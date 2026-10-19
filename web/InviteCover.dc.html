@@ -18,14 +18,14 @@
 <sc-if value="{{ th.oval }}">
 <div style="position:absolute;left:16cqw;top:10cqw;width:60cqw;height:80cqw;border-radius:50%;border:1px solid {{ th.accent }};transform:translate(4cqw,3cqw)"></div>
 <div style="position:absolute;left:16cqw;top:10cqw;width:60cqw;height:80cqw;border-radius:50%;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
-<div style="position:absolute;left:7cqw;top:78cqw;padding:1.6cqw 3.4cqw;border-radius:99px;background:{{ th.surface }};font-size:2.6cqw;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }}">{{ date }}</div>
+<sc-if value="{{ date }}"><div style="position:absolute;left:7cqw;top:78cqw;padding:1.6cqw 3.4cqw;border-radius:99px;background:{{ th.surface }};font-size:2.6cqw;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }}">{{ date }}</div></sc-if>
 <div style="position:absolute;left:7cqw;right:7cqw;bottom:8cqw;font-family:{{ th.fontCss }};font-style:italic;font-weight:{{ th.wt }};font-size:calc(11cqw * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }}">{{ names }}</div>
 </sc-if>
 <sc-if value="{{ th.bubble }}">
 <div style="position:absolute;width:56cqw;height:56cqw;border-radius:50%;background:{{ th.accent2 }};left:-14cqw;top:-6cqw"></div>
 <div style="position:absolute;width:34cqw;height:34cqw;border-radius:50%;background:{{ th.accent }};opacity:.45;right:-8cqw;top:52cqw"></div>
 <div style="position:absolute;left:18cqw;top:12cqw;width:64cqw;height:64cqw;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};border:2cqw solid {{ th.surface }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
-<div style="position:absolute;right:12cqw;top:12cqw;padding:1.6cqw 3.4cqw;border-radius:99px;background:{{ th.accent }};color:{{ th.onAccent }};font-size:2.6cqw;font-weight:700;transform:rotate(8deg)">{{ date }}</div>
+<sc-if value="{{ date }}"><div style="position:absolute;right:12cqw;top:12cqw;padding:1.6cqw 3.4cqw;border-radius:99px;background:{{ th.accent }};color:{{ th.onAccent }};font-size:2.6cqw;font-weight:700;transform:rotate(8deg)">{{ date }}</div></sc-if>
 <div style="position:absolute;left:7cqw;right:7cqw;top:84cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10cqw * {{ th.fs }});line-height:1;text-transform:{{ th.tt }}">{{ names }}</div>
 </sc-if>
 <sc-if value="{{ th.deco }}">
@@ -33,7 +33,7 @@
 <div style="position:absolute;left:50%;top:34cqw;width:130cqw;height:130cqw;margin:-65cqw 0 0 -65cqw;border-radius:50%;background:repeating-conic-gradient({{ th.accent }} 0deg .7deg,transparent .7deg 10deg);opacity:.16"></div>
 <div style="position:absolute;left:30cqw;top:14cqw;width:40cqw;height:40cqw;border-radius:50%;border:1px solid {{ th.accent }};background:{{ th.bg }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:13cqw;color:{{ th.accent }}">{{ mono }}</div>
 <div style="position:absolute;left:8cqw;right:8cqw;top:64cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(8.4cqw * {{ th.fs }});letter-spacing:.06em;line-height:1.05;text-transform:{{ th.tt }}">{{ names }}</div>
-<div style="position:absolute;left:0;right:0;top:92cqw;display:flex;align-items:center;justify-content:center;gap:3cqw;font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}"><span style="width:10cqw;height:1px;background:{{ th.accent }}"></span>{{ date }}<span style="width:10cqw;height:1px;background:{{ th.accent }}"></span></div>
+<sc-if value="{{ date }}"><div style="position:absolute;left:0;right:0;top:92cqw;display:flex;align-items:center;justify-content:center;gap:3cqw;font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}"><span style="width:10cqw;height:1px;background:{{ th.accent }}"></span>{{ date }}<span style="width:10cqw;height:1px;background:{{ th.accent }}"></span></div></sc-if>
 <div style="position:absolute;left:14cqw;right:14cqw;bottom:9cqw;height:18cqw;overflow:hidden;border:1px solid {{ th.accent }};background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
 </sc-if>
 <sc-if value="{{ th.full }}">
@@ -42,7 +42,7 @@
 <div style="position:absolute;left:7cqw;right:7cqw;bottom:8cqw;display:flex;flex-direction:column;gap:3cqw">
 <div style="font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">{{ kicker }}</div>
 <div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(13cqw * {{ th.fs }});line-height:.88;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ names }}</div>
-<div style="display:flex"><span style="background:{{ th.accent }};color:{{ th.onAccent }};padding:1.6cqw 3cqw;border-radius:{{ th.radius }};font-size:2.8cqw;letter-spacing:.12em;text-transform:uppercase;font-weight:600">{{ date }}</span></div>
+<sc-if value="{{ date }}"><div style="display:flex"><span style="background:{{ th.accent }};color:{{ th.onAccent }};padding:1.6cqw 3cqw;border-radius:{{ th.radius }};font-size:2.8cqw;letter-spacing:.12em;text-transform:uppercase;font-weight:600">{{ date }}</span></div></sc-if>
 </div>
 </sc-if>
 <sc-if value="{{ th.ticket }}">
@@ -79,7 +79,7 @@
 <div style="position:absolute;left:12cqw;right:12cqw;top:9cqw;height:76cqw;background:{{ th.accent2 }};overflow:hidden"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }};mix-blend-mode:multiply"></div>
 <div style="position:absolute;left:12cqw;right:12cqw;top:9cqw;height:76cqw;background:{{ th.accent }};mix-blend-mode:multiply;opacity:.5;transform:translate(2.4cqw,2cqw)"></div>
 <div style="position:absolute;left:6cqw;right:6cqw;top:74cqw;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(12cqw * {{ th.fs }});line-height:.9;text-transform:{{ th.tt }};text-shadow:.8cqw .8cqw 0 {{ th.accent }}">{{ names }}</div>
-<div style="position:absolute;left:6cqw;bottom:7cqw;padding:1.4cqw 3cqw;background:{{ th.accent2 }};font-size:2.8cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transform:rotate(-3deg)">{{ date }}</div>
+<sc-if value="{{ date }}"><div style="position:absolute;left:6cqw;bottom:7cqw;padding:1.4cqw 3cqw;background:{{ th.accent2 }};font-size:2.8cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transform:rotate(-3deg)">{{ date }}</div></sc-if>
 </sc-if>
 <sc-if value="{{ th.scrap }}">
 <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(0,0,0,.05) 1px,transparent 1.2px);background-size:2.2cqw 2.2cqw"></div>
@@ -108,7 +108,7 @@
 <div style="position:absolute;inset:4cqw;border:1.6cqw solid {{ th.ink }}"></div>
 <div style="position:absolute;left:9cqw;right:9cqw;top:9cqw;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10.5cqw * {{ th.fs }});line-height:.9;text-transform:{{ th.tt }};overflow-wrap:break-word;hyphens:auto">{{ names }}</div>
 <div style="position:absolute;right:11cqw;bottom:24cqw;width:46cqw;height:46cqw;overflow:hidden;background:{{ th.imgBg }};border:1cqw solid {{ th.ink }};box-shadow:3cqw 3cqw 0 {{ th.ink }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
-<div style="position:absolute;left:9cqw;bottom:11cqw;padding:1.6cqw 3cqw;background:{{ th.accent }};color:{{ th.onAccent }};border:.6cqw solid {{ th.ink }};font-size:3cqw;font-weight:700;letter-spacing:.06em;text-transform:uppercase">{{ date }}</div>
+<sc-if value="{{ date }}"><div style="position:absolute;left:9cqw;bottom:11cqw;padding:1.6cqw 3cqw;background:{{ th.accent }};color:{{ th.onAccent }};border:.6cqw solid {{ th.ink }};font-size:3cqw;font-weight:700;letter-spacing:.06em;text-transform:uppercase">{{ date }}</div></sc-if>
 </sc-if>
 </div>
 </x-dc>

@@ -350,7 +350,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-herotext="1" style="font-size:12px;letter-spacing:.38em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:26px;width:min(62vw,340px);aspect-ratio:3/4;border-radius:999px 999px {{ th.radius }} {{ th.radius }};overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }};box-shadow:0 40px 80px -40px rgba(0,0,0,.5)"><img data-par="0.14" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="margin:32px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,12vw,116px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};letter-spacing:-.02em;text-wrap:balance;max-width:14ch;text-shadow:{{ th.glowCss }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div data-herotext="1" onClick="{{ ed.when }}" style="margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:{{ th.muted }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><span style="width:34px;height:1px;background:{{ th.accent }}"></span><span>{{ gWhen }}</span><span style="width:34px;height:1px;background:{{ th.accent }}"></span></div>
+<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:{{ th.muted }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><span style="width:34px;height:1px;background:{{ th.accent }}"></span><span>{{ whenTxt }}</span><span style="width:34px;height:1px;background:{{ th.accent }}"></span></div></sc-if>
 <div data-herotext="1" onClick="{{ ed.names }}" style="margin-top:14px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 <div style="position:absolute;bottom:22px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.scroll }}<span style="width:1px;height:36px;background:{{ th.accent }}"></span></div>
@@ -391,7 +391,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-style:italic;font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }});line-height:.92;letter-spacing:-.02em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="width:64px;height:1px;background:{{ th.accent }}"></div>
-<div onClick="{{ ed.when }}" style="font-size:16px;line-height:1.6;cursor:{{ ec }}">{{ gWdDate }}<br>{{ gTimeVenue }}</div>
+<div onClick="{{ ed.when }}" style="font-size:16px;line-height:1.6;cursor:{{ ec }}"><sc-if value="{{ gWdDate }}">{{ gWdDate }}<br></sc-if>{{ gTimeVenue }}</div>
 <div onClick="{{ ed.names }}" style="font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 </section></sc-if>
@@ -417,7 +417,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-herotext="1" style="position:relative;width:min(46vw,210px);aspect-ratio:1;border-radius:50%;border:1px solid {{ th.accent }};background:{{ th.bg }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:clamp(54px,14vw,86px);color:{{ th.accent }};box-shadow:0 0 0 10px {{ th.bg }},0 0 0 11px {{ th.accentSoft }}">{{ monogram }}</div>
 <div data-herotext="1" style="position:relative;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,96px) * {{ th.fs }});line-height:1;letter-spacing:.06em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span>{{ gWhen }}<span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span></div>
+<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span>{{ whenTxt }}<span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span></div></sc-if>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:40px;width:min(100%,760px);aspect-ratio:21/9;overflow:hidden;border:1px solid {{ th.accent }};background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.2" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-25%;width:100%;height:150%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:relative;margin-top:18px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
@@ -466,7 +466,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,11vw,112px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:34px;width:min(58vw,300px);aspect-ratio:3/4;border-radius:999px 999px 0 0;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:relative;width:min(100%,720px);height:1px;background:{{ th.accent }}"></div>
-<div onClick="{{ ed.when }}" style="position:relative;margin-top:20px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;cursor:{{ ec }}">{{ gWhen }}</div>
+<sc-if value="{{ whenTxt }}"><div onClick="{{ ed.when }}" style="position:relative;margin-top:20px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;cursor:{{ ec }}">{{ whenTxt }}</div></sc-if>
 <div style="position:relative;margin-top:10px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
@@ -498,7 +498,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-family:'Caveat',cursive;font-size:26px;color:{{ th.accent }}">{{ kick }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:8px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,13vw,130px) * {{ th.fs }});line-height:.9;transform:rotate(-2deg);text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="width:min(70%,260px);height:6px;margin-top:10px;border-radius:3px;background:{{ th.accent2 }};transform:rotate(-2deg)"></div>
-<div onClick="{{ ed.when }}" style="margin-top:22px;font-size:17px;line-height:1.6;cursor:{{ ec }}">{{ gWdDate }}<br>{{ inv.venue }}</div>
+<div onClick="{{ ed.when }}" style="margin-top:22px;font-size:17px;line-height:1.6;cursor:{{ ec }}"><sc-if value="{{ gWdDate }}">{{ gWdDate }}<br></sc-if>{{ inv.venue }}</div>
 <div style="margin-top:10px;font-family:'Caveat',cursive;font-size:22px;color:{{ th.muted }}">— {{ inv.host }}</div>
 </div></div>
 </section></sc-if>
@@ -513,7 +513,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-herotext="1" style="padding:0 20px">
 <div style="margin-top:30px;font-size:12px;letter-spacing:.5em;text-transform:uppercase;color:{{ th.muted }}">{{ inv.host }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:14px auto 0;max-width:16ch;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(48px,11vw,128px) * {{ th.fs }});line-height:.92;letter-spacing:.05em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div onClick="{{ ed.when }}" style="margin-top:22px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px 26px;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><span>{{ gDateLong }}</span><span>{{ inv.time }}</span><span>{{ inv.venue }}</span></div>
+<div onClick="{{ ed.when }}" style="margin-top:22px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px 26px;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><sc-if value="{{ gDateLong }}"><span>{{ gDateLong }}</span></sc-if><sc-if value="{{ inv.time }}"><span>{{ inv.time }}</span></sc-if><sc-if value="{{ whenEmpty }}"><span>{{ whenTxt }}</span></sc-if><sc-if value="{{ inv.venue }}"><span>{{ inv.venue }}</span></sc-if></div>
 </div>
 </section></sc-if>
 
@@ -524,7 +524,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div onClick="{{ ed.cover }}" style="position:relative;width:min(72vw,400px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};-webkit-mask-image:radial-gradient(closest-side,#000 66%,transparent);mask-image:radial-gradient(closest-side,#000 66%,transparent);cursor:{{ ec }}"><img data-par="0.1" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div data-herotext="1" style="position:relative;margin-top:8px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }});line-height:1;text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:18px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }};cursor:{{ ec }}">{{ gWhen }}</div>
+<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:18px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }};cursor:{{ ec }}">{{ whenTxt }}</div></sc-if>
 <div style="position:relative;margin-top:10px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
@@ -536,7 +536,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 <div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:4/3;border:4px solid {{ th.ink }};overflow:hidden;background:{{ th.imgBg }};box-shadow:8px 8px 0 {{ th.ink }};cursor:{{ ec }}"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="display:grid;gap:14px">
-<sc-if value="{{ hasWhen }}"><div onClick="{{ ed.when }}" style="border:4px solid {{ th.ink }};background:{{ th.accent }};color:{{ th.onAccent }};padding:18px;box-shadow:8px 8px 0 {{ th.ink }};cursor:{{ ec }}"><div style="font:700 11px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase">{{ whenLabel }}</div><sc-if value="{{ hasDate }}"><div style="margin-top:6px;font-family:{{ th.fontCss }};font-size:calc(clamp(30px,6vw,52px) * {{ th.fs }});line-height:.95;text-transform:uppercase">{{ gDateLong }}</div></sc-if><sc-if value="{{ hasTime }}"><div style="margin-top:4px;font:700 18px 'JetBrains Mono',monospace">{{ inv.time }}</div></sc-if></div></sc-if>
+<sc-if value="{{ hasWhen }}"><div onClick="{{ ed.when }}" style="border:4px solid {{ th.ink }};background:{{ th.accent }};color:{{ th.onAccent }};padding:18px;box-shadow:8px 8px 0 {{ th.ink }};cursor:{{ ec }}"><div style="font:700 11px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase">{{ whenLabel }}</div><sc-if value="{{ hasDate }}"><div style="margin-top:6px;font-family:{{ th.fontCss }};font-size:calc(clamp(30px,6vw,52px) * {{ th.fs }});line-height:.95;text-transform:uppercase">{{ gDateLong }}</div></sc-if><sc-if value="{{ hasTime }}"><div style="margin-top:4px;font:700 18px 'JetBrains Mono',monospace">{{ inv.time }}</div></sc-if><sc-if value="{{ whenEmpty }}"><div style="margin-top:6px;font:700 18px 'JetBrains Mono',monospace">✎</div></sc-if></div></sc-if>
 <div style="border:4px solid {{ th.ink }};background:{{ th.accent2 }};color:#fff;padding:18px;box-shadow:8px 8px 0 {{ th.ink }}"><div style="font:700 11px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase">{{ gt.venue }}</div><div style="margin-top:6px;font-size:20px;font-weight:700">{{ inv.venue }}</div><div style="margin-top:2px;font-size:14px;opacity:.9">{{ inv.host }}</div></div>
 </div></div>
 <div style="margin:28px calc(-1 * clamp(14px,4vw,40px)) 0;border-top:4px solid {{ th.ink }};border-bottom:4px solid {{ th.ink }};background:{{ th.ink }};color:{{ th.accent }};overflow:hidden;white-space:nowrap"><div data-tick="1" style="display:inline-flex;gap:30px;padding:10px 0;font-family:{{ th.fontCss }};font-size:24px;text-transform:uppercase;will-change:transform"><span>{{ tickerTxt }}</span><span>{{ tickerTxt }}</span></div></div>
@@ -983,6 +983,14 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <button data-mock="failed" onClick="{{ mk.fail }}" style="height:52px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ mk.op }}">{{ t.mockFail }}</button>
 </div></main></sc-if>
 
+<sc-if value="{{ isPaid }}"><main data-screen="paid" style="max-width:640px;margin:0 auto;padding:26px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
+<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span>{{ t.orderKick }}</span><span style="color:{{ ui.muted }}">{{ monthYear }}</span></div>
+<div style="margin-top:30px;display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2f6fe0"><span style="width:8px;height:8px;border-radius:50%;background:#2f6fe0"></span>Telegram</div>
+<h2 style="margin:12px 0 0;font:500 clamp(46px,12vw,96px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ t.paidTitle }}</h2>
+<p style="margin:18px 0 0;max-width:46ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.paidText }}</p>
+<sc-if value="{{ paidBot }}"><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:32px"><a data-paid-bot="1" href="{{ paidBot }}" target="_blank" rel="noopener" style="height:56px;padding:0 26px;border-radius:999px;background:#2f6fe0;color:#fff;font:500 16px 'Onest',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none" style-hover="background:#1f5bc4">✈ {{ t.paidBack }} ↗</a></div></sc-if>
+</main></sc-if>
+
 <sc-if value="{{ payOpen }}"><div onClick="{{ closePay }}" style="position:fixed;inset:0;z-index:91;background:rgba(10,9,8,.45)"></div>
 <div data-sheet="pay" style="position:fixed;left:0;right:0;bottom:0;z-index:92;max-width:560px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;box-shadow:0 -20px 60px rgba(0,0,0,.3);font-family:'Onest',sans-serif">
 <div style="width:40px;height:4px;border-radius:2px;background:rgba({{ ui.inkRgb }},.2);margin:0 auto"></div>
@@ -1058,7 +1066,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-top:16px;font-size:14px"><button onClick="{{ lg.resend }}" style="background:none;border:0;padding:0;cursor:pointer;color:{{ lg.resendColor }};font:inherit">{{ lg.resendLabel }}</button><button onClick="{{ lg.changePhone }}" style="background:none;border:0;padding:0;cursor:pointer;color:{{ ui.muted }};font:inherit;text-decoration:underline">{{ t.changePhone }}</button></div>
 </div></sc-if>
 <sc-if value="{{ lg.isTgWait }}"><div style="margin-top:22px;display:flex;flex-direction:column;gap:12px">
-<div style="display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2f6fe0"><span style="width:8px;height:8px;border-radius:50%;background:#2f6fe0;animation:invPulse 1.4s ease-in-out infinite"></span>Telegram</div>
+<sc-if value="{{ lg.tgPending }}"><div data-wait="telegram" style="display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2f6fe0"><span style="width:8px;height:8px;border-radius:50%;background:#2f6fe0;animation:invPulse 1.4s ease-in-out infinite"></span>Telegram</div></sc-if>
+<sc-if value="{{ lg.tgFailed }}"><button onClick="{{ lg.tgAgain }}" style="height:54px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">✈ {{ t.tryAgain }}</button></sc-if>
 <sc-if value="{{ lg.hasTgUrl }}"><a href="{{ lg.tgUrl }}" target="_blank" rel="noopener" style="height:54px;border-radius:999px;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none">✈ {{ t.tgOpen }} ↗</a></sc-if>
 <button onClick="{{ lg.cancelTg }}" style="height:46px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.cancel }}</button>
 </div></sc-if>
@@ -1066,7 +1075,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <button onClick="{{ lg.tgAuth }}" style="width:100%;height:54px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;opacity:{{ lg.tgOp }};transition:opacity .2s">✈ {{ lg.tgLabel }}</button>
 </div></sc-if>
 <sc-if value="{{ lg.isTgPhone }}"><div style="margin-top:22px;display:flex;flex-direction:column;gap:12px">
-<button onClick="{{ lg.askContact }}" style="height:54px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">☎ {{ t.sharePhone }}</button>
+<button onClick="{{ lg.askContact }}" style="height:54px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">☎ {{ lg.shareLabel }}</button>
 <sc-if value="{{ lg.waitOn }}"><div data-wait="phone" style="display:flex;align-items:center;justify-content:center;gap:10px;font:500 11px/1.45 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;text-align:center;color:{{ ui.muted }}"><sc-if value="{{ lg.waitDot }}"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:#2f6fe0;animation:invPulse 1.4s ease-in-out infinite"></span></sc-if>{{ lg.waitText }}</div></sc-if>
 </div></sc-if>
 <sc-if value="{{ lg.err }}"><div role="alert" style="margin-top:16px;color:#d4452a;font-size:14px;line-height:1.45">{{ lg.err }}</div></sc-if>
@@ -1129,6 +1138,14 @@ class Component extends DCLogic {
     // Возврат со страницы оплаты (returnUrl заказа) и тестовая оплата PAYMENT_PROVIDER=mock.
     orders: (id) => { if (this.isUuid(id)) this.requireLogin(() => this.openOrder(id)); else this.clearHash(); },
     'mock-pay': (id) => { if (this.isUuid(id)) this.requireLogin(() => this.openMock(id)); else this.clearHash(); },
+    // Возврат после оплаты из мини-аппа (returnTo: telegram): внешний браузер, куда Telegram открыл оплату, обычно
+    // без сессии. Вход не требуется и заказ не запрашивается: карточка «вернитесь в Telegram». С сессией — экран заказа.
+    paid: (id) => {
+      if (!this.isUuid(id)) { this.clearHash(); return; }
+      if (this.state.me) { try { history.replaceState(null, '', location.pathname + location.search + '#/orders/' + id); } catch (e) {} this.openOrder(id); return; }
+      clearTimeout(this._orderT);
+      this.setState({ screen: 'paid', paid: { id }, order: null, mock: null, pay: null });
+    },
   };
 
   ui() {
@@ -1208,7 +1225,7 @@ class Component extends DCLogic {
     this.setState({ authReady: true });
     if (ok) this.loadInvitations();
     const fn = this._afterAuth; this._afterAuth = null;
-    if (this._tgPhone) this.openLogin({ step: 'tgphone' }, fn || undefined);
+    if (this._tgPhone) this.openLogin({ step: 'tgphone', err: this._tgPhoneErr }, fn || undefined);
     else if (this.tgReal && !ok) this.openLogin({ step: 'tg', err: this.tgErrText() || this.t().tgAuthFail }, fn || undefined);
     else if (fn) this.requireLogin(fn);
     this.route();
@@ -1230,6 +1247,8 @@ class Component extends DCLogic {
     if (r && r.status === 'ok') { this._tgPhone = false; this.A.setToken(r.token); return this.loadMe(); }
     if (r && r.status === 'phone_required') {
       this._tgPhone = true;
+      // Бот не принял последний присланный номер (например, он уже привязан к другому Telegram): причина — в шаге номера.
+      this._tgPhoneErr = r.error ? String(r.error) : '';
       // Cookie прежнего аккаунта не должна действовать вместо этого человека, пока он делится номером.
       this.dropSession();
     }
@@ -1248,7 +1267,7 @@ class Component extends DCLogic {
     const L = this.state.login; if (!L || L.busy) return;
     this.setLogin({ busy: true, err: '' });
     if (await this.tgAuth()) return this.finishLogin();
-    if (this._tgPhone) { this.openLogin({ step: 'tgphone' }); return; }
+    if (this._tgPhone) { this.openLogin({ step: 'tgphone', err: this._tgPhoneErr }); return; }
     this.setLogin({ busy: false, err: this.tgErrText() || this.t().tgAuthFail });
   }
   // Профиль и доступ (GET /api/auth/me). 401 — не вошли, 428 — нет телефона, сеть или 5xx — приложение без входа и тост.
@@ -1301,7 +1320,7 @@ class Component extends DCLogic {
       this.A.setToken(null);
       this.setState({ me: null });
       if (this.tgReal && (await this.tgAuth())) { if (retry) retry(); return; }
-      if (this.tgReal && this._tgPhone) { this.openLogin({ step: 'tgphone' }, retry || null); return; }
+      if (this.tgReal && this._tgPhone) { this.openLogin({ step: 'tgphone', err: this._tgPhoneErr }, retry || null); return; }
       this.openLogin({ reason: 'again', err: this.tgReal ? this.tgErrText() : '' }, retry || null);
     } finally { this._lost = false; }
   }
@@ -1311,8 +1330,9 @@ class Component extends DCLogic {
     // В мини-аппе вход только через Telegram (initData): SMS-вход в Telegram Web (фрейм чужого сайта) не сохранит cookie.
     const step = opts.step || (this.tgReal ? (this._tgPhone || opts.reason === 'phone' ? 'tgphone' : 'tg') : 'phone');
     clearTimeout(this._tgPollT);
-    this.setState((x) => ({ account: false, login: { step, reason: opts.reason || null, connect: !!opts.connect, fromUid: opts.fromUid || null, phone: (x.login && x.login.phone) || '', code: '', busy: false, err: opts.err || '', resendAt: 0, declined: false, shared: 0, slow: false } }));
-    if (step === 'tgphone') this.askContact();
+    this.setState((x) => ({ account: false, login: { step, reason: opts.reason || null, connect: !!opts.connect, fromUid: opts.fromUid || null, phone: (x.login && x.login.phone) || '', code: '', busy: false, err: opts.err || '', prevErr: '', resendAt: 0, declined: false, shared: 0, slow: false } }));
+    // Номер, который бот уже отклонил: сначала причина и «Попробовать ещё раз», а не сразу новый запрос контакта.
+    if (step === 'tgphone') { if (opts.err) this.pollWebapp(15000); else this.askContact(); }
   }
   closeLogin() {
     const L = this.state.login;
@@ -1335,8 +1355,9 @@ class Component extends DCLogic {
     code = code || L.code; if (!/^\d{6}$/.test(code)) return;
     this.setLogin({ busy: true, err: '' });
     try {
-      const r = await this.A.api('/api/auth/phone/verify', { body: { phone: '+998' + L.phone, code } });
-      // Токен в ответе (если сервер его отдаёт) нужен там, где cookie не сохраняется: фрейм Telegram Web.
+      // bearer: true — только в настоящем Telegram: во фрейм web.telegram.org cookie не доходит, и сервер отдаёт токен
+      // сессии в ответе. На сайте токен не запрашивается, чтобы он не был виден скриптам страницы.
+      const r = await this.A.api('/api/auth/phone/verify', { body: { phone: '+998' + L.phone, code, ...(this.tgReal && { bearer: true }) } });
       if (r && r.token) this.A.setToken(r.token);
       await this.finishLogin();
     } catch (e) { this.logErr(e); this.setLogin({ busy: false, err: this.errText(e), code: '' }); }
@@ -1363,10 +1384,11 @@ class Component extends DCLogic {
       const fail = (err) => this.setLogin({ step: L.connect ? 'tgwait' : 'phone', nonce: null, tgUrl: '', err });
       if (Date.now() > L.tgUntil) return fail(this.t().tgExpired);
       try {
-        const r = await this.A.api('/api/auth/telegram/poll', { body: { nonce: L.nonce } });
+        const r = await this.A.api('/api/auth/telegram/poll', { body: { nonce: L.nonce, ...(this.tgReal && { bearer: true }) } });
         if (r && r.status === 'ok') { if (r.token) this.A.setToken(r.token); return this.finishLogin(); }
         if (r && r.status === 'expired') return fail(this.t().tgExpired);
-        // Подключение Telegram, который уже принадлежит другому аккаунту: сервер отказывает, сессия остаётся прежней.
+        // «Подключить Telegram», а этот Telegram уже у другого аккаунта: сервер ничего не привязывает и не переключает,
+        // сессия остаётся прежней; в листе — причина и «Попробовать ещё раз».
         if (r && r.status === 'conflict') return fail(r.error || this.t().tgConflict);
       } catch (e) { console.error(e); if (e.status && e.status < 500 && e.status !== 429) return fail(this.errText(e)); }
       this.pollTg();
@@ -1376,9 +1398,12 @@ class Component extends DCLogic {
   // пока не получит status ok: не чаще раза в 3 секунды (лимит маршрута 40 в минуту), после 429 — через 5 секунд.
   // Отказ поделиться номером: в листе подсказка вместо «Ждём номер…», опрос идёт редко (раз в 15 с), ведь номер
   // ещё может прийти из чата с ботом; новое нажатие «Поделиться номером» снова включает опрос раз в 3 с.
+  // Ошибка прошлого номера (prevErr) остаётся в ответах /webapp, пока бот не получил новый контакт: она не считается
+  // ответом на новую попытку, пока открыт запрос контакта и ещё 8 секунд после того, как номер отправлен.
   askContact() {
     if (!this.tgReal) return;
-    this.setLogin({ declined: false, shared: 0, slow: false, err: '' });
+    const L = this.state.login || {};
+    this.setLogin({ declined: false, shared: 0, slow: false, err: '', prevErr: L.err || L.prevErr || '' });
     try {
       window.Telegram.WebApp.requestContact((shared) => {
         this.setLogin(shared ? { declined: false, shared: Date.now() } : { declined: true });
@@ -1393,15 +1418,20 @@ class Component extends DCLogic {
     this._tgPollT = setTimeout(async () => {
       const L = this.state.login; if (!L || L.step !== 'tgphone') return;
       this._tgLast = Date.now();
-      let next = L.declined ? 15000 : 3000;
+      let next = L.declined || L.err ? 15000 : 3000;
       try {
         const r = await this.A.api('/api/auth/webapp', { body: { initData: window.Telegram.WebApp.initData } });
         if (r && r.status === 'ok') { this._tgPhone = false; this.A.setToken(r.token); return this.finishLogin(); }
-        // Бот не принял номер (например, он уже привязан к другому Telegram): причина в листе, опрос — до нового нажатия.
-        if (r && r.error) return this.setLogin({ err: String(r.error), shared: 0, slow: false });
-        // Номер отправлен, а входа всё нет: скорее всего, бот ответил в чате — подсказка смотреть туда.
-        const cur = this.state.login;
-        if (cur && cur.shared && !cur.slow && Date.now() - cur.shared > 12000) this.setLogin({ slow: true });
+        const cur = this.state.login; if (!cur || cur.step !== 'tgphone') return;
+        if (r && r.error) {
+          // Бот не принял номер (например, он уже привязан к другому Telegram): причина в листе вместо «Ждём номер…»,
+          // кнопка — «Попробовать ещё раз». Опрос редкий (раз в 15 с): номер ещё могут прислать боту прямо в чате.
+          const err = String(r.error), stale = !cur.err && err === cur.prevErr && (!cur.shared || Date.now() - cur.shared < 8000);
+          if (!stale) { next = 15000; if (err !== cur.err) this.setLogin({ err, shared: 0, slow: false }); }
+        } else if (cur.shared && !cur.slow && Date.now() - cur.shared > 12000) {
+          // Номер отправлен, а входа всё нет: скорее всего, бот ответил в чате — подсказка смотреть туда.
+          this.setLogin({ slow: true });
+        }
       } catch (e) {
         console.error(e);
         if (e.status === 429) next = 5000; else if (e.status) return this.setLogin({ err: this.errText(e) });
@@ -1425,6 +1455,8 @@ class Component extends DCLogic {
     this.toast(other ? t.tgOtherAccount.replace('{who}', who) : L && L.connect ? t.tgConnected : t.welcome);
     this.loadInvitations();
     if (cont) cont();
+    // Вошли с карточки «Оплата завершена» (#/paid/<id>): теперь можно показать сам заказ.
+    else if (/^#\/paid\//.test(location.hash)) this.route();
   }
   // «Подключить Telegram» в аккаунте: тот же вход через бота, после него профиль перечитывается.
   connectTg() { this.openLogin({ step: 'tgwait', connect: true, fromUid: this._uid || null }, null); this.tgLogin(); }
@@ -1527,6 +1559,9 @@ class Component extends DCLogic {
     this.refreshMe(); this.loadTemplates();
   }
   setPay(patch) { this.setState((x) => (x.pay ? { pay: { ...x.pay, ...patch } } : null)); }
+  // Заказ (POST /api/orders). Из мини-аппа оплата открывается во внешнем браузере без сессии: returnTo: telegram
+  // возвращает его на /app/#/paid/<id> («вернитесь в Telegram»), а заказ опрашивает сам мини-апп.
+  createOrder(body) { return this.A.api('/api/orders', { body: this.tgReal ? { ...body, returnTo: 'telegram' } : body }); }
   closePay() { if (this.state.pay && this.state.pay.busy) return; this.setState({ pay: null }); }
   // «Оплатить» / «Опубликовать»: тип приглашения (PATCH mode), заказ шаблона или мест (POST /api/orders),
   // бесплатный заказ выполняется сразу, иначе — страница оплаты. После оплаты приглашение публикуется
@@ -1541,8 +1576,8 @@ class Component extends DCLogic {
       let inv = this.state.draft;
       if (P.kind === 'publish' && inv.mode !== P.mode) inv = await this.patchInvitation(id, { mode: P.mode }, { quiet: true });
       let r = null;
-      if (P.mode === 'shared') { if (!inv.unlocked) r = await this.A.api('/api/orders', { body: { kind: 'template', invitationId: id } }); }
-      else if (P.seats > 0) r = await this.A.api('/api/orders', { body: { kind: 'seats', invitationId: id, quantity: P.seats } });
+      if (P.mode === 'shared') { if (!inv.unlocked) r = await this.createOrder({ kind: 'template', invitationId: id }); }
+      else if (P.seats > 0) r = await this.createOrder({ kind: 'seats', invitationId: id, quantity: P.seats });
       if (r && r.status === 'pending') { this.checkout(r, { inv: id, then, pub }); return; }
       if (r && r.message) this.toast(r.message);
       this.setState({ pay: null });
@@ -1562,7 +1597,7 @@ class Component extends DCLogic {
       // Выбранный тип уходит до оплаты, как в pay(): после подписки публикация идёт по нему, а не по прежнему.
       const inv = this.state.draft;
       if (P.kind === 'publish' && id && inv && inv.mode !== P.mode) await this.patchInvitation(id, { mode: P.mode }, { quiet: true });
-      const r = await this.A.api('/api/orders', { body: { kind: 'subscription', months: P.months } });
+      const r = await this.createOrder({ kind: 'subscription', months: P.months });
       if (r && r.status === 'pending') { this.checkout(r, { inv: id, then: P.then || (P.kind === 'seats' ? s.screen : 'share'), sub: true, ...(P.mode === 'personal' && P.seats > 0 && { seats: P.seats }) }); return; }
       this.setState({ pay: null }); await this.refreshMe();
     } catch (e) {
@@ -1645,7 +1680,7 @@ class Component extends DCLogic {
         if (cont.then === 'edit') { this.dropOrderCont(o.id); this.clearHash(); this.openGuest('edit'); return; }
         // Шаблон по подписке открывается бесплатным заказом; персональному нужны ещё места.
         if (dto.mode === 'shared' && dto.status !== 'active') {
-          if (!dto.unlocked) await this.A.api('/api/orders', { body: { kind: 'template', invitationId: id } });
+          if (!dto.unlocked) await this.createOrder({ kind: 'template', invitationId: id });
           await this.afterPaid(id, cont.then);
         } else if (dto.mode === 'personal' && dto.paidSeats < 1) {
           this.clearHash(); this.go('build', { step: 0 }); this.openPay({ dto, seats: cont.seats });
@@ -2577,7 +2612,7 @@ class Component extends DCLogic {
   }
   goHome() {
     if (this.isPublic() || this.boot.mode === 'notfound') { location.href = '/app/'; return; }
-    if (/^#\/(orders|mock-pay)\//.test(location.hash)) this.clearHash();
+    if (/^#\/(orders|mock-pay|paid)\//.test(location.hash)) this.clearHash();
     this.stopMusic(); this.exitDemo(); this.setState({ music: false, fromTour: false, pay: null }); this.go('home');
   }
   // Свои приглашения на главной: нужен вход.
@@ -2697,7 +2732,8 @@ class Component extends DCLogic {
     const v = { d: Math.floor(ms / 864e5), h: Math.floor(ms / 36e5) % 24, m: Math.floor(ms / 6e4) % 60, s: Math.floor(ms / 1e3) % 60 };
     r.querySelectorAll('[data-cd]').forEach((el) => { const s = String(v[el.dataset.cd]).padStart(2, '0'); if (el.textContent !== s) el.textContent = s; });
     const lang = this.state.lang, t = this.D.I18N[lang], cn = t.cdN || {}, w = (n, k, f) => n + ' ' + this.D.plural(lang, n, cn[k] || f);
-    const txt = [w(v.d, 'd', t.days), w(v.h, 'h', t.hours), w(v.m, 'm', t.min)].join(' · ');
+    // Без даты в конструкторе под переключателем пусто, а не «0 дней · 0 часов · 0 минут».
+    const txt = at ? [w(v.d, 'd', t.days), w(v.h, 'h', t.hours), w(v.m, 'm', t.min)].join(' · ') : '';
     r.querySelectorAll('[data-cdtext]').forEach((el) => { if (el.textContent !== txt) el.textContent = txt; });
   }
 
@@ -2792,11 +2828,17 @@ class Component extends DCLogic {
 
     // вход и аккаунт
     const L = s.login, now = Date.now();
+    // «Подключить Telegram» не удался (Telegram уже у другого аккаунта, запрос устарел, сбой): ожидания больше нет,
+    // в листе причина и «Попробовать ещё раз».
+    const tgFailed = !!L && L.step === 'tgwait' && !L.nonce && !L.busy && !!L.err;
     const lg = L ? {
       title: L.connect ? t.tgConnect : t.loginTitle,
       note: L.reason === 'expired' ? t.loginExpired : L.reason === 'again' ? t.loginAgain : L.reason === 'phone' ? t.phoneNeeded : '',
-      hint: L.step === 'code' ? t.codeSent.replace('{phone}', '+998 ' + fmtPhone(L.phone)) : L.step === 'tgwait' ? t.tgWait : L.step === 'tgphone' ? t.sharePhoneHint : L.step === 'tg' ? t.tgAuthHint : L.connect ? t.tgConnectHint : t.loginHint,
+      hint: L.step === 'code' ? t.codeSent.replace('{phone}', '+998 ' + fmtPhone(L.phone)) : L.step === 'tgwait' ? (tgFailed ? t.tgConnectHint : t.tgWait) : L.step === 'tgphone' ? t.sharePhoneHint : L.step === 'tg' ? t.tgAuthHint : L.connect ? t.tgConnectHint : t.loginHint,
       isPhone: L.step === 'phone', isCode: L.step === 'code', isTgWait: L.step === 'tgwait', isTgPhone: L.step === 'tgphone', isTg: L.step === 'tg',
+      tgPending: L.step === 'tgwait' && !tgFailed, tgFailed, tgAgain: () => { if (!L.busy) this.tgLogin(); },
+      // Номер не принят ботом: та же кнопка запроса контакта — «Попробовать ещё раз».
+      shareLabel: L.err ? t.tryAgain : t.sharePhone,
       tgAuth: () => this.tgRetry(), tgOp: L.busy ? 0.6 : 1, tgLabel: L.busy && L.step === 'tg' ? t.loading : t.tgLogin,
       // Ожидание номера: после отказа — подсказка нажать ещё раз, после долгого ожидания — смотреть ответ бота в чате.
       waitOn: !L.err, waitDot: !L.declined, waitText: L.declined ? t.phoneDeclined : L.slow ? t.tgPhoneSlow : t.tgWaitPhone,
@@ -3196,6 +3238,8 @@ class Component extends DCLogic {
       openAdd: () => this.openAdd(), addOpen: !!s.addSheet, closeAdd: () => { if (!(s.addSheet && s.addSheet.busy)) this.setState({ addSheet: null }); }, ad,
       payOpen: !!s.pay && !!pd, closePay: () => this.closePay(), py,
       isOrder: s.screen === 'order', od, isMock: s.screen === 'mockpay', mk,
+      // Карточка после оплаты из мини-аппа (#/paid/<id>): без данных заказа, кнопка ведёт в бота (без бота её нет).
+      isPaid: s.screen === 'paid', paidBot: cfg.botUsername ? 'https://t.me/' + encodeURIComponent(cfg.botUsername) : '',
       hasBot, entry,
     };
 
@@ -3254,7 +3298,9 @@ class Component extends DCLogic {
       envShow: isGuest && intro && env < 4 && !isEdit && (inv.intro || 'envelope') === 'envelope', curtainShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'curtain', scratchIntroShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'scratch', curL: env >= 1 ? '-102%' : '0%', curR: env >= 1 ? '102%' : '0%', openEnv: () => this.openEnv(), envOp: env >= 3 ? 0 : 1, envCardY: env >= 2 ? '-62%' : '0%', envFlap: env >= 1 ? 'rotateX(180deg)' : 'rotateX(0deg)', envFlapZ: env >= 1 ? 1 : 4, sealOp: env >= 1 ? 0 : 1, sealScale: env >= 1 ? 1.4 : 1, initials: (parts0.length > 1 ? parts0.slice(0, 2).map((p) => p.trim()[0]).join('').toUpperCase() : this.ini(inv.names)) || '✦',
       gDateLong, gWeekday, gDay, gMonthYear, gWhen, gWdDate, gTimeVenue, gFull, gMyTime, hasDate: !!d0, words,
       // Без даты или времени их ячейки в героях (билет, сетка, brutal) скрыты, а не пусты.
-      hasTime: !!inv.time, hasWhen: !!d0 || !!inv.time, whenLabel: d0 ? gt.fDate : gt.fTime,
+      // В редакторе пустые дата и время остаются местом для нажатия: «✎ Дата» открывает лист «Когда».
+      hasTime: !!inv.time, hasWhen: !!d0 || !!inv.time || isEdit, whenLabel: d0 || !inv.time ? gt.fDate : gt.fTime,
+      whenTxt: gWhen || (isEdit ? '✎ ' + gt.fDate : ''), whenEmpty: isEdit && !d0 && !inv.time,
       ticketCols: 'repeat(' + (1 + (d0 ? 1 : 0) + (inv.time ? 1 : 0)) + ',minmax(0,1fr))',
       progN: n, progTotal: String(n).padStart(2, '0'), pinH: (n * 90 + 60) + 'vh', pinCols: wide ? 'minmax(0,1fr) minmax(0,1.4fr)' : 'minmax(0,1fr)',
       cdUnits: [['d', gt.days], ['h', gt.hours], ['m', gt.min], ['s', gt.secs]].map(([k, label], i) => ({ k, label, delay: i * 90 + 'ms' })),

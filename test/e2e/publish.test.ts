@@ -1005,9 +1005,13 @@ describe("мини-апп Telegram", () => {
       (window as any).Telegram = { WebApp: { initData, initDataUnsafe: {}, version: "8.0", platform: "ios", colorScheme: "light", themeParams: {}, ready: nop, expand: nop, close: nop, openLink: (u: string) => links.push(u), openTelegramLink: (u: string) => links.push(u), MainButton: { setText: nop, show: nop, hide: nop, onClick: (fn: () => void) => { (window as any).__main = fn; } }, BackButton: { show: nop, hide: nop, onClick: nop } } };
     }, initData);
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Телеграм тест" });
+    const sent: Dict[] = [];
+    page.on("request", (r) => { if (r.method() === "POST" && r.url() === e.base + "/api/orders") sent.push(r.postDataJSON() as Dict); });
     await toShare(page, ru, true);
     await sheet(page, "pay").locator('[data-pay="go"]').click();
     await page.locator('[data-screen="mock-pay"]').waitFor();
+    // Мини-апп просит вернуть внешний браузер после оплаты на #/paid/<id> (контракт 3.9).
+    expect(sent).toEqual([{ kind: "template", invitationId: inv.id, returnTo: "telegram" }]);
     const [order] = await ordersOf(inv.id);
     // Без ухода со страницы: адрес тестовой оплаты требует cookie, которой нет во внешнем браузере Telegram.
     expect(page.url()).toBe(`${e.base}/app/#/mock-pay/${order!.id}`);
