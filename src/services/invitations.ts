@@ -322,6 +322,9 @@ const isUniqueViolation = (err: unknown) => {
   return e.code === "23505" || e.cause?.code === "23505";
 };
 
+/** Поля содержимого, которые есть на картинке превью ссылки (renderCard в web/invito-engine.js). */
+const OG_CARD_FIELDS = ["names", "date", "time", "cover", "font", "palette"] as const satisfies readonly (keyof InvContent)[];
+
 /**
  * Изменяет приглашение. Режим меняется только у неоплаченного черновика без гостей; после оплаты
  * шаблон можно сменить на равный или дешевле; data сливается с сохранённым содержимым по ключам
@@ -370,6 +373,7 @@ export async function updateInvitation(
   if (patch.language !== undefined) set.language = patch.language;
   if (patch.settings !== undefined) set.settings = { ...defaultInvitationSettings, ...inv.settings, ...patch.settings };
 
+  let cardChanged = false;
   if (patch.data !== undefined || set.templateId || set.language) {
     const current = coerceContent(inv.data, oldTpl.style);
     let data: InvContent;
@@ -389,6 +393,17 @@ export async function updateInvitation(
     }
     set.data = data;
     set.title = titleOf(data, tpl, set.language ?? inv.language);
+    cardChanged = OG_CARD_FIELDS.some((k) => data[k] !== current[k]);
+  }
+
+  // Превью ссылки (og:image) нарисовано фронтендом по именам, дате, обложке, оформлению, языку и адресу
+  // (renderCard). После их правки оно устарело — например, показывало бы стёртую дату: картинка сбрасывается,
+  // og:image страницы — обложка, пока экран «Поделиться» не загрузит новое превью (PUT /og).
+  if (
+    inv.ogImageUrl &&
+    (cardChanged || set.templateId || set.slug || (set.mode && set.mode !== inv.mode) || (set.language && set.language !== inv.language))
+  ) {
+    set.ogImageUrl = null;
   }
 
   if (!Object.keys(set).length) return dtoOf(ctx, { inv, tpl });
@@ -424,6 +439,7 @@ export async function updateInvitation(
     throw err;
   }
   await invalidateInvitation(ctx, updated!, ...(updated!.slug !== inv.slug ? [inv.slug] : []));
+  if (set.ogImageUrl === null) await deleteOwnMedia(ctx, user.id, inv.ogImageUrl);
   return dtoOf(ctx, { inv: updated!, tpl });
 }
 

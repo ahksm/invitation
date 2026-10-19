@@ -100,10 +100,13 @@ export async function renderCard({ W, H, th, names, kick, date, link, cover: src
   ctx.shadowBlur = 0;
   const by = ty + (land ? 40 : 70) + ft.lines.length * ft.size * 0.95 + (land ? 60 : 110);
   // Ширина плашки с датой учитывает разрядку 2px, с которой текст рисуется (spaced), иначе конец даты («17:00») вылезает за плашку.
-  const DT = date.toUpperCase(), sp = 'letterSpacing' in ctx ? 2 : 0;
-  ctx.font = `700 ${land ? 26 : 40}px '${th.body}'`; const dw = ctx.measureText(DT).width + sp * DT.length + (land ? 40 : 64); const dh = land ? 50 : 80;
-  const dx = align === 'center' ? tx - dw / 2 : tx;
-  ctx.fillStyle = th.accent; ctx.fillRect(dx, by - dh * 0.7, dw, dh); ctx.fillStyle = th.onAccent; ctx.textAlign = 'left'; spaced(ctx, DT, dx + (land ? 20 : 32), by + dh * 0.12, 2, 'left');
+  // Без даты и времени (стёрты в конструкторе) плашки нет, а не пустой цветной прямоугольник.
+  const DT = String(date || '').toUpperCase(), sp = 'letterSpacing' in ctx ? 2 : 0;
+  if (DT) {
+    ctx.font = `700 ${land ? 26 : 40}px '${th.body}'`; const dw = ctx.measureText(DT).width + sp * DT.length + (land ? 40 : 64); const dh = land ? 50 : 80;
+    const dx = align === 'center' ? tx - dw / 2 : tx;
+    ctx.fillStyle = th.accent; ctx.fillRect(dx, by - dh * 0.7, dw, dh); ctx.fillStyle = th.onAccent; ctx.textAlign = 'left'; spaced(ctx, DT, dx + (land ? 20 : 32), by + dh * 0.12, 2, 'left');
+  }
   ctx.fillStyle = th.muted; ctx.font = `500 ${land ? 20 : 30}px 'JetBrains Mono', monospace`; ctx.textAlign = align; ctx.fillText(link, align === 'center' ? tx : tx, H - (land ? 40 : 90));
   try { return c.toDataURL('image/png'); } catch (e) { return null; }
 }

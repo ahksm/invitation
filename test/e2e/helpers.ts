@@ -8,13 +8,15 @@ import { Redis } from "ioredis";
 import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
 import { expect } from "vitest";
 import { buildApp } from "../../src/app.js";
-import { createCache } from "../../src/cache.js";
-import { loadConfig } from "../../src/config.js";
+import { createBot } from "../../src/bot/index.js";
+import { createCache, type Cache } from "../../src/cache.js";
+import { loadConfig, type Config } from "../../src/config.js";
 import { createDb } from "../../src/db/index.js";
 import { runMigrations } from "../../src/db/migrate.js";
 import { users } from "../../src/db/schema.js";
 import { seed } from "../../src/db/seed.js";
 import { createPaymentProvider } from "../../src/payments/index.js";
+import type { PaymentProvider } from "../../src/payments/types.js";
 import { createMockSms } from "../../src/sms/mock.js";
 
 /**
@@ -122,7 +124,15 @@ export type OpenOptions = {
   context?: BrowserContext;
 };
 
-export async function startE2E() {
+export type E2EOptions = {
+  /**
+   * Платёжный провайдер вместо тестового (PAYMENT_PROVIDER=mock): например, настоящий код Multicard
+   * с подменённой сетью (createMulticardProvider с fetch-заглушкой). base — адрес этого сервера.
+   */
+  payments?: (config: Config, cache: Cache, base: string) => PaymentProvider;
+};
+
+export async function startE2E(opts: E2EOptions = {}) {
   const port = await freePort();
   const base = `http://127.0.0.1:${port}`;
   const mediaDir = mkdtempSync(join(tmpdir(), "invite-e2e-media-"));
@@ -149,7 +159,7 @@ export async function startE2E() {
   await redis.flushdb();
   const sms: { phone: string; text: string }[] = [];
   const app = await buildApp(
-    { config, db, cache, payments: createPaymentProvider(config, cache), sms: createMockSms({ info: () => {} }, sms) },
+    { config, db, cache, payments: opts.payments ? opts.payments(config, cache, base) : createPaymentProvider(config, cache), sms: createMockSms({ info: () => {} }, sms) },
     { logger: false },
   );
   await app.listen({ port, host: "127.0.0.1" });
@@ -263,6 +273,54 @@ export async function startE2E() {
 }
 
 export type E2E = Awaited<ReturnType<typeof startE2E>>;
+
+/**
+ * Бот этого сервера в процессе, как botHarness в test/review-fixes.test.ts: бот не запускается, обновления
+ * подаются через handleUpdate, а каждый запрос к Bot API перехватывается и сохраняется в calls — Telegram
+ * не вызывается. message — текст или команда, contact — контакт (owner — чей номер, по умолчанию свой),
+ * press — нажатие inline-кнопки.
+ */
+export function botHarness(e: E2E, username = "invito_e2e_bot") {
+  const bot = createBot(e.app.ctx);
+  bot.botInfo = {
+    id: 999,
+    is_bot: true,
+    first_name: "Invito",
+    username,
+    can_join_groups: false,
+    can_read_all_group_messages: false,
+    supports_inline_queries: false,
+    can_connect_to_business: false,
+    has_main_web_app: false,
+  } as typeof bot.botInfo;
+  const calls: { method: string; payload: Dict }[] = [];
+  bot.api.config.use(async (_prev, method, payload) => {
+    calls.push({ method, payload: payload as Dict });
+    return { ok: true, result: true } as never;
+  });
+  let id = 1;
+  const date = Math.floor(Date.now() / 1000);
+  const from = (tg: number) => ({ id: tg, is_bot: false, first_name: "Гость", language_code: "ru" });
+  const chat = (tg: number) => ({ id: tg, type: "private" as const, first_name: "Гость" });
+  const message = (tg: number, text: string) => {
+    const command = text.startsWith("/") ? { entities: [{ type: "bot_command", offset: 0, length: text.split(" ")[0]!.length }] } : {};
+    return bot.handleUpdate({ update_id: id++, message: { message_id: id, date, chat: chat(tg), from: from(tg), text, ...command } } as never);
+  };
+  const contact = (tg: number, phone: string, owner = tg) =>
+    bot.handleUpdate({
+      update_id: id++,
+      message: { message_id: id, date, chat: chat(tg), from: from(tg), contact: { phone_number: phone, first_name: "Гость", user_id: owner } },
+    } as never);
+  const press = (tg: number, data: string) =>
+    bot.handleUpdate({
+      update_id: id++,
+      callback_query: { id: String(id), from: from(tg), chat_instance: "ci", data, message: { message_id: 1, date, chat: chat(tg), text: "…" } },
+    } as never);
+  const of = (method: string) => calls.filter((c) => c.method === method);
+  const replies = () => of("sendMessage").map((c) => c.payload.text as string);
+  const edits = () => of("editMessageText").map((c) => c.payload.text as string);
+  return { bot, calls, message, contact, press, of, replies, edits };
+}
 
 let phoneSeq = 0;
 /** Неповторяющийся номер 99890XXXXXXX: лимиты на номер и уникальность в базе не мешают тестам. */
