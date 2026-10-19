@@ -20,6 +20,6 @@ export async function setPrices(ctx: Pick<Ctx, "db" | "cache">, prices: Prices):
     .insert(settings)
     .values({ key: PRICES_KEY, value })
     .onConflictDoUpdate({ target: settings.key, set: { value } });
-  await ctx.cache.del(`${cacheKeys.settings}:${PRICES_KEY}`);
+  await ctx.cache.invalidate(`${cacheKeys.settings}:${PRICES_KEY}`);
   return value;
 }

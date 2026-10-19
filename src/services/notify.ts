@@ -35,6 +35,16 @@ const texts = {
     en: "{name}, a reminder about your invitation: {event}{date}.\nPlease let us know whether you can come.",
   },
   openInvitation: { ru: "Открыть приглашение", uz: "Taklifnomani ochish", en: "Open the invitation" },
+  // Напоминания по расписанию (src/services/reminders.ts): за сутки, за 3 часа и утром в день события.
+  r1d: {
+    ru: "🔔 {name}, напоминаем о приглашении: {event}, {when}.",
+    uz: "🔔 {name}, taklifnoma haqida eslatma: {event}, {when}.",
+    en: "🔔 {name}, a reminder about your invitation: {event}, {when}.",
+  },
+  r3h: { ru: "⏰ {name}, скоро начало: {event}, {when}.", uz: "⏰ {name}, tez orada boshlanadi: {event}, {when}.", en: "⏰ {name}, starting soon: {event}, {when}." },
+  morning: { ru: "☀️ {name}, сегодня: {event}, {when}.", uz: "☀️ {name}, bugun: {event}, {when}.", en: "☀️ {name}, today: {event}, {when}." },
+  pleaseReply: { ru: "Ответьте, пожалуйста, получится ли у вас прийти.", uz: "Iltimos, kela olasizmi, javob bering.", en: "Please let us know whether you can come." },
+  route: { ru: "Маршрут", uz: "Yo'nalish", en: "Directions" },
 } satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
 
 type TextKey = keyof typeof texts;

@@ -116,6 +116,11 @@ export function coerceContent(raw: unknown, style: string | null | undefined): I
   return normalizeContent(ok as InvContent, style);
 }
 
+/** Загруженные файлы (/media/…) в содержимом: обложка, музыка, видео и галерея. Стоковые картинки не входят. */
+export function contentMediaUrls(d: InvContent): string[] {
+  return [d.cover, d.musicSrc, d.video, ...(d.gallery ?? [])].filter((u): u is string => typeof u === "string" && u.startsWith("/media/"));
+}
+
 /** Включена ли секция. Без списка секций действуют значения дизайна: всё, кроме «reveal». */
 export function sectionOn(d: InvContent, k: string): boolean {
   if (!d.sections) return k !== "reveal";

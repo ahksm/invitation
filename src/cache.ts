@@ -14,9 +14,12 @@ export type Lock = {
 // Продление и снятие только своей блокировки: значение ключа сверяется с токеном владельца.
 const EXTEND_SCRIPT = `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('EXPIRE', KEYS[1], ARGV[2]) end return 0`;
 const RELEASE_SCRIPT = `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0`;
+// Версии ключей wrap живут дольше любой загрузки значения.
+const VERSION_TTL = 3600;
 
 export function createCache(redis: Redis, prefix = "inv:") {
   const k = (key: string) => prefix + key;
+  const ver = (key: string) => k(`ver:${key}`);
 
   return {
     redis,
@@ -34,13 +37,33 @@ export function createCache(redis: Redis, prefix = "inv:") {
       if (keys.length) await redis.del(...keys.map(k));
     },
 
-    /** Читает из кэша, а при промахе вычисляет и сохраняет. null/undefined не кэшируются. */
+    /**
+     * Читает из кэша, а при промахе вычисляет и сохраняет. null/undefined не кэшируются.
+     * Если за время загрузки ключ сбросили через invalidate, загруженное значение могло устареть
+     * (прочитано до изменения в базе): оно удаляется сразу, а не живёт до конца срока.
+     */
     async wrap<T>(key: string, ttlSeconds: number, load: () => Promise<T>): Promise<T> {
       const hit = await this.get<T>(key);
       if (hit !== undefined) return hit;
+      const version = await redis.get(ver(key));
       const value = await load();
-      if (value !== null && value !== undefined) await this.set(key, value, ttlSeconds);
+      if (value !== null && value !== undefined) {
+        await this.set(key, value, ttlSeconds);
+        if ((await redis.get(ver(key))) !== version) await redis.del(k(key));
+      }
       return value;
+    },
+
+    /**
+     * Сбрасывает значения wrap после изменения в базе. Версия ключа растёт до удаления: загрузка,
+     * начатая раньше, увидит новую версию и не оставит в кэше старое значение.
+     */
+    async invalidate(...keys: string[]) {
+      if (!keys.length) return;
+      const tx = redis.multi();
+      for (const key of keys) tx.incr(ver(key)).expire(ver(key), VERSION_TTL);
+      tx.del(...keys.map(k));
+      await tx.exec();
     },
 
     /** Одноразовое значение: читается и удаляется атомарно. */
@@ -93,4 +116,6 @@ export const cacheKeys = {
   otp: (phone: string) => `otp:${phone}`,
   // Рассылки гостям приглашения (SMS и напоминания) идут по одной.
   sendLock: (invitationId: string) => `send:${invitationId}`,
+  // Напоминания по расписанию: один запуск за раз на все процессы.
+  remindersLock: "reminders",
 };

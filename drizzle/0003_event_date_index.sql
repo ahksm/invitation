@@ -1,0 +1,1 @@
+CREATE INDEX "invitations_event_date_idx" ON "invitations" USING btree (("data" ->> 'date')) WHERE "invitations"."status" = 'active';

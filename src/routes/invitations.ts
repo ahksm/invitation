@@ -17,7 +17,6 @@ import {
   publishInvitation,
   setOgImage,
   settingsPatchSchema,
-  slugSchema,
   updateInvitation,
 } from "../services/invitations.js";
 import { sendBotTest } from "../services/notify.js";
@@ -48,7 +47,8 @@ const updateSchema = z.object({
   mode: mode.optional(),
   language: z.enum(locales).optional(),
   data: data.optional(),
-  slug: slugSchema.optional(),
+  // Формат проверяет сервис, и только у новой ссылки: прежнюю ссылку можно прислать обратно без изменений.
+  slug: z.string().max(64).optional(),
   accessCode: z.string().min(1).max(64).nullable().optional(),
   settings: settingsPatchSchema.optional(),
 });

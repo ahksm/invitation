@@ -76,6 +76,13 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo'lmaydi", en: "This link cannot be used" },
   "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to'lanmagan qoralamada o'zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
   "Этот шаблон дороже оплаченного": { uz: "Bu shablon to'langanidan qimmatroq", en: "This template costs more than the one you paid for" },
+  "Режим можно сменить, только пока в приглашении нет гостей": {
+    uz: "Rejimni faqat taklifnomada mehmonlar yo'qligida o'zgartirish mumkin",
+    en: "The mode can be changed only while the invitation has no guests",
+  },
+  "Приглашение в архиве": { uz: "Taklifnoma arxivda", en: "The invitation is archived" },
+  "Шаблон больше недоступен, выберите другой": { uz: "Shablon endi mavjud emas, boshqasini tanlang", en: "This template is no longer available, choose another one" },
+  "Заказ отменён, оформите оплату заново": { uz: "Buyurtma bekor qilindi, qaytadan to'lov qiling", en: "The order was cancelled, please pay again" },
   "Такого стола нет": { uz: "Bunday stol yo'q", en: "There is no such table" },
   "Приглашение защищено паролем": { uz: "Taklifnoma parol bilan himoyalangan", en: "This invitation is protected by a password" },
   "Неверный пароль": { uz: "Parol noto'g'ri", en: "Wrong password" },
@@ -209,6 +216,21 @@ export const botTexts = {
   statusDraft: { ru: "черновик", uz: "qoralama", en: "draft" },
   statusActive: { ru: "опубликовано", uz: "e'lon qilingan", en: "published" },
   statusArchived: { ru: "в архиве", uz: "arxivda", en: "archived" },
+  menuStart: { ru: "Главное меню", uz: "Asosiy menyu", en: "Main menu" },
+  // Карточка приглашения для гостя (/start g_<token>): на языке приглашения.
+  guestInvited: { ru: "💌 {name}, вы приглашены!", uz: "💌 {name}, siz taklif qilingansiz!", en: "💌 {name}, you are invited!" },
+  guestAnswer: { ru: "Ваш ответ: {answer}", uz: "Javobingiz: {answer}", en: "Your reply: {answer}" },
+  guestReminders: { ru: "🔔 Напоминания о событии придут сюда.", uz: "🔔 Tadbir haqidagi eslatmalar shu yerga keladi.", en: "🔔 Event reminders will arrive here." },
+  guestNotFound: {
+    ru: "Приглашение не найдено или ещё не открыто. Откройте ссылку из приглашения ещё раз.",
+    uz: "Taklifnoma topilmadi yoki hali ochilmagan. Taklifnomadagi havolani qayta oching.",
+    en: "The invitation was not found or is not open yet. Open the link from your invitation again.",
+  },
+  openInvitation: { ru: "Открыть приглашение", uz: "Taklifnomani ochish", en: "Open the invitation" },
+  rsvpYes: { ru: "✅ Приду", uz: "✅ Kelaman", en: "✅ I'll be there" },
+  rsvpMaybe: { ru: "🤔 Возможно", uz: "🤔 Balki", en: "🤔 Maybe" },
+  rsvpNo: { ru: "❌ Не приду", uz: "❌ Kela olmayman", en: "❌ Can't make it" },
+  rsvpSaved: { ru: "Ответ сохранён", uz: "Javob saqlandi", en: "Reply saved" },
 } satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
 
 export type BotTextKey = keyof typeof botTexts;

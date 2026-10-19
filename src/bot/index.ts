@@ -1,16 +1,18 @@
 import { Bot, InlineKeyboard, Keyboard, type Context } from "grammy";
-import { count, gt } from "drizzle-orm";
+import { count, eq, gt } from "drizzle-orm";
 import { issueLoginCode } from "../auth/codes.js";
 import { approveTelegramLogin, getTelegramLogin, isNonce } from "../auth/telegram.js";
 import type { Ctx } from "../context.js";
 import { invitations, users, type User } from "../db/schema.js";
 import { eventLabel } from "../design-data.js";
 import { HttpError } from "../errors.js";
-import { bt, dateLocale, localeNames, locales, pickLocale, translateError, type Locale } from "../i18n.js";
+import { bt, dateLocale, localeNames, locales, pickLocale, translateError, type BotTextKey, type Locale } from "../i18n.js";
 import { getPrices } from "../services/settings.js";
 import { listOwnInvitations } from "../services/invitations.js";
 import { attachPhoneToTelegramUser, formatPhone, normalizePhone } from "../services/phone.js";
+import { linkGuestChat, longDate, personalView, rsvpFromChat, type PublicView } from "../services/public.js";
 import { track } from "../services/usage.js";
+import { parseUserRef, type UserRef } from "../services/user-ref.js";
 import { getAccess, invalidateUser, setUserLocale, upsertTelegramUser } from "../services/users.js";
 
 export type BotContext = Context & { user: User; lang: Locale };
@@ -28,12 +30,21 @@ export function contactPhone(raw: string): string | null {
   return digits.length >= 10 && digits.length <= 15 ? digits : null;
 }
 
+const RSVP_BUTTONS = { yes: "rsvpYes", maybe: "rsvpMaybe", no: "rsvpNo" } as const satisfies Record<string, BotTextKey>;
+type RsvpStatus = keyof typeof RSVP_BUTTONS;
+// Параметр /start: вход на сайт (auth_<nonce>) или гость со страницы приглашения (g_<token>).
+const GUEST_PAYLOAD = /^g_([\w-]{8,62})$/;
+
+/** Ссылка на пользователя в ответе админу: видно, что именно разобрал parseUserRef. */
+const describeRef = (ref: UserRef) => ("phone" in ref ? formatPhone(ref.phone) : `Telegram ID ${ref.telegramId}`);
+
 export function createBot(ctx: Ctx) {
   const bot = new Bot<BotContext>(ctx.config.TELEGRAM_BOT_TOKEN);
   const appUrl = ctx.config.APP_URL.replace(/\/+$/, "");
   // Telegram принимает в кнопках только публичные https-ссылки.
   const canUseUrlButtons = appUrl.startsWith("https://");
-  const pendingKey = (tgId: number) => `bot:pending-login:${tgId}`;
+  // Параметр /start ждёт, пока человек делится номером: вход на сайт 5 минут, приглашение гостя час.
+  const pendingKey = (tgId: number) => `bot:pending-start:${tgId}`;
   const menu = (l: Locale) =>
     new InlineKeyboard().text(bt(l, "menuLogin"), "login").row().text(bt(l, "menuMy"), "my").text(bt(l, "menuPrices"), "prices").row().text(bt(l, "menuLang"), "lang");
 
@@ -69,17 +80,56 @@ export function createBot(ctx: Ctx) {
     else await c.reply(`${text}\n${url}`, { link_preview_options: { is_disabled: true } });
   }
 
+  /** Карточка приглашения для гостя на языке приглашения: кнопка открыть и кнопки ответа. */
+  function guestCard(guestId: string, token: string, view: PublicView) {
+    const l = view.language;
+    const d = view.data;
+    const link = `${appUrl}/g/${token}`;
+    const when = [d.date ? longDate(d.date, l) : "", d.time ?? ""].filter(Boolean).join(", ");
+    const place = [d.venue, d.address].map((s) => s?.trim()).filter(Boolean).join(", ");
+    const g = view.guest;
+    const lines = [
+      bt(l, "guestInvited", { name: g?.name ?? "" }),
+      d.names?.trim() || eventLabel(view.event, l) || ctx.config.APP_NAME,
+      when && `📅 ${when}`,
+      place && `📍 ${place}`,
+      g && g.rsvp !== "pending" && bt(l, "guestAnswer", { answer: bt(l, RSVP_BUTTONS[g.rsvp]) }),
+      bt(l, "guestReminders"),
+      !canUseUrlButtons && `${bt(l, "openInvitation")}: ${link}`,
+    ];
+    const kb = new InlineKeyboard();
+    if (canUseUrlButtons) kb.url(bt(l, "openInvitation"), link).row();
+    for (const [status, key] of Object.entries(RSVP_BUTTONS)) kb.text(bt(l, key), `rsvp:${guestId}:${status}`);
+    return { text: lines.filter(Boolean).join("\n"), reply_markup: kb };
+  }
+
+  /** /start g_<token>: чат привязывается к гостю (напоминания), гость получает карточку приглашения. */
+  async function startGuest(c: BotContext, token: string) {
+    const linked = await linkGuestChat(ctx, token, c.chat!.id);
+    if (!linked) return void (await c.reply(bt(c.lang, "guestNotFound")));
+    const { text, reply_markup } = guestCard(linked.guestId, token, linked.view);
+    await c.reply(text, { reply_markup, link_preview_options: { is_disabled: true } });
+  }
+
+  /** Параметр /start после того, как номер привязан. */
+  async function handleStart(c: BotContext, payload: string) {
+    if (payload.startsWith("auth_")) return askLoginConfirm(c, payload.slice(5));
+    const guest = GUEST_PAYLOAD.exec(payload);
+    if (guest) return startGuest(c, guest[1]!);
+  }
+
   bot.command("start", async (c) => {
     await track(ctx, c.user.id, "bot_start");
     const payload = c.match;
-    // t.me/<бот>?start=auth_<nonce> приходит с кнопки «Войти через Telegram» на сайте.
-    if (payload.startsWith("auth_") && isNonce(payload.slice(5))) {
-      const nonce = payload.slice(5);
+    // t.me/<бот>?start=auth_<nonce> приходит с кнопки «Войти через Telegram» на сайте,
+    // t.me/<бот>?start=g_<token> — с кнопки «Ответить через бота» на странице гостя.
+    const known = (payload.startsWith("auth_") && isNonce(payload.slice(5))) || GUEST_PAYLOAD.test(payload);
+    if (known) {
       if (!c.user.phone) {
-        await ctx.cache.set(pendingKey(c.from!.id), nonce, 300);
+        await ctx.cache.set(pendingKey(c.from!.id), payload, payload.startsWith("auth_") ? 300 : 3600);
         return void (await askPhone(c));
       }
-      return askLoginConfirm(c, nonce);
+      return handleStart(c, payload);
     }
     if (!c.user.phone) return void (await askPhone(c));
     await c.reply(bt(c.lang, "welcome"), { reply_markup: menu(c.lang) });
@@ -98,8 +148,8 @@ export function createBot(ctx: Ctx) {
       throw err;
     }
     await c.reply(bt(c.lang, "phoneLinked", { phone: phone.startsWith("998") ? formatPhone(phone) : `+${phone}` }), { reply_markup: { remove_keyboard: true } });
-    const nonce = await ctx.cache.take<string>(pendingKey(c.from.id));
-    if (nonce) await askLoginConfirm(c, nonce);
+    const payload = await ctx.cache.take<string>(pendingKey(c.from.id));
+    if (payload) await handleStart(c, payload);
     else await c.reply(bt(c.lang, "whatNext"), { reply_markup: menu(c.lang) });
   });
 
@@ -140,6 +190,18 @@ export function createBot(ctx: Ctx) {
     await askPhone(c);
   });
   const verified = bot.filter((c) => Boolean(c.user.phone));
+
+  // Ответ гостя кнопкой под карточкой приглашения.
+  verified.callbackQuery(/^rsvp:([0-9a-f-]{36}):(yes|maybe|no)$/, async (c) => {
+    const status = c.match[2] as RsvpStatus;
+    const token = await rsvpFromChat(ctx, c.match[1]!, c.chat!.id, status);
+    const view = token ? await personalView(ctx, token) : null;
+    if (!token || !view) return void (await c.answerCallbackQuery({ text: bt(c.lang, "guestNotFound"), show_alert: true }));
+    await c.answerCallbackQuery({ text: bt(view.language, "rsvpSaved") });
+    const { text, reply_markup } = guestCard(c.match[1]!, token, view);
+    // Тот же ответ второй раз: Telegram отвечает «message is not modified», это не ошибка.
+    await c.editMessageText(text, { reply_markup, link_preview_options: { is_disabled: true } }).catch(() => {});
+  });
 
   verified.command("login", sendLoginLink);
   verified.callbackQuery("login", async (c) => {
@@ -200,23 +262,35 @@ export function createBot(ctx: Ctx) {
     await c.reply(`Пользователей: ${total!.n}\nАктивных за 30 дней: ${active!.n}\nПриглашений: ${inv!.n}\nАдминка: ${appUrl}/admin/`);
   });
 
+  // Как в админке (parseUserRef): «+998…» или 998XXXXXXXXX — телефон, просто цифры или tg:123 — Telegram ID.
+  // Девять цифр — Telegram ID, а не номер без +998: иначе доступ получил бы посторонний владелец номера.
   async function setFree(c: BotContext, free: boolean) {
-    const [idArg, ...note] = (c.message?.text ?? "").split(/\s+/).slice(1);
-    const usage = `Использование: /${free ? "grant" : "revoke"} <telegram_id или телефон>${free ? " [заметка]" : ""}`;
-    if (!idArg) return void (await c.reply(usage));
-    const phone = normalizePhone(idArg);
-    const telegramId = Number(idArg);
-    if (!phone && (!Number.isSafeInteger(telegramId) || telegramId <= 0)) return void (await c.reply(usage));
-    const noteText = note.join(" ") || null;
-    const target = phone ? { phone } : { telegramId };
+    const [idArg = "", ...note] = (c.message?.text ?? "").split(/\s+/).slice(1);
+    const usage = `Использование: /${free ? "grant" : "revoke"} <Telegram ID или телефон +998…>${free ? " [заметка]" : ""}`;
+    const ref = parseUserRef(idArg);
+    if (!ref) return void (await c.reply(usage));
+    const by = { adminId: c.user.id, via: "bot" };
+    if (!free) {
+      // Снять доступ можно только существующему пользователю, нового не создаём.
+      const [u] = await ctx.db
+        .update(users)
+        .set({ freeAccess: false })
+        .where("phone" in ref ? eq(users.phone, ref.phone) : eq(users.telegramId, ref.telegramId))
+        .returning();
+      if (!u) return void (await c.reply(`Пользователь не найден: ${describeRef(ref)}`));
+      await invalidateUser(ctx, u.id);
+      await track(ctx, u.id, "free_access_revoked", by);
+      return void (await c.reply(`Бесплатный доступ снят: ${describeRef(ref)}`));
+    }
+    const set = { freeAccess: true, freeAccessNote: note.join(" ") || null };
     const [u] = await ctx.db
       .insert(users)
-      .values({ ...target, freeAccess: free, freeAccessNote: noteText })
-      .onConflictDoUpdate({ target: phone ? users.phone : users.telegramId, set: { freeAccess: free, ...(free && { freeAccessNote: noteText }) } })
+      .values({ ...ref, ...set })
+      .onConflictDoUpdate({ target: "phone" in ref ? users.phone : users.telegramId, set })
       .returning();
     await invalidateUser(ctx, u!.id);
-    await track(ctx, u!.id, free ? "free_access_granted" : "free_access_revoked", { adminId: c.user.id, via: "bot" });
-    await c.reply(free ? `Бесплатный доступ выдан: ${idArg}` : `Бесплатный доступ снят: ${idArg}`);
+    await track(ctx, u!.id, "free_access_granted", by);
+    await c.reply(`Бесплатный доступ выдан: ${describeRef(ref)}`);
   }
   admin.command("grant", (c) => setFree(c, true));
   admin.command("revoke", (c) => setFree(c, false));
@@ -228,12 +302,23 @@ export function createBot(ctx: Ctx) {
   return bot;
 }
 
-export async function setBotCommands(bot: Bot<BotContext>) {
-  await bot.api.setMyCommands([
-    { command: "start", description: "Главное меню" },
-    { command: "login", description: "Войти на сайт" },
-    { command: "my", description: "Мои приглашения" },
-    { command: "prices", description: "Тарифы" },
+/** Команды меню «/» на языке бота. */
+export function botCommands(l: Locale) {
+  return [
+    { command: "start", description: bt(l, "menuStart") },
+    { command: "login", description: bt(l, "menuLogin") },
+    { command: "my", description: bt(l, "menuMy") },
+    { command: "prices", description: bt(l, "menuPrices") },
     { command: "lang", description: "Язык / Til / Language" },
-  ]);
+  ];
+}
+
+/**
+ * Меню команд по языку клиента Telegram: без language_code — русское (для всех остальных языков),
+ * отдельно uz и en. Telegram различает язык только по коду клиента («uz» без письменности),
+ * поэтому кириллический uzc получает узбекское меню на латинице.
+ */
+export async function setBotCommands(bot: Pick<Bot<BotContext>, "api">) {
+  await bot.api.setMyCommands(botCommands("ru"));
+  for (const l of ["uz", "en"] as const) await bot.api.setMyCommands(botCommands(l), { language_code: l });
 }

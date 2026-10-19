@@ -1,14 +1,14 @@
 import { and, desc, eq, gt, sql } from "drizzle-orm";
 import type { Ctx } from "../context.js";
 import { invitations, orders, subscriptions, templates, users, type Order } from "../db/schema.js";
-import { extendSubscription, quoteSeats, quoteSubscription, quoteTemplate } from "../pricing.js";
+import { extendSubscription, quoteSeats, quoteSubscription, quoteTemplate, templatePrice, type Prices } from "../pricing.js";
 import type { CheckoutItem, PaymentNotification } from "../payments/types.js";
 import { HttpError } from "../errors.js";
 import type { ApiTextKey } from "../i18n.js";
 import { getPrices } from "./settings.js";
 import { getAccess, getUser } from "./users.js";
 import { logEvent } from "./events.js";
-import { invalidateInvitation } from "./invitations.js";
+import { assertNotArchived, cancelPendingOrders, invalidateInvitation } from "./invitations.js";
 import { track } from "./usage.js";
 
 export type OrderRequest =
@@ -32,6 +32,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
   let quantity = 1;
   let invitationId: string | null = null;
   let items: CheckoutItem[];
+  let meta: Record<string, unknown> = {};
 
   if (req.kind === "subscription") {
     quantity = req.months;
@@ -44,6 +45,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
       .innerJoin(templates, eq(templates.id, invitations.templateId))
       .where(and(eq(invitations.id, req.invitationId), eq(invitations.userId, userId)));
     if (!row) throw new HttpError(404, "Приглашение не найдено");
+    assertNotArchived(row.inv);
     invitationId = row.inv.id;
 
     if (req.kind === "template") {
@@ -51,16 +53,16 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
       if (row.inv.unlocked) throw new HttpError(409, "Шаблон уже оплачен");
       amount = quoteTemplate(access, row.tpl, prices);
       items = [{ title: `Шаблон «${row.tpl.title}»`, quantity: 1, unitPrice: amount }];
+      // Счёт за этот шаблон: если до оплаты шаблон сменят на более дорогой, applyPayment его не применит.
+      meta = { templateId: row.tpl.id };
       if (amount === 0) {
         await ctx.db.transaction(async (tx) => {
           await tx.update(invitations).set({ unlocked: true }).where(eq(invitations.id, row.inv.id));
           // Начатые оплаты шаблона больше не нужны; если по старому счёту всё же заплатят, applyPayment откажет.
-          await tx
-            .update(orders)
-            .set({ status: "cancelled" })
-            .where(and(eq(orders.invitationId, row.inv.id), eq(orders.kind, "template"), eq(orders.status, "pending")));
+          await cancelPendingOrders(tx, row.inv.id, "template", "unlocked_free");
         });
         await invalidateInvitation(ctx, row.inv);
+        await logEvent(ctx, row.inv.id, "paid", { meta: { orderId: null, kind: "template", quantity: 1, amount: 0 } });
         return { status: "fulfilled", order: null, messageKey: "templateUnlocked" };
       }
     } else {
@@ -74,6 +76,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
           .set({ paidSeats: sql`${invitations.paidSeats} + ${quantity}` })
           .where(eq(invitations.id, row.inv.id));
         await invalidateInvitation(ctx, row.inv);
+        await logEvent(ctx, row.inv.id, "paid", { meta: { orderId: null, kind: "seats", quantity, amount: 0 } });
         return { status: "fulfilled", order: null, messageKey: "seatsAdded", n: quantity };
       }
     }
@@ -89,6 +92,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
       amount,
       currency: ctx.config.CURRENCY,
       provider: ctx.payments.name,
+      meta,
     })
     .returning();
 
@@ -115,14 +119,30 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
   }
 }
 
-export type FulfillOutcome = "paid" | "already_paid" | "not_found" | "amount_mismatch" | "duplicate" | "marked_failed" | "ignored";
+export type FulfillOutcome = "paid" | "already_paid" | "not_found" | "amount_mismatch" | "duplicate" | "stale" | "marked_failed" | "ignored";
+
+type OrderInvitation = { mode: "shared" | "personal"; templateId: string; templatePrice: number | null };
+
+/**
+ * Счёт больше не подходит приглашению: режим сменился (шаблон оплачивается у общего, места у
+ * персонального) или шаблон сменили на более дорогой, чем оплачено по счёту. Счёт приглашения,
+ * удалённого в архив, применяется: оплата не теряется.
+ */
+function staleOrder(order: Order, inv: OrderInvitation, prices: Prices): boolean {
+  if (order.kind === "seats") return inv.mode !== "personal";
+  if (order.kind !== "template") return false;
+  if (inv.mode !== "shared") return true;
+  return order.meta.templateId !== inv.templateId && order.amount < templatePrice({ price: inv.templatePrice }, prices);
+}
 
 /**
  * Применяет проверенное уведомление об оплате. Идемпотентно: повторный колбэк ничего не меняет.
  * Заказ блокируется в транзакции (SELECT ... FOR UPDATE), чтобы параллельные колбэки не начислили дважды.
- * Второй оплаченный счёт за уже открытый шаблон отклоняется (duplicate): провайдер отменит платёж.
+ * Второй оплаченный счёт за уже открытый шаблон отклоняется (duplicate), как и отменённый счёт или
+ * счёт, который больше не подходит приглашению (stale): провайдер отменит платёж.
  */
 export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<FulfillOutcome> {
+  const prices = await getPrices(ctx);
   const outcome = await ctx.db.transaction(async (tx) => {
     const [order] = await tx.select().from(orders).where(eq(orders.number, n.orderNumber)).for("update");
     if (!order) return { result: "not_found" as const };
@@ -135,20 +155,31 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
     }
     if (n.amount !== order.amount) return { result: "amount_mismatch" as const, order };
 
-    if (order.kind === "template" && order.invitationId) {
-      // Строка приглашения блокируется: из двух параллельных оплат шаблона пройдёт только первая.
-      const [inv] = await tx
-        .select({ unlocked: invitations.unlocked })
-        .from(invitations)
-        .where(eq(invitations.id, order.invitationId))
-        .for("update");
-      if (inv?.unlocked) {
-        await tx
-          .update(orders)
-          .set({ status: "cancelled", meta: { ...order.meta, duplicate: true, notification: n.raw } })
-          .where(eq(orders.id, order.id));
-        return { result: "duplicate" as const, order };
-      }
+    // Строка приглашения блокируется: из двух параллельных оплат шаблона пройдёт только первая,
+    // а смена режима или шаблона не проскочит между проверкой и начислением.
+    const [inv] =
+      order.invitationId && order.kind !== "subscription"
+        ? await tx
+            .select({ unlocked: invitations.unlocked, mode: invitations.mode, templateId: invitations.templateId, templatePrice: templates.price })
+            .from(invitations)
+            .innerJoin(templates, eq(templates.id, invitations.templateId))
+            .where(eq(invitations.id, order.invitationId))
+            .for("update", { of: invitations })
+        : [];
+    if (order.kind === "template" && inv?.unlocked) {
+      await tx
+        .update(orders)
+        .set({ status: "cancelled", meta: { ...order.meta, duplicate: true, notification: n.raw } })
+        .where(eq(orders.id, order.id));
+      return { result: "duplicate" as const, order };
+    }
+    // Отменённый счёт (сменили режим или шаблон, открыли шаблон бесплатно) не применяется, даже если по нему заплатили.
+    if (order.status === "cancelled" || (inv && staleOrder(order, inv, prices))) {
+      await tx
+        .update(orders)
+        .set({ status: "cancelled", meta: { ...order.meta, stale: true, notification: n.raw } })
+        .where(eq(orders.id, order.id));
+      return { result: "stale" as const, order };
     }
     if (order.kind === "subscription") {
       // Две оплаченные подписки одного пользователя продлеваются по очереди, а не от одной даты.
@@ -200,6 +231,9 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
   }
   if (outcome.result === "duplicate") {
     ctx.log.error({ orderNumber: n.orderNumber, invitationId: outcome.order.invitationId }, "повторная оплата уже открытого шаблона отклонена");
+  }
+  if (outcome.result === "stale") {
+    ctx.log.error({ orderNumber: n.orderNumber, invitationId: outcome.order.invitationId }, "оплата отменённого или устаревшего счёта отклонена");
   }
   return outcome.result;
 }

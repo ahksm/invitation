@@ -22,6 +22,20 @@
       "when": 1792415812067,
       "tag": "0002_sms_reminder",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792419781651,
+      "tag": "0003_event_date_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792419791065,
+      "tag": "0004_legacy_content",
+      "breakpoints": true
     }
   ]
 }

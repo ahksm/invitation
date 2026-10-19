@@ -72,7 +72,7 @@ export const templates = pgTable("templates", {
   smsEnabled: boolean("sms_enabled").notNull().default(false),
   // Описание полей, которые заполняет пользователь (название события, дата, место и т.д.).
   fields: jsonb("fields").$type<TemplateField[]>().notNull().default([]),
-  // Название и описание на других языках: { uz: { title, description }, en: {...} }.
+  // Название и описание на других языках: { uz: { title, description }, uzc: {...}, en: {...} }.
   translations: jsonb("translations").$type<TemplateTranslations>().notNull().default({}),
   // Шаблоны Invito: событие и стиль из web/invito-data.js (slug = "<event>-<style>"). У старых шаблонов пусто.
   event: text("event"),
@@ -82,12 +82,12 @@ export const templates = pgTable("templates", {
   ...timestamps,
 });
 
-export type TemplateTranslations = Partial<Record<"ru" | "uz" | "en", { title?: string; description?: string }>>;
+export type TemplateTranslations = Partial<Record<"ru" | "uz" | "uzc" | "en", { title?: string; description?: string }>>;
 
 export type TemplateField = {
   key: string;
   // Подпись поля; можно задать отдельно для каждого языка.
-  label: string | Partial<Record<"ru" | "uz" | "en", string>>;
+  label: string | Partial<Record<"ru" | "uz" | "uzc" | "en", string>>;
   type: "text" | "textarea" | "date" | "time" | "url";
   required?: boolean;
 };
@@ -130,7 +130,13 @@ export const invitations = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
     ...timestamps,
   },
-  (t) => [index("invitations_user_idx").on(t.userId)],
+  (t) => [
+    index("invitations_user_idx").on(t.userId),
+    // Напоминания по расписанию раз в минуту ищут опубликованные приглашения по дате события.
+    index("invitations_event_date_idx")
+      .on(sql`(${t.data} ->> 'date')`)
+      .where(sql`${t.status} = 'active'`),
+  ],
 );
 
 export const guests = pgTable(

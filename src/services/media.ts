@@ -4,9 +4,9 @@ import { mkdir, open, rename, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { and, eq, sum } from "drizzle-orm";
+import { and, eq, inArray, or, sql, sum } from "drizzle-orm";
 import type { Ctx } from "../context.js";
-import { media, type Media, type MediaKind, type User } from "../db/schema.js";
+import { invitations, media, type Media, type MediaKind, type User } from "../db/schema.js";
 import { HttpError } from "../errors.js";
 
 /** Лимиты размера по типу файла и квота на пользователя (админы и бесплатный доступ без квоты). */
@@ -122,10 +122,47 @@ export async function saveBuffer(ctx: Pick<Ctx, "db" | "config">, user: Pick<Use
   return row!;
 }
 
-/** Удаляет файл пользователя по адресу /media/<id>.<ext>. Чужие и внешние адреса пропускаются. */
+const MEDIA_PATH = /^\/media\/([0-9a-f-]{36})\.([a-z0-9]+)$/;
+
+/**
+ * Адреса /media/<id>.<ext> в содержимом приглашения должны указывать на файлы, загруженные этим
+ * пользователем: иначе можно сослаться на чужой файл, а владелец удалит его, не зная о ссылке.
+ */
+export async function assertOwnMedia(ctx: Pick<Ctx, "db">, userId: string, urls: string[]) {
+  const ids = [...new Set(urls.map((u) => MEDIA_PATH.exec(u)?.[1]).filter((id): id is string => id !== undefined))];
+  if (!ids.length) return;
+  const rows = await ctx.db
+    .select({ id: media.id, ext: media.ext })
+    .from(media)
+    .where(and(eq(media.userId, userId), inArray(media.id, ids)));
+  const own = new Set(rows.map(mediaUrl));
+  if (urls.some((u) => !own.has(u))) throw new HttpError(400, "Файл должен быть загружен через /api/media");
+}
+
+/**
+ * Удаляет файл пользователя по адресу /media/<id>.<ext>. Чужие и внешние адреса пропускаются, как и
+ * файлы, на которые ещё ссылается другое приглашение владельца (картинка превью или содержимое копии).
+ */
 export async function deleteOwnMedia(ctx: Pick<Ctx, "db" | "config" | "log">, userId: string, url: string | null) {
-  const m = url?.match(/^\/media\/([0-9a-f-]{36})\.([a-z0-9]+)$/);
-  if (!m) return;
+  const m = url ? MEDIA_PATH.exec(url) : null;
+  if (!url || !m) return;
+  const [used] = await ctx.db
+    .select({ id: invitations.id })
+    .from(invitations)
+    .where(
+      and(
+        eq(invitations.userId, userId),
+        or(
+          eq(invitations.ogImageUrl, url),
+          sql`${invitations.data}->>'cover' = ${url}`,
+          sql`${invitations.data}->>'musicSrc' = ${url}`,
+          sql`${invitations.data}->>'video' = ${url}`,
+          sql`${invitations.data}->'gallery' @> jsonb_build_array(${url}::text)`,
+        ),
+      ),
+    )
+    .limit(1);
+  if (used) return;
   const [row] = await ctx.db
     .delete(media)
     .where(and(eq(media.id, m[1]!), eq(media.userId, userId)))

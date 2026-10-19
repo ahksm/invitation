@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { and, asc, count, eq, inArray, isNull } from "drizzle-orm";
 import { cacheKeys } from "../cache.js";
+import { botUsername } from "../config.js";
 import { coerceContent, sectionOn, type InvContent } from "../content.js";
 import type { Ctx } from "../context.js";
 import { guests, invitations, templates, type Guest, type GuestDiet, type Invitation } from "../db/schema.js";
@@ -9,7 +10,7 @@ import { HttpError } from "../errors.js";
 import { dateLocale, pickLocale, type Locale } from "../i18n.js";
 import { logEvent } from "./events.js";
 import { takeSeats } from "./guests.js";
-import { appUrlOf, invalidateInvitation, randomToken } from "./invitations.js";
+import { appUrlOf, invalidateInvitation, lockInvitation, randomToken } from "./invitations.js";
 import { notifyOwnerLater } from "./notify.js";
 import { isGuestPaid } from "./seats.js";
 
@@ -29,7 +30,7 @@ export type PublicView = {
   event: string | null;
   data: InvContent;
   guest?: PublicGuest;
-  /** Кто придёт: только при data.showGuests и включённой секции «who». */
+  /** Кто придёт: только если владелец включил data.showGuests и секция «who» включена. */
   who?: { count: number; list: { name: string; plus: number }[]; more: number };
   /** Гостевая книга: только при включённой секции «guestbook». */
   guestbook?: { name: string; text: string }[];
@@ -105,7 +106,8 @@ const notFoundMeta = (ctx: Pick<Ctx, "config">, url: string): PageMeta => ({ tit
 
 /** «Кто придёт» и гостевая книга. me: гость личной ссылки, он идёт первым в списке. */
 async function social(ctx: Pick<Ctx, "db">, invitationId: string, data: InvContent, meId?: string): Promise<Pick<PublicView, "who" | "guestbook">> {
-  const showWho = data.showGuests !== false && sectionOn(data, "who");
+  // Имена гостей видны всем, у кого есть ссылка, поэтому список только по явному согласию владельца.
+  const showWho = data.showGuests === true && sectionOn(data, "who");
   const showBook = sectionOn(data, "guestbook");
   if (!showWho && !showBook) return {};
   const rows = await ctx.db
@@ -137,7 +139,7 @@ function baseView(ctx: Pick<Ctx, "config">, kind: PublicView["kind"], { inv, tpl
     template: tpl.slug,
     event: tpl.event,
     data,
-    botUsername: ctx.config.TELEGRAM_BOT_USERNAME || null,
+    botUsername: botUsername(ctx.config),
     appUrl: appUrlOf(ctx),
   };
 }
@@ -169,7 +171,7 @@ async function sharedEntry(ctx: Pick<Ctx, "db" | "cache" | "config">, slug: stri
   });
 }
 
-/** Личная ссылка гостя: приглашение опубликовано, место гостя оплачено (у общего: шаблон оплачен). */
+/** Личная ссылка гостя: приглашение опубликовано, место гостя оплачено (у общего: шаблон оплачен и гость ответил сам). */
 async function guestEntry(ctx: Pick<Ctx, "db" | "cache" | "config">, token: string): Promise<GuestEntry | null> {
   if (!TOKEN_RE.test(token)) return null;
   return ctx.cache.wrap(cacheKeys.publicGuest(token), 120, async () => {
@@ -180,7 +182,8 @@ async function guestEntry(ctx: Pick<Ctx, "db" | "cache" | "config">, token: stri
       .innerJoin(templates, eq(templates.id, invitations.templateId))
       .where(eq(guests.token, token));
     if (!row || row.inv.status !== "active") return null;
-    if (row.inv.mode === "shared" ? !row.inv.unlocked : !(await isGuestPaid(ctx, row.inv, row.g))) return null;
+    if (row.inv.mode === "shared" && !row.inv.unlocked) return null;
+    if (!(await isGuestPaid(ctx, row.inv, row.g))) return null;
     const { g } = row;
     const data = coerceContent(row.inv.data, row.tpl.style);
     const guest: PublicGuest = {
@@ -281,6 +284,9 @@ async function afterRsvp(ctx: RsvpCtx, inv: { id: string; slug: string }, guest:
 export async function rsvpPersonal(ctx: RsvpCtx, token: string, input: RsvpInput): Promise<boolean> {
   const entry = await guestEntry(ctx, token);
   if (!entry) return false;
+  // Запись в кэше могла пережить архив: ответ принимается, только пока приглашение опубликовано.
+  const [inv] = await ctx.db.select({ status: invitations.status }).from(invitations).where(eq(invitations.id, entry.invitationId));
+  if (inv?.status !== "active") return false;
   const [g] = await ctx.db.update(guests).set(rsvpValues(input)).where(eq(guests.id, entry.guestId)).returning({ id: guests.id, name: guests.name });
   // Гостя могли удалить, пока его страница лежала в кэше.
   if (!g) return false;
@@ -300,14 +306,18 @@ export async function rsvpShared(
 ): Promise<{ guestToken: string }> {
   const entry = await sharedEntry(ctx, slug);
   if (!entry) throw new HttpError(404, "Приглашение не найдено");
-  if (entry.accessCode !== null) {
-    if (!input.code) throw new HttpError(401, "Приглашение защищено паролем");
-    const check = await checkCode(ctx, entry.accessCode, input.code, ip);
-    if (check === "limited") throw new HttpError(429, "Слишком много попыток, попробуйте через минуту");
-    if (check === "wrong") throw new HttpError(401, "Неверный пароль");
-  }
   const values = { ...rsvpValues(input), name: input.name };
   const guest = await ctx.db.transaction(async (tx) => {
+    // Запись в кэше могла устареть (архив, новая ссылка или пароль): доступ проверяется по базе,
+    // под блокировкой строки приглашения, до записи ответа.
+    const inv = await lockInvitation(tx, entry.invitationId);
+    if (inv.mode !== "shared" || inv.status !== "active" || !inv.unlocked || inv.slug !== entry.slug) throw new HttpError(404, "Приглашение не найдено");
+    if (inv.accessCode !== null) {
+      if (!input.code) throw new HttpError(401, "Приглашение защищено паролем");
+      const check = await checkCode(ctx, inv.accessCode, input.code, ip);
+      if (check === "limited") throw new HttpError(429, "Слишком много попыток, попробуйте через минуту");
+      if (check === "wrong") throw new HttpError(401, "Неверный пароль");
+    }
     if (input.guestToken) {
       const [g] = await tx
         .update(guests)
@@ -316,7 +326,7 @@ export async function rsvpShared(
         .returning();
       if (g) return g;
     }
-    const seat = await takeSeats(tx, entry.invitationId, 1);
+    const { start: seat } = await takeSeats(tx, entry.invitationId, 1);
     const [{ n } = { n: 0 }] = await tx
       .select({ n: count() })
       .from(guests)
@@ -330,4 +340,34 @@ export async function rsvpShared(
   });
   await afterRsvp(ctx, { id: entry.invitationId, slug: entry.slug }, guest, input);
   return { guestToken: guest.token };
+}
+
+/**
+ * Гость открыл бота со страницы приглашения (/start g_<token>): чат привязывается к гостю, чтобы
+ * слать ему напоминания. null, если личная ссылка не открывается (не опубликовано, место не оплачено).
+ */
+export async function linkGuestChat(ctx: Pick<Ctx, "db" | "cache" | "config">, token: string, chatId: number): Promise<{ guestId: string; view: PublicView } | null> {
+  const entry = await guestEntry(ctx, token);
+  if (!entry) return null;
+  const [g] = await ctx.db.update(guests).set({ telegramChatId: chatId }).where(eq(guests.id, entry.guestId)).returning({ id: guests.id });
+  return g ? { guestId: g.id, view: entry.view } : null;
+}
+
+/** Представление личной ссылки без отметки открытия (для карточки в боте). */
+export async function personalView(ctx: Pick<Ctx, "db" | "cache" | "config">, token: string): Promise<PublicView | null> {
+  return (await guestEntry(ctx, token))?.view ?? null;
+}
+
+/**
+ * Ответ кнопкой под карточкой приглашения в боте: тот же путь, что POST /api/public/g/:token/rsvp.
+ * Кнопка несёт id гостя, поэтому ответ принимается только из чата, привязанного к этому гостю.
+ * Число гостей, пожелания и диета остаются прежними. Возвращает токен гостя или null, если ответ не принят.
+ */
+export async function rsvpFromChat(ctx: RsvpCtx, guestId: string, chatId: number, status: RsvpInput["status"]): Promise<string | null> {
+  const [g] = await ctx.db
+    .select({ token: guests.token, plus: guests.plus, diet: guests.diet, message: guests.message })
+    .from(guests)
+    .where(and(eq(guests.id, guestId), eq(guests.telegramChatId, chatId)));
+  if (!g) return null;
+  return (await rsvpPersonal(ctx, g.token, { status, count: 1 + g.plus, diet: g.diet, msg: g.message ?? "" })) ? g.token : null;
 }

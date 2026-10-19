@@ -19,10 +19,10 @@ const user = () => login(nextUser++);
 const get = (url: string, headers: Record<string, string> = {}) => t.app.inject({ url, headers });
 const post = (url: string, payload: unknown, headers: Record<string, string> = {}) => req(null, "POST", url, payload, headers);
 
-/** Общее приглашение: создано, шаблон оплачен, опубликовано. */
+/** Общее приглашение: создано, шаблон оплачен, опубликовано. «Кто придёт» включён, как в данных дизайна по умолчанию. */
 async function sharedPublished(data: Record<string, unknown> = {}, patch: Record<string, unknown> = {}) {
   const { cookie } = await user();
-  const created = await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", mode: "shared", data: { names: "Азиз & Мадина", ...data } });
+  const created = await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", mode: "shared", data: { names: "Азиз & Мадина", showGuests: true, ...data } });
   expect(created.statusCode, created.body).toBe(201);
   const inv = created.json();
   await pay(cookie, { kind: "template", invitationId: inv.id });
@@ -34,7 +34,7 @@ async function sharedPublished(data: Record<string, unknown> = {}, patch: Record
 /** Персональное приглашение с гостями и оплаченными местами, опубликованное. */
 async function personalPublished(names: string[], seats: number, data: Record<string, unknown> = {}) {
   const { cookie } = await user();
-  const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", mode: "personal", data: { names: "Той", ...data } })).json();
+  const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", mode: "personal", data: { names: "Той", showGuests: true, ...data } })).json();
   const added = (await req(cookie, "POST", `/api/invitations/${inv.id}/guests`, { guests: names.map((name) => ({ name })) })).json();
   await pay(cookie, { kind: "seats", invitationId: inv.id, quantity: seats });
   expect((await req(cookie, "POST", `/api/invitations/${inv.id}/publish`)).statusCode).toBe(200);
@@ -80,7 +80,7 @@ afterAll(async () => {
 describe("общая ссылка", () => {
   it("открывается только у опубликованного оплаченного общего приглашения", async () => {
     const { cookie } = await user();
-    const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", mode: "shared", data: { names: "A & B", date: "2026-12-12" } })).json();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", mode: "shared", data: { names: "A & B", date: "2026-12-12", showGuests: true } })).json();
     const url = `/api/public/i/${inv.slug}`;
     expect((await get(url)).statusCode).toBe(404);
 
@@ -145,6 +145,11 @@ describe("общая ссылка", () => {
     const v1 = (await get(`/api/public/i/${hidden.inv.slug}`)).json();
     expect(v1).not.toHaveProperty("who");
     expect(v1).toHaveProperty("guestbook");
+
+    // Без явного showGuests имена гостей не показываются (например, у старых приглашений).
+    const unset = await sharedPublished({ showGuests: undefined });
+    await insertGuests(unset.inv.id, [{ name: "Анна Каримова", rsvp: "yes" }]);
+    expect((await get(`/api/public/i/${unset.inv.slug}`)).json()).not.toHaveProperty("who");
 
     const off = await sharedPublished({ sections: [{ k: "who", on: false }, { k: "guestbook", on: false }] });
     const v2 = (await get(`/api/public/i/${off.inv.slug}`)).json();

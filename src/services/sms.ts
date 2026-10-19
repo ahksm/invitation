@@ -8,7 +8,7 @@ import { HttpError } from "../errors.js";
 import { pickLocale, type Locale } from "../i18n.js";
 import { formatSmsDate, inviteText } from "../sms/texts.js";
 import { logEvent } from "./events.js";
-import { appUrlOf, getOwnInvitation } from "./invitations.js";
+import { appUrlOf, assertNotArchived, getOwnInvitation } from "./invitations.js";
 import { paidGuestIds } from "./seats.js";
 import { track } from "./usage.js";
 
@@ -147,6 +147,7 @@ export async function guestSmsSender(ctx: Ctx, userId: string, inv: Pick<Invitat
  */
 export async function sendInvitationSms(ctx: Ctx, userId: string, invitationId: string, guestIds?: string[]) {
   const inv = await getOwnInvitation(ctx, userId, invitationId);
+  assertNotArchived(inv);
   if (inv.mode !== "personal") throw new HttpError(400, "SMS отправляются гостям персонального приглашения");
   if (inv.status !== "active") throw new HttpError(400, "Сначала опубликуйте приглашение");
   const tpl = await smsTemplate(ctx, inv);
@@ -190,18 +191,22 @@ export async function sendInvitationSms(ctx: Ctx, userId: string, invitationId: 
   });
 }
 
-/** Статусы SMS по гостям приглашения: последняя отправка каждому и сколько всего (приглашения и напоминания). */
+/**
+ * Статусы SMS по гостям приглашения: статус последней отправки каждому (в том числе неудачной) и
+ * count — сколько SMS засчитано в лимит MAX_SMS_PER_GUEST (приглашения и напоминания, без неудачных).
+ */
 export async function guestSmsStatuses(ctx: Pick<Ctx, "db">, invitationId: string) {
   const rows = await ctx.db
     .select({ guestId: smsMessages.guestId, status: smsMessages.status, createdAt: smsMessages.createdAt })
     .from(smsMessages)
     .where(and(eq(smsMessages.invitationId, invitationId), inArray(smsMessages.purpose, GUEST_SMS)))
-    .orderBy(smsMessages.createdAt);
+    .orderBy(smsMessages.createdAt, smsMessages.id);
+  const counted = new Set<string>(COUNTED);
   const map = new Map<string, { status: string; at: Date; count: number }>();
   for (const r of rows) {
     if (!r.guestId) continue;
     const prev = map.get(r.guestId);
-    map.set(r.guestId, { status: r.status, at: r.createdAt, count: (prev?.count ?? 0) + 1 });
+    map.set(r.guestId, { status: r.status, at: r.createdAt, count: (prev?.count ?? 0) + (counted.has(r.status) ? 1 : 0) });
   }
   return map;
 }

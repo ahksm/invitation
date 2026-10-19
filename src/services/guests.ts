@@ -4,7 +4,7 @@ import type { Ctx } from "../context.js";
 import { defaultInvitationSettings, guests, invitations, type Guest, type GuestDiet, type Invitation } from "../db/schema.js";
 import { HttpError } from "../errors.js";
 import { logEvent } from "./events.js";
-import { appUrlOf, getOwnInvitation, invalidateInvitation, randomToken } from "./invitations.js";
+import { appUrlOf, assertNotArchived, getOwnInvitation, invalidateInvitation, lockInvitation, randomToken } from "./invitations.js";
 import { notifyOwnerLater } from "./notify.js";
 import { isGuestPaid, paidByRank } from "./seats.js";
 import { guestSmsStatuses } from "./sms.js";
@@ -65,7 +65,7 @@ export async function listGuestDtos(ctx: Pick<Ctx, "db" | "config">, inv: Pick<I
     ctx.db.select().from(guests).where(eq(guests.invitationId, inv.id)).orderBy(asc(guests.seat)),
     guestSmsStatuses(ctx, inv.id),
   ]);
-  return list.map((g, i) => toGuestDto(ctx, g, { paid: paidByRank(inv, i + 1), sms: sms.get(g.id) }));
+  return list.map((g, i) => toGuestDto(ctx, g, { paid: paidByRank(inv, g, i + 1), sms: sms.get(g.id) }));
 }
 
 async function guestDto(ctx: Pick<Ctx, "db" | "config">, inv: Invitation, g: Guest): Promise<GuestDto> {
@@ -75,16 +75,16 @@ async function guestDto(ctx: Pick<Ctx, "db" | "config">, inv: Invitation, g: Gue
 
 /**
  * Номера мест для n новых гостей. Вызывается в транзакции: приглашение блокируется,
- * чтобы параллельные запросы не получили одинаковые номера.
+ * чтобы параллельные запросы не получили одинаковые номера. Вместе с первым номером возвращает
+ * строку приглашения под блокировкой: режим и статус в ней уже не изменятся до конца транзакции.
  */
-export async function takeSeats(tx: Pick<Ctx["db"], "select" | "update">, invitationId: string, n: number): Promise<number> {
-  const [row] = await tx.select({ next: invitations.nextSeat }).from(invitations).where(eq(invitations.id, invitationId)).for("update");
-  if (!row) throw new HttpError(404, "Приглашение не найдено");
+export async function takeSeats(tx: Pick<Ctx["db"], "select" | "update">, invitationId: string, n: number): Promise<{ start: number; inv: Invitation }> {
+  const inv = await lockInvitation(tx, invitationId);
   await tx
     .update(invitations)
-    .set({ nextSeat: row.next + n })
+    .set({ nextSeat: inv.nextSeat + n })
     .where(eq(invitations.id, invitationId));
-  return row.next;
+  return { start: inv.nextSeat, inv };
 }
 
 export type NewGuest = { name: string; phone?: string | null | undefined; group?: Guest["group"] | undefined; plus?: number | undefined };
@@ -92,9 +92,13 @@ export type NewGuest = { name: string; phone?: string | null | undefined; group?
 /** Добавляет гостей персонального приглашения. Ссылки гостей сверх оплаченных мест не открываются, пока места не оплачены. */
 export async function addGuests(ctx: Pick<Ctx, "db" | "config">, userId: string, invitationId: string, list: NewGuest[]): Promise<GuestDto[]> {
   const inv = await getOwnInvitation(ctx, userId, invitationId);
+  assertNotArchived(inv);
   if (inv.mode !== "personal") throw new HttpError(400, "Гости добавляются только в персональное приглашение");
-  const { added, before } = await ctx.db.transaction(async (tx) => {
-    const start = await takeSeats(tx, inv.id, list.length);
+  const { added, before, cur } = await ctx.db.transaction(async (tx) => {
+    // Режим мог смениться на общий между чтением и блокировкой: гости владельца туда не попадают.
+    const { start, inv: cur } = await takeSeats(tx, inv.id, list.length);
+    assertNotArchived(cur);
+    if (cur.mode !== "personal") throw new HttpError(400, "Гости добавляются только в персональное приглашение");
     const [{ n: before } = { n: 0 }] = await tx.select({ n: count() }).from(guests).where(eq(guests.invitationId, inv.id));
     const added = await tx
       .insert(guests)
@@ -110,9 +114,9 @@ export async function addGuests(ctx: Pick<Ctx, "db" | "config">, userId: string,
         })),
       )
       .returning();
-    return { added, before };
+    return { added, before, cur };
   });
-  return added.map((g, i) => toGuestDto(ctx, g, { paid: paidByRank(inv, before + i + 1) }));
+  return added.map((g, i) => toGuestDto(ctx, g, { paid: paidByRank(cur, g, before + i + 1) }));
 }
 
 export type GuestPatch = {
@@ -175,7 +179,7 @@ export async function removeGuest(ctx: Pick<Ctx, "db" | "cache">, userId: string
     .returning({ token: guests.token });
   if (!g) throw new HttpError(404, "Гость не найден");
   // Следующие гости могли стать оплаченными, а ответ удалённого пропадает из «Кто придёт».
-  await ctx.cache.del(cacheKeys.publicGuest(g.token));
+  await ctx.cache.invalidate(cacheKeys.publicGuest(g.token));
   await invalidateInvitation(ctx, inv);
 }
 

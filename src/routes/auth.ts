@@ -3,6 +3,7 @@ import { z } from "zod";
 import { SESSION_COOKIE } from "../app.js";
 import { redeemLoginCode } from "../auth/codes.js";
 import { claimTelegramLogin, describeDevice, isNonce, startTelegramLogin, verifyWebAppInitData } from "../auth/telegram.js";
+import { botUsername } from "../config.js";
 import { HttpError } from "../errors.js";
 import { locales, pickLocale, requestLocale } from "../i18n.js";
 import { normalizePhone, requestOtp, upsertPhoneUser, verifyOtp } from "../services/phone.js";
@@ -28,9 +29,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   }
 
   // Общая конфигурация для фронтенда: вход через Telegram, адрес сайта, цены, помощник с текстом.
+  // Вход через Telegram показывается, только пока бот запущен: подтверждение входа приходит от него.
   app.get("/config", async () => ({
-    telegram: Boolean(ctx.config.TELEGRAM_BOT_USERNAME),
-    botUsername: ctx.config.TELEGRAM_BOT_USERNAME || null,
+    telegram: botUsername(ctx.config) !== null,
+    botUsername: botUsername(ctx.config),
     appUrl: ctx.config.APP_URL.replace(/\/+$/, ""),
     prices: await getPrices(ctx),
     currency: ctx.config.CURRENCY,
@@ -39,7 +41,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   // Шаг 1 входа через Telegram: ссылка на бота и секрет этого браузера в cookie.
   app.post("/telegram/start", strict, async (req, reply) => {
-    const bot = ctx.config.TELEGRAM_BOT_USERNAME;
+    const bot = botUsername(ctx.config);
     if (!bot) throw new HttpError(503, "Вход через Telegram не настроен");
     const { nonce, secret, ttl } = await startTelegramLogin(ctx.cache, describeDevice(req.headers["user-agent"]));
     reply.setCookie(TG_COOKIE, secret, { httpOnly: true, secure, sameSite: "lax", path: "/api/auth/telegram", maxAge: ttl });

@@ -5,11 +5,12 @@ import { buildApp } from "./app.js";
 import { setBotCommands, createBot, type BotContext } from "./bot/index.js";
 import { createTelegramNotifier } from "./bot/notifier.js";
 import { createCache } from "./cache.js";
-import { loadConfig } from "./config.js";
+import { botEnabled, loadConfig } from "./config.js";
 import { createDb } from "./db/index.js";
 import { runMigrations } from "./db/migrate.js";
 import { seed } from "./db/seed.js";
 import { createPaymentProvider } from "./payments/index.js";
+import { startReminderJob } from "./services/reminders.js";
 import { createSmsProvider } from "./sms/index.js";
 
 const config = loadConfig();
@@ -26,10 +27,11 @@ await seed(db);
 const app = await buildApp({ config, db, cache, payments, sms });
 onDbError = (err) => app.log.error({ err }, "ошибка соединения с Postgres");
 
-const botEnabled = config.TELEGRAM_MODE !== "off" && config.TELEGRAM_BOT_TOKEN !== "";
-const bot = botEnabled ? createBot(app.ctx) : null;
+const bot = botEnabled(config) ? createBot(app.ctx) : null;
 // Уведомления владельцам и напоминания гостям. Отправка не требует bot.init, ошибки только в лог.
 if (bot) app.ctx.notifier = createTelegramNotifier(bot.api, app.ctx);
+// Напоминания гостям по расписанию (r1d, r3h, morning) уходят только через бота.
+const stopReminders = bot ? startReminderJob(app.ctx) : null;
 
 if (bot && config.TELEGRAM_MODE === "webhook") {
   // Telegram подписывает каждый запрос заголовком X-Telegram-Bot-Api-Secret-Token.
@@ -45,6 +47,7 @@ async function shutdown(signal: string) {
   if (stopping) return;
   stopping = true;
   app.log.info({ signal }, "остановка");
+  stopReminders?.();
   if (bot?.isRunning()) await bot.stop();
   await app.close();
   await Promise.allSettled([pool.end(), redis.quit()]);

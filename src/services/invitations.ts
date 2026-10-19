@@ -1,8 +1,8 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { and, asc, count, desc, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { cacheKeys } from "../cache.js";
-import { coerceContent, contentSchema, normalizeContent, type InvContent } from "../content.js";
+import { coerceContent, contentMediaUrls, contentSchema, normalizeContent, type InvContent } from "../content.js";
 import type { Ctx } from "../context.js";
 import {
   defaultInvitationSettings,
@@ -20,7 +20,7 @@ import { HttpError } from "../errors.js";
 import { pickLocale, type Locale } from "../i18n.js";
 import { quoteTemplate, templatePrice } from "../pricing.js";
 import { logEvent } from "./events.js";
-import { deleteOwnMedia, mediaUrl, saveBuffer, sniffMedia } from "./media.js";
+import { assertOwnMedia, deleteOwnMedia, mediaUrl, saveBuffer, sniffMedia } from "./media.js";
 import { getPrices } from "./settings.js";
 import { getAccess } from "./users.js";
 
@@ -80,13 +80,13 @@ export async function listActiveTemplates(ctx: Pick<Ctx, "db" | "cache">): Promi
 }
 
 export async function invalidateTemplates(ctx: Pick<Ctx, "cache">) {
-  await ctx.cache.del(cacheKeys.templates);
+  await ctx.cache.invalidate(cacheKeys.templates);
 }
 
 /** Сбрасывает кэш публичных страниц приглашения (общей и всех гостевых). extraSlugs: прежние ссылки. */
 export async function invalidateInvitation(ctx: Pick<Ctx, "db" | "cache">, inv: { id: string; slug: string }, ...extraSlugs: string[]) {
   const tokens = await ctx.db.select({ token: guests.token }).from(guests).where(eq(guests.invitationId, inv.id));
-  await ctx.cache.del(
+  await ctx.cache.invalidate(
     cacheKeys.publicShared(inv.slug),
     ...extraSlugs.map(cacheKeys.publicShared),
     ...tokens.map((t) => cacheKeys.publicGuest(t.token)),
@@ -100,6 +100,59 @@ export async function getOwnInvitation(ctx: Pick<Ctx, "db">, userId: string, id:
     .where(and(eq(invitations.id, id), eq(invitations.userId, userId)));
   if (!inv) throw new HttpError(404, "Приглашение не найдено");
   return inv;
+}
+
+/** Архивное приглашение снято с использования: его не меняют, не публикуют, не оплачивают и не рассылают. */
+export function assertNotArchived(inv: Pick<Invitation, "status">) {
+  if (inv.status === "archived") throw new HttpError(409, "Приглашение в архиве");
+}
+
+type DbReader = Pick<Ctx["db"], "select">;
+
+/** Строка приглашения, заблокированная до конца транзакции (выдача мест, смена режима и шаблона). */
+export async function lockInvitation(tx: DbReader, id: string): Promise<Invitation> {
+  const [row] = await tx.select().from(invitations).where(eq(invitations.id, id)).for("update");
+  if (!row) throw new HttpError(404, "Приглашение не найдено");
+  return row;
+}
+
+async function guestCount(db: DbReader, invitationId: string) {
+  const [{ n } = { n: 0 }] = await db.select({ n: count() }).from(guests).where(eq(guests.invitationId, invitationId));
+  return n;
+}
+
+/**
+ * Отменяет начатые оплаты приглашения, которые больше не подходят (сменился режим или шаблон).
+ * cheaperThan: только счета на меньшую сумму. Если по отменённому счёту всё же заплатят, applyPayment
+ * откажет, и платёжная система вернёт деньги.
+ */
+export async function cancelPendingOrders(
+  tx: Pick<Ctx["db"], "update">,
+  invitationId: string,
+  kind: "template" | "seats",
+  reason: string,
+  cheaperThan?: number,
+) {
+  await tx
+    .update(orders)
+    .set({ status: "cancelled", meta: sql`${orders.meta} || ${JSON.stringify({ cancelled: reason })}::jsonb` })
+    .where(
+      and(
+        eq(orders.invitationId, invitationId),
+        eq(orders.kind, kind),
+        eq(orders.status, "pending"),
+        cheaperThan === undefined ? undefined : lt(orders.amount, cheaperThan),
+      ),
+    );
+}
+
+/**
+ * Режим меняется только у неоплаченного черновика без гостей. В общем режиме гости не оплачиваются
+ * по местам: гости владельца иначе получили бы личные ссылки за цену одного шаблона.
+ */
+function assertModeChangeable(inv: Pick<Invitation, "status" | "unlocked" | "paidSeats">, guests: number) {
+  if (inv.status !== "draft" || inv.unlocked || inv.paidSeats > 0) throw new HttpError(409, "Режим можно сменить только у неоплаченного черновика");
+  if (guests > 0) throw new HttpError(409, "Режим можно сменить, только пока в приглашении нет гостей");
 }
 
 type TemplateInfo = Pick<Template, "id" | "slug" | "event" | "style" | "title" | "price">;
@@ -237,6 +290,7 @@ export async function createInvitation(
 ): Promise<InvitationDto> {
   const tpl = await activeTemplate(ctx, input.template);
   const data = contentSchema(tpl.style).parse(input.data ?? {});
+  await assertOwnMedia(ctx, userId, contentMediaUrls(data));
   const [inv] = await ctx.db
     .insert(invitations)
     .values({
@@ -269,9 +323,9 @@ const isUniqueViolation = (err: unknown) => {
 };
 
 /**
- * Изменяет приглашение. Режим меняется только у неоплаченного черновика; после оплаты шаблон
- * можно сменить на равный или дешевле; data сливается с сохранённым содержимым по ключам
- * (ключ со значением null удаляется).
+ * Изменяет приглашение. Режим меняется только у неоплаченного черновика без гостей; после оплаты
+ * шаблон можно сменить на равный или дешевле; data сливается с сохранённым содержимым по ключам
+ * (ключ со значением null удаляется). Начатые оплаты, которые после изменения не подходят, отменяются.
  */
 export async function updateInvitation(
   ctx: Pick<Ctx, "db" | "cache" | "config" | "log">,
@@ -280,27 +334,32 @@ export async function updateInvitation(
   patch: InvitationPatch,
 ): Promise<InvitationDto> {
   const { inv, tpl: oldTpl } = await ownRow(ctx, user.id, id);
+  assertNotArchived(inv);
   const set: Partial<typeof invitations.$inferInsert> = {};
 
+  // Проверки режима и шаблона повторяются в транзакции под блокировкой строки: оплата или новые
+  // гости, пришедшие параллельно, не проскочат между проверкой и изменением.
   if (patch.mode !== undefined && patch.mode !== inv.mode) {
-    if (inv.status !== "draft" || inv.unlocked || inv.paidSeats > 0) throw new HttpError(409, "Режим можно сменить только у неоплаченного черновика");
+    assertModeChangeable(inv, await guestCount(ctx.db, inv.id));
     set.mode = patch.mode;
   }
 
   let tpl = oldTpl;
+  let tplPrice = 0;
+  let pricier = false;
   if (patch.template !== undefined && patch.template !== oldTpl.slug) {
     tpl = await activeTemplate(ctx, patch.template);
-    if (inv.unlocked) {
-      // Оплаченный шаблон можно поменять на равный или дешевле; с подпиской и бесплатным доступом на любой.
-      const [prices, access] = await Promise.all([getPrices(ctx), getAccess(ctx, user)]);
-      if (quoteTemplate(access, tpl, prices) > 0 && templatePrice(tpl, prices) > templatePrice(oldTpl, prices)) {
-        throw new HttpError(402, "Этот шаблон дороже оплаченного");
-      }
-    }
+    const [prices, access] = await Promise.all([getPrices(ctx), getAccess(ctx, user)]);
+    tplPrice = templatePrice(tpl, prices);
+    // Оплаченный шаблон можно поменять на равный или дешевле; с подпиской и бесплатным доступом на любой.
+    pricier = quoteTemplate(access, tpl, prices) > 0 && tplPrice > templatePrice(oldTpl, prices);
+    if (inv.unlocked && pricier) throw new HttpError(402, "Этот шаблон дороже оплаченного");
     set.templateId = tpl.id;
   }
 
   if (patch.slug !== undefined && patch.slug !== inv.slug) {
+    // Формат проверяется только у новой ссылки: прежнюю, созданную по старым правилам, можно прислать обратно.
+    slugSchema.parse(patch.slug);
     if (RESERVED_SLUGS.has(patch.slug)) throw new HttpError(400, "Эту ссылку занять нельзя");
     const [taken] = await ctx.db.select({ id: invitations.id }).from(invitations).where(eq(invitations.slug, patch.slug));
     if (taken) throw new HttpError(409, "Эта ссылка уже занята");
@@ -318,6 +377,13 @@ export async function updateInvitation(
       const merged: Record<string, unknown> = { ...current, ...patch.data };
       for (const [k, v] of Object.entries(patch.data)) if (v === null) delete merged[k];
       data = contentSchema(tpl.style).parse(merged);
+      // Новые файлы должны быть загружены самим владельцем; уже сохранённые адреса не перепроверяются.
+      const saved = new Set(contentMediaUrls(current));
+      await assertOwnMedia(
+        ctx,
+        user.id,
+        contentMediaUrls(data).filter((u) => !saved.has(u)),
+      );
     } else {
       data = normalizeContent(current, tpl.style);
     }
@@ -329,6 +395,20 @@ export async function updateInvitation(
   let updated: Invitation | undefined;
   try {
     updated = await ctx.db.transaction(async (tx) => {
+      if (set.mode || set.templateId) {
+        const cur = await lockInvitation(tx, inv.id);
+        assertNotArchived(cur);
+        if (set.mode) {
+          assertModeChangeable(cur, await guestCount(tx, inv.id));
+          // Счета прежнего режима (места у общего, шаблон у персонального) больше не нужны.
+          await cancelPendingOrders(tx, inv.id, set.mode === "shared" ? "seats" : "template", "mode_changed");
+        }
+        if (set.templateId) {
+          if (cur.unlocked && pricier) throw new HttpError(402, "Этот шаблон дороже оплаченного");
+          // Счёт за прежний шаблон, которого не хватает на новый, не должен его открыть.
+          if (!cur.unlocked) await cancelPendingOrders(tx, inv.id, "template", "template_changed", tplPrice);
+        }
+      }
       const [row] = await tx.update(invitations).set(set).where(eq(invitations.id, inv.id)).returning();
       // Столов стало меньше: гости с исчезнувших столов остаются без стола.
       if (set.settings && set.settings.tables < (inv.settings.tables ?? defaultInvitationSettings.tables)) {
@@ -370,6 +450,12 @@ export async function deleteInvitation(ctx: Pick<Ctx, "db" | "cache" | "config" 
 /** Копия как новый черновик: содержимое, шаблон, язык и режим, без ссылки, оплат, гостей и пароля. */
 export async function duplicateInvitation(ctx: Pick<Ctx, "db" | "config" | "log">, userId: string, id: string): Promise<InvitationDto> {
   const { inv: src, tpl } = await ownRow(ctx, userId, id);
+  // Как и при создании: на выключенном шаблоне (например, старом invite-cover) новые приглашения не начинают.
+  const [active] = await ctx.db
+    .select({ id: templates.id })
+    .from(templates)
+    .where(and(eq(templates.id, tpl.id), eq(templates.isActive, true)));
+  if (!active) throw new HttpError(409, "Шаблон больше недоступен, выберите другой");
   const [inv] = await ctx.db
     .insert(invitations)
     .values({
@@ -389,16 +475,20 @@ export async function duplicateInvitation(ctx: Pick<Ctx, "db" | "config" | "log"
 /** Публикует приглашение. Общее нужно оплатить, у персонального должно быть хотя бы одно оплаченное место. */
 export async function publishInvitation(ctx: Pick<Ctx, "db" | "cache" | "config" | "log">, userId: string, id: string): Promise<InvitationDto> {
   const { inv, tpl } = await ownRow(ctx, userId, id);
+  assertNotArchived(inv);
   if (inv.mode === "shared" && !inv.unlocked) throw new HttpError(402, "Сначала оплатите шаблон или оформите подписку");
   if (inv.mode === "personal" && inv.paidSeats < 1) throw new HttpError(402, "Сначала оплатите места для гостей");
   // Первая публикация ставит publishedAt и пишет событие; повторная только возвращает статус active.
+  // Приглашение, ушедшее в архив во время запроса, не возвращается из архива.
+  const notArchived = and(eq(invitations.id, inv.id), ne(invitations.status, "archived"));
   let [updated] = await ctx.db
     .update(invitations)
     .set({ status: "active", publishedAt: new Date() })
-    .where(and(eq(invitations.id, inv.id), isNull(invitations.publishedAt)))
+    .where(and(notArchived, isNull(invitations.publishedAt)))
     .returning();
   if (updated) await logEvent(ctx, inv.id, "published");
-  else [updated] = await ctx.db.update(invitations).set({ status: "active" }).where(eq(invitations.id, inv.id)).returning();
+  else [updated] = await ctx.db.update(invitations).set({ status: "active" }).where(notArchived).returning();
+  if (!updated) throw new HttpError(409, "Приглашение в архиве");
   await invalidateInvitation(ctx, inv);
   return dtoOf(ctx, { inv: updated!, tpl });
 }
@@ -411,6 +501,7 @@ export async function setOgImage(
   body: Buffer,
 ): Promise<{ ogImageUrl: string }> {
   const inv = await getOwnInvitation(ctx, user.id, id);
+  assertNotArchived(inv);
   const type = sniffMedia(body);
   if (!type || (type.ext !== "png" && type.ext !== "jpg")) throw new HttpError(415, "Нужна картинка PNG или JPEG");
   const file = await saveBuffer(ctx, user, body, type);

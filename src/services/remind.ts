@@ -5,7 +5,7 @@ import { HttpError } from "../errors.js";
 import { reminderText } from "../sms/texts.js";
 import { logEvent } from "./events.js";
 import { guestLink } from "./guests.js";
-import { getOwnInvitation } from "./invitations.js";
+import { assertNotArchived, getOwnInvitation } from "./invitations.js";
 import { notifyText } from "./notify.js";
 import { longDate } from "./public.js";
 import { paidGuestIds } from "./seats.js";
@@ -33,6 +33,7 @@ export type RemindResult = {
  */
 export async function remindGuests(ctx: Ctx, userId: string, invitationId: string, guestIds?: string[]): Promise<RemindResult> {
   const inv = await getOwnInvitation(ctx, userId, invitationId);
+  assertNotArchived(inv);
   if (inv.status !== "active") throw new HttpError(400, "Сначала опубликуйте приглашение");
   const tpl = await smsTemplate(ctx, inv);
 
