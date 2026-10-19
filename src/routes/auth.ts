@@ -26,6 +26,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   async function startSession(reply: FastifyReply, userId: string) {
     const token = await reply.jwtSign({ sub: userId });
     reply.setCookie(SESSION_COOKIE, token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: 30 * 24 * 3600 });
+    return token;
   }
 
   // Общая конфигурация для фронтенда: вход через Telegram, адрес сайта, цены, помощник с текстом.
@@ -74,9 +75,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const user = await upsertTelegramUser(ctx, profile);
     if (user.blocked) throw new HttpError(403, "Доступ заблокирован");
     if (!user.phone) return { status: "phone_required" };
-    await startSession(reply, user.id);
+    const token = await startSession(reply, user.id);
     await track(ctx, user.id, "login", { via: "webapp" });
-    return { status: "ok", redirect: user.isAdmin ? "/admin/" : "/app/" };
+    // В Telegram Web мини-апп открыт во фрейме чужого сайта, и cookie с SameSite=Lax туда не доходит.
+    // Поэтому токен отдаётся и в ответе: мини-апп шлёт его в заголовке Authorization: Bearer.
+    return { status: "ok", redirect: user.isAdmin ? "/admin/" : "/app/", token };
   });
 
   app.post("/phone/request", strict, async (req) => {

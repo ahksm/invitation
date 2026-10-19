@@ -250,6 +250,11 @@ describe("вход через Telegram", () => {
     const ok = await req(null, "POST", "/api/auth/webapp", { initData });
     expect(ok.json().status).toBe("ok");
     expect((await req(sessionCookie(ok), "GET", "/api/auth/me")).json().user.locale).toBe("en");
+    // Внутри фрейма Telegram Web cookie не доходит: тот же вход работает по токену в заголовке.
+    const bearer = { authorization: `Bearer ${ok.json().token}` };
+    expect((await req(null, "GET", "/api/auth/me", undefined, bearer)).json().user.locale).toBe("en");
+    expect((await req(null, "PATCH", "/api/auth/me", { locale: "uz" }, bearer)).json()).toEqual({ ok: true, locale: "uz" });
+    expect((await req(null, "GET", "/api/auth/me", undefined, { authorization: "Bearer nope" })).statusCode).toBe(401);
     const forged = initData.replace("Mini", "Evil");
     expect((await req(null, "POST", "/api/auth/webapp", { initData: forged })).statusCode).toBe(401);
   });

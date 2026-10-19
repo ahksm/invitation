@@ -19,7 +19,10 @@ import { mediaRoutes } from "./routes/media.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { publicRoutes } from "./routes/public.js";
 import { smsRoutes } from "./routes/sms.js";
+import { getPublicPage } from "./services/public.js";
 import { getUser } from "./services/users.js";
+import { siteHelmet } from "./web/csp.js";
+import { webRoutes } from "./web/pages.js";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -55,18 +58,8 @@ export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?
   const ctx: Ctx = { ...deps, notifier: deps.notifier ?? noopNotifier, log: app.log };
   app.decorate("ctx", ctx);
 
-  await app.register(helmet, {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://telegram.org"],
-        frameSrc: ["https://oauth.telegram.org"],
-        imgSrc: ["'self'", "data:", "https:"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      },
-    },
-  });
+  // CSP и запрет фреймов для всего сайта; страницы приложения переопределяют их в src/web.
+  await app.register(helmet, siteHelmet);
   await app.register(rateLimit, {
     global: true,
     max: 120,
@@ -147,10 +140,10 @@ export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?
   await app.register(aiRoutes, { prefix: "/api/ai" });
   await app.register(mediaRoutes);
 
+  // Фронтенд из дизайна (web/): /, /app, /i/:slug, /g/:token и файлы под /app/.
+  await app.register(webRoutes, { publicPage: (req) => getPublicPage(ctx, req) });
+  // Админка и её общие файлы.
   await app.register(fastifyStatic, { root: publicDir, prefix: "/", index: ["index.html"] });
-  // Страницы, которые открывают гости: общая ссылка и персональная.
-  app.get("/i/:slug", (_req, reply) => reply.sendFile("invite/index.html"));
-  app.get("/g/:token", (_req, reply) => reply.sendFile("invite/index.html"));
 
   return app;
 }

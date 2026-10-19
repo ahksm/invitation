@@ -1,0 +1,4 @@
+# Исходники дизайна с LF на любой системе: сервер ищет в web/support.js точные фрагменты
+# (src/web/support-patches.ts), а хэши файлов под /app/ не зависят от checkout.
+web/*.html text eol=lf
+web/*.js text eol=lf
