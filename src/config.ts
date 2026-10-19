@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { z } from "zod";
 
 const csvIds = z
@@ -11,13 +12,49 @@ const csvIds = z
   )
   .pipe(z.array(z.string().regex(/^\d+$/, "ожидаются числа через запятую")));
 
+// Имена диапазонов, которые понимает Fastify (proxy-addr): 127.0.0.0/8 и ::1, 169.254.0.0/16 и fe80::/10, частные сети.
+const PROXY_RANGES = new Set(["loopback", "linklocal", "uniquelocal"]);
+const isProxyAddress = (s: string) => {
+  if (PROXY_RANGES.has(s)) return true;
+  const [ip = "", bits, ...rest] = s.split("/");
+  const v = isIP(ip);
+  if (!v || rest.length) return false;
+  return bits === undefined || (/^\d{1,3}$/.test(bits) && Number(bits) <= (v === 4 ? 32 : 128));
+};
+
+/**
+ * Каким прокси верить в X-Forwarded-For (от этого зависит req.ip, а на нём держатся все лимиты).
+ * false: никаким; число: столько прокси перед приложением (1 для одного nginx); иначе адреса или
+ * подсети прокси через запятую. true не принимается: тогда адрес клиента подделывается заголовком.
+ */
+const trustProxy = z
+  .string()
+  .default("false")
+  .transform((raw, c): false | number | string[] => {
+    const s = raw.trim().toLowerCase();
+    if (s === "" || s === "false" || s === "0") return false;
+    if (s === "true") {
+      c.addIssue({ code: "custom", message: "TRUST_PROXY=true доверяет любому X-Forwarded-For: укажите число прокси (обычно 1) или их адреса" });
+      return z.NEVER;
+    }
+    if (/^\d+$/.test(s)) {
+      const hops = Number(s);
+      if (hops > 10) c.addIssue({ code: "custom", message: "TRUST_PROXY: прокси не может быть больше 10" });
+      return hops;
+    }
+    const list = s.split(",").map((x) => x.trim()).filter(Boolean);
+    const bad = list.filter((x) => !isProxyAddress(x));
+    if (bad.length) c.addIssue({ code: "custom", message: `TRUST_PROXY: ожидается число прокси или их адреса через запятую, неверно: ${bad.join(", ")}` });
+    return list;
+  });
+
 const schema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(3000),
     HOST: z.string().default("0.0.0.0"),
     APP_URL: z.url().default("http://localhost:3000"),
-    TRUST_PROXY: z.stringbool().default(false),
+    TRUST_PROXY: trustProxy,
     DATABASE_URL: z.string().min(1),
     REDIS_URL: z.string().min(1),
     JWT_SECRET: z.string().min(32, "JWT_SECRET должен быть не короче 32 символов"),
@@ -29,6 +66,8 @@ const schema = z
     MEDIA_DIR: z.string().min(1).default("./data/media"),
     // Помощник с текстом (POST /api/ai/write). Пусто: выключен.
     ANTHROPIC_API_KEY: z.string().default(""),
+    // Модель для помощника; должна принимать output_config.effort. Пусто: модель по умолчанию.
+    AI_MODEL: z.preprocess((v) => (v === "" ? undefined : v), z.string().default("claude-opus-5-5")),
 
     TELEGRAM_BOT_TOKEN: z.string().default(""),
     TELEGRAM_BOT_USERNAME: z.string().default(""),
@@ -69,12 +108,13 @@ const schema = z
     SMS_CALLBACK_SECRET: z.string().default(""),
   })
   .superRefine((env, ctx) => {
+    // Без секрета вебхук принимает поддельные обновления (в том числе подтверждение входа), поэтому в любом окружении.
+    if (env.TELEGRAM_MODE === "webhook" && env.TELEGRAM_WEBHOOK_SECRET.length < 16) {
+      ctx.addIssue({ code: "custom", message: "TELEGRAM_WEBHOOK_SECRET обязателен (от 16 символов) в режиме webhook" });
+    }
     if (env.NODE_ENV !== "production") return;
     if (env.PAYMENT_PROVIDER === "mock") {
       ctx.addIssue({ code: "custom", message: "В production нельзя использовать PAYMENT_PROVIDER=mock" });
-    }
-    if (env.TELEGRAM_MODE === "webhook" && env.TELEGRAM_WEBHOOK_SECRET.length < 16) {
-      ctx.addIssue({ code: "custom", message: "TELEGRAM_WEBHOOK_SECRET обязателен (от 16 символов) в режиме webhook" });
     }
     if (env.SMS_PROVIDER === "mock") {
       ctx.addIssue({ code: "custom", message: "В production нельзя использовать SMS_PROVIDER=mock" });

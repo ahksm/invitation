@@ -17,6 +17,7 @@ export const paymentRoutes: FastifyPluginAsync = async (app) => {
   const refusal: Partial<Record<string, string>> = {
     not_found: "Заказ не найден",
     amount_mismatch: "Сумма оплаты не совпадает с заказом",
+    duplicate: "Шаблон уже оплачен",
   };
   const allowedIps = provider.name === "multicard" ? ctx.config.MULTICARD_CALLBACK_IPS : [];
 

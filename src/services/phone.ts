@@ -6,7 +6,7 @@ import { invitations, media, orders, smsMessages, subscriptions, usageEvents, us
 import { HttpError } from "../errors.js";
 import type { Locale } from "../i18n.js";
 import { otpText } from "../sms/texts.js";
-import { invalidateUser } from "./users.js";
+import { invalidateUser, isConfiguredAdmin, syncAdmin } from "./users.js";
 
 /** Приводит номер к виду 998XXXXXXXXX. Принимает +998 90 123-45-67, 998901234567 и 901234567. */
 export function normalizePhone(input: string): string | null {
@@ -48,32 +48,42 @@ export async function requestOtp(ctx: Ctx, phone: string, ip: string, locale: Lo
   return { ttl: OTP_TTL };
 }
 
-/** Проверяет код. После 5 неверных попыток код сгорает. */
+/**
+ * Попытка ввода кода одной командой Redis: хэш читается и счётчик попыток растёт атомарно.
+ * Нет кода — nil (ключ не создаётся заново без срока жизни); попытки кончились — код удаляется, nil.
+ */
+const OTP_ATTEMPT_SCRIPT = `
+local hash = redis.call('HGET', KEYS[1], 'hash')
+if not hash then return false end
+local n = redis.call('HINCRBY', KEYS[1], 'attempts', 1)
+if n > tonumber(ARGV[1]) then
+  redis.call('DEL', KEYS[1])
+  return false
+end
+return hash`;
+
+/** Проверяет код. После 5 неверных попыток код сгорает; верный код срабатывает один раз. */
 export async function verifyOtp(ctx: Pick<Ctx, "cache" | "config">, phone: string, code: string): Promise<boolean> {
   const key = `inv:${cacheKeys.otp(phone)}`;
-  const rec = await ctx.cache.redis.hgetall(key);
-  if (!rec.hash) return false;
-  const attempts = await ctx.cache.redis.hincrby(key, "attempts", 1);
-  if (attempts > OTP_ATTEMPTS) {
-    await ctx.cache.redis.del(key);
-    return false;
-  }
+  const hash = (await ctx.cache.redis.eval(OTP_ATTEMPT_SCRIPT, 1, key, OTP_ATTEMPTS)) as string | null;
+  if (!hash) return false;
   const a = Buffer.from(otpHash(ctx.config.JWT_SECRET, phone, code));
-  const b = Buffer.from(rec.hash);
+  const b = Buffer.from(hash);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-  await ctx.cache.redis.del(key);
-  return true;
+  // Из двух одновременных верных попыток проходит одна: та, что удалила код.
+  return (await ctx.cache.redis.del(key)) === 1;
 }
 
 export async function upsertPhoneUser(ctx: Pick<Ctx, "db" | "cache" | "config">, phone: string, locale: Locale): Promise<User> {
-  const isAdmin = ctx.config.ADMIN_PHONES.includes(phone);
-  const [user] = await ctx.db
+  const [row] = await ctx.db
     .insert(users)
-    .values({ phone, isAdmin, locale, lastSeenAt: new Date() })
-    .onConflictDoUpdate({ target: users.phone, set: { lastSeenAt: new Date(), ...(isAdmin && { isAdmin }) } })
+    .values({ phone, locale, lastSeenAt: new Date() })
+    .onConflictDoUpdate({ target: users.phone, set: { lastSeenAt: new Date() } })
     .returning();
-  await invalidateUser(ctx, user!.id);
-  return user!;
+  // Права админа пересчитываются по ADMIN_PHONES и ADMIN_TELEGRAM_IDS (у аккаунта может быть и Telegram).
+  const user = await syncAdmin(ctx, row!);
+  await invalidateUser(ctx, user.id);
+  return user;
 }
 
 /**
@@ -86,7 +96,8 @@ export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | 
   const result = await ctx.db.transaction(async (tx) => {
     const [owner] = await tx.select().from(users).where(eq(users.phone, phone)).for("update");
     if (!owner || owner.id === tgUser.id) {
-      const [u] = await tx.update(users).set({ phone }).where(eq(users.id, tgUser.id)).returning();
+      const isAdmin = isConfiguredAdmin(ctx.config, { phone, telegramId: tgUser.telegramId });
+      const [u] = await tx.update(users).set({ phone, isAdmin }).where(eq(users.id, tgUser.id)).returning();
       return { user: u!, removed: null };
     }
     if (owner.telegramId !== null && owner.telegramId !== tgUser.telegramId) {
@@ -103,7 +114,7 @@ export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | 
         username: tgUser.username,
         firstName: owner.firstName ?? tgUser.firstName,
         lastName: owner.lastName ?? tgUser.lastName,
-        isAdmin: owner.isAdmin || tgUser.isAdmin,
+        isAdmin: isConfiguredAdmin(ctx.config, { phone, telegramId: tgUser.telegramId }),
         freeAccess: owner.freeAccess || tgUser.freeAccess,
         freeAccessNote: owner.freeAccessNote ?? tgUser.freeAccessNote,
         blocked: owner.blocked || tgUser.blocked,

@@ -3,7 +3,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { orders } from "../db/schema.js";
 import { HttpError } from "../errors.js";
-import { locales, pickLocale } from "../i18n.js";
+import { apiText, locales, pickLocale, requestLocale } from "../i18n.js";
 import { listActivity } from "../services/events.js";
 import { addGuests, checkInByToken, listGuestDtos, removeGuest, updateGuest } from "../services/guests.js";
 import {
@@ -20,7 +20,9 @@ import {
   slugSchema,
   updateInvitation,
 } from "../services/invitations.js";
+import { sendBotTest } from "../services/notify.js";
 import { createOrder } from "../services/orders.js";
+import { remindGuests } from "../services/remind.js";
 import { sendInvitationSms } from "../services/sms.js";
 import { phoneSchema } from "./auth.js";
 import { track } from "../services/usage.js";
@@ -65,6 +67,7 @@ const guestPatchSchema = z.object({
   checkedIn: z.boolean().optional(),
   rsvp: z.enum(["pending", "yes", "no", "maybe"]).optional(),
 });
+const guestIdsSchema = z.object({ guestIds: z.array(z.uuid()).max(500).optional() });
 const orderSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("template"), invitationId: z.uuid() }),
   z.object({ kind: z.literal("seats"), invitationId: z.uuid(), quantity: z.number().int().min(1).max(1000) }),
@@ -163,9 +166,20 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
 
     // Рассылка приглашений гостям по SMS. Без guestIds отправляется всем, кому можно.
     priv.post("/invitations/:id/sms", { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } }, async (req) => {
-      const { guestIds } = z.object({ guestIds: z.array(z.uuid()).max(500).optional() }).parse(req.body ?? {});
+      const { guestIds } = guestIdsSchema.parse(req.body ?? {});
       return sendInvitationSms(ctx, req.user.id, id.parse(req.params).id, guestIds);
     });
+
+    // Напоминание ответить: Telegram гостя, иначе SMS. Без guestIds — всем гостям без ответа.
+    priv.post("/invitations/:id/remind", { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } }, async (req) => {
+      const { guestIds } = guestIdsSchema.parse(req.body ?? {});
+      return remindGuests(ctx, req.user.id, id.parse(req.params).id, guestIds);
+    });
+
+    // Пробное уведомление владельцу в Telegram (вкладка «Бот»).
+    priv.post("/invitations/:id/bot/test", { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } }, async (req) =>
+      sendBotTest(ctx, req.user, id.parse(req.params).id),
+    );
 
     priv.delete("/invitations/:id/guests/:guestId", async (req, reply) => {
       const p = guestParams.parse(req.params);
@@ -175,7 +189,8 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
 
     priv.post("/orders", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req, reply) => {
       const result = await createOrder(ctx, req.user.id, orderSchema.parse(req.body));
-      return reply.code(result.status === "pending" ? 201 : 200).send(result);
+      if (result.status === "pending") return reply.code(201).send(result);
+      return { status: result.status, order: null, message: apiText(requestLocale(req.headers), result.messageKey, { n: result.n ?? 0 }) };
     });
 
     priv.get("/orders", async (req) =>

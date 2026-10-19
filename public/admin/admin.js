@@ -8,7 +8,9 @@ const eventNames = {
   login: "вход", sms_sent: "разослал SMS", bot_start: "запустил бота", invitation_created: "создал приглашение", invitation_updated: "изменил приглашение",
   invitation_published: "опубликовал приглашение", guests_added: "добавил гостей", order_created: "создал заказ", order_paid: "оплатил заказ",
   free_access_granted: "получил бесплатный доступ", free_access_revoked: "лишён бесплатного доступа", user_blocked: "заблокирован", user_unblocked: "разблокирован",
+  ai_write: "написал текст с помощником",
 };
+const smsPurpose = { otp: "код входа", invite: "приглашение", reminder: "напоминание" };
 const orderKinds = { template: "шаблон", seats: "места", subscription: "подписка" };
 const orderStatus = { pending: ["ожидает", "warn"], paid: ["оплачен", "ok"], failed: ["ошибка", "bad"], cancelled: ["отменён", "bad"] };
 const name = (u) => [u.firstName, u.lastName].filter(Boolean).join(" ") || (u.username ? `@${u.username}` : u.phone ? `+${u.phone}` : `id ${u.telegramId}`);
@@ -42,16 +44,19 @@ const routes = {
     search.addEventListener("keydown", (e) => e.key === "Enter" && go());
     sel.addEventListener("change", go);
 
-    const grantId = h("input", { placeholder: "Телефон или Telegram ID", inputmode: "tel" });
+    // Телефон только с +998: девять цифр без него сервер считает Telegram ID.
+    const grantId = h("input", { placeholder: "+998 90 123-45-67 или tg:123456789" });
     const grantNote = h("input", { placeholder: "Заметка (кому и почему)" });
-    const grant = h("form", { class: "row", onsubmit: async (e) => {
-      e.preventDefault();
+    const setFree = async (free) => {
       try {
-        await api("/api/admin/users/free-access", { method: "POST", body: { who: grantId.value, note: grantNote.value || undefined } });
-        toast("Бесплатный доступ выдан");
+        await api("/api/admin/users/free-access", { method: "POST", body: { who: grantId.value, note: grantNote.value || undefined, free } });
+        toast(free ? "Бесплатный доступ выдан" : "Бесплатный доступ снят");
         render();
       } catch (err) { toast(err.message, "bad"); }
-    } }, grantId, grantNote, h("button", { class: "primary" }, "Выдать бесплатный доступ"));
+    };
+    const grant = h("form", { class: "row", onsubmit: (e) => { e.preventDefault(); setFree(true); } }, grantId, grantNote,
+      h("button", { class: "primary" }, "Выдать бесплатный доступ"),
+      h("button", { type: "button", onclick: () => setFree(false) }, "Снять"));
 
     const rows = data.items.map((u) => h("tr", { class: "click", onclick: () => (location.hash = `#/user/${u.id}`) },
       h("td", {}, name(u), u.isAdmin ? h("span", { class: "badge" }, " админ") : null),
@@ -62,7 +67,7 @@ const routes = {
       h("td", {}, u.invitations), h("td", {}, m(u.paidTotal)), h("td", {}, date(u.lastSeenAt)), h("td", {}, date(u.createdAt))));
     return [
       h("div", { class: "card" }, h("div", { class: "row" }, search, sel, h("button", { onclick: go }, "Найти"))),
-      h("div", { class: "card" }, h("h3", {}, "Бесплатный доступ по телефону или Telegram ID"), h("p", { class: "muted" }, "Можно выдать заранее, до того как человек зайдёт в бота."), grant),
+      h("div", { class: "card" }, h("h3", {}, "Бесплатный доступ по телефону или Telegram ID"), h("p", { class: "muted" }, "Можно выдать заранее, до того как человек зайдёт в бота. Телефон пишите с +998, Telegram ID — как tg:123456789 (просто цифры тоже считаются Telegram ID)."), grant),
       h("div", { class: "card" }, data.items.length ? table(["Пользователь", "Телефон", "Telegram ID", "Доступ", "Приглашений", "Оплатил", "Был", "Регистрация"], rows) : h("p", { class: "muted" }, "Никого не найдено")),
     ];
   },
@@ -120,7 +125,7 @@ const routes = {
   async "/sms"() {
     const list = await api("/api/admin/sms");
     return h("div", { class: "card" }, list.length ? table(["Когда", "Кому", "Тип", "Статус", "Отправитель", "Текст"], list.map(({ sms: s, ...u }) => h("tr", {},
-      h("td", {}, date(s.createdAt)), h("td", {}, phone(s.phone)), h("td", {}, s.purpose === "otp" ? "код входа" : "приглашение"),
+      h("td", {}, date(s.createdAt)), h("td", {}, phone(s.phone)), h("td", {}, smsPurpose[s.purpose] ?? s.purpose),
       h("td", {}, h("span", { class: `badge ${smsStatus[s.status]?.[1] ?? ""}` }, smsStatus[s.status]?.[0] ?? s.status)),
       h("td", {}, u.userId ? name(u) : "—"), h("td", { style: "white-space:normal;min-width:240px" }, s.text ?? (s.error ? `Ошибка: ${s.error}` : "—"))))) : h("p", { class: "muted" }, "SMS ещё не отправлялись"));
   },
@@ -150,9 +155,10 @@ const routes = {
     const save = async (id, body) => {
       try { await api(`/api/admin/templates/${id}`, { method: "PATCH", body }); toast("Сохранено"); render(); } catch (err) { toast(err.message, "bad"); }
     };
-    return h("div", { class: "card" }, table(["Шаблон", "Код", "Цена", "Активен", "SMS гостям", ""], list.map((t) => {
+    return h("div", { class: "card" }, h("p", { class: "muted" }, "Каталог шаблонов задаёт дизайн. Пустая цена — общая цена шаблона из раздела «Цены»."),
+      table(["Шаблон", "Событие · стиль", "Код", "Цена", "Активен", "SMS гостям", ""], list.map((t) => {
       const price = h("input", { type: "number", min: "0", placeholder: "по умолчанию", value: t.price === null ? "" : t.price / 100, style: "width:140px" });
-      return h("tr", {}, h("td", {}, t.title), h("td", {}, h("code", {}, t.slug)), h("td", {}, price),
+      return h("tr", {}, h("td", {}, t.title), h("td", {}, t.event ? `${t.event} · ${t.style ?? "—"}` : "—"), h("td", {}, h("code", {}, t.slug)), h("td", {}, price),
         h("td", {}, h("input", { type: "checkbox", checked: t.isActive, style: "width:auto", onchange: (e) => save(t.id, { isActive: e.target.checked }) })),
         h("td", {}, h("input", { type: "checkbox", checked: t.smsEnabled, style: "width:auto", onchange: (e) => save(t.id, { smsEnabled: e.target.checked }) })),
         h("td", {}, h("button", { onclick: () => save(t.id, { price: price.value === "" ? null : Math.round(Number(price.value) * 100) }) }, "Сохранить цену")));

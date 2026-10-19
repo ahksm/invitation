@@ -70,6 +70,7 @@
 - `GET /api/auth/me` → `{ user: { id, phone, firstName, lastName, username, telegramId: string|null, locale, isAdmin, freeAccess }, access: { free, subscribed, subscriptionEndsAt: string|null }, prices, currency }`. 401 без сессии, 428 без телефона (как сейчас).
 - `PATCH /api/auth/me` `{ locale }` (теперь и `uzc`).
 - Остальные маршруты входа без изменений (`/telegram/start`, `/telegram/poll`, `/webapp`, `/phone/request`, `/phone/verify`, `/link`, `/logout`).
+- Лимит `POST /api/auth/webapp` — 40 запросов в минуту на IP (остальные маршруты входа 10): пока ответ `phone_required`, мини-апп опрашивает его не чаще раза в 3 секунды, а при 429 ждёт 5 секунд и продолжает.
 
 ### 3.2 Содержимое приглашения (`InvContent`, колонка `invitations.data`)
 
@@ -131,9 +132,10 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 - `POST /api/invitations/:id/publish` → `Invitation` (status `active`, `publishedAt`), либо 402 с текстом, что оплатить. Событие `published` (один раз).
 - `PUT /api/invitations/:id/og` (тело `image/png` или `image/jpeg`, ≤ 3 МБ) → `{ ogImageUrl }`.
 - `GET /api/invitations/:id/activity?limit=50` → `[{ id, kind, guestId, guestName, meta, createdAt }]`, kind: `created|published|paid|opened|yes|no|maybe|reminder|sms|checkin|test`.
-- `POST /api/invitations/:id/bot/test` → `{ ok: true }`, либо 409 «Подключите Telegram, чтобы получать уведомления», если у владельца нет `telegramId`.
-- `POST /api/invitations/:id/remind` `{ guestIds? }` → `{ telegram, sms, skipped }`. По умолчанию все гости без ответа. Сначала Telegram (если гость подключил бота), иначе SMS по правилам раздела 3.5. Событие `reminder` с `{ n }`.
-- `POST /api/invitations/:id/sms` `{ guestIds? }`: отправка приглашений по SMS, как сейчас (с исправлениями из раздела 6).
+- `POST /api/invitations/:id/bot/test` → `{ ok: true }`, либо 409 «Подключите Telegram, чтобы получать уведомления», если у владельца нет `telegramId`, 503 «Бот сейчас недоступен», если бот выключен, 502 «Не удалось отправить сообщение в Telegram», если Telegram не принял сообщение (например, владелец остановил бота). Если `settings.notify` выключен, сообщение всё равно уходит и говорит об этом. Событие `test`. Лимит 5 в минуту.
+- `POST /api/invitations/:id/remind` `{ guestIds? }` → `{ telegram, sms, skipped: [{ guestId, name, reason }], limited }`. По умолчанию все гости без ответа. Только опубликованное приглашение (иначе 400) и оплаченные гости. Сначала Telegram (если гость подключил бота), иначе SMS по правилам раздела 3.5. Одному гостю не чаще раза в 12 часов. `reason`: `seat_unpaid`, `no_channel` (нет Telegram, а SMS недоступны), `no_phone`, `recently_reminded`, `limit_reached` (гостю уже ушли 3 SMS), `invitation_limit`, `rate_limited` (часовой лимит: `limited: true`, отправленные до него засчитаны), `send_failed`. Событие `reminder` с `{ n }`. Лимит 10 в минуту.
+- `POST /api/invitations/:id/sms` `{ guestIds? }` → `{ sent, skipped: [{ guestId, name, reason }], limited }`, причины как у `/remind` (кроме `no_channel` и `recently_reminded`). Без `guestIds` уходит только тем, кому приглашение ещё не отправлялось (остальные `already_sent`), с `guestIds` — повторно, в пределах лимитов. Если часовой лимит уже исчерпан, сразу 429.
+- Рассылка SMS и напоминаний по одному приглашению идёт по одной: параллельный запрос получает 409 «Рассылка уже идёт, подождите».
 - `POST /api/invitations/:id/checkin` `{ token }` → `{ guest: Guest }`. 404, если токен не этого приглашения. Событие `checkin`.
 
 Гость `Guest`:
@@ -151,7 +153,8 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 ### 3.5 SMS
 
 - Приглашение по SMS только для `personal`, опубликованного, оплаченного гостя с телефоном, шаблон с `smsEnabled`.
-- Лимит на приглашение: всего не больше `paidSeats × 3` SMS-приглашений (считаются и SMS удалённых гостей), плюс не больше 3 на гостя и 300 в час на пользователя, как сейчас.
+- Лимит на приглашение: всего не больше `paidSeats × 3` SMS-приглашений и SMS-напоминаний вместе (считаются и SMS удалённых гостей), плюс не больше 3 на гостя (приглашения и напоминания вместе) и 300 в час на пользователя, как сейчас.
+- Тексты SMS (`src/sms/texts.ts`): код входа, приглашение и напоминание на ru/uz/uzc/en. В SMS и на страницах гостю видны имена (`data.names`) или название события, но не внутреннее название приглашения.
 
 ### 3.6 Публичные страницы
 
@@ -179,10 +182,13 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 ### 3.8 Текст с помощью ИИ
 
 - `POST /api/ai/write` `{ lang, tone, event, names, host, date, time, venue }` (сессия; 10 в минуту и 50 в сутки на пользователя) → `{ text }`. Без `ANTHROPIC_API_KEY` 503 «Помощник с текстом сейчас недоступен» (клиент берёт готовый текст из дизайна). Запрос к `https://api.anthropic.com/v1/messages` с моделью из `AI_MODEL` (по умолчанию `claude-opus-5-5`), `max_tokens` 400, тот же промпт, что в `aiWrite` дизайна.
+- Поля: `lang` — Locale, `tone` — `warm|formal|playful|poetic|short`, `event` — ключ `EVENTS`, `names`/`host`/`venue` — строки до 200 символов (переводы строк заменяются пробелами), `date` — `YYYY-MM-DD` или пусто, `time` — `HH:MM` или пусто; лишние поля дают 400. Превышение лимитов — 429, ошибка или отказ модели — 502 «Помощник не смог написать текст, попробуйте ещё раз».
 
 ### 3.9 Заказы
 
 Без изменений: `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`. Возврат после оплаты: `/app/#/orders/<id>`. Тестовая оплата: `/app/#/mock-pay/<id>`.
+- Бесплатный заказ → 200 `{ status: "fulfilled", order: null, message }`, `message` на языке запроса (`X-Lang`). Начатые оплаты шаблона при этом отменяются.
+- Повторно оплаченный счёт за уже открытый шаблон отклоняется в колбэке («Шаблон уже оплачен»), заказ получает `cancelled`: Multicard отменяет такую оплату.
 
 ## 4. Фронтенд: что меняется в логике Invito
 
@@ -206,7 +212,7 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 ## 5. Бот
 
 - `/start g_<token>` (гость открыл бота со страницы приглашения): после обязательного телефона (ожидающий payload хранится в Redis, пока человек делится контактом) бот привязывает чат к гостю (`guests.telegram_chat_id`), присылает карточку приглашения с кнопкой открыть (`/g/<token>`) и кнопками ответа «Приду / Возможно / Не приду». Ответ через кнопки идёт тем же путём, что `POST /api/public/g/:token/rsvp`.
-- Уведомления владельцу (`settings.notify`): ответ гостя, отметка на входе. Через интерфейс `ctx.notifier` (`sendToUser(userId, text, opts)`), который реализует бот; без бота это no-op.
+- Уведомления владельцу (`settings.notify`): ответ гостя, отметка на входе. Через интерфейс `ctx.notifier` (`sendToUser(userId, text, opts)` и `sendToChat(chatId, text, opts)`, `opts.buttons` — кнопки-ссылки), который реализует бот; без бота это no-op. Тексты на языке профиля владельца (`src/services/notify.ts`), ошибки Telegram только пишутся в лог.
 - Напоминания гостям в Telegram по `settings.r1d` (за сутки), `r3h` (за 3 часа), `morning` (в 9:00 по Ташкенту в день события): задача раз в минуту, гости с привязанным чатом и ответом «да», «может быть» или без ответа, учёт отправленных в таблице `guest_reminders (guest_id, kind)` с уникальным ключом, отправка только если вставка прошла.
 - Язык бота: добавить `uzc` в меню `/lang`. Тексты бота для `uzc` через `toCyr`.
 

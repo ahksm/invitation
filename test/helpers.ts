@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { Redis } from "ioredis";
 import { buildApp } from "../src/app.js";
+import { createTelegramNotifier } from "../src/bot/notifier.js";
 import { createCache } from "../src/cache.js";
 import { loadConfig } from "../src/config.js";
 import { createDb } from "../src/db/index.js";
@@ -18,10 +19,28 @@ export const APP_URL = "http://localhost:3000";
 export type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 /**
- * Окружение интеграционных тестов: тестовая база (схема пересоздаётся в start), Redis,
- * Multicard с подменённой сетью и SMS в память. Файлы пишутся во временный каталог.
+ * Bot API для уведомлений: сообщения сохраняются в sent, чаты из failChats отвечают ошибкой,
+ * как Telegram, когда человек остановил бота.
  */
-export function testContext() {
+export function fakeTelegram() {
+  const sent: { chatId: number; text: string; other: any }[] = [];
+  const failChats = new Set<number>();
+  const api = {
+    async sendMessage(chatId: number | string, text: string, other?: unknown) {
+      if (failChats.has(Number(chatId))) throw new Error("Forbidden: bot was blocked by the user");
+      sent.push({ chatId: Number(chatId), text, other });
+      return { message_id: sent.length } as any;
+    },
+  };
+  return { api, sent, failChats };
+}
+
+/**
+ * Окружение интеграционных тестов: тестовая база (схема пересоздаётся в start), Redis,
+ * Multicard с подменённой сетью, SMS в память и Telegram в память (telegram.sent).
+ * Файлы пишутся во временный каталог. env дополняет и переопределяет переменные окружения.
+ */
+export function testContext(env: Record<string, string> = {}) {
   const mediaDir = mkdtempSync(join(tmpdir(), "invite-media-"));
   const config = loadConfig({
     NODE_ENV: "test",
@@ -40,6 +59,7 @@ export function testContext() {
     TELEGRAM_BOT_USERNAME: "invite_test_bot",
     SMS_CALLBACK_SECRET: "sms-cb-secret",
     MEDIA_DIR: mediaDir,
+    ...env,
   });
 
   // Подменяем сеть: Multicard отвечает как в документации, а запросы сохраняются для проверки.
@@ -70,6 +90,7 @@ export function testContext() {
   });
   const smsSent: { phone: string; text: string }[] = [];
   const sms = createMockSms({ info: () => {} }, smsSent);
+  const telegram = fakeTelegram();
 
   const t = {
     config,
@@ -79,6 +100,7 @@ export function testContext() {
     cache,
     calls,
     smsSent,
+    telegram,
     mediaDir,
     app: undefined as unknown as Awaited<ReturnType<typeof buildApp>>,
 
@@ -89,6 +111,7 @@ export function testContext() {
       await seed(db);
       await redis.flushdb();
       t.app = await buildApp({ config, db, cache, payments, sms }, { logger: false });
+      t.app.ctx.notifier = createTelegramNotifier(telegram.api, t.app.ctx);
     },
 
     async close() {

@@ -1,36 +1,22 @@
 import type { FastifyPluginAsync } from "fastify";
-import { and, count, desc, eq, gt, ilike, or, sql, sum, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, ilike, or, sql, sum, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { invitations, orders, smsMessages, subscriptions, templates, usageEvents, users } from "../db/schema.js";
-import { normalizePhone } from "../services/phone.js";
 import { HttpError } from "../errors.js";
 import { pricesSchema } from "../pricing.js";
 import { invalidateTemplates } from "../services/invitations.js";
 import { getPrices, setPrices } from "../services/settings.js";
 import { track } from "../services/usage.js";
-import { invalidateUser } from "../services/users.js";
+import { parseUserRef } from "../services/user-ref.js";
+import { invalidateUser, isConfiguredAdmin } from "../services/users.js";
 
 const id = z.object({ id: z.uuid() });
-const templateFields = z
-  .array(
-    z.object({
-      key: z.string().regex(/^[a-zA-Z][\w]{0,40}$/),
-      label: z.union([z.string().min(1).max(100), z.partialRecord(z.enum(["ru", "uz", "en"]), z.string().min(1).max(100))]),
-      type: z.enum(["text", "textarea", "date", "time", "url"]),
-      required: z.boolean().optional(),
-    }),
-  )
-  .max(50);
-const templateSchema = z.object({
-  slug: z.string().regex(/^[a-z0-9-]{2,60}$/),
-  title: z.string().min(1).max(200),
-  description: z.string().max(2000).nullish(),
-  previewUrl: z.url().nullish(),
-  price: z.number().int().min(0).nullish(),
-  isActive: z.boolean().default(true),
-  smsEnabled: z.boolean().default(false),
-  fields: templateFields.default([]),
-  translations: z.partialRecord(z.enum(["ru", "uz", "en"]), z.object({ title: z.string().max(200).optional(), description: z.string().max(2000).optional() })).default({}),
+// Каталог шаблонов задаёт сид из дизайна (событие × стиль), админ меняет только цену и флаги.
+// Без значений по умолчанию: PATCH меняет только присланные поля.
+const templatePatchSchema = z.strictObject({
+  price: z.number().int().min(0).nullable().optional(),
+  isActive: z.boolean().optional(),
+  smsEnabled: z.boolean().optional(),
 });
 
 export const adminRoutes: FastifyPluginAsync = async (app) => {
@@ -84,7 +70,8 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       );
     }
     // Коррелированные подзапросы пишем с явными алиасами: drizzle не квалифицирует колонки внутри select.
-    const paidSum = sql<number>`coalesce((select sum(o.amount) from orders o where o.user_id = "users"."id" and o.status = 'paid'), 0)::int`;
+    // bigint: сумма всех оплат пользователя может выйти за int4; в JSON отдаём числом.
+    const paidSum = sql<number>`coalesce((select sum(o.amount) from orders o where o.user_id = "users"."id" and o.status = 'paid'), 0)::bigint`.mapWith(Number);
     const subEnd = sql<Date | null>`(select max(s.ends_at) from subscriptions s where s.user_id = "users"."id")`;
     if (q.filter === "free") conds.push(eq(users.freeAccess, true));
     if (q.filter === "blocked") conds.push(eq(users.blocked, true));
@@ -115,7 +102,8 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       .orderBy(sql`${users.lastSeenAt} desc nulls last`)
       .limit(pageSize)
       .offset((q.page - 1) * pageSize);
-    return { items: rows, page: q.page, pageSize };
+    // Права админа по ADMIN_PHONES и ADMIN_TELEGRAM_IDS: колонка обновляется только при входе.
+    return { items: rows.map((r) => ({ ...r, isAdmin: isConfiguredAdmin(ctx.config, r) })), page: q.page, pageSize };
   });
 
   app.get("/users/:id", async (req, reply) => {
@@ -133,7 +121,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       db.select().from(subscriptions).where(eq(subscriptions.userId, userId)).orderBy(desc(subscriptions.endsAt)),
       db.select().from(usageEvents).where(eq(usageEvents.userId, userId)).orderBy(desc(usageEvents.createdAt)).limit(100),
     ]);
-    return { user, invitations: invs, orders: ords, subscriptions: subs, events };
+    return { user: { ...user, isAdmin: isConfiguredAdmin(ctx.config, user) }, invitations: invs, orders: ords, subscriptions: subs, events };
   });
 
   app.patch("/users/:id", async (req, reply) => {
@@ -155,20 +143,34 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return user;
   });
 
-  // Выдать бесплатный доступ по номеру телефона или Telegram ID, даже если человек ещё не заходил.
-  app.post("/users/free-access", async (req) => {
-    const body = z.object({ who: z.string().trim().min(1).max(32), note: z.string().max(500).optional() }).parse(req.body);
-    const phone = normalizePhone(body.who);
-    const telegramId = /^\d{1,15}$/.test(body.who) ? Number(body.who) : NaN;
-    if (!phone && !Number.isSafeInteger(telegramId)) throw new HttpError(400, "Укажите номер телефона или Telegram ID");
+  // Выдать (free: false — снять) бесплатный доступ по телефону или Telegram ID. Выдать можно заранее,
+  // до первого входа. who разбирает parseUserRef: «+998…» — телефон, «tg:123456789» или цифры — Telegram ID.
+  app.post("/users/free-access", async (req, reply) => {
+    const body = z
+      .object({ who: z.string().trim().min(1).max(32), note: z.string().max(500).optional(), free: z.boolean().default(true) })
+      .parse(req.body);
+    const ref = parseUserRef(body.who);
+    if (!ref) throw new HttpError(400, "Укажите номер телефона или Telegram ID");
+    const by = { adminId: req.user.id };
+    if (!body.free) {
+      const [user] = await db
+        .update(users)
+        .set({ freeAccess: false })
+        .where("phone" in ref ? eq(users.phone, ref.phone) : eq(users.telegramId, ref.telegramId))
+        .returning();
+      if (!user) return reply.code(404).send({ error: "Пользователь не найден" });
+      await invalidateUser(ctx, user.id);
+      await track(ctx, user.id, "free_access_revoked", by);
+      return user;
+    }
     const set = { freeAccess: true, freeAccessNote: body.note ?? null };
     const [user] = await db
       .insert(users)
-      .values({ ...(phone ? { phone } : { telegramId }), ...set })
-      .onConflictDoUpdate({ target: phone ? users.phone : users.telegramId, set })
+      .values({ ...ref, ...set })
+      .onConflictDoUpdate({ target: "phone" in ref ? users.phone : users.telegramId, set })
       .returning();
     await invalidateUser(ctx, user!.id);
-    await track(ctx, user!.id, "free_access_granted", { adminId: req.user.id });
+    await track(ctx, user!.id, "free_access_granted", by);
     return user;
   });
 
@@ -217,20 +219,17 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   app.get("/prices", async () => getPrices(ctx));
   app.put("/prices", async (req) => setPrices(ctx, pricesSchema.parse(req.body)));
 
-  app.get("/templates", async () => db.select().from(templates).orderBy(desc(templates.createdAt)));
-
-  app.post("/templates", async (req, reply) => {
-    const [tpl] = await db.insert(templates).values(templateSchema.parse(req.body)).returning();
-    await invalidateTemplates(ctx);
-    return reply.code(201).send(tpl);
-  });
+  // Порядок каталога; старые шаблоны без события в конце.
+  app.get("/templates", async () =>
+    db.select().from(templates).orderBy(sql`${templates.event} is null`, asc(templates.sortOrder), asc(templates.title)),
+  );
 
   app.patch("/templates/:id", async (req, reply) => {
-    const [tpl] = await db
-      .update(templates)
-      .set(templateSchema.partial().parse(req.body))
-      .where(eq(templates.id, id.parse(req.params).id))
-      .returning();
+    const templateId = id.parse(req.params).id;
+    const patch = templatePatchSchema.parse(req.body);
+    const [tpl] = Object.keys(patch).length
+      ? await db.update(templates).set(patch).where(eq(templates.id, templateId)).returning()
+      : await db.select().from(templates).where(eq(templates.id, templateId));
     if (!tpl) return reply.code(404).send({ error: "Шаблон не найден" });
     await invalidateTemplates(ctx);
     return tpl;

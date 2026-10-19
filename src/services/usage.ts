@@ -14,7 +14,8 @@ export type UsageType =
   | "free_access_granted"
   | "free_access_revoked"
   | "user_blocked"
-  | "user_unblocked";
+  | "user_unblocked"
+  | "ai_write";
 
 /** Пишет событие в журнал. Ошибка журнала не должна ломать основной запрос. */
 export async function track(ctx: Pick<Ctx, "db" | "log">, userId: string | null, type: UsageType, meta: Record<string, unknown> = {}) {

@@ -13,7 +13,7 @@ import { attachPhoneToTelegramUser, formatPhone, normalizePhone } from "../servi
 import { track } from "../services/usage.js";
 import { getAccess, invalidateUser, setUserLocale, upsertTelegramUser } from "../services/users.js";
 
-type BotContext = Context & { user: User; lang: Locale };
+export type BotContext = Context & { user: User; lang: Locale };
 
 export function formatMoney(minor: number, currency: string, l: Locale = "ru") {
   const unit = currency !== "UZS" ? currency : l === "ru" ? "сум" : l === "uz" ? "so'm" : l === "uzc" ? "сўм" : "UZS";

@@ -88,6 +88,29 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Прикрепите файл в поле file": { uz: "Faylni file maydoniga biriktiring", uzc: "Файлни file майдонига бириктиринг", en: "Attach the file in the “file” field" },
   "Слишком много загрузок, попробуйте через минуту": { uz: "Yuklashlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many uploads, try again in a minute" },
   "Файл не найден": { uz: "Fayl topilmadi", en: "File not found" },
+  // Сообщения схем zod: обработчик ошибок показывает их вместо общего «Неверные данные».
+  "Ссылка: 3–40 символов, латинские буквы, цифры и дефис": {
+    uz: "Havola: 3–40 belgi, lotin harflari, raqamlar va chiziqcha",
+    en: "Link: 3–40 characters, Latin letters, digits and hyphens",
+  },
+  "Файл должен быть загружен через /api/media": { uz: "Fayl /api/media orqali yuklanishi kerak", en: "The file must be uploaded via /api/media" },
+  "Время в формате ЧЧ:ММ": { uz: "Vaqt SS:DD formatida bo'lishi kerak", en: "Time must be in HH:MM format" },
+  "Дата в формате ГГГГ-ММ-ДД": { uz: "Sana YYYY-OO-KK formatida bo'lishi kerak", en: "Date must be in YYYY-MM-DD format" },
+  "Такой даты нет": { uz: "Bunday sana yo'q", en: "There is no such date" },
+  "Цвет в формате #rrggbb": { uz: "Rang #rrggbb formatida bo'lishi kerak", uzc: "Ранг #rrggbb форматида бўлиши керак", en: "Colour must be in #rrggbb format" },
+  "Неизвестное событие": { uz: "Noma'lum tadbir", en: "Unknown event" },
+  // Рассылки, бот и помощник с текстом.
+  "Рассылка уже идёт, подождите": { uz: "Yuborish davom etmoqda, kuting", en: "Sending is already in progress, please wait" },
+  "Подключите Telegram, чтобы получать уведомления": { uz: "Bildirishnomalarni olish uchun Telegramni ulang", en: "Connect Telegram to receive notifications" },
+  "Бот сейчас недоступен": { uz: "Bot hozir ishlamayapti", en: "The bot is unavailable right now" },
+  "Не удалось отправить сообщение в Telegram": { uz: "Telegramga xabar yuborib bo'lmadi", en: "Could not send the message to Telegram" },
+  "Помощник с текстом сейчас недоступен": { uz: "Matn yordamchisi hozir ishlamayapti", en: "The text assistant is unavailable right now" },
+  "Слишком много запросов к помощнику, попробуйте через минуту": {
+    uz: "Yordamchiga so'rovlar juda ko'p, bir daqiqadan keyin urinib ko'ring",
+    en: "Too many requests to the assistant, try again in a minute",
+  },
+  "Помощник на сегодня исчерпал лимит, попробуйте завтра": { uz: "Yordamchining bugungi limiti tugadi, ertaga urinib ko'ring", en: "The assistant's daily limit is used up, try again tomorrow" },
+  "Помощник не смог написать текст, попробуйте ещё раз": { uz: "Yordamchi matn yoza olmadi, qayta urinib ko'ring", en: "The assistant could not write the text, please try again" },
 };
 
 // Кириллица (uzc) получается из латиницы, если не задана отдельно.
@@ -95,6 +118,22 @@ for (const t of Object.values(errors)) if (t.uz && !t.uzc) t.uzc = cyrText(t.uz)
 
 export function translateError(message: string, locale: Locale): string {
   return locale === "ru" ? message : (errors[message]?.[locale] ?? message);
+}
+
+/** Есть ли у сообщения переводы: такие сообщения из схем zod можно показывать пользователю. */
+export const isKnownMessage = (message: string) => Object.hasOwn(errors, message);
+
+/** Сообщения API об успехе (например, о бесплатном заказе): клиент получает готовый текст на языке запроса. */
+const apiTexts = {
+  templateUnlocked: { ru: "Шаблон открыт без оплаты", uz: "Shablon to'lovsiz ochildi", en: "The template is unlocked free of charge" },
+  seatsAdded: { ru: "Добавлено мест: {n}", uz: "Qo'shilgan joylar: {n}", en: "Seats added: {n}" },
+} satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
+
+export type ApiTextKey = keyof typeof apiTexts;
+
+export function apiText(locale: Locale, key: ApiTextKey, vars: Record<string, string | number> = {}) {
+  const text = locale === "uzc" ? cyrText(apiTexts[key].uz) : apiTexts[key][locale];
+  return text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
 }
 
 /** Тексты бота. */

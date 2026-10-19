@@ -9,8 +9,10 @@ import { ZodError } from "zod";
 import type { Ctx } from "./context.js";
 import type { User } from "./db/schema.js";
 import { HttpError } from "./errors.js";
-import { requestLocale, translateError } from "./i18n.js";
+import { isKnownMessage, requestLocale, translateError } from "./i18n.js";
+import { noopNotifier, type Notifier } from "./notifier.js";
 import { adminRoutes } from "./routes/admin.js";
+import { aiRoutes } from "./routes/ai.js";
 import { authRoutes } from "./routes/auth.js";
 import { invitationRoutes } from "./routes/invitations.js";
 import { mediaRoutes } from "./routes/media.js";
@@ -41,14 +43,16 @@ const publicDir = fileURLToPath(new URL("../public", import.meta.url));
 // Пути, куда приходят запросы от внешних систем: проверка Origin к ним не применяется.
 const EXTERNAL_PATHS = [/^\/api\/payments\/[\w-]+\/callback$/, /^\/api\/sms\/[\w-]+\/callback$/, /^\/telegram\/webhook$/];
 
-export async function buildApp(deps: Omit<Ctx, "log">, opts: { logger?: boolean } = {}) {
+export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?: Notifier }, opts: { logger?: boolean } = {}) {
   const { config } = deps;
+  const hops = config.TRUST_PROXY;
   const app = Fastify({
     logger: opts.logger ?? true,
-    trustProxy: config.TRUST_PROXY,
+    // Число прокси передаём функцией: Fastify 5 не доверяет ни одному адресу, если получает просто число.
+    trustProxy: typeof hops === "number" ? (_address: string, hop: number) => hop < hops : hops,
     bodyLimit: 256 * 1024,
   });
-  const ctx: Ctx = { ...deps, log: app.log };
+  const ctx: Ctx = { ...deps, notifier: deps.notifier ?? noopNotifier, log: app.log };
   app.decorate("ctx", ctx);
 
   await app.register(helmet, {
@@ -112,7 +116,9 @@ export async function buildApp(deps: Omit<Ctx, "log">, opts: { logger?: boolean 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof HttpError) return reply.code(err.statusCode).send({ error: err.message });
     if (err instanceof ZodError) {
-      return reply.code(400).send({ error: "Неверные данные", issues: err.issues.map((i) => ({ path: i.path, message: i.message })) });
+      // Понятное сообщение из схемы (например, «Введите узбекский номер…») важнее общего: его можно перевести.
+      const known = err.issues.find((i) => isKnownMessage(i.message));
+      return reply.code(400).send({ error: known?.message ?? "Неверные данные", issues: err.issues.map((i) => ({ path: i.path, message: i.message })) });
     }
     const status = (err as { statusCode?: number }).statusCode;
     if (status && status < 500) return reply.code(status).send({ error: (err as Error).message });
@@ -138,6 +144,7 @@ export async function buildApp(deps: Omit<Ctx, "log">, opts: { logger?: boolean 
   await app.register(publicRoutes, { prefix: "/api/public" });
   await app.register(smsRoutes, { prefix: "/api/sms" });
   await app.register(adminRoutes, { prefix: "/api/admin" });
+  await app.register(aiRoutes, { prefix: "/api/ai" });
   await app.register(mediaRoutes);
 
   await app.register(fastifyStatic, { root: publicDir, prefix: "/", index: ["index.html"] });

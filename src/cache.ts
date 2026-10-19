@@ -1,6 +1,19 @@
+import { randomUUID } from "node:crypto";
 import { Redis } from "ioredis";
 
 export type Cache = ReturnType<typeof createCache>;
+
+/** Блокировка, взятая через Cache.lock. */
+export type Lock = {
+  /** Продлевает блокировку ещё на ttl секунд, пока она наша. */
+  extend(): Promise<void>;
+  /** Снимает блокировку, если она ещё наша (после истечения её мог взять другой). */
+  release(): Promise<void>;
+};
+
+// Продление и снятие только своей блокировки: значение ключа сверяется с токеном владельца.
+const EXTEND_SCRIPT = `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('EXPIRE', KEYS[1], ARGV[2]) end return 0`;
+const RELEASE_SCRIPT = `if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0`;
 
 export function createCache(redis: Redis, prefix = "inv:") {
   const k = (key: string) => prefix + key;
@@ -48,6 +61,22 @@ export function createCache(redis: Redis, prefix = "inv:") {
     async hits(key: string): Promise<number> {
       return Number((await redis.get(k(`rl:${key}`))) ?? 0);
     },
+
+    /** Ставит отметку на ttl секунд; false, если она уже стоит (например, напоминание уже отправлено). */
+    async claim(key: string, ttlSeconds: number): Promise<boolean> {
+      return (await redis.set(k(key), "1", "EX", ttlSeconds, "NX")) === "OK";
+    },
+
+    /** Берёт блокировку на ttl секунд; null, если её уже держит другой запрос. */
+    async lock(key: string, ttlSeconds: number): Promise<Lock | null> {
+      const full = k(`lock:${key}`);
+      const token = randomUUID();
+      if ((await redis.set(full, token, "EX", ttlSeconds, "NX")) !== "OK") return null;
+      return {
+        extend: async () => void (await redis.eval(EXTEND_SCRIPT, 1, full, token, ttlSeconds)),
+        release: async () => void (await redis.eval(RELEASE_SCRIPT, 1, full, token)),
+      };
+    },
   };
 }
 
@@ -62,4 +91,6 @@ export const cacheKeys = {
   multicardToken: "multicard:token",
   eskizToken: "eskiz:token",
   otp: (phone: string) => `otp:${phone}`,
+  // Рассылки гостям приглашения (SMS и напоминания) идут по одной.
+  sendLock: (invitationId: string) => `send:${invitationId}`,
 };

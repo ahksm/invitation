@@ -5,6 +5,7 @@ import { defaultInvitationSettings, guests, invitations, type Guest, type GuestD
 import { HttpError } from "../errors.js";
 import { logEvent } from "./events.js";
 import { appUrlOf, getOwnInvitation, invalidateInvitation, randomToken } from "./invitations.js";
+import { notifyOwnerLater } from "./notify.js";
 import { isGuestPaid, paidByRank } from "./seats.js";
 import { guestSmsStatuses } from "./sms.js";
 
@@ -125,7 +126,7 @@ export type GuestPatch = {
 };
 
 export async function updateGuest(
-  ctx: Pick<Ctx, "db" | "cache" | "config" | "log">,
+  ctx: Pick<Ctx, "db" | "cache" | "config" | "notifier" | "log">,
   userId: string,
   invitationId: string,
   guestId: string,
@@ -157,7 +158,10 @@ export async function updateGuest(
   if (!Object.keys(set).length) return guestDto(ctx, inv, g);
 
   const [updated] = await ctx.db.update(guests).set(set).where(eq(guests.id, g.id)).returning();
-  if (checkIn) await logEvent(ctx, inv.id, "checkin", { guestId: g.id });
+  if (checkIn) {
+    await logEvent(ctx, inv.id, "checkin", { guestId: g.id });
+    notifyOwnerLater(ctx, inv.id, { kind: "checkin", guestName: updated!.name });
+  }
   // Имя, ответ и число гостей видны на страницах других гостей («Кто придёт»).
   await invalidateInvitation(ctx, inv);
   return guestDto(ctx, inv, updated!);
@@ -176,7 +180,12 @@ export async function removeGuest(ctx: Pick<Ctx, "db" | "cache">, userId: string
 }
 
 /** Отметка на входе по токену из QR (ссылка /g/<token>). Повторная отметка ничего не меняет. */
-export async function checkInByToken(ctx: Pick<Ctx, "db" | "cache" | "config" | "log">, userId: string, invitationId: string, token: string) {
+export async function checkInByToken(
+  ctx: Pick<Ctx, "db" | "cache" | "config" | "notifier" | "log">,
+  userId: string,
+  invitationId: string,
+  token: string,
+) {
   const inv = await getOwnInvitation(ctx, userId, invitationId);
   const [first] = await ctx.db
     .update(guests)
@@ -193,6 +202,7 @@ export async function checkInByToken(ctx: Pick<Ctx, "db" | "cache" | "config" | 
   if (first) {
     await logEvent(ctx, inv.id, "checkin", { guestId: g.id });
     await invalidateInvitation(ctx, inv);
+    notifyOwnerLater(ctx, inv.id, { kind: "checkin", guestName: g.name });
   }
   return { guest: await guestDto(ctx, inv, g) };
 }

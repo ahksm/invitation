@@ -614,7 +614,7 @@ describe("SMS по модели мест", () => {
 
     t.smsSent.length = 0;
     const r1 = (await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, {})).json();
-    expect(r1).toEqual({ sent: 1, skipped: [{ guestId: b.id, name: "Боря", reason: "seat_unpaid" }] });
+    expect(r1).toEqual({ sent: 1, skipped: [{ guestId: b.id, name: "Боря", reason: "seat_unpaid" }], limited: false });
     expect(t.smsSent[0]!.text).toBe(`Аня, приглашаем вас: Анна и Тимур, 26.12.2026. Ваше приглашение: ${APP_URL}/g/${a.token}`);
     await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, { guestIds: [a.id] });
     await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, { guestIds: [a.id] });
@@ -622,7 +622,7 @@ describe("SMS по модели мест", () => {
     // Удаляем Аню: Боря становится оплаченным, но SMS удалённой гостьи считаются в лимите приглашения.
     await req(cookie, "DELETE", `/api/invitations/${inv.id}/guests/${a.id}`);
     const r2 = (await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, {})).json();
-    expect(r2).toEqual({ sent: 0, skipped: [{ guestId: b.id, name: "Боря", reason: "invitation_limit" }] });
+    expect(r2).toEqual({ sent: 0, skipped: [{ guestId: b.id, name: "Боря", reason: "invitation_limit" }], limited: false });
 
     const detail = (await req(cookie, "GET", `/api/invitations/${inv.id}`)).json();
     expect(detail.guests[0]).toMatchObject({ id: b.id, paid: true, sms: null });

@@ -21,7 +21,8 @@ export const invitationStatus = pgEnum("invitation_status", ["draft", "active", 
 export const orderKind = pgEnum("order_kind", ["template", "seats", "subscription"]);
 export const orderStatus = pgEnum("order_status", ["pending", "paid", "failed", "cancelled"]);
 export const rsvpStatus = pgEnum("rsvp_status", ["pending", "yes", "no", "maybe"]);
-export const smsPurpose = pgEnum("sms_purpose", ["otp", "invite"]);
+// invite и reminder — SMS гостям: вместе ограничены 3 на гостя и paidSeats × 3 на приглашение.
+export const smsPurpose = pgEnum("sms_purpose", ["otp", "invite", "reminder"]);
 export const smsStatus = pgEnum("sms_status", ["queued", "sent", "delivered", "failed"]);
 export const guestGroup = pgEnum("guest_group", ["family", "friends", "work", "other"]);
 export const guestSource = pgEnum("guest_source", ["owner", "self"]);
@@ -269,7 +270,7 @@ export const settings = pgTable("settings", {
     .$onUpdate(() => new Date()),
 });
 
-// Все отправленные SMS: коды входа и приглашения гостям.
+// Все отправленные SMS: коды входа, приглашения и напоминания гостям.
 export const smsMessages = pgTable(
   "sms_messages",
   {
@@ -287,7 +288,12 @@ export const smsMessages = pgTable(
     error: text("error"),
     ...timestamps,
   },
-  (t) => [index("sms_guest_idx").on(t.guestId), index("sms_created_idx").on(t.createdAt), index("sms_ref_idx").on(t.providerRef)],
+  (t) => [
+    index("sms_guest_idx").on(t.guestId),
+    index("sms_invitation_idx").on(t.invitationId),
+    index("sms_created_idx").on(t.createdAt),
+    index("sms_ref_idx").on(t.providerRef),
+  ],
 );
 
 // Журнал действий: кто и когда пользовался платформой.

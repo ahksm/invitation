@@ -10,6 +10,7 @@ import { dateLocale, pickLocale, type Locale } from "../i18n.js";
 import { logEvent } from "./events.js";
 import { takeSeats } from "./guests.js";
 import { appUrlOf, invalidateInvitation, randomToken } from "./invitations.js";
+import { notifyOwnerLater } from "./notify.js";
 import { isGuestPaid } from "./seats.js";
 
 /**
@@ -264,19 +265,26 @@ function rsvpValues(input: RsvpInput) {
   };
 }
 
-/** После ответа гостя: событие в ленте и сброс кэша (ответ виден в «Кто придёт» у других гостей). */
-async function afterRsvp(ctx: Pick<Ctx, "db" | "cache" | "log">, inv: { id: string; slug: string }, guestId: string, status: RsvpInput["status"]) {
-  await logEvent(ctx, inv.id, status, { guestId });
+type RsvpCtx = Pick<Ctx, "db" | "cache" | "config" | "notifier" | "log">;
+
+/**
+ * После ответа гостя: событие в ленте, сброс кэша (ответ виден в «Кто придёт» у других гостей)
+ * и уведомление владельцу в Telegram (в фоне, если включено settings.notify).
+ */
+async function afterRsvp(ctx: RsvpCtx, inv: { id: string; slug: string }, guest: { id: string; name: string }, input: RsvpInput) {
+  await logEvent(ctx, inv.id, input.status, { guestId: guest.id });
   await invalidateInvitation(ctx, inv);
-  // Уведомление владельцу (settings.notify, раздел 5 спецификации) подключается здесь вместе с ботом.
+  notifyOwnerLater(ctx, inv.id, { kind: input.status, guestName: guest.name, count: input.count, msg: input.msg });
 }
 
 /** Ответ по личной ссылке. false, если ссылка не открывается (не опубликовано или место не оплачено). */
-export async function rsvpPersonal(ctx: Pick<Ctx, "db" | "cache" | "config" | "log">, token: string, input: RsvpInput): Promise<boolean> {
+export async function rsvpPersonal(ctx: RsvpCtx, token: string, input: RsvpInput): Promise<boolean> {
   const entry = await guestEntry(ctx, token);
   if (!entry) return false;
-  await ctx.db.update(guests).set(rsvpValues(input)).where(eq(guests.id, entry.guestId));
-  await afterRsvp(ctx, { id: entry.invitationId, slug: entry.slug }, entry.guestId, input.status);
+  const [g] = await ctx.db.update(guests).set(rsvpValues(input)).where(eq(guests.id, entry.guestId)).returning({ id: guests.id, name: guests.name });
+  // Гостя могли удалить, пока его страница лежала в кэше.
+  if (!g) return false;
+  await afterRsvp(ctx, { id: entry.invitationId, slug: entry.slug }, g, input);
   return true;
 }
 
@@ -285,7 +293,7 @@ export async function rsvpPersonal(ctx: Pick<Ctx, "db" | "cache" | "config" | "l
  * обновляет прежний ответ. Не больше SELF_GUESTS_LIMIT таких гостей на приглашение.
  */
 export async function rsvpShared(
-  ctx: Pick<Ctx, "db" | "cache" | "config" | "log">,
+  ctx: RsvpCtx,
   slug: string,
   input: RsvpInput & { name: string; code?: string | undefined; guestToken?: string | undefined },
   ip: string,
@@ -320,6 +328,6 @@ export async function rsvpShared(
       .returning();
     return g!;
   });
-  await afterRsvp(ctx, { id: entry.invitationId, slug: entry.slug }, guest.id, input.status);
+  await afterRsvp(ctx, { id: entry.invitationId, slug: entry.slug }, guest, input);
   return { guestToken: guest.token };
 }

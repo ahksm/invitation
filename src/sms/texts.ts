@@ -2,8 +2,8 @@ import { cyrText, type Locale } from "../i18n.js";
 
 /**
  * Тексты SMS на четырёх языках. Eskiz пропускает только одобренные шаблоны, поэтому каждый
- * текст ниже (8 штук) нужно отправить на модерацию в кабинете Eskiz, а после изменения отправить заново.
- * Кириллица: 70 символов в одном SMS, латиница: 160; длиннее делится на части.
+ * текст ниже (12 штук) нужно отправить на модерацию в кабинете Eskiz, а после изменения отправить заново.
+ * Кириллица: 70 символов в одном SMS, латиница: 160 (только символы GSM: без ‘ и ’); длиннее делится на части.
  * Тексты uzc получаются из uz через toCyr; подставляемые значения (имя, ссылка, код) не транслитерируются.
  */
 type Text<V extends unknown[]> = (...v: V) => string;
@@ -36,9 +36,27 @@ const invite: Record<Locale, Text<InviteVars>> = {
   en: (g, e, d, l) => `${g}, you are invited: ${e}${d ? `, ${d}` : ""}. Your invitation: ${l}`,
 };
 
+/** Напоминание гостю, который ещё не ответил. Короче приглашения: часто это второе SMS тому же человеку. */
+type ReminderVars = InviteVars;
+const reminderUz: Text<ReminderVars> = (g, e, d, l) => `${g}, eslatma: ${e}${d ? `, ${d}` : ""}. Javobingizni kutamiz: ${l}`;
+const reminder: Record<Locale, Text<ReminderVars>> = {
+  ru: (g, e, d, l) => `${g}, напоминаем: ${e}${d ? `, ${d}` : ""}. Ждём ваш ответ: ${l}`,
+  uz: reminderUz,
+  uzc: cyr(reminderUz),
+  en: (g, e, d, l) => `${g}, a reminder: ${e}${d ? `, ${d}` : ""}. Please reply: ${l}`,
+};
+
 export const otpText = (locale: Locale, appName: string, code: string) => otp[locale](appName, code);
+
+// Узбекские апострофы (o‘, g‘, ʼ) в именах и названиях событий («To‘y») заменяются на ',
+// иначе латинское SMS уходит в UCS-2 и делится на части по 70 символов.
+const gsm = (s: string) => s.replace(/[\u2018\u2019\u02bb\u02bc`]/g, "'");
+
 export const inviteText = (locale: Locale, v: { guestName: string; event: string; date?: string | undefined; link: string }) =>
-  invite[locale](v.guestName, v.event, v.date ?? "", v.link);
+  invite[locale](gsm(v.guestName), gsm(v.event), v.date ?? "", v.link);
+
+export const reminderText = (locale: Locale, v: { guestName: string; event: string; date?: string | undefined; link: string }) =>
+  reminder[locale](gsm(v.guestName), gsm(v.event), v.date ?? "", v.link);
 
 export function formatSmsDate(isoDate: string | undefined) {
   if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate;

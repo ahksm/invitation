@@ -15,6 +15,13 @@
       "when": 1792413566162,
       "tag": "0001_invito",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792415812067,
+      "tag": "0002_sms_reminder",
+      "breakpoints": true
     }
   ]
 }

@@ -63,7 +63,9 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   // Вход из мини-аппа Telegram. Если номера ещё нет, мини-апп запрашивает контакт
   // (Telegram.WebApp.requestContact), бот получает его и привязывает, а мини-апп ждёт phone в ответе.
-  app.post("/webapp", strict, async (req, reply) => {
+  // Пока человек отвечает на запрос контакта, мини-апп повторяет этот запрос, поэтому лимит выше strict:
+  // 40 в минуту хватает на опрос раз в 3 секунды (20 в минуту) с запасом на соседей за тем же IP.
+  app.post("/webapp", { config: { rateLimit: { max: 40, timeWindow: "1 minute" } } }, async (req, reply) => {
     const { initData } = z.object({ initData: z.string().max(4096) }).parse(req.body);
     const profile = verifyWebAppInitData(initData, ctx.config.TELEGRAM_BOT_TOKEN);
     if (!profile) throw new HttpError(401, "Данные Telegram не прошли проверку");
