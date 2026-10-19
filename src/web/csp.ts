@@ -27,9 +27,8 @@ export const siteHelmet: FastifyHelmetOptions = {
  * не отправляется: в нём нельзя перечислить чужие сайты, и браузер, который смотрит на него,
  * а не на CSP, запретил бы фрейм.
  */
-export const appHelmet: Omit<FastifyHelmetOptions, "global"> = {
-  contentSecurityPolicy: {
-    directives: { ...directives, frameAncestors: ["'self'", "https://web.telegram.org", "https://*.telegram.org"] },
-  },
-  xFrameOptions: false,
+export const appCsp = {
+  directives: { ...directives, frameAncestors: ["'self'", "https://web.telegram.org", "https://*.telegram.org"] },
 };
+
+export const appHelmet: Omit<FastifyHelmetOptions, "global"> = { contentSecurityPolicy: appCsp, xFrameOptions: false };

@@ -24,6 +24,17 @@ export function cyrText(s: string): string {
     .join("");
 }
 
+/**
+ * Подставляет значения {name} в текст. Значение, которое само кончается точкой (русская дата
+ * «1 июня 2031 г.»), перед точкой текста не даёт двух точек подряд.
+ */
+export function fillText(text: string, vars: Record<string, string | number>): string {
+  return text.replace(/\{(\w+)\}(\.?)/g, (_, k: string, dot: string) => {
+    const v = String(vars[k] ?? "");
+    return dot && v.endsWith(".") ? v : v + dot;
+  });
+}
+
 /** Язык запроса: заголовок X-Lang от нашего фронтенда, иначе Accept-Language. */
 export function requestLocale(headers: Record<string, string | string[] | undefined>): Locale {
   const x = headers["x-lang"];
@@ -72,6 +83,7 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Вход через Telegram не настроен": { uz: "Telegram orqali kirish sozlanmagan", en: "Telegram sign-in is not configured" },
   "Данные Telegram не прошли проверку": { uz: "Telegram ma'lumotlari tekshiruvdan o'tmadi", en: "Telegram data failed verification" },
   "Этот номер уже привязан к другому Telegram-аккаунту": { uz: "Bu raqam boshqa Telegram akkauntiga ulangan", en: "This number is linked to another Telegram account" },
+  "Этот Telegram уже привязан к другому аккаунту": { uz: "Bu Telegram boshqa akkauntga ulangan", en: "This Telegram account is linked to another account" },
   "Эта ссылка уже занята": { uz: "Bu havola band", en: "This link is already taken" },
   "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo'lmaydi", en: "This link cannot be used" },
   "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to'lanmagan qoralamada o'zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
@@ -84,6 +96,7 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Шаблон больше недоступен, выберите другой": { uz: "Shablon endi mavjud emas, boshqasini tanlang", en: "This template is no longer available, choose another one" },
   "Заказ отменён, оформите оплату заново": { uz: "Buyurtma bekor qilindi, qaytadan to'lov qiling", en: "The order was cancelled, please pay again" },
   "Такого стола нет": { uz: "Bunday stol yo'q", en: "There is no such table" },
+  "За один раз можно добавить не больше 500 гостей": { uz: "Bir martada ko'pi bilan 500 ta mehmon qo'shish mumkin", en: "You can add at most 500 guests at a time" },
   "Приглашение защищено паролем": { uz: "Taklifnoma parol bilan himoyalangan", en: "This invitation is protected by a password" },
   "Неверный пароль": { uz: "Parol noto'g'ri", en: "Wrong password" },
   "Слишком много попыток, попробуйте через минуту": { uz: "Urinishlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many attempts, try again in a minute" },
@@ -140,7 +153,7 @@ export type ApiTextKey = keyof typeof apiTexts;
 
 export function apiText(locale: Locale, key: ApiTextKey, vars: Record<string, string | number> = {}) {
   const text = locale === "uzc" ? cyrText(apiTexts[key].uz) : apiTexts[key][locale];
-  return text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+  return fillText(text, vars);
 }
 
 /** Тексты бота. */
@@ -171,6 +184,18 @@ export const botTexts = {
   },
   confirmButton: { ru: "✅ Подтвердить вход", uz: "✅ Kirishni tasdiqlash", en: "✅ Confirm sign-in" },
   loginConfirmed: { ru: "✅ Вход подтверждён. Вернитесь в браузер.", uz: "✅ Kirish tasdiqlandi. Brauzerga qayting.", en: "✅ Sign-in confirmed. Go back to your browser." },
+  // «Подключить Telegram» в аккаунте на сайте: номер аккаунта со скрытой серединой.
+  confirmLink: {
+    ru: "Подключить этот Telegram к аккаунту {phone}? Запрос с устройства: {device}.\nЕсли это не вы, просто проигнорируйте сообщение.",
+    uz: "Ushbu Telegramni {phone} akkauntiga ulaysizmi? So'rov qurilmadan: {device}.\nAgar bu siz bo'lmasangiz, xabarni e'tiborsiz qoldiring.",
+    en: "Connect this Telegram to the account {phone}? Request from device: {device}.\nIf this wasn't you, just ignore this message.",
+  },
+  confirmLinkButton: { ru: "✅ Подключить", uz: "✅ Ulash", en: "✅ Connect" },
+  linkConfirmed: {
+    ru: "✅ Telegram подключён к аккаунту {phone}. Вернитесь в браузер.",
+    uz: "✅ Telegram {phone} akkauntiga ulandi. Brauzerga qayting.",
+    en: "✅ Telegram is connected to the account {phone}. Go back to your browser.",
+  },
   loginExpired: {
     ru: "Запрос входа устарел. Нажмите «Войти через Telegram» на сайте ещё раз.",
     uz: "Kirish so'rovi eskirgan. Saytda «Telegram orqali kirish» tugmasini qayta bosing.",
@@ -240,7 +265,7 @@ const botTextsUzc = Object.fromEntries(Object.entries(botTexts).map(([k, v]) => 
 
 export function bt(locale: Locale, key: BotTextKey, vars: Record<string, string | number> = {}) {
   const text = locale === "uzc" ? botTextsUzc[key] : botTexts[key][locale];
-  return text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+  return fillText(text, vars);
 }
 
 export const localeNames: Record<Locale, string> = { ru: "Русский", uz: "O'zbekcha", uzc: "Ўзбекча", en: "English" };

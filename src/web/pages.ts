@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { appHelmet } from "./csp.js";
+import { appCsp, appHelmet } from "./csp.js";
 import { assetUrl, createDesignStore, type Asset, type Design, type Encoding } from "./design.js";
 
 /** Загрузочные данные страницы: логика Invito читает их из #invito-boot. */
@@ -251,6 +251,11 @@ export async function webRoutes(app: FastifyInstance, opts: { publicPage: Public
       const file = (path.split("/").pop() ?? "").includes(".");
       const html = (req.headers.accept ?? "").includes("text/html");
       if (html && !file && !/^\/(api|media)\//.test(path)) {
+        // У обработчика 404 нет настроек маршрута, и helmet уже поставил заголовки сайта (frame-ancestors 'none',
+        // X-Frame-Options: DENY). Оболочка «не найдено» открывается и во фрейме Telegram Web, поэтому получает
+        // заголовки страниц приложения (appHelmet), как /app и /i/…: без X-Frame-Options, frame-ancestors с Telegram.
+        reply.raw.removeHeader("x-frame-options");
+        reply.helmet({ contentSecurityPolicy: appCsp, xFrameOptions: false });
         return sendShell(reply, store.get(), { boot: { mode: "notfound" }, meta: { title: ctx.config.APP_NAME }, status: 404 });
       }
     }

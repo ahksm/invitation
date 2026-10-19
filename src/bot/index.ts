@@ -1,7 +1,16 @@
 import { Bot, InlineKeyboard, Keyboard, type Context } from "grammy";
 import { count, eq, gt } from "drizzle-orm";
 import { issueLoginCode } from "../auth/codes.js";
-import { approveTelegramLogin, getTelegramLogin, isNonce } from "../auth/telegram.js";
+import {
+  approveTelegramLogin,
+  claimTelegramApproval,
+  clearContactRejection,
+  dropTelegramLogin,
+  getTelegramLogin,
+  isNonce,
+  setContactRejection,
+  settleTelegramLogin,
+} from "../auth/telegram.js";
 import type { Ctx } from "../context.js";
 import { invitations, users, type User } from "../db/schema.js";
 import { eventLabel } from "../design-data.js";
@@ -9,11 +18,12 @@ import { HttpError } from "../errors.js";
 import { bt, dateLocale, localeNames, locales, pickLocale, translateError, type BotTextKey, type Locale } from "../i18n.js";
 import { getPrices } from "../services/settings.js";
 import { listOwnInvitations } from "../services/invitations.js";
-import { attachPhoneToTelegramUser, formatPhone, normalizePhone } from "../services/phone.js";
+import { attachPhoneToTelegramUser, formatPhone, linkTelegramToUser, maskPhone, normalizePhone } from "../services/phone.js";
 import { linkGuestChat, longDate, personalView, rsvpFromChat, type PublicView } from "../services/public.js";
+import { tashkentDate } from "../services/reminders.js";
 import { track } from "../services/usage.js";
 import { parseUserRef, type UserRef } from "../services/user-ref.js";
-import { getAccess, invalidateUser, setUserLocale, upsertTelegramUser } from "../services/users.js";
+import { getAccess, getUser, invalidateUser, setUserLocale, upsertTelegramUser } from "../services/users.js";
 
 export type BotContext = Context & { user: User; lang: Locale };
 
@@ -64,12 +74,54 @@ export function createBot(ctx: Ctx) {
       reply_markup: new Keyboard().requestContact(bt(c.lang, "sharePhoneButton")).resized().oneTime(),
     });
 
+  /** Аккаунт, к которому подключают Telegram (запрос начат с сессией на сайте); null — обычный вход. */
+  async function linkTarget(nonce: string) {
+    const login = await getTelegramLogin(ctx.cache, nonce);
+    if (!login?.linkUserId) return null;
+    const user = await getUser(ctx, login.linkUserId);
+    return { login, user: user && !user.blocked && user.phone ? { ...user, phone: user.phone } : null };
+  }
+
   async function askLoginConfirm(c: BotContext, nonce: string) {
     const login = await getTelegramLogin(ctx.cache, nonce);
-    if (!login || login.userId) return void (await c.reply(bt(c.lang, "loginExpired")));
+    if (!login || login.userId || login.conflict) return void (await c.reply(bt(c.lang, "loginExpired")));
+    if (login.linkUserId) {
+      // Подключение: человек видит, к какому аккаунту (номер со скрытой серединой) и с какого устройства.
+      const target = await linkTarget(nonce);
+      if (!target?.user) return void (await c.reply(bt(c.lang, "loginExpired")));
+      return void (await c.reply(bt(c.lang, "confirmLink", { phone: maskPhone(target.user.phone), device: login.device }), {
+        reply_markup: new InlineKeyboard().text(bt(c.lang, "confirmLinkButton"), `auth:${nonce}`),
+      }));
+    }
     await c.reply(bt(c.lang, "confirmLogin", { device: login.device }), {
       reply_markup: new InlineKeyboard().text(bt(c.lang, "confirmButton"), `auth:${nonce}`),
     });
+  }
+
+  /**
+   * Нажатие «Подключить»: Telegram привязывается к аккаунту запроса, браузер получает сессию этого
+   * аккаунта. Telegram другого аккаунта (с номером) не привязывается: запрос завершается отказом,
+   * и браузер остаётся в своём аккаунте. Возвращает текст, которым заменяется сообщение с кнопкой.
+   */
+  async function confirmLink(c: BotContext, nonce: string, targetId: string): Promise<string> {
+    // Повторное или параллельное нажатие той же кнопки ничего не делает.
+    if (!(await claimTelegramApproval(ctx.cache, nonce))) return bt(c.lang, "loginExpired");
+    let linked;
+    try {
+      linked = await linkTelegramToUser(ctx, targetId, c.user);
+    } catch (err) {
+      if (!(err instanceof HttpError)) throw err;
+      await settleTelegramLogin(ctx.cache, nonce, { conflict: err.message });
+      return translateError(err.message, c.lang);
+    }
+    if (!linked?.phone) {
+      await dropTelegramLogin(ctx.cache, nonce);
+      return bt(c.lang, "loginExpired");
+    }
+    c.user = linked;
+    await settleTelegramLogin(ctx.cache, nonce, { userId: linked.id });
+    await track(ctx, linked.id, "telegram_linked", { telegramId: String(linked.telegramId) });
+    return bt(c.lang, "linkConfirmed", { phone: maskPhone(linked.phone) });
   }
 
   async function sendLoginLink(c: BotContext) {
@@ -125,7 +177,9 @@ export function createBot(ctx: Ctx) {
     // t.me/<бот>?start=g_<token> — с кнопки «Ответить через бота» на странице гостя.
     const known = (payload.startsWith("auth_") && isNonce(payload.slice(5))) || GUEST_PAYLOAD.test(payload);
     if (known) {
-      if (!c.user.phone) {
+      // Подключение Telegram к аккаунту на сайте: номер уже есть у аккаунта, в боте его не спрашиваем.
+      const link = payload.startsWith("auth_") && (await linkTarget(payload.slice(5))) !== null;
+      if (!c.user.phone && !link) {
         await ctx.cache.set(pendingKey(c.from!.id), payload, payload.startsWith("auth_") ? 300 : 3600);
         return void (await askPhone(c));
       }
@@ -135,17 +189,27 @@ export function createBot(ctx: Ctx) {
     await c.reply(bt(c.lang, "welcome"), { reply_markup: menu(c.lang) });
   });
 
+  // Отказ принять контакт запоминается для мини-аппа (/api/auth/webapp отвечает с error), новый контакт его сбрасывает.
   bot.on("message:contact", async (c) => {
     const contact = c.message.contact;
+    const tgId = c.from.id;
+    await clearContactRejection(ctx.cache, tgId);
     // Принимаем только собственный номер, отправленный кнопкой, а не чужой контакт.
-    if (contact.user_id !== c.from.id) return void (await c.reply(bt(c.lang, "ownPhoneOnly")));
+    if (contact.user_id !== tgId) {
+      await setContactRejection(ctx.cache, tgId, { text: "ownPhoneOnly" });
+      return void (await c.reply(bt(c.lang, "ownPhoneOnly")));
+    }
     const phone = contactPhone(contact.phone_number);
-    if (!phone) return void (await c.reply(bt(c.lang, "badPhone")));
+    if (!phone) {
+      await setContactRejection(ctx.cache, tgId, { text: "badPhone" });
+      return void (await c.reply(bt(c.lang, "badPhone")));
+    }
     try {
       c.user = await attachPhoneToTelegramUser(ctx, c.user, phone);
     } catch (err) {
-      if (err instanceof HttpError) return void (await c.reply(translateError(err.message, c.lang), { reply_markup: { remove_keyboard: true } }));
-      throw err;
+      if (!(err instanceof HttpError)) throw err;
+      await setContactRejection(ctx.cache, tgId, { error: err.message });
+      return void (await c.reply(translateError(err.message, c.lang), { reply_markup: { remove_keyboard: true } }));
     }
     await c.reply(bt(c.lang, "phoneLinked", { phone: phone.startsWith("998") ? formatPhone(phone) : `+${phone}` }), { reply_markup: { remove_keyboard: true } });
     const payload = await ctx.cache.take<string>(pendingKey(c.from.id));
@@ -154,11 +218,18 @@ export function createBot(ctx: Ctx) {
   });
 
   bot.callbackQuery(/^auth:([\w-]+)$/, async (c) => {
+    const nonce = c.match[1]!;
+    const link = await linkTarget(nonce);
+    if (link) {
+      await c.answerCallbackQuery();
+      const text = link.login.userId || link.login.conflict ? bt(c.lang, "loginExpired") : await confirmLink(c, nonce, link.login.linkUserId!);
+      return void (await c.editMessageText(text));
+    }
     if (!c.user.phone) {
       await c.answerCallbackQuery();
       return void (await askPhone(c));
     }
-    const ok = await approveTelegramLogin(ctx.cache, c.match[1]!, c.user.id);
+    const ok = await approveTelegramLogin(ctx.cache, nonce, c.user.id);
     await c.answerCallbackQuery();
     await c.editMessageText(bt(c.lang, ok ? "loginConfirmed" : "loginExpired"));
   });
@@ -238,7 +309,8 @@ export function createBot(ctx: Ctx) {
       access.free
         ? bt(l, "accessFree")
         : access.subscriptionEndsAt
-          ? bt(l, "accessSub", { date: access.subscriptionEndsAt.toLocaleDateString(dateLocale[l]) })
+          ? // Дата по календарю Ташкента, как в приложении: подписка до 01:30 19-го — это 19-е, а не 18-е (UTC).
+            bt(l, "accessSub", { date: longDate(tashkentDate(access.subscriptionEndsAt), l) })
           : bt(l, "accessNone"),
     ];
     await c.reply(lines.join("\n"));

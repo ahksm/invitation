@@ -56,7 +56,12 @@ const group = z.enum(["family", "friends", "work", "other"]);
 const plus = z.number().int().min(0).max(10);
 const guestName = z.string().trim().min(1).max(120);
 const guestSchema = z.object({ name: guestName, phone: phoneSchema.nullish(), group: group.optional(), plus: plus.optional() });
-const guestsSchema = z.object({ guests: z.array(guestSchema).min(1).max(500) });
+/** Гостей за один запрос: фронтенд шлёт большие списки частями по GUESTS_PER_REQUEST. */
+export const GUESTS_PER_REQUEST = 500;
+const guestsSchema = z.object({
+  // Понятное сообщение с лимитом вместо общего «Неверные данные» (ключ перевода в src/i18n.ts).
+  guests: z.array(guestSchema).min(1).max(GUESTS_PER_REQUEST, `За один раз можно добавить не больше ${GUESTS_PER_REQUEST} гостей`),
+});
 const guestPatchSchema = z.object({
   name: guestName.optional(),
   phone: phoneSchema.nullable().optional(),

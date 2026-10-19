@@ -17,6 +17,12 @@ export function normalizePhone(input: string): string | null {
 
 export const formatPhone = (p: string) => `+${p.slice(0, 3)} ${p.slice(3, 5)} ${p.slice(5, 8)}-${p.slice(8, 10)}-${p.slice(10)}`;
 
+/**
+ * Номер со скрытой серединой для сообщений бота: «+998 90 ***-**-67». Номер из Telegram-контакта
+ * может быть и не узбекским (только цифры): тогда видны код страны и две последние цифры.
+ */
+export const maskPhone = (p: string) => (/^998\d{9}$/.test(p) ? `+998 ${p.slice(3, 5)} ***-**-${p.slice(10)}` : `+${p.slice(0, 3)}***${p.slice(-2)}`);
+
 const OTP_TTL = 300;
 const OTP_ATTEMPTS = 5;
 
@@ -86,6 +92,15 @@ export async function upsertPhoneUser(ctx: Pick<Ctx, "db" | "cache" | "config">,
   return user;
 }
 
+/** Таблицы с данными пользователя: при объединении аккаунтов строки переходят к оставшемуся. */
+const USER_DATA = [invitations, orders, subscriptions, usageEvents, smsMessages, media] as const;
+
+/** Переносит данные пользователя from к пользователю to и удаляет from (в транзакции). */
+async function mergeInto(tx: Pick<Ctx["db"], "update" | "delete">, fromId: string, toId: string) {
+  for (const t of USER_DATA) await tx.update(t).set({ userId: toId }).where(eq(t.userId, fromId));
+  await tx.delete(users).where(eq(users.id, fromId));
+}
+
 /**
  * Привязывает номер из Telegram-контакта к пользователю Telegram.
  * Если этот номер уже есть у аккаунта, созданного входом по SMS, аккаунты объединяются:
@@ -103,10 +118,7 @@ export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | 
     if (owner.telegramId !== null && owner.telegramId !== tgUser.telegramId) {
       throw new HttpError(409, "Этот номер уже привязан к другому Telegram-аккаунту");
     }
-    for (const t of [invitations, orders, subscriptions, usageEvents, smsMessages, media]) {
-      await tx.update(t).set({ userId: owner.id }).where(eq(t.userId, tgUser.id));
-    }
-    await tx.delete(users).where(eq(users.id, tgUser.id));
+    await mergeInto(tx, tgUser.id, owner.id);
     const [u] = await tx
       .update(users)
       .set({
@@ -123,6 +135,51 @@ export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | 
       .returning();
     return { user: u!, removed: tgUser.id };
   });
+  await invalidateUser(ctx, result.user.id);
+  if (result.removed) await invalidateUser(ctx, result.removed);
+  return result.user;
+}
+
+/** Отказ подключения Telegram: он уже у другого аккаунта (с номером). Ключ перевода в src/i18n.ts. */
+export const TELEGRAM_TAKEN = "Этот Telegram уже привязан к другому аккаунту";
+
+/**
+ * «Подключить Telegram» из аккаунта на сайте: Telegram tgUser (пользователь бота) привязывается
+ * к аккаунту targetId. Telegram уже этого аккаунта — ничего не меняется. Telegram без номера (его
+ * создал бот, когда человек его открыл, или админ выдал доступ по Telegram ID) свободен: его данные
+ * и бесплатный доступ переходят к аккаунту, запись удаляется. Telegram с номером — другой аккаунт:
+ * HttpError(409, TELEGRAM_TAKEN), ничего не меняется. Прежний Telegram аккаунта, если был, заменяется.
+ * null — аккаунта больше нет, он заблокирован или без номера (вход по нему всё равно невозможен).
+ */
+export async function linkTelegramToUser(ctx: Pick<Ctx, "db" | "cache" | "config">, targetId: string, tgUser: Pick<User, "id" | "telegramId">): Promise<User | null> {
+  const telegramId = tgUser.telegramId;
+  if (telegramId === null) throw new Error("linkTelegramToUser: у пользователя бота нет Telegram ID");
+  const result = await ctx.db.transaction(async (tx) => {
+    const [target] = await tx.select().from(users).where(eq(users.id, targetId)).for("update");
+    if (!target || target.blocked || !target.phone) return null;
+    // Строка Telegram читается заново под блокировкой: бот мог объединить её с другой, пока шёл запрос.
+    const [owner] = await tx.select().from(users).where(eq(users.telegramId, telegramId)).for("update");
+    if (owner?.id === target.id) return { user: target, removed: null };
+    if (owner?.phone) throw new HttpError(409, TELEGRAM_TAKEN);
+    // Заблокированный Telegram не переносит блокировку на аккаунт и не подключается.
+    if (owner?.blocked) throw new HttpError(403, "Доступ заблокирован");
+    if (owner) await mergeInto(tx, owner.id, target.id);
+    const [u] = await tx
+      .update(users)
+      .set({
+        telegramId,
+        username: owner?.username ?? target.username,
+        firstName: target.firstName ?? owner?.firstName ?? null,
+        lastName: target.lastName ?? owner?.lastName ?? null,
+        isAdmin: isConfiguredAdmin(ctx.config, { phone: target.phone, telegramId }),
+        freeAccess: target.freeAccess || Boolean(owner?.freeAccess),
+        freeAccessNote: target.freeAccessNote ?? owner?.freeAccessNote ?? null,
+      })
+      .where(eq(users.id, target.id))
+      .returning();
+    return { user: u!, removed: owner?.id ?? null };
+  });
+  if (!result) return null;
   await invalidateUser(ctx, result.user.id);
   if (result.removed) await invalidateUser(ctx, result.removed);
   return result.user;
