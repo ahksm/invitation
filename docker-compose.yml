@@ -1,0 +1,41 @@
+# Полный запуск: docker compose up --build (переменные берутся из .env).
+services:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://invite:invite@db:5432/invite
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: invite
+      POSTGRES_PASSWORD: invite
+      POSTGRES_DB: invite
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invite"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis:/data
+    restart: unless-stopped
+
+volumes:
+  db:
+  redis:

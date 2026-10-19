@@ -1,0 +1,118 @@
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
+import { eq } from "drizzle-orm";
+import { cacheKeys } from "../cache.js";
+import type { Ctx } from "../context.js";
+import { invitations, orders, smsMessages, subscriptions, usageEvents, users, type User } from "../db/schema.js";
+import { HttpError } from "../errors.js";
+import type { Locale } from "../i18n.js";
+import { otpText } from "../sms/texts.js";
+import { invalidateUser } from "./users.js";
+
+/** Приводит номер к виду 998XXXXXXXXX. Принимает +998 90 123-45-67, 998901234567 и 901234567. */
+export function normalizePhone(input: string): string | null {
+  const digits = input.replace(/\D/g, "");
+  const full = digits.length === 9 ? `998${digits}` : digits;
+  return /^998\d{9}$/.test(full) ? full : null;
+}
+
+export const formatPhone = (p: string) => `+${p.slice(0, 3)} ${p.slice(3, 5)} ${p.slice(5, 8)}-${p.slice(8, 10)}-${p.slice(10)}`;
+
+const OTP_TTL = 300;
+const OTP_ATTEMPTS = 5;
+
+function otpHash(secret: string, phone: string, code: string) {
+  return createHmac("sha256", secret).update(`${phone}:${code}`).digest("hex");
+}
+
+/** Отправляет код входа. Лимиты: раз в минуту и 5 в час на номер, 20 в час с одного IP. */
+export async function requestOtp(ctx: Ctx, phone: string, ip: string, locale: Locale) {
+  const { cache } = ctx;
+  if (await cache.hit(`otp:minute:${phone}`, 1, 60)) throw new HttpError(429, "Код уже отправлен, повторить можно через минуту");
+  if (await cache.hit(`otp:hour:${phone}`, 5, 3600)) throw new HttpError(429, "Слишком много запросов кода, попробуйте через час");
+  if (await cache.hit(`otp:ip:${ip}`, 20, 3600)) throw new HttpError(429, "Слишком много запросов кода, попробуйте позже");
+
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  const key = `inv:${cacheKeys.otp(phone)}`;
+  await cache.redis.multi().del(key).hset(key, { hash: otpHash(ctx.config.JWT_SECRET, phone, code), attempts: 0 }).expire(key, OTP_TTL).exec();
+
+  const [row] = await ctx.db.insert(smsMessages).values({ purpose: "otp", phone, provider: ctx.sms.name }).returning({ id: smsMessages.id });
+  try {
+    const { providerRef } = await ctx.sms.send(phone, otpText(locale, ctx.config.APP_NAME, code));
+    await ctx.db.update(smsMessages).set({ status: "sent", providerRef }).where(eq(smsMessages.id, row!.id));
+  } catch (err) {
+    await ctx.db.update(smsMessages).set({ status: "failed", error: String(err).slice(0, 500) }).where(eq(smsMessages.id, row!.id));
+    await cache.redis.del(key);
+    ctx.log.error({ err }, "не удалось отправить код входа");
+    throw new HttpError(502, "Не удалось отправить SMS, попробуйте позже");
+  }
+  return { ttl: OTP_TTL };
+}
+
+/** Проверяет код. После 5 неверных попыток код сгорает. */
+export async function verifyOtp(ctx: Pick<Ctx, "cache" | "config">, phone: string, code: string): Promise<boolean> {
+  const key = `inv:${cacheKeys.otp(phone)}`;
+  const rec = await ctx.cache.redis.hgetall(key);
+  if (!rec.hash) return false;
+  const attempts = await ctx.cache.redis.hincrby(key, "attempts", 1);
+  if (attempts > OTP_ATTEMPTS) {
+    await ctx.cache.redis.del(key);
+    return false;
+  }
+  const a = Buffer.from(otpHash(ctx.config.JWT_SECRET, phone, code));
+  const b = Buffer.from(rec.hash);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
+  await ctx.cache.redis.del(key);
+  return true;
+}
+
+export async function upsertPhoneUser(ctx: Pick<Ctx, "db" | "cache" | "config">, phone: string, locale: Locale): Promise<User> {
+  const isAdmin = ctx.config.ADMIN_PHONES.includes(phone);
+  const [user] = await ctx.db
+    .insert(users)
+    .values({ phone, isAdmin, locale, lastSeenAt: new Date() })
+    .onConflictDoUpdate({ target: users.phone, set: { lastSeenAt: new Date(), ...(isAdmin && { isAdmin }) } })
+    .returning();
+  await invalidateUser(ctx, user!.id);
+  return user!;
+}
+
+/**
+ * Привязывает номер из Telegram-контакта к пользователю Telegram.
+ * Если этот номер уже есть у аккаунта, созданного входом по SMS, аккаунты объединяются:
+ * данные Telegram-аккаунта переносятся в аккаунт с номером.
+ */
+export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | "config">, tgUser: User, phone: string): Promise<User> {
+  if (tgUser.phone === phone) return tgUser;
+  const result = await ctx.db.transaction(async (tx) => {
+    const [owner] = await tx.select().from(users).where(eq(users.phone, phone)).for("update");
+    if (!owner || owner.id === tgUser.id) {
+      const [u] = await tx.update(users).set({ phone }).where(eq(users.id, tgUser.id)).returning();
+      return { user: u!, removed: null };
+    }
+    if (owner.telegramId !== null && owner.telegramId !== tgUser.telegramId) {
+      throw new HttpError(409, "Этот номер уже привязан к другому Telegram-аккаунту");
+    }
+    for (const t of [invitations, orders, subscriptions, usageEvents, smsMessages]) {
+      await tx.update(t).set({ userId: owner.id }).where(eq(t.userId, tgUser.id));
+    }
+    await tx.delete(users).where(eq(users.id, tgUser.id));
+    const [u] = await tx
+      .update(users)
+      .set({
+        telegramId: tgUser.telegramId,
+        username: tgUser.username,
+        firstName: owner.firstName ?? tgUser.firstName,
+        lastName: owner.lastName ?? tgUser.lastName,
+        isAdmin: owner.isAdmin || tgUser.isAdmin,
+        freeAccess: owner.freeAccess || tgUser.freeAccess,
+        freeAccessNote: owner.freeAccessNote ?? tgUser.freeAccessNote,
+        blocked: owner.blocked || tgUser.blocked,
+      })
+      .where(eq(users.id, owner.id))
+      .returning();
+    return { user: u!, removed: tgUser.id };
+  });
+  await invalidateUser(ctx, result.user.id);
+  if (result.removed) await invalidateUser(ctx, result.removed);
+  return result.user;
+}
