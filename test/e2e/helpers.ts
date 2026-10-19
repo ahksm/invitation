@@ -58,6 +58,50 @@ export function signInitData(fields: Record<string, string>, token = BOT_TOKEN) 
   return new URLSearchParams({ ...fields, hash }).toString();
 }
 
+type Dict = Record<string, any>;
+
+/**
+ * Мини-апп: Telegram.WebApp с initData, подписанной ключом бота. requestContact отвечает window.__contactOk,
+ * нажатия кнопок и открытые ссылки записываются в window.__tg.
+ */
+export async function telegramStub(context: BrowserContext, user: Dict, opts: { authDate?: number; contactOk?: boolean; scanQr?: boolean } = {}) {
+  const initData = signInitData({ auth_date: String(opts.authDate ?? Math.floor(Date.now() / 1000)), query_id: "q1", user: JSON.stringify(user) });
+  await context.addInitScript(
+    ({ initData, user, contactOk, scanQr }) => {
+      const tg: Dict = { contact: 0, links: [], scans: 0, scanFn: null, main: { text: "", visible: false, fn: null }, back: { visible: false, fn: null } };
+      (window as any).__tg = tg;
+      (window as any).__contactOk = contactOk;
+      const WebApp: Dict = {
+        initData,
+        initDataUnsafe: { user },
+        version: "8.0",
+        platform: "ios",
+        colorScheme: "light",
+        themeParams: {},
+        ready() {},
+        expand() {},
+        close() { tg.closed = true; },
+        isVersionAtLeast() { return true; },
+        requestContact(cb?: (ok: boolean) => void) { tg.contact++; setTimeout(() => cb && cb(!!(window as any).__contactOk), 50); },
+        openLink(u: string) { tg.links.push(["link", u]); },
+        openTelegramLink(u: string) { tg.links.push(["tg", u]); },
+        MainButton: { setText(t: string) { tg.main.text = t; }, show() { tg.main.visible = true; }, hide() { tg.main.visible = false; }, onClick(fn: () => void) { tg.main.fn = fn; } },
+        BackButton: { show() { tg.back.visible = true; }, hide() { tg.back.visible = false; }, onClick(fn: () => void) { tg.back.fn = fn; } },
+      };
+      if (scanQr) WebApp.showScanQrPopup = (_p: Dict, fn: (data: string) => boolean) => { tg.scans++; tg.scanFn = fn; };
+      (window as any).Telegram = { WebApp };
+    },
+    { initData, user, contactOk: opts.contactOk ?? true, scanQr: !!opts.scanQr },
+  );
+}
+
+/** Что мини-апп сделал с Telegram.WebApp из telegramStub: запросы контакта, ссылки, сканер, MainButton и BackButton. */
+export const tgState = (page: Page) =>
+  page.evaluate(() => {
+    const tg = (window as any).__tg;
+    return { contact: tg.contact as number, links: tg.links as string[][], scans: tg.scans as number, main: { text: tg.main.text as string, visible: !!tg.main.visible }, back: !!tg.back.visible };
+  });
+
 export type Problems = {
   /** Ошибки консоли, кроме ожидаемых 401 от /api/auth/me (они в me401). */
   console: string[];

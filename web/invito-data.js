@@ -126,6 +126,7 @@ const en = {
   loginNotKept:'The login was not kept: the browser blocks cookies for this site. Allow them and try again.',
   noScanner:'This browser can’t read QR codes with the camera. Check the guest in with “{btn}” or paste their personal link into the field below.',
   tplOff:'This template is not available right now. Choose another one.', addPartial:'Added {n} of {total}. The rest were not added: {err}', showMore:'Show more · {n}',
+  tryAgain:'Try again', paidTitle:'Payment finished', paidText:'Go back to Telegram: Invito will check the payment there and carry on by itself. You can close this page.', paidBack:'Back to Telegram',
 };
 const ru = {
   close:'Закрыть', miniApp:'мини-приложение', myInv:'Мои приглашения', issueTag:'Конструктор приглашений',
@@ -230,6 +231,7 @@ const ru = {
   loginNotKept:'Вход не сохранился: браузер не принимает cookie этого сайта. Разрешите их и попробуйте снова.',
   noScanner:'Этот браузер не умеет читать QR-коды камерой. Отметьте гостя кнопкой «{btn}» или вставьте его личную ссылку в поле ниже.',
   tplOff:'Этот шаблон сейчас недоступен. Выберите другой.', addPartial:'Добавлено {n} из {total}. Остальные не добавлены: {err}', showMore:'Показать ещё · {n}',
+  tryAgain:'Попробовать ещё раз', paidTitle:'Оплата завершена', paidText:'Вернитесь в Telegram: Invito сам проверит оплату и продолжит. Эту страницу можно закрыть.', paidBack:'Вернуться в Telegram',
 };
 const uz = {
   close:'Yopish', miniApp:'mini ilova', myInv:'Mening taklifnomalarim', issueTag:'Taklifnoma konstruktori',
@@ -334,6 +336,7 @@ const uz = {
   loginNotKept:'Kirish saqlanmadi: brauzer bu saytning cookie fayllarini qabul qilmayapti. Ularga ruxsat bering va qaytadan urinib ko‘ring.',
   noScanner:'Bu brauzer kamera orqali QR kodni o‘qiy olmaydi. Mehmonni “{btn}” tugmasi bilan belgilang yoki uning shaxsiy havolasini quyidagi maydonga qo‘ying.',
   tplOff:'Bu shablon hozir mavjud emas. Boshqasini tanlang.', addPartial:'{total} tadan {n} tasi qo‘shildi. Qolganlari qo‘shilmadi: {err}', showMore:'Yana ko‘rsatish · {n}',
+  tryAgain:'Qayta urinib ko‘rish', paidTitle:'To‘lov yakunlandi', paidText:'Telegramga qayting: Invito to‘lovni o‘zi tekshiradi va davom etadi. Bu sahifani yopishingiz mumkin.', paidBack:'Telegramga qaytish',
 };
 export const I18N = { en, ru, uz, uzc: deep(uz) };
 export const LANGS = [ { code:'ru', label:'RU' }, { code:'en', label:'EN' }, { code:'uz', label:'UZ' }, { code:'uzc', label:'ЎЗ' } ];

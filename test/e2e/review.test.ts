@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
-import type { BrowserContext, Page } from "playwright-core";
+import type { Page } from "playwright-core";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { guests, invitations, subscriptions, templates, users } from "../../src/db/schema.js";
 import { I18N, INVITO, plural, toCyr } from "../../web/invito-data.js";
-import { signInitData, startE2E, uniquePhone, type E2E } from "./helpers.js";
+import { startE2E, telegramStub, tgState, uniquePhone, type E2E } from "./helpers.js";
 
 /**
  * Исправления после проверки в браузере (этап 3): вход в мини-аппе без чужой cookie, номер из Telegram,
@@ -54,38 +54,6 @@ async function personalWith(userId: string, list: Dict[], body: Dict = {}, paidS
 /** Текст в DOM без учёта text-transform (подписи шаблонов набраны заглавными). */
 const content = (page: Page) => page.evaluate(() => document.body.textContent || "");
 
-/** Мини-апп: initData подписана ключом бота; requestContact отвечает window.__contactOk, кнопки и ссылки — в window.__tg. */
-async function telegramStub(context: BrowserContext, user: Dict, opts: { authDate?: number; contactOk?: boolean; scanQr?: boolean } = {}) {
-  const initData = signInitData({ auth_date: String(opts.authDate ?? Math.floor(Date.now() / 1000)), query_id: "q1", user: JSON.stringify(user) });
-  await context.addInitScript(
-    ({ initData, user, contactOk, scanQr }) => {
-      const tg: Dict = { contact: 0, links: [], scans: 0, scanFn: null, main: { text: "", visible: false, fn: null }, back: { visible: false, fn: null } };
-      (window as any).__tg = tg;
-      (window as any).__contactOk = contactOk;
-      const WebApp: Dict = {
-        initData,
-        initDataUnsafe: { user },
-        version: "8.0",
-        platform: "ios",
-        colorScheme: "light",
-        themeParams: {},
-        ready() {},
-        expand() {},
-        close() { tg.closed = true; },
-        isVersionAtLeast() { return true; },
-        requestContact(cb?: (ok: boolean) => void) { tg.contact++; setTimeout(() => cb && cb(!!(window as any).__contactOk), 50); },
-        openLink(u: string) { tg.links.push(["link", u]); },
-        openTelegramLink(u: string) { tg.links.push(["tg", u]); },
-        MainButton: { setText(t: string) { tg.main.text = t; }, show() { tg.main.visible = true; }, hide() { tg.main.visible = false; }, onClick(fn: () => void) { tg.main.fn = fn; } },
-        BackButton: { show() { tg.back.visible = true; }, hide() { tg.back.visible = false; }, onClick(fn: () => void) { tg.back.fn = fn; } },
-      };
-      if (scanQr) WebApp.showScanQrPopup = (_p: Dict, fn: (data: string) => boolean) => { tg.scans++; tg.scanFn = fn; };
-      (window as any).Telegram = { WebApp };
-    },
-    { initData, user, contactOk: opts.contactOk ?? true, scanQr: !!opts.scanQr },
-  );
-}
-const tgState = (page: Page) => page.evaluate(() => { const tg = (window as any).__tg; return { contact: tg.contact, links: tg.links, scans: tg.scans, main: { text: tg.main.text, visible: tg.main.visible }, back: tg.back.visible }; });
 const tgBack = (page: Page) => page.evaluate(() => (window as any).__tg.back.fn());
 
 describe("тексты дизайна", () => {
