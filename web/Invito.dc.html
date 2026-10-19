@@ -20,7 +20,6 @@ html::-webkit-scrollbar{width:0;height:0}
 input,textarea,select,button{font-family:inherit}
 input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-height:46px}
 </style>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </helmet>
 <div ref="{{ rootRef }}" style="min-height:100vh;background:{{ rootBg }};color:{{ rootInk }};font-family:'Onest',sans-serif;transition:background .5s ease">
 <sc-if value="{{ notReady }}" hint-placeholder-val="{{ true }}"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font:italic 500 44px 'Cormorant Garamond',serif;color:{{ ui.ink }}">Invito</div></sc-if>
@@ -1022,8 +1021,7 @@ class Component extends DCLogic {
   seat(gid, table) { this.setState((x) => ({ guests: x.guests.map((g) => g.id === gid ? { ...g, table } : g), pick: null, overTable: null })); }
 
   componentDidMount() {
-    const base = document.baseURI;
-    Promise.all([import(new URL('./invito-data.js', base).href), import(new URL('./invito-engine.js', base).href)]).then(([m, eng]) => {
+    Promise.all([import('/app/invito-data.js'), import('/app/invito-engine.js')]).then(([m, eng]) => {
       this.D = m.INVITO; this.E = eng; this.music = eng.createMusic();
       const lang = 'ru', ev = 'wedding';
       let drafts = []; try { drafts = JSON.parse(localStorage.getItem('invito.v1.drafts') || '[]'); } catch (e) {}

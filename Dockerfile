@@ -14,6 +14,8 @@ COPY --from=build /app/dist ./dist
 COPY package.json ./
 COPY drizzle ./drizzle
 COPY public ./public
+# Исходники дизайна: сервер собирает из них фронтенд при старте (React и qrcode берутся из node_modules).
+COPY web ./web
 USER node
 EXPOSE 3000
 CMD ["node", "dist/server.js"]

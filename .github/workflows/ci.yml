@@ -30,3 +30,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # Дымовая проверка фронтенда в Chromium (test/e2e). Браузер ставится в кэш Playwright,
+      # тест находит его сам; другой путь можно задать через PLAYWRIGHT_CHROMIUM.
+      - run: npx playwright-core install --with-deps chromium
+      - run: npm run test:e2e
