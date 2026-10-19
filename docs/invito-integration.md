@@ -56,7 +56,7 @@
    - `img-src 'self' data: blob: https://images.unsplash.com`; `media-src 'self' blob: data:`;
    - `frame-src https://maps.google.com https://www.google.com https://oauth.telegram.org`;
    - `connect-src 'self'`;
-   - `frame-ancestors 'self' https://web.telegram.org https://*.telegram.org` для `/`, `/app*`, `/i/*`, `/g/*`; без `X-Frame-Options` на этих путях (иначе мини-апп не открывается в Telegram Web). Админка остаётся `frame-ancestors 'none'`.
+   - `frame-ancestors 'self' https://web.telegram.org https://*.telegram.org` для `/`, `/app*`, `/i/*`, `/g/*` и HTML-страницы «не найдено» на любом другом адресе; без `X-Frame-Options` на этих путях (иначе мини-апп не открывается в Telegram Web). Админка, API и JSON-ответы 404 остаются `frame-ancestors 'none'` и `X-Frame-Options: DENY`.
 5. Старые страницы `public/app/` и `public/invite/` удалить. `public/admin/` и `public/shared/` (их использует админка) остаются.
 6. Dockerfile копирует `web/`. CI собирает и проверяет как раньше.
 
@@ -69,9 +69,17 @@
 - `GET /api/auth/config` → `{ telegram: boolean, botUsername: string|null, appUrl: string, prices: { sharedTemplate, seat, subscriptionMonth }, currency: "UZS", ai: boolean }`.
 - `GET /api/auth/me` → `{ user: { id, phone, firstName, lastName, username, telegramId: string|null, locale, isAdmin, freeAccess }, access: { free, subscribed, subscriptionEndsAt: string|null }, prices, currency }`. 401 без сессии, 428 без телефона (как сейчас).
 - `PATCH /api/auth/me` `{ locale }` (теперь и `uzc`).
-- Остальные маршруты входа без изменений (`/telegram/start`, `/telegram/poll`, `/webapp`, `/phone/request`, `/phone/verify`, `/link`, `/logout`).
+- Маршруты входа: `/telegram/start`, `/telegram/poll`, `/webapp`, `/phone/request`, `/phone/verify`, `/link`, `/logout`. Каждый успешный вход ставит cookie сессии (`session`, `HttpOnly`, `SameSite=Lax`, 30 дней).
 - `POST /api/auth/webapp` при успехе отвечает `{ status: "ok", redirect, token }`. В Telegram Web мини-апп открыт во фрейме `web.telegram.org`, и cookie с `SameSite=Lax` туда не доходит, поэтому мини-апп хранит `token` в памяти и шлёт его во всех запросах к API заголовком `Authorization: Bearer <token>`. Сервер принимает и cookie, и заголовок.
+- `POST /api/auth/webapp`, пока у пользователя нет телефона: `{ status: "phone_required", error?: string }`. `error` (на языке `X-Lang`) есть, если бот отклонил последний контакт этого Telegram: номер уже привязан к другому Telegram-аккаунту, прислан чужой контакт или номер не распознан. Новый контакт в боте причину сбрасывает (принят — следующий ответ `ok`, отклонён — новая причина). Причина хранится сутки.
 - Лимит `POST /api/auth/webapp` — 40 запросов в минуту на IP (остальные маршруты входа 10): пока ответ `phone_required`, мини-апп опрашивает его не чаще раза в 3 секунды, а при 429 ждёт 5 секунд и продолжает.
+- Токен в ответе других входов: `POST /api/auth/phone/verify` `{ phone, code, bearer? }` и `POST /api/auth/telegram/poll` `{ nonce, bearer? }`. С `bearer: true` успешный ответ содержит и `token` — тот же JWT, что в cookie: `{ status: "ok", redirect, token }`. Фронтенд шлёт `bearer: true` только в настоящем Telegram (`tgReal`), где cookie во фрейм `web.telegram.org` не доходит. На обычном сайте флаг не шлётся, и токен в ответе не появляется (скриптам страницы он не виден). `bearer` не boolean — 400.
+- Вход через Telegram на сайте: `POST /api/auth/telegram/start` → `{ nonce, url: "https://t.me/<бот>?start=auth_<nonce>", ttl }` и cookie `tglogin` (секрет этого браузера, путь `/api/auth/telegram`, 5 минут). Затем `POST /api/auth/telegram/poll` `{ nonce, bearer? }` раз в 2 секунды → `{ status: "pending" }`, `{ status: "expired" }` (истёк, чужой браузер или уже забран), `{ status: "ok", redirect, token? }` или `{ status: "conflict", error }` (ниже). Ответ `ok` и `conflict` выдаётся один раз.
+- «Подключить Telegram» из аккаунта — те же `start` и `poll`. Если `start` вызван с действующей сессией (cookie или `Authorization: Bearer`; пользователь с телефоном и не заблокирован), запрос запоминает этого пользователя. Бот тогда не спрашивает номер, а предлагает «Подключить этот Telegram к аккаунту +998 90 ***-**-67?» (номер аккаунта со скрытой серединой и устройство). После нажатия:
+  - Telegram свободен (в базе нет аккаунта с этим Telegram ID и телефоном: запись без номера, которую создал бот или админ выдачей доступа по Telegram ID, объединяется с аккаунтом, бесплатный доступ переходит к нему) или уже принадлежит этому пользователю — Telegram привязывается к нему (прежний Telegram аккаунта, если был, заменяется), `poll` отвечает `ok` для этого же пользователя, событие `telegram_linked` в журнале (`login` не пишется);
+  - Telegram принадлежит другому аккаунту — `poll` отвечает `{ status: "conflict", error }` (`error` на языке `X-Lang`: «Этот Telegram уже привязан к другому аккаунту»), ничего не привязывается, сессия не выдаётся и не меняется. Бот пишет ту же причину.
+  Без сессии (или с недействительной) `start` — обычный вход: `poll` выдаёт сессию аккаунта, которому принадлежит Telegram.
+  Во фрейме Telegram Web cookie `tglogin` не сохраняется, поэтому запрос подключения забирает и та же сессия (cookie или `Authorization: Bearer` того пользователя, из чьего аккаунта начат `start`); сессия другого аккаунта получает `expired`. Обычный вход (без сессии при `start`) по-прежнему забирается только с cookie `tglogin`.
 
 ### 3.2 Содержимое приглашения (`InvContent`, колонка `invitations.data`)
 
@@ -87,8 +95,8 @@ zod-схема (лишние ключи отбрасываются):
 | gifts, notes | ≤ 1000 |
 | dressColors | массив `#rrggbb`, не больше 6 |
 | program | массив не больше 8 из `{ time: "HH:MM" или "", title ≤ 120, place ≤ 200 }` |
-| date | `YYYY-MM-DD` |
-| time | `HH:MM` |
+| date | `YYYY-MM-DD` или `""` (дата стёрта) |
+| time | `HH:MM` или `""` (время стёрто) |
 | countdown, showGuests | boolean |
 | cover, musicSrc, video | MediaUrl или "" |
 | gallery | массив MediaUrl, не больше 12 |
@@ -101,6 +109,8 @@ zod-схема (лишние ключи отбрасываются):
 | sections | массив `{ k: одна из SECTIONS, on: boolean }`; сервер убирает повторы и дописывает недостающие секции в конец с `on: false` |
 
 MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://images.unsplash.com/...` (стоковые картинки по умолчанию). `data:`, `blob:` и другие хосты отклоняются с 400.
+
+Стёртые дата и время: `""` сохраняется как есть и возвращается в `data` (фронтенд не подставляет вместо него значение шаблона); `null` в `PATCH` удаляет ключ. Без даты: страница гостя показывает остальное, `og:title` — только имена, бот и SMS пишут текст без даты, напоминания по расписанию не отправляются (утреннему нужна дата, `r1d` и `r3h` — дата и время), «Напомнить» уходит без даты. Без времени: дата без времени, из напоминаний по расписанию только утреннее. Неверная дата или время — 400 с понятным текстом («Такой даты нет», «Время в формате ЧЧ:ММ»).
 
 ### 3.3 Шаблоны
 
@@ -146,7 +156,7 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
   diet: ("veg"|"halal"|"nonut"|"noalc")[], source: "owner"|"self", openedAt, respondedAt,
   telegramLinked: boolean, paid: boolean, sms: { status, count } | null }
 ```
-- `POST /api/invitations/:id/guests` `{ guests: [{ name, phone?, group?, plus? }] }` (только `personal`) → 201 `Guest[]`.
+- `POST /api/invitations/:id/guests` `{ guests: [{ name, phone?, group?, plus? }] }` (только `personal`) → 201 `Guest[]`. За один запрос 1..500 гостей; больше 500 — 400 «За один раз можно добавить не больше 500 гостей» (на языке `X-Lang`), поэтому большие списки фронтенд шлёт частями по 500.
 - `PATCH /api/invitations/:id/guests/:guestId` любые из `{ name, phone, group, plus (0..10), tableNo (0..settings.tables), checkedIn, rsvp }` → `Guest`.
 - `DELETE /api/invitations/:id/guests/:guestId` → 204.
 - Оплаченность гостя: в режиме `personal` гость оплачен, если его порядковый номер среди текущих гостей (по `seat`) не больше `paidSeats`. Удаление гостя сдвигает следующих в оплаченные. Номера `seat` не переиспользуются (счётчик `invitations.next_seat`). В режиме `shared` все гости оплачены.
@@ -188,7 +198,7 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 ### 3.9 Заказы
 
 `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`. Заказ в ответах: `{ id, number, kind, invitationId, quantity, amount, currency, status, checkoutUrl, paidAt, createdAt }` (без `meta`: уведомление платёжной системы клиенту не отдаётся и хранится без токена карты и подписи). Тестовая оплата: `/app/#/mock-pay/<id>`.
-- Возврат после оплаты: `POST /api/orders` принимает необязательное `returnTo: "app" | "telegram"`. `app` — `/app/#/orders/<id>` (экран заказа, нужна сессия). `telegram` — `/app/#/paid/<id>`: оплату из мини-аппа Telegram открывает во внешнем браузере без сессии, поэтому этот экран не требует входа и не запрашивает заказ: «Оплата завершена — вернитесь в Telegram», кнопка `https://t.me/<botUsername>` (из `/api/auth/config`), а если сессия в этом браузере есть, можно открыть `#/orders/<id>`. Без `returnTo` сервер выбирает `telegram`, когда запрос пришёл с `Authorization: Bearer` (так входит мини-апп), иначе `app`. Мини-апп шлёт `returnTo: "telegram"` при `tgReal`.
+- Возврат после оплаты: `POST /api/orders` принимает необязательное `returnTo: "app" | "telegram"`. `app` — `/app/#/orders/<id>` (экран заказа, нужна сессия). `telegram` — `/app/#/paid/<id>`: оплату из мини-аппа Telegram открывает во внешнем браузере без сессии, поэтому этот экран не требует входа и без сессии не запрашивает заказ. С сессией он сразу переходит на `#/orders/<id>`, без неё показывает короткую карточку в стиле Invito «Оплата завершена — вернитесь в Telegram» с кнопкой `https://t.me/<botUsername>` (из `/api/auth/config`; без бота кнопки нет) и без данных заказа. Заказ мини-аппа отмечается оплаченным по колбэку Multicard, мини-апп узнаёт об этом сам, опрашивая `GET /api/orders/:id`. Без `returnTo` сервер выбирает `telegram`, когда запрос пришёл с `Authorization: Bearer` (так входит мини-апп), иначе `app`. Мини-апп шлёт `returnTo: "telegram"` при `tgReal`.
 - Бесплатный заказ → 200 `{ status: "fulfilled", order: null, message }`, `message` на языке запроса (`X-Lang`). Начатые оплаты шаблона при этом отменяются.
 - Повторно оплаченный счёт за уже открытый шаблон отклоняется в колбэке («Шаблон уже оплачен»), заказ получает `cancelled`: Multicard отменяет такую оплату.
 
@@ -217,6 +227,8 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 - Уведомления владельцу (`settings.notify`): ответ гостя, отметка на входе. Через интерфейс `ctx.notifier` (`sendToUser(userId, text, opts)` и `sendToChat(chatId, text, opts)`, `opts.buttons` — кнопки-ссылки), который реализует бот; без бота это no-op. Тексты на языке профиля владельца (`src/services/notify.ts`), ошибки Telegram только пишутся в лог.
 - Напоминания гостям в Telegram по `settings.r1d` (за сутки), `r3h` (за 3 часа), `morning` (в 9:00 по Ташкенту в день события): задача раз в минуту, гости с привязанным чатом и ответом «да», «может быть» или без ответа, учёт отправленных в таблице `guest_reminders (guest_id, kind)` с уникальным ключом, отправка только если вставка прошла.
 - Язык бота: добавить `uzc` в меню `/lang`. Тексты бота для `uzc` через `toCyr`.
+- Вход и подключение Telegram с сайта (`/start auth_<nonce>`, раздел 3.1): обычный вход требует номер в боте, подключение к аккаунту — нет (номер есть у аккаунта). Отказ принять контакт (номер у другого Telegram, чужой контакт, нераспознанный номер) бот запоминает для мини-аппа (`error` в `phone_required`).
+- Даты в боте — по календарю Ташкента, как в приложении: «Ваша подписка активна до 20 мая 2031 г.» для подписки до 19 мая 20:30 UTC. Подстановка, которая сама кончается точкой (русская дата «… г.»), перед точкой текста не даёт двух точек подряд.
 
 ## 6. Найденные проблемы бэкенда, которые нужно исправить
 

@@ -3,6 +3,7 @@ import { usageEvents } from "../db/schema.js";
 
 export type UsageType =
   | "login"
+  | "telegram_linked"
   | "bot_start"
   | "invitation_created"
   | "invitation_updated"

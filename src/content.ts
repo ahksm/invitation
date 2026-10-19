@@ -20,11 +20,14 @@ export function isMediaUrl(s: string): boolean {
 const text = (max: number) => z.string().max(max);
 const mediaUrl = z.string().refine(isMediaUrl, "Файл должен быть загружен через /api/media");
 const mediaOrEmpty = z.union([z.literal(""), mediaUrl]);
-const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Время в формате ЧЧ:ММ");
-const isoDate = z
+// Время и дата или пустая строка (поле стёрто). Одна строковая схема, а не union с "": так ошибка
+// остаётся понятной («Время в формате ЧЧ:ММ»), а не общей «Invalid input» от union.
+const hhmmOrEmpty = z.string().regex(/^(([01]\d|2[0-3]):[0-5]\d)?$/, "Время в формате ЧЧ:ММ");
+const isoDateOrEmpty = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Дата в формате ГГГГ-ММ-ДД")
+  .regex(/^(\d{4}-\d{2}-\d{2})?$/, "Дата в формате ГГГГ-ММ-ДД")
   .refine((s) => {
+    if (!s) return true;
     const d = new Date(`${s}T00:00:00Z`);
     return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(s);
   }, "Такой даты нет");
@@ -50,14 +53,17 @@ const fields = {
   program: z
     .array(
       z.object({
-        time: z.union([z.literal(""), hhmm]).default(""),
+        time: hhmmOrEmpty.default(""),
         title: text(120).default(""),
         place: text(200).nullish().transform((p) => p ?? ""),
       }),
     )
     .max(8),
-  date: isoDate,
-  time: hhmm,
+  // Пустая строка — дата или время стёрты в конструкторе: так и сохраняется, чтобы фронтенд не подставил
+  // значение шаблона. null в PATCH удаляет ключ (src/services/invitations.ts). Без даты страница гостя,
+  // og:title, напоминания, бот и SMS обходятся без неё.
+  date: isoDateOrEmpty,
+  time: hhmmOrEmpty,
   countdown: z.boolean(),
   showGuests: z.boolean(),
   cover: mediaOrEmpty,

@@ -1,11 +1,11 @@
-import type { FastifyPluginAsync, FastifyReply } from "fastify";
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { SESSION_COOKIE } from "../app.js";
 import { redeemLoginCode } from "../auth/codes.js";
-import { claimTelegramLogin, describeDevice, isNonce, startTelegramLogin, verifyWebAppInitData } from "../auth/telegram.js";
+import { claimTelegramLogin, describeDevice, getContactRejection, isNonce, startTelegramLogin, verifyWebAppInitData } from "../auth/telegram.js";
 import { botUsername } from "../config.js";
 import { HttpError } from "../errors.js";
-import { locales, pickLocale, requestLocale } from "../i18n.js";
+import { bt, locales, pickLocale, requestLocale } from "../i18n.js";
 import { normalizePhone, requestOtp, upsertPhoneUser, verifyOtp } from "../services/phone.js";
 import { getPrices } from "../services/settings.js";
 import { track } from "../services/usage.js";
@@ -18,6 +18,13 @@ export const phoneSchema = z.string().max(32).transform((s, c) => {
   return p ?? "";
 });
 
+/**
+ * bearer: true — токен сессии нужен и в ответе. Его просит только мини-апп в настоящем Telegram:
+ * в Telegram Web он открыт во фрейме web.telegram.org, куда cookie не доходит. На сайте токен
+ * в ответе не нужен и не отдаётся, поэтому скрипты страницы его не видят.
+ */
+const bearerFlag = z.boolean().optional();
+
 export const authRoutes: FastifyPluginAsync = async (app) => {
   const { ctx } = app;
   const secure = ctx.config.APP_URL.startsWith("https://");
@@ -27,6 +34,18 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     const token = await reply.jwtSign({ sub: userId });
     reply.setCookie(SESSION_COOKIE, token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: 30 * 24 * 3600 });
     return token;
+  }
+
+  /** Пользователь действующей сессии (cookie или Authorization: Bearer): с номером и не заблокирован. */
+  async function sessionUser(req: FastifyRequest) {
+    let sub: string;
+    try {
+      ({ sub } = await req.jwtVerify<{ sub: string }>());
+    } catch {
+      return undefined;
+    }
+    const user = await getUser(ctx, sub);
+    return user && !user.blocked && user.phone ? user : undefined;
   }
 
   // Общая конфигурация для фронтенда: вход через Telegram, адрес сайта, цены, помощник с текстом.
@@ -41,27 +60,35 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   }));
 
   // Шаг 1 входа через Telegram: ссылка на бота и секрет этого браузера в cookie.
+  // С действующей сессией это «Подключить Telegram»: запрос помнит пользователя, и бот привязывает
+  // Telegram к нему (src/auth/telegram.ts), а не входит в аккаунт, которому этот Telegram принадлежит.
   app.post("/telegram/start", strict, async (req, reply) => {
     const bot = botUsername(ctx.config);
     if (!bot) throw new HttpError(503, "Вход через Telegram не настроен");
-    const { nonce, secret, ttl } = await startTelegramLogin(ctx.cache, describeDevice(req.headers["user-agent"]));
+    const linkUser = await sessionUser(req);
+    const { nonce, secret, ttl } = await startTelegramLogin(ctx.cache, describeDevice(req.headers["user-agent"]), linkUser?.id);
     reply.setCookie(TG_COOKIE, secret, { httpOnly: true, secure, sameSite: "lax", path: "/api/auth/telegram", maxAge: ttl });
     return { nonce, url: `https://t.me/${bot}?start=auth_${nonce}`, ttl };
   });
 
-  // Шаг 2: браузер ждёт, пока человек подтвердит вход в боте.
+  // Шаг 2: браузер ждёт, пока человек подтвердит вход в боте. Подключение Telegram, который уже
+  // принадлежит другому аккаунту, заканчивается { status: "conflict", error }: сессия остаётся прежней.
   app.post("/telegram/poll", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (req, reply) => {
-    const { nonce } = z.object({ nonce: z.string().refine(isNonce) }).parse(req.body);
+    const { nonce, bearer } = z.object({ nonce: z.string().refine(isNonce), bearer: bearerFlag }).parse(req.body);
     const secret = req.cookies[TG_COOKIE];
-    if (!secret) return { status: "expired" };
-    const result = await claimTelegramLogin(ctx.cache, nonce, secret);
+    // Без cookie (во фрейме Telegram Web она не сохраняется) подключение Telegram забирает сессия того же аккаунта.
+    const sessionUserId = (await sessionUser(req))?.id;
+    if (!secret && !sessionUserId) return { status: "expired" };
+    const result = await claimTelegramLogin(ctx.cache, nonce, { secret, sessionUserId });
     if (typeof result === "string") return { status: result };
+    reply.clearCookie(TG_COOKIE, { path: "/api/auth/telegram" });
+    if ("conflict" in result) return { status: "conflict", error: result.conflict };
     const user = await getUser(ctx, result.userId);
     if (!user || user.blocked || !user.phone) return { status: "expired" };
-    reply.clearCookie(TG_COOKIE, { path: "/api/auth/telegram" });
-    await startSession(reply, user.id);
-    await track(ctx, user.id, "login", { via: "telegram" });
-    return { status: "ok", redirect: user.isAdmin ? "/admin/" : "/app/" };
+    const token = await startSession(reply, user.id);
+    // Подключение Telegram — не новый вход: оно уже записано ботом (telegram_linked).
+    if (!result.linked) await track(ctx, user.id, "login", { via: "telegram" });
+    return { status: "ok", redirect: user.isAdmin ? "/admin/" : "/app/", ...(bearer && { token }) };
   });
 
   // Вход из мини-аппа Telegram. Если номера ещё нет, мини-апп запрашивает контакт
@@ -74,7 +101,13 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     if (!profile) throw new HttpError(401, "Данные Telegram не прошли проверку");
     const user = await upsertTelegramUser(ctx, profile);
     if (user.blocked) throw new HttpError(403, "Доступ заблокирован");
-    if (!user.phone) return { status: "phone_required" };
+    if (!user.phone) {
+      // Бот не принял последний контакт (номер уже у другого Telegram и т.п.): мини-апп показывает причину.
+      // Сообщение HttpError переводит общий обработчик ответа (preSerialization), текст бота — bt.
+      const rejected = await getContactRejection(ctx.cache, profile.id);
+      const error = rejected && ("error" in rejected ? rejected.error : bt(requestLocale(req.headers), rejected.text));
+      return { status: "phone_required", ...(error && { error }) };
+    }
     const token = await startSession(reply, user.id);
     await track(ctx, user.id, "login", { via: "webapp" });
     // В Telegram Web мини-апп открыт во фрейме чужого сайта, и cookie с SameSite=Lax туда не доходит.
@@ -88,13 +121,15 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   });
 
   app.post("/phone/verify", strict, async (req, reply) => {
-    const { phone, code } = z.object({ phone: phoneSchema, code: z.string().regex(/^\d{6}$/, "Код состоит из 6 цифр") }).parse(req.body);
+    const { phone, code, bearer } = z
+      .object({ phone: phoneSchema, code: z.string().regex(/^\d{6}$/, "Код состоит из 6 цифр"), bearer: bearerFlag })
+      .parse(req.body);
     if (!(await verifyOtp(ctx, phone, code))) throw new HttpError(400, "Неверный или устаревший код");
     const user = await upsertPhoneUser(ctx, phone, requestLocale(req.headers));
     if (user.blocked) throw new HttpError(403, "Доступ заблокирован");
-    await startSession(reply, user.id);
+    const token = await startSession(reply, user.id);
     await track(ctx, user.id, "login", { via: "sms" });
-    return { status: "ok", redirect: user.isAdmin ? "/admin/" : "/app/" };
+    return { status: "ok", redirect: user.isAdmin ? "/admin/" : "/app/", ...(bearer && { token }) };
   });
 
   // Вход по одноразовой ссылке из бота (команда /login).

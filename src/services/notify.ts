@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Ctx } from "../context.js";
 import { defaultInvitationSettings, invitations, users, type User } from "../db/schema.js";
 import { HttpError } from "../errors.js";
-import { cyrText, pickLocale, type Locale } from "../i18n.js";
+import { cyrText, fillText, pickLocale, type Locale } from "../i18n.js";
 import { logEvent } from "./events.js";
 import { appUrlOf, getOwnInvitation } from "./invitations.js";
 
@@ -52,7 +52,7 @@ const textsUzc = Object.fromEntries(Object.entries(texts).map(([k, v]) => [k, cy
 
 export function notifyText(locale: Locale, key: TextKey, vars: Record<string, string | number> = {}) {
   const text = locale === "uzc" ? textsUzc[key] : texts[key][locale];
-  return text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+  return fillText(text, vars);
 }
 
 export type OwnerEvent =

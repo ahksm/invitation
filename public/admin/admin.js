@@ -9,7 +9,7 @@ let currency = "UZS";
 const m = (v) => money(v, currency);
 
 const eventNames = {
-  login: "вход", sms_sent: "разослал SMS", bot_start: "запустил бота", invitation_created: "создал приглашение", invitation_updated: "изменил приглашение",
+  login: "вход", telegram_linked: "подключил Telegram", sms_sent: "разослал SMS", bot_start: "запустил бота", invitation_created: "создал приглашение", invitation_updated: "изменил приглашение",
   invitation_published: "опубликовал приглашение", guests_added: "добавил гостей", order_created: "создал заказ", order_paid: "оплатил заказ",
   free_access_granted: "получил бесплатный доступ", free_access_revoked: "лишён бесплатного доступа", user_blocked: "заблокирован", user_unblocked: "разблокирован",
   ai_write: "написал текст с помощником",
@@ -228,16 +228,21 @@ async function render() {
     const content = await handler(new URLSearchParams(query), id);
     view.replaceChildren(...[content].flat());
   } catch (err) {
-    if (err.status === 401) return void view.replaceChildren(await loginCard());
+    // 428: сессия без номера телефона (например, вход в мини-аппе не закончен) — войти на сайте заново.
+    if (err.status === 401 || err.status === 428) return void view.replaceChildren(await loginCard());
     if (err.status === 403) return void view.replaceChildren(h("div", { class: "card" }, "Эта страница только для администратора."));
     view.replaceChildren(h("div", { class: "card" }, err.message));
   }
 }
 
+// В шапке: кто вошёл, а без сессии — ссылка на вход на сайте (/app/), откуда админ попадает сюда из меню аккаунта.
+const who = document.getElementById("who");
 try {
   const me = await api("/api/auth/me");
   currency = me.currency;
-  document.getElementById("who").textContent = me.user.firstName || me.user.username || "";
-} catch {}
+  who.textContent = me.user.firstName || me.user.username || "";
+} catch (err) {
+  if (err.status === 401 || err.status === 428) who.replaceChildren(h("a", { href: "/app/" }, "Войти на сайте"));
+}
 addEventListener("hashchange", render);
 render();
