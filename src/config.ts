@@ -61,7 +61,7 @@ const schema = z
     ADMIN_TELEGRAM_IDS: csvIds,
     // Админы, которые входят по телефону: номера через запятую в формате 998XXXXXXXXX.
     ADMIN_PHONES: csvIds,
-    APP_NAME: z.string().default("Invitations"),
+    APP_NAME: z.string().default("Invito"),
     // Каталог загруженных файлов (картинки, музыка, видео). В Docker — отдельный том.
     MEDIA_DIR: z.string().min(1).default("./data/media"),
     // Помощник с текстом (POST /api/ai/write). Пусто: выключен.
@@ -81,6 +81,7 @@ const schema = z
     MULTICARD_BASE_URL: z.url().default("https://dev-mesh.multicard.uz"),
     MULTICARD_APPLICATION_ID: z.string().default(""),
     MULTICARD_SECRET: z.string().default(""),
+    // Числовой ID кассы: в счёт он уходит числом, в колбэке сверяется с тем, что прислал Multicard.
     MULTICARD_STORE_ID: z.string().default(""),
     // ИКПУ (MXIK) и код упаковки для фискального чека; выдаются при регистрации в soliq.uz.
     MULTICARD_MXIK: z.string().default(""),
@@ -112,7 +113,17 @@ const schema = z
     if (env.TELEGRAM_MODE === "webhook" && env.TELEGRAM_WEBHOOK_SECRET.length < 16) {
       ctx.addIssue({ code: "custom", message: "TELEGRAM_WEBHOOK_SECRET обязателен (от 16 символов) в режиме webhook" });
     }
+    // UUID кассы в счёте стал бы store_id: null, и каждая оплата падала бы с 502 уже у покупателя.
+    if (env.PAYMENT_PROVIDER === "multicard" && env.MULTICARD_STORE_ID && !/^\d+$/.test(env.MULTICARD_STORE_ID)) {
+      ctx.addIssue({ code: "custom", message: "MULTICARD_STORE_ID: укажите числовой ID кассы из кабинета Multicard" });
+    }
     if (env.NODE_ENV !== "production") return;
+    // Сайт работает только по https за прокси: CSP переводит скрипты на https (upgrade-insecure-requests),
+    // проверка Origin, ссылки в SMS, адреса возврата и колбэков Multicard строятся от APP_URL.
+    const appUrl = new URL(env.APP_URL);
+    if (appUrl.protocol !== "https:" || ["localhost", "127.0.0.1", "[::1]", "0.0.0.0"].includes(appUrl.hostname)) {
+      ctx.addIssue({ code: "custom", message: "APP_URL: публичный https-адрес сайта, например https://invito.uz" });
+    }
     if (env.PAYMENT_PROVIDER === "mock") {
       ctx.addIssue({ code: "custom", message: "В production нельзя использовать PAYMENT_PROVIDER=mock" });
     }

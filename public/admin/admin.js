@@ -1,4 +1,8 @@
 import { api, date, h, money, toast } from "/shared/api.js";
+import { setLang } from "/shared/i18n.js";
+
+// Админка только на русском: деньги, даты и ошибки сервера (X-Lang) тоже, независимо от языка браузера.
+setLang("ru");
 
 const view = document.getElementById("view");
 let currency = "UZS";
@@ -23,12 +27,29 @@ function table(headers, rows) {
   return h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, h("tr", {}, headers.map((x) => h("th", {}, x)))), h("tbody", {}, rows)));
 }
 
+/** «Назад» и «Дальше» по страницам списка: ссылки на тот же раздел с теми же параметрами. */
+function pager(route, params, page, hasNext, info) {
+  if (page <= 1 && !hasNext) return null;
+  const link = (p, text) => h("a", { class: "btn", href: `#${route}?${new URLSearchParams({ ...params, page: String(p) })}` }, text);
+  return h("div", { class: "row", style: "margin-top:12px" }, page > 1 ? link(page - 1, "← Назад") : null, h("span", { class: "muted" }, info), hasNext ? link(page + 1, "Дальше →") : null);
+}
+
+/** Без сессии: вход на сайте (по телефону или через Telegram), а команда бота — только если бот работает. */
+async function loginCard() {
+  const cfg = await api("/api/auth/config").catch(() => ({}));
+  return h("div", { class: "card" },
+    h("h3", { style: "margin-top:0" }, "Нужно войти"),
+    h("p", {}, h("a", { class: "btn primary", href: "/app/" }, "Войти на сайте")),
+    h("p", { class: "muted" }, "После входа откройте «Админка» в меню аккаунта.", cfg.telegram ? " Можно и через Telegram-бота: команда /login." : ""));
+}
+
 const routes = {
   async "/"() {
     const s = await api("/api/admin/stats");
     const stat = (v, label) => h("div", { class: "card stat" }, h("b", {}, v), h("span", {}, label));
     return h("div", { class: "grid" },
       stat(s.users, "пользователей"), stat(s.activeLast30Days, "активных за 30 дней"), stat(s.freeAccessUsers, "с бесплатным доступом"),
+      stat(s.pendingFreeAccess, "доступ выдан заранее, ещё не входили"),
       stat(s.activeSubscriptions, "активных подписок"), stat(s.invitations, "приглашений"), stat(s.paidOrders, "оплаченных заказов"),
       stat(m(s.revenue), "выручка"));
   },
@@ -36,7 +57,8 @@ const routes = {
   async "/users"(params) {
     const q = params.get("q") ?? "";
     const filter = params.get("filter") ?? "all";
-    const data = await api(`/api/admin/users?${new URLSearchParams({ q, filter })}`);
+    const page = Math.max(1, Math.floor(Number(params.get("page"))) || 1);
+    const data = await api(`/api/admin/users?${new URLSearchParams({ q, filter, page: String(page) })}`);
     const search = h("input", { placeholder: "Имя, @username, телефон или Telegram ID", value: q });
     const sel = h("select", {}, Object.entries({ all: "Все", free: "Бесплатный доступ", paying: "Платившие", subscribed: "С подпиской", blocked: "Заблокированные" })
       .map(([v, t]) => h("option", { value: v, selected: v === filter }, t)));
@@ -68,7 +90,8 @@ const routes = {
     return [
       h("div", { class: "card" }, h("div", { class: "row" }, search, sel, h("button", { onclick: go }, "Найти"))),
       h("div", { class: "card" }, h("h3", {}, "Бесплатный доступ по телефону или Telegram ID"), h("p", { class: "muted" }, "Можно выдать заранее, до того как человек зайдёт в бота. Телефон пишите с +998, Telegram ID — как tg:123456789 (просто цифры тоже считаются Telegram ID)."), grant),
-      h("div", { class: "card" }, data.items.length ? table(["Пользователь", "Телефон", "Telegram ID", "Доступ", "Приглашений", "Оплатил", "Был", "Регистрация"], rows) : h("p", { class: "muted" }, "Никого не найдено")),
+      h("div", { class: "card" }, data.items.length ? table(["Пользователь", "Телефон", "Telegram ID", "Доступ", "Приглашений", "Оплатил", "Был", "Регистрация"], rows) : h("p", { class: "muted" }, "Никого не найдено"),
+        pager("/users", { q, filter }, page, page * data.pageSize < data.total, `стр. ${page} из ${Math.max(1, Math.ceil(data.total / data.pageSize))} · всего ${data.total}`)),
     ];
   },
 
@@ -107,13 +130,16 @@ const routes = {
 
   async "/orders"(params) {
     const status = params.get("status") ?? "";
-    const list = await api(`/api/admin/orders${status ? `?status=${status}` : ""}`);
+    const page = Math.max(1, Math.floor(Number(params.get("page"))) || 1);
+    const list = await api(`/api/admin/orders?${new URLSearchParams({ ...(status && { status }), page: String(page) })}`);
     const sel = h("select", { onchange: (e) => (location.hash = `#/orders${e.target.value ? `?status=${e.target.value}` : ""}`) },
       h("option", { value: "" }, "Все"), Object.entries(orderStatus).map(([v, [t]]) => h("option", { value: v, selected: v === status }, t)));
     return [h("div", { class: "card" }, h("div", { class: "row" }, sel)),
       h("div", { class: "card" }, list.length ? table(["№", "Пользователь", "Что", "Кол-во", "Сумма", "Статус", "Провайдер", "Создан"], list.map(({ order: o, ...u }) => h("tr", { class: "click", onclick: () => (location.hash = `#/user/${o.userId}`) },
         h("td", {}, o.number), h("td", {}, name(u)), h("td", {}, orderKinds[o.kind]), h("td", {}, o.quantity), h("td", {}, m(o.amount)),
-        h("td", {}, statusBadge(o.status)), h("td", {}, o.provider), h("td", {}, date(o.createdAt))))) : h("p", { class: "muted" }, "Платежей нет"))];
+        h("td", {}, statusBadge(o.status)), h("td", {}, o.provider), h("td", {}, date(o.createdAt))))) : h("p", { class: "muted" }, "Платежей нет"),
+      // Сервер отдаёт по 50 заказов: полная страница значит, что могут быть ещё.
+      pager("/orders", status ? { status } : {}, page, list.length === 50, `стр. ${page}`))];
   },
 
   async "/activity"() {
@@ -131,37 +157,60 @@ const routes = {
   },
 
   async "/prices"() {
-    const p = await api("/api/admin/prices");
-    const field = (key, label) => {
-      const input = h("input", { type: "number", min: "0", step: "1", value: p[key] / 100, name: key });
-      return h("label", {}, h("span", {}, `${label}, ${currency === "UZS" ? "сум" : currency}`), input);
+    let p = await api("/api/admin/prices");
+    const labels = {
+      sharedTemplate: "Общий шаблон (по умолчанию, если у шаблона нет своей цены)",
+      seat: "Одно место в персональном приглашении",
+      subscriptionMonth: "Подписка за месяц",
+    };
+    const field = (key) => {
+      const input = h("input", { type: "number", min: "0", step: "1", required: true, value: p[key] / 100, name: key });
+      return h("label", {}, h("span", {}, `${labels[key]}, ${currency === "UZS" ? "сум" : currency}`), input);
     };
     const form = h("form", { class: "card", onsubmit: async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
-      const body = Object.fromEntries(["sharedTemplate", "seat", "subscriptionMonth"].map((k) => [k, Math.round(Number(fd.get(k)) * 100)]));
-      try { await api("/api/admin/prices", { method: "PUT", body }); toast("Цены сохранены"); } catch (err) { toast(err.message, "bad"); }
+      // Пустое поле не становится нулём: Number("") — это 0, то есть бесплатно для всех.
+      const raw = Object.keys(labels).map((k) => [k, String(fd.get(k) ?? "").trim()]);
+      if (raw.some(([, v]) => v === "" || !Number.isFinite(Number(v)) || Number(v) < 0)) return toast("Укажите все цены", "bad");
+      const body = Object.fromEntries(raw.map(([k, v]) => [k, Math.round(Number(v) * 100)]));
+      const zeroed = Object.keys(labels).filter((k) => body[k] === 0 && p[k] !== 0);
+      if (zeroed.length && !confirm(`${zeroed.map((k) => `Цена «${labels[k]}» станет 0`).join(", ")} — это бесплатно для всех. Сохранить?`)) return;
+      try { p = await api("/api/admin/prices", { method: "PUT", body }); toast("Цены сохранены"); } catch (err) { toast(err.message, "bad"); }
     } },
       h("p", { class: "muted" }, "Люди с бесплатным доступом ничего не платят. Подписка открывает шаблоны, но места гостей оплачиваются отдельно."),
-      field("sharedTemplate", "Общий шаблон (по умолчанию, если у шаблона нет своей цены)"),
-      field("seat", "Одно место в персональном приглашении"),
-      field("subscriptionMonth", "Подписка за месяц"),
+      field("sharedTemplate"),
+      field("seat"),
+      field("subscriptionMonth"),
       h("button", { class: "primary" }, "Сохранить"));
     return form;
   },
 
   async "/templates"() {
     const list = await api("/api/admin/templates");
+    // Таблица не перерисовывается после сохранения: прокрутка и цены, набранные в других строках, остаются.
     const save = async (id, body) => {
-      try { await api(`/api/admin/templates/${id}`, { method: "PATCH", body }); toast("Сохранено"); render(); } catch (err) { toast(err.message, "bad"); }
+      try { const tpl = await api(`/api/admin/templates/${id}`, { method: "PATCH", body }); toast("Сохранено"); return tpl; } catch (err) { toast(err.message, "bad"); return null; }
     };
+    // Флажок уже показывает новое значение; если сохранить не вышло, он возвращается назад.
+    const toggle = (id, key) => async (e) => {
+      const box = e.target;
+      if (!(await save(id, { [key]: box.checked }))) box.checked = !box.checked;
+    };
+    const shown = (v) => (v === null ? "" : v / 100);
     return h("div", { class: "card" }, h("p", { class: "muted" }, "Каталог шаблонов задаёт дизайн. Пустая цена — общая цена шаблона из раздела «Цены»."),
       table(["Шаблон", "Событие · стиль", "Код", "Цена", "Активен", "SMS гостям", ""], list.map((t) => {
-      const price = h("input", { type: "number", min: "0", placeholder: "по умолчанию", value: t.price === null ? "" : t.price / 100, style: "width:140px" });
+      const price = h("input", { type: "number", min: "0", placeholder: "по умолчанию", value: shown(t.price), style: "width:140px" });
+      const savePrice = async () => {
+        const v = price.value.trim();
+        if (v !== "" && !(Number.isFinite(Number(v)) && Number(v) >= 0)) return toast("Цена — число не меньше 0", "bad");
+        const tpl = await save(t.id, { price: v === "" ? null : Math.round(Number(v) * 100) });
+        if (tpl) price.value = shown(tpl.price);
+      };
       return h("tr", {}, h("td", {}, t.title), h("td", {}, t.event ? `${t.event} · ${t.style ?? "—"}` : "—"), h("td", {}, h("code", {}, t.slug)), h("td", {}, price),
-        h("td", {}, h("input", { type: "checkbox", checked: t.isActive, style: "width:auto", onchange: (e) => save(t.id, { isActive: e.target.checked }) })),
-        h("td", {}, h("input", { type: "checkbox", checked: t.smsEnabled, style: "width:auto", onchange: (e) => save(t.id, { smsEnabled: e.target.checked }) })),
-        h("td", {}, h("button", { onclick: () => save(t.id, { price: price.value === "" ? null : Math.round(Number(price.value) * 100) }) }, "Сохранить цену")));
+        h("td", {}, h("input", { type: "checkbox", checked: t.isActive, style: "width:auto", onchange: toggle(t.id, "isActive") })),
+        h("td", {}, h("input", { type: "checkbox", checked: t.smsEnabled, style: "width:auto", onchange: toggle(t.id, "smsEnabled") })),
+        h("td", {}, h("button", { onclick: savePrice }, "Сохранить цену")));
     })));
   },
 };
@@ -179,7 +228,7 @@ async function render() {
     const content = await handler(new URLSearchParams(query), id);
     view.replaceChildren(...[content].flat());
   } catch (err) {
-    if (err.status === 401) return void view.replaceChildren(h("div", { class: "card" }, "Войдите через Telegram-бота командой /login."));
+    if (err.status === 401) return void view.replaceChildren(await loginCard());
     if (err.status === 403) return void view.replaceChildren(h("div", { class: "card" }, "Эта страница только для администратора."));
     view.replaceChildren(h("div", { class: "card" }, err.message));
   }

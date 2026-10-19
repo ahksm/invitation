@@ -14,18 +14,31 @@ import { startReminderJob } from "./services/reminders.js";
 import { createSmsProvider } from "./sms/index.js";
 
 const config = loadConfig();
-// До запуска приложения ошибки соединений с Postgres пишем в консоль, потом в лог Fastify.
-let onDbError = (err: Error) => console.error("ошибка соединения с Postgres:", err.message);
-const { db, pool } = createDb(config.DATABASE_URL, (err) => onDbError(err));
-const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: 3 });
+// До запуска приложения ошибки соединений с Postgres и Redis пишем в консоль, потом в лог Fastify.
+let logError = (err: Error, msg: string) => console.error(`${msg}:`, err.message);
+const { db, pool } = createDb(config.DATABASE_URL, (err) => logError(err, "ошибка соединения с Postgres"));
+// Недоступный Redis: команда ждёт переподключения не дольше 2 с, а не десятки секунд на каждый запрос.
+const redis = new Redis(config.REDIS_URL, { maxRetriesPerRequest: 3, commandTimeout: 2000 });
+// Лимиты запросов на отдельном клиенте, который без соединения сразу отвечает ошибкой: лимит
+// пропускается (skipOnError), и страницы и файлы, которым Redis не нужен, отдаются без задержки.
+const rateLimitRedis = new Redis(config.REDIS_URL, { connectTimeout: 500, maxRetriesPerRequest: 1, enableOfflineQueue: false, commandTimeout: 500 });
+// ioredis сообщает о каждой неудачной попытке переподключения; в лог — не чаще раза в 30 с.
+for (const [client, name] of [[redis, "Redis"], [rateLimitRedis, "Redis (лимиты)"]] as const) {
+  let last = 0;
+  client.on("error", (err: Error) => {
+    if (Date.now() - last < 30_000) return;
+    last = Date.now();
+    logError(err, `${name} недоступен`);
+  });
+}
 const cache = createCache(redis);
 const payments = createPaymentProvider(config, cache);
 const sms = createSmsProvider(config, cache, { info: (obj: object, msg?: string) => console.log(msg, JSON.stringify(obj)) });
 
 await runMigrations(db);
 await seed(db);
-const app = await buildApp({ config, db, cache, payments, sms });
-onDbError = (err) => app.log.error({ err }, "ошибка соединения с Postgres");
+const app = await buildApp({ config, db, cache, payments, sms, rateLimitRedis });
+logError = (err, msg) => app.log.error({ err }, msg);
 
 const bot = botEnabled(config) ? createBot(app.ctx) : null;
 // Уведомления владельцам и напоминания гостям. Отправка не требует bot.init, ошибки только в лог.
@@ -50,7 +63,7 @@ async function shutdown(signal: string) {
   stopReminders?.();
   if (bot?.isRunning()) await bot.stop();
   await app.close();
-  await Promise.allSettled([pool.end(), redis.quit()]);
+  await Promise.allSettled([pool.end(), redis.quit(), rateLimitRedis.quit()]);
   process.exit(0);
 }
 process.on("SIGINT", () => void shutdown("SIGINT"));
