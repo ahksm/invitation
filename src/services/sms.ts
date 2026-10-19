@@ -100,7 +100,10 @@ export async function guestSmsSender(ctx: Ctx, userId: string, inv: Pick<Invitat
   let budget = inv.paidSeats * MAX_SMS_PER_GUEST - total;
   let limited = await hourlyLimitReached(ctx, userId);
   const appUrl = appUrlOf(ctx);
-  const callbackUrl = ctx.config.SMS_CALLBACK_SECRET ? `${appUrl}/api/sms/${ctx.sms.name}/callback?secret=${ctx.config.SMS_CALLBACK_SECRET}` : undefined;
+  // Секрет кодируется: «+», «/», «=» и «&» из base64 иначе пришли бы обратно другими символами.
+  const callbackUrl = ctx.config.SMS_CALLBACK_SECRET
+    ? `${appUrl}/api/sms/${ctx.sms.name}/callback?secret=${encodeURIComponent(ctx.config.SMS_CALLBACK_SECRET)}`
+    : undefined;
 
   return {
     /** Часовой лимит кончился: остальным гостям SMS не отправляются. */

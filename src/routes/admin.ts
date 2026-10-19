@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { and, asc, count, desc, eq, gt, ilike, or, sql, sum, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, ilike, isNotNull, isNull, or, sql, sum, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import { invitations, orders, smsMessages, subscriptions, templates, usageEvents, users } from "../db/schema.js";
 import { HttpError } from "../errors.js";
@@ -27,10 +27,13 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   app.get("/stats", async () => {
     const now = new Date();
     const monthAgo = new Date(now.getTime() - 30 * 24 * 3600 * 1000);
-    const [[u], [active], [free], [paid], [subs], [inv]] = await Promise.all([
-      db.select({ n: count() }).from(users),
+    // Пользователи — те, кто хоть раз входил: бесплатный доступ, выданный заранее, создаёт строку
+    // для человека, который ещё не заходил (такие считаются отдельно, в pendingFreeAccess).
+    const [[u], [active], [free], [pending], [paid], [subs], [inv]] = await Promise.all([
+      db.select({ n: count() }).from(users).where(isNotNull(users.lastSeenAt)),
       db.select({ n: count() }).from(users).where(gt(users.lastSeenAt, monthAgo)),
       db.select({ n: count() }).from(users).where(eq(users.freeAccess, true)),
+      db.select({ n: count() }).from(users).where(and(eq(users.freeAccess, true), isNull(users.lastSeenAt))),
       db.select({ n: count(), revenue: sum(orders.amount) }).from(orders).where(eq(orders.status, "paid")),
       db.select({ n: sql<number>`count(distinct ${subscriptions.userId})::int` }).from(subscriptions).where(gt(subscriptions.endsAt, now)),
       db.select({ n: count() }).from(invitations),
@@ -39,6 +42,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       users: u!.n,
       activeLast30Days: active!.n,
       freeAccessUsers: free!.n,
+      pendingFreeAccess: pending!.n,
       paidOrders: paid!.n,
       revenue: Number(paid!.revenue ?? 0),
       activeSubscriptions: subs!.n,
@@ -57,28 +61,37 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       .parse(req.query);
     const conds: SQL[] = [];
     if (q.q) {
-      const like = `%${q.q.replace(/[%_\\]/g, "\\$&")}%`;
-      const digits = q.q.replace(/\D/g, "");
-      conds.push(
-        or(
-          ilike(users.username, like),
-          ilike(users.firstName, like),
-          ilike(users.lastName, like),
-          digits ? ilike(users.phone, `%${digits}%`) : undefined,
-          sql`${users.telegramId}::text like ${like}`,
-        )!,
-      );
+      // Поиск в тех видах, в каких админка показывает и просит людей: «@username», «tg:123456789»
+      // (как в форме бесплатного доступа), «Имя Фамилия», телефон с пробелами и дефисами.
+      const term = q.q.replace(/^@/, "");
+      const tg = /^(?:tg|id):?\s*(\d+)$/i.exec(term);
+      const likeOf = (v: string) => `%${v.replace(/[%_\\]/g, "\\$&")}%`;
+      if (tg) conds.push(sql`${users.telegramId}::text like ${likeOf(tg[1]!)}`);
+      else {
+        const like = likeOf(term);
+        const digits = term.replace(/\D/g, "");
+        conds.push(
+          or(
+            ilike(users.username, like),
+            ilike(sql`concat_ws(' ', ${users.firstName}, ${users.lastName})`, like),
+            digits ? ilike(users.phone, `%${digits}%`) : undefined,
+            sql`${users.telegramId}::text like ${like}`,
+          )!,
+        );
+      }
     }
     // Коррелированные подзапросы пишем с явными алиасами: drizzle не квалифицирует колонки внутри select.
     // bigint: сумма всех оплат пользователя может выйти за int4; в JSON отдаём числом.
     const paidSum = sql<number>`coalesce((select sum(o.amount) from orders o where o.user_id = "users"."id" and o.status = 'paid'), 0)::bigint`.mapWith(Number);
-    const subEnd = sql<Date | null>`(select max(s.ends_at) from subscriptions s where s.user_id = "users"."id")`;
+    // mapWith: дата в JSON в ISO, как у остальных полей, а не строкой Postgres.
+    const subEnd = sql<Date | null>`(select max(s.ends_at) from subscriptions s where s.user_id = "users"."id")`.mapWith(subscriptions.endsAt);
     if (q.filter === "free") conds.push(eq(users.freeAccess, true));
     if (q.filter === "blocked") conds.push(eq(users.blocked, true));
     if (q.filter === "paying") conds.push(sql`${paidSum} > 0`);
     if (q.filter === "subscribed") conds.push(sql`${subEnd} > now()`);
     const pageSize = 50;
-    const rows = await db
+    const where = conds.length ? and(...conds) : undefined;
+    const [[total], rows] = await Promise.all([db.select({ n: count() }).from(users).where(where), db
       .select({
         id: users.id,
         telegramId: users.telegramId,
@@ -98,12 +111,12 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
         subscriptionEndsAt: subEnd,
       })
       .from(users)
-      .where(conds.length ? and(...conds) : undefined)
-      .orderBy(sql`${users.lastSeenAt} desc nulls last`)
+      .where(where)
+      .orderBy(sql`${users.lastSeenAt} desc nulls last`, desc(users.createdAt), asc(users.id))
       .limit(pageSize)
-      .offset((q.page - 1) * pageSize);
+      .offset((q.page - 1) * pageSize)]);
     // Права админа по ADMIN_PHONES и ADMIN_TELEGRAM_IDS: колонка обновляется только при входе.
-    return { items: rows.map((r) => ({ ...r, isAdmin: isConfiguredAdmin(ctx.config, r) })), page: q.page, pageSize };
+    return { items: rows.map((r) => ({ ...r, isAdmin: isConfiguredAdmin(ctx.config, r) })), page: q.page, pageSize, total: total!.n };
   });
 
   app.get("/users/:id", async (req, reply) => {
@@ -186,7 +199,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       .from(orders)
       .innerJoin(users, eq(users.id, orders.userId))
       .where(q.status ? eq(orders.status, q.status) : undefined)
-      .orderBy(desc(orders.createdAt))
+      .orderBy(desc(orders.createdAt), desc(orders.number))
       .limit(50)
       .offset((q.page - 1) * 50);
   });

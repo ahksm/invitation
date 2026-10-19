@@ -1,13 +1,16 @@
+import compress from "@fastify/compress";
 import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
+import { eq, sql } from "drizzle-orm";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
+import type { Redis } from "ioredis";
 import { fileURLToPath } from "node:url";
 import { ZodError } from "zod";
 import type { Ctx } from "./context.js";
-import type { User } from "./db/schema.js";
+import { users, type User } from "./db/schema.js";
 import { HttpError } from "./errors.js";
 import { isKnownMessage, requestLocale, translateError } from "./i18n.js";
 import { noopNotifier, type Notifier } from "./notifier.js";
@@ -46,16 +49,38 @@ const publicDir = fileURLToPath(new URL("../public", import.meta.url));
 // Пути, куда приходят запросы от внешних систем: проверка Origin к ним не применяется.
 const EXTERNAL_PATHS = [/^\/api\/payments\/[\w-]+\/callback$/, /^\/api\/sms\/[\w-]+\/callback$/, /^\/telegram\/webhook$/];
 
-export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?: Notifier }, opts: { logger?: boolean } = {}) {
+// Секреты из адреса (пароль приглашения, одноразовый код входа, секрет колбэка SMS) в лог не попадают.
+const SECRET_PARAMS = /([?&](?:code|secret|token)=)[^&#]*/gi;
+export const logUrl = (url: string) => url.replace(SECRET_PARAMS, "$1***");
+
+type Deps = Omit<Ctx, "log" | "notifier"> & {
+  notifier?: Notifier;
+  /**
+   * Redis для лимитов запросов. Отдельный клиент, который при недоступном Redis сразу отвечает ошибкой
+   * (см. server.ts): тогда лимит пропускается (skipOnError), а не задерживает каждый запрос, включая
+   * статические файлы. По умолчанию — клиент кэша.
+   */
+  rateLimitRedis?: Redis;
+};
+
+export async function buildApp(deps: Deps, opts: { logger?: boolean } = {}) {
   const { config } = deps;
   const hops = config.TRUST_PROXY;
   const app = Fastify({
-    logger: opts.logger ?? true,
+    logger:
+      opts.logger === false
+        ? false
+        : {
+            serializers: {
+              req: (req) => ({ method: req.method, url: logUrl(req.url), host: req.host, remoteAddress: req.ip, remotePort: req.socket?.remotePort }),
+            },
+          },
     // Число прокси передаём функцией: Fastify 5 не доверяет ни одному адресу, если получает просто число.
     trustProxy: typeof hops === "number" ? (_address: string, hop: number) => hop < hops : hops,
     bodyLimit: 256 * 1024,
   });
-  const ctx: Ctx = { ...deps, notifier: deps.notifier ?? noopNotifier, log: app.log };
+  const { rateLimitRedis, ...ctxDeps } = deps;
+  const ctx: Ctx = { ...ctxDeps, notifier: deps.notifier ?? noopNotifier, log: app.log };
   app.decorate("ctx", ctx);
 
   // CSP и запрет фреймов для всего сайта; страницы приложения переопределяют их в src/web.
@@ -64,11 +89,14 @@ export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?
     global: true,
     max: 120,
     timeWindow: "1 minute",
-    redis: deps.cache.redis,
+    redis: rateLimitRedis ?? deps.cache.redis,
     nameSpace: "inv:rl-http:",
     skipOnError: true,
     errorResponseBuilder: () => new HttpError(429, "Слишком много запросов, попробуйте позже"),
   });
+  // Сжатие ответов (API, админка, страницы), тела запросов не распаковываются. Файлы под /app/
+  // отдаются уже сжатыми копиями (compress: false у их маршрутов, см. src/web/pages.ts).
+  await app.register(compress, { global: true, globalDecompression: false, encodings: ["br", "gzip"] });
   await app.register(cookie);
   await app.register(jwt, {
     secret: config.JWT_SECRET,
@@ -98,6 +126,9 @@ export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?
     if (user.blocked) throw new HttpError(403, "Доступ заблокирован");
     // Номер телефона обязателен для всех аккаунтов: каждый способ входа его привязывает.
     if (!user.phone) throw new HttpError(428, "Привяжите номер телефона");
+    // «Был» в админке и порядок списка пользователей: последняя активность, а не последний вход.
+    // Не чаще раза в час на пользователя; кэш пользователя ради этого не сбрасывается.
+    if (await ctx.cache.claim(`seen:${user.id}`, 3600)) await ctx.db.update(users).set({ lastSeenAt: new Date() }).where(eq(users.id, user.id));
     req.user = user;
   });
 
@@ -127,7 +158,7 @@ export async function buildApp(deps: Omit<Ctx, "log" | "notifier"> & { notifier?
   });
 
   app.get("/health", { config: { rateLimit: false } }, async () => {
-    await deps.cache.redis.ping();
+    await Promise.all([deps.cache.redis.ping(), deps.db.execute(sql`select 1`)]);
     return { ok: true };
   });
 

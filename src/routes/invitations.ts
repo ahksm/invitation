@@ -20,7 +20,7 @@ import {
   updateInvitation,
 } from "../services/invitations.js";
 import { sendBotTest } from "../services/notify.js";
-import { createOrder } from "../services/orders.js";
+import { createOrder, orderDto } from "../services/orders.js";
 import { remindGuests } from "../services/remind.js";
 import { sendInvitationSms } from "../services/sms.js";
 import { phoneSchema } from "./auth.js";
@@ -73,6 +73,7 @@ const orderSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("seats"), invitationId: z.uuid(), quantity: z.number().int().min(1).max(1000) }),
   z.object({ kind: z.literal("subscription"), months: z.number().int().min(1).max(12) }),
 ]);
+const returnToSchema = z.object({ returnTo: z.enum(["app", "telegram"]).optional() });
 
 export const invitationRoutes: FastifyPluginAsync = async (app) => {
   const { ctx } = app;
@@ -100,7 +101,9 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
 
     priv.patch("/invitations/:id", async (req) => {
       const inv = await updateInvitation(ctx, req.user, id.parse(req.params).id, updateSchema.parse(req.body));
-      await track(ctx, req.user.id, "invitation_updated", { invitationId: inv.id });
+      // Автосохранение шлёт PATCH после каждой паузы в наборе: в журнал идёт одно событие на приглашение
+      // за 30 минут, иначе в карточке пользователя и ленте активности не остаётся ничего, кроме правок.
+      if (await ctx.cache.claim(`usage:inv-upd:${inv.id}`, 1800)) await track(ctx, req.user.id, "invitation_updated", { invitationId: inv.id });
       return inv;
     });
 
@@ -188,13 +191,17 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
     });
 
     priv.post("/orders", { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } }, async (req, reply) => {
-      const result = await createOrder(ctx, req.user.id, orderSchema.parse(req.body));
-      if (result.status === "pending") return reply.code(201).send(result);
+      const order = orderSchema.parse(req.body);
+      // Мини-апп входит по токену в Authorization (cookie во фрейме Telegram нет), и браузер, куда
+      // Telegram откроет оплату, сессии не имеет: без явного returnTo такой заказ возвращает в Telegram.
+      const { returnTo = req.headers.authorization?.startsWith("Bearer ") ? "telegram" : "app" } = returnToSchema.parse(req.body);
+      const result = await createOrder(ctx, req.user.id, order, returnTo);
+      if (result.status === "pending") return reply.code(201).send({ ...result, order: orderDto(result.order) });
       return { status: result.status, order: null, message: apiText(requestLocale(req.headers), result.messageKey, { n: result.n ?? 0 }) };
     });
 
     priv.get("/orders", async (req) =>
-      ctx.db.select().from(orders).where(eq(orders.userId, req.user.id)).orderBy(desc(orders.createdAt)).limit(100),
+      (await ctx.db.select().from(orders).where(eq(orders.userId, req.user.id)).orderBy(desc(orders.createdAt)).limit(100)).map(orderDto),
     );
 
     priv.get("/orders/:id", async (req, reply) => {
@@ -202,7 +209,7 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
         .select()
         .from(orders)
         .where(and(eq(orders.id, id.parse(req.params).id), eq(orders.userId, req.user.id)));
-      return order ?? reply.code(404).send({ error: "Заказ не найден" });
+      return order ? orderDto(order) : reply.code(404).send({ error: "Заказ не найден" });
     });
   });
 };

@@ -16,13 +16,49 @@ export type OrderRequest =
   | { kind: "seats"; invitationId: string; quantity: number }
   | { kind: "subscription"; months: number };
 
+/**
+ * Куда платёжная страница вернёт плательщика. app — экран заказа в приложении (нужна сессия этого
+ * браузера). telegram — оплата начата в мини-аппе: страницу оплаты Telegram открывает во внешнем
+ * браузере без сессии, поэтому возврат идёт на экран без входа «Вернитесь в Telegram» (#/paid/<id>).
+ */
+export type ReturnTo = "app" | "telegram";
+
+/** Заказ для клиента: без meta (там уведомление платёжной системы и служебные отметки). */
+export type OrderDto = Pick<
+  Order,
+  "id" | "number" | "kind" | "invitationId" | "quantity" | "amount" | "currency" | "status" | "checkoutUrl" | "paidAt" | "createdAt"
+>;
+
+export const orderDto = (o: Order): OrderDto => ({
+  id: o.id,
+  number: o.number,
+  kind: o.kind,
+  invitationId: o.invitationId,
+  quantity: o.quantity,
+  amount: o.amount,
+  currency: o.currency,
+  status: o.status,
+  checkoutUrl: o.checkoutUrl,
+  paidAt: o.paidAt,
+  createdAt: o.createdAt,
+});
+
+// Поля уведомления об оплате, которые хранятся в заказе. Остальное (токен карты, подпись, телефон
+// плательщика) не сохраняется: для сверки с кабинетом платёжной системы оно не нужно.
+const NOTIFICATION_FIELDS = ["uuid", "invoice_id", "billing_id", "payment_time", "ps", "card_pan", "receipt_url", "amount", "order_number", "status"];
+
+export function notificationMeta(raw: unknown): Record<string, unknown> {
+  if (!raw || typeof raw !== "object") return {};
+  return Object.fromEntries(Object.entries(raw).filter(([k]) => NOTIFICATION_FIELDS.includes(k)));
+}
+
 /** Бесплатный заказ выполнен сразу: messageKey и n — для текста на языке пользователя (apiText). */
 export type OrderResult =
   | { status: "fulfilled"; order: null; messageKey: ApiTextKey; n?: number }
   | { status: "pending"; order: Order; checkoutUrl: string };
 
 /** Создаёт заказ. Если платить не нужно (бесплатный доступ, подписка), сразу применяет результат. */
-export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): Promise<OrderResult> {
+export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest, returnTo: ReturnTo = "app"): Promise<OrderResult> {
   const user = await getUser(ctx, userId);
   if (!user) throw new HttpError(401, "Пользователь не найден");
   const access = await getAccess(ctx, user);
@@ -102,7 +138,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
       order: order!,
       items,
       callbackUrl: `${appUrl}/api/payments/${ctx.payments.name}/callback`,
-      returnUrl: `${appUrl}/app/#/orders/${order!.id}`,
+      returnUrl: `${appUrl}/app/#/${returnTo === "telegram" ? "paid" : "orders"}/${order!.id}`,
       lang: user.locale === "uz" || user.locale === "uzc" ? "uz" : user.locale === "en" ? "en" : "ru",
     });
     const [updated] = await ctx.db
@@ -150,7 +186,7 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
 
     if (n.status !== "paid") {
       if (order.status !== "pending") return { result: "ignored" as const };
-      await tx.update(orders).set({ status: n.status, meta: { ...order.meta, notification: n.raw } }).where(eq(orders.id, order.id));
+      await tx.update(orders).set({ status: n.status, meta: { ...order.meta, notification: notificationMeta(n.raw) } }).where(eq(orders.id, order.id));
       return { result: "marked_failed" as const };
     }
     if (n.amount !== order.amount) return { result: "amount_mismatch" as const, order };
@@ -169,7 +205,7 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
     if (order.kind === "template" && inv?.unlocked) {
       await tx
         .update(orders)
-        .set({ status: "cancelled", meta: { ...order.meta, duplicate: true, notification: n.raw } })
+        .set({ status: "cancelled", meta: { ...order.meta, duplicate: true, notification: notificationMeta(n.raw) } })
         .where(eq(orders.id, order.id));
       return { result: "duplicate" as const, order };
     }
@@ -177,7 +213,7 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
     if (order.status === "cancelled" || (inv && staleOrder(order, inv, prices))) {
       await tx
         .update(orders)
-        .set({ status: "cancelled", meta: { ...order.meta, stale: true, notification: n.raw } })
+        .set({ status: "cancelled", meta: { ...order.meta, stale: true, notification: notificationMeta(n.raw) } })
         .where(eq(orders.id, order.id));
       return { result: "stale" as const, order };
     }
@@ -189,7 +225,7 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
     const now = new Date();
     await tx
       .update(orders)
-      .set({ status: "paid", paidAt: now, providerRef: n.providerRef ?? order.providerRef, meta: { ...order.meta, notification: n.raw } })
+      .set({ status: "paid", paidAt: now, providerRef: n.providerRef ?? order.providerRef, meta: { ...order.meta, notification: notificationMeta(n.raw) } })
       .where(eq(orders.id, order.id));
 
     let invitation: { id: string; slug: string } | undefined;

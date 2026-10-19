@@ -1,4 +1,3 @@
-import compress from "@fastify/compress";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { appHelmet } from "./csp.js";
 import { assetUrl, createDesignStore, type Asset, type Design, type Encoding } from "./design.js";
@@ -203,9 +202,6 @@ export async function webRoutes(app: FastifyInstance, opts: { publicPage: Public
   const store = createDesignStore({ watch: ctx.config.NODE_ENV === "development" });
   const appUrl = ctx.config.APP_URL.replace(/\/+$/, "");
 
-  // Сжатие оболочки на лету (страница небольшая), тела запросов не распаковываются.
-  await app.register(compress, { global: true, globalDecompression: false, encodings: ["br", "gzip"] });
-
   // Файлы под /app/ отдаются из памяти уже сжатыми (compress: false, копию выбирает sendAsset).
   // Лимит отдельный на каждый файл и в 5 раз выше общего (120 в минуту): страница грузит каждый файл
   // не больше одного раза, а сами страницы ограничены общим лимитом, поэтому гости одного приглашения
@@ -242,5 +238,22 @@ export async function webRoutes(app: FastifyInstance, opts: { publicPage: Public
   app.get<{ Params: { token: string } }>("/g/:token", pageRoute, async (req, reply) => {
     const page = { kind: "personal" as const, key: req.params.token, ip: req.ip, userAgent: req.headers["user-agent"] };
     return sendShell(reply, store.get(), await publicShell(opts.publicPage, page));
+  });
+
+  // Неизвестный адрес (обработчик на весь сайт: плагин без префикса). Ссылка гостя с лишним «/» в конце
+  // ведёт на саму ссылку; страница, которую открывают в браузере, получает оболочку «не найдено» в стиле
+  // Invito. API, файлы (/media/, /app/*.js) и запросы не за HTML получают JSON, как раньше.
+  app.setNotFoundHandler((req, reply) => {
+    const [path = "", query] = req.url.split(/\?(.*)/s);
+    if (req.method === "GET" || req.method === "HEAD") {
+      const guest = /^\/([ig])\/([^/]+)\/+$/.exec(path);
+      if (guest) return reply.redirect(`/${guest[1]}/${guest[2]}${query ? `?${query}` : ""}`, 301);
+      const file = (path.split("/").pop() ?? "").includes(".");
+      const html = (req.headers.accept ?? "").includes("text/html");
+      if (html && !file && !/^\/(api|media)\//.test(path)) {
+        return sendShell(reply, store.get(), { boot: { mode: "notfound" }, meta: { title: ctx.config.APP_NAME }, status: 404 });
+      }
+    }
+    return reply.code(404).send({ message: `Route ${req.method}:${req.url} not found`, error: "Not Found", statusCode: 404 });
   });
 }
