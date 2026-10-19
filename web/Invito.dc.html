@@ -1142,9 +1142,8 @@ class Component extends DCLogic {
     // без сессии. Вход не требуется и заказ не запрашивается: карточка «вернитесь в Telegram». С сессией — экран заказа.
     paid: (id) => {
       if (!this.isUuid(id)) { this.clearHash(); return; }
-      if (this.state.me) { try { history.replaceState(null, '', location.pathname + location.search + '#/orders/' + id); } catch (e) {} this.openOrder(id); return; }
-      clearTimeout(this._orderT);
-      this.setState({ screen: 'paid', paid: { id }, order: null, mock: null, pay: null });
+      if (this.state.me) { try { history.replaceState(null, '', location.pathname + location.search + '#/orders/' + id); } catch (e) {} this.openOrder(id, { fromPaid: true }); return; }
+      this.showPaid(id);
     },
   };
 
@@ -1637,10 +1636,15 @@ class Component extends DCLogic {
     this.go(then === 'manage' ? 'manage' : 'share', { music: false });
   }
   // Экран заказа (#/orders/<id>): опрос GET /api/orders/:id до оплаты, отказа или отмены.
-  openOrder(id) {
+  openOrder(id, opts = {}) {
     clearTimeout(this._orderT);
-    this.setState({ screen: 'order', order: { id, data: null, err: '', busy: false }, pay: null });
+    this.setState({ screen: 'order', order: { id, data: null, err: '', busy: false, fromPaid: !!opts.fromPaid }, pay: null });
     this.pollOrder(id);
+  }
+  // Карточка «Оплата завершена, вернитесь в Telegram» без данных заказа.
+  showPaid(id) {
+    clearTimeout(this._orderT);
+    this.setState({ screen: 'paid', paid: { id }, order: null, mock: null, pay: null });
   }
   async pollOrder(id) {
     clearTimeout(this._orderT);
@@ -1650,6 +1654,8 @@ class Component extends DCLogic {
     try { o = await this.A.api('/api/orders/' + id); } catch (e) {
       this.logErr(e);
       if (e.status === 401) return this.sessionLost(() => this.openOrder(id));
+      // С #/paid/<id> в браузере, где вошёл другой человек, заказ чужой: вместо «Заказ не найден» — та же карточка «вернитесь в Telegram».
+      if (e.status === 404 && cur() && this.state.order.fromPaid) { this.clearHash(); return this.showPaid(id); }
       if (e.status === 404) return this.setState((x) => (cur() ? { order: { ...x.order, err: this.errText(e), missing: true } } : null));
     }
     if (!cur()) return;

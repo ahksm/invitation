@@ -168,6 +168,24 @@ describe("возврат после оплаты из мини-аппа (#/paid/
     expect(problems.me401).toBe(0);
     await close();
   });
+
+  it("в браузере, где вошёл другой человек: та же карточка «Оплата завершена», а не «Заказ не найден»", async () => {
+    const [owner] = await e.db.insert(users).values({ phone: uniquePhone(), locale: "ru" }).returning();
+    const order = await pendingOrder(owner!.id);
+    const context = await e.newContext();
+    await e.signIn(context);
+    const { page, problems, close } = await e.open(`/app/#/paid/${order.id}`, { context });
+    const card = page.locator('[data-screen="paid"]');
+    await card.waitFor();
+    expect(await card.innerText()).toContain(ru.paidText);
+    expect(await card.innerText()).not.toContain(String(order.number));
+    expect(await page.locator(`[data-order-status]`).count()).toBe(0);
+    // Единственная ошибка — ответ 404 на чужой заказ в консоли браузера.
+    expect(problems.console).toEqual(["Failed to load resource: the server responded with a status of 404 (Not Found)"]);
+    problems.console = [];
+    await e.expectClean(page, problems);
+    await close();
+  });
 });
 
 describe("стёртая дата приглашения", () => {
