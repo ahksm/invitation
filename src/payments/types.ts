@@ -7,6 +7,8 @@ export type CheckoutRequest = {
   items: CheckoutItem[];
   callbackUrl: string;
   returnUrl: string;
+  /** Язык платёжной страницы. */
+  lang?: "ru" | "uz" | "en" | undefined;
 };
 
 export type CheckoutResult = { checkoutUrl: string; providerRef: string };

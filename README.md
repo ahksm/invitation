@@ -51,8 +51,8 @@ npm test               # нужна база invite_test, см. test/api.test.ts
 
 ## Перед запуском в бой
 
-1. **Multicard**: сверить поля API и формулу подписи с https://docs.multicard.uz/ (код в `src/payments/multicard.ts`), указать адрес колбэка `https://<домен>/api/payments/multicard/callback`.
-2. **Eskiz**: отправить на модерацию тексты SMS из `src/sms/texts.ts` (6 шаблонов: код входа и приглашение на трёх языках), задать `SMS_CALLBACK_SECRET`.
+1. **Multicard**: получить ИКПУ и код упаковки услуги на tasnif.soliq.uz и указать их в `MULTICARD_MXIK` и `MULTICARD_PACKAGE_CODE` (без них счёт не создаётся), при необходимости `MULTICARD_VAT`. Боевой адрес `https://mesh.multicard.uz`. Колбэк приходит на `https://<домен>/api/payments/multicard/callback`; ответ не 200 отменяет оплату, поэтому отказ даётся только при неверной подписи, неизвестном заказе или несовпадении суммы.
+2. **Eskiz**: отправить на модерацию тексты SMS из `src/sms/texts.ts` (6 шаблонов: код входа и приглашение на трёх языках), задать `SMS_CALLBACK_SECRET`. Тестовый аккаунт Eskiz отправляет только фразу «This is test from Eskiz»: для разработки есть `ESKIZ_TEST_MODE=true`, тогда настоящий текст с кодом пишется в лог.
 3. **Telegram**: создать бота в @BotFather, указать `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_MODE=webhook` и `TELEGRAM_WEBHOOK_SECRET`. Кнопка мини-аппа ставится автоматически, если `APP_URL` начинается с https.
 4. Указать себя в `ADMIN_PHONES` или `ADMIN_TELEGRAM_IDS`.
 

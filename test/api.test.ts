@@ -14,6 +14,7 @@ import { createMockSms } from "../src/sms/mock.js";
 import { approveTelegramLogin } from "../src/auth/telegram.js";
 import { templates } from "../src/db/schema.js";
 import { signInitData } from "./telegram.test.js";
+import { applySmsDelivery } from "../src/services/sms.js";
 
 const APP_URL = "http://localhost:3000";
 const config = loadConfig({
@@ -27,6 +28,8 @@ const config = loadConfig({
   MULTICARD_APPLICATION_ID: "app",
   MULTICARD_SECRET: "mc-secret",
   MULTICARD_STORE_ID: "6",
+  MULTICARD_MXIK: "10305008002000000",
+  MULTICARD_PACKAGE_CODE: "1545643",
   TELEGRAM_BOT_TOKEN: "123:abc",
   TELEGRAM_BOT_USERNAME: "invite_test_bot",
   SMS_CALLBACK_SECRET: "sms-cb-secret",
@@ -38,7 +41,7 @@ const fakeFetch: typeof fetch = async (input, init) => {
   const url = String(input);
   const body = init?.body ? JSON.parse(String(init.body)) : undefined;
   calls.push({ url, body });
-  if (url.endsWith("/auth")) return Response.json({ token: "tok", expiry: new Date(Date.now() + 86_400_000).toISOString() });
+  if (url.endsWith("/auth")) return Response.json({ token: "tok", role: "merchant", expiry: "2099-01-01 12:00:00" });
   if (url.endsWith("/payment/invoice")) {
     return Response.json({ success: true, data: { uuid: `uuid-${body.invoice_id}`, checkout_url: `https://checkout.test/${body.invoice_id}` } });
   }
@@ -53,6 +56,8 @@ const payments = createMulticardProvider({
   applicationId: "app",
   secret: "mc-secret",
   storeId: "6",
+  mxik: config.MULTICARD_MXIK,
+  packageCode: config.MULTICARD_PACKAGE_CODE,
   cache,
   fetch: fakeFetch,
 });
@@ -94,7 +99,7 @@ function callback(orderNumber: number, amount: number, secret = "mc-secret") {
       store_id: 6,
       invoice_id: String(orderNumber),
       amount,
-      invoice_uuid: `uuid-${orderNumber}`,
+      uuid: `uuid-${orderNumber}`,
       sign: multicardSign(6, String(orderNumber), amount, secret),
     },
   });
@@ -165,9 +170,15 @@ describe("оплата общего шаблона", () => {
     const invoiceCall = calls.find((c) => c.url.endsWith("/payment/invoice"))!;
     expect(invoiceCall.body).toMatchObject({ store_id: 6, amount: order.amount, invoice_id: String(order.number) });
     expect(invoiceCall.body.callback_url).toBe(`${APP_URL}/api/payments/multicard/callback`);
+    expect(invoiceCall.body.lang).toBe("ru");
+    expect(invoiceCall.body.ofd).toEqual([
+      { name: "Шаблон «Обложка приглашения»", qty: 1, price: order.amount, total: order.amount, mxik: "10305008002000000", package_code: "1545643" },
+    ]);
 
     expect((await callback(order.number, order.amount, "wrong")).statusCode).toBe(400);
-    expect((await callback(order.number, order.amount - 1)).statusCode).toBe(400);
+    const mismatch = await callback(order.number, order.amount - 1);
+    expect(mismatch.statusCode).toBe(400);
+    expect(mismatch.json()).toEqual({ success: false, message: "Сумма оплаты не совпадает с заказом" });
     const ok = await callback(order.number, order.amount);
     expect(ok.statusCode).toBe(200);
     expect(ok.json()).toEqual({ success: true });
@@ -390,6 +401,16 @@ describe("SMS гостям и язык приглашения", () => {
     expect(bad.statusCode).toBe(404);
     const ok = await app.inject({ method: "POST", url: "/api/sms/mock/callback?secret=sms-cb-secret", payload: { request_id: ref, status: "DELIVRD" } });
     expect(ok.statusCode).toBe(200);
+  });
+
+  it("поздний промежуточный статус SMS не затирает итоговый", async () => {
+    const [row] = await db.execute(sql`select provider_ref from sms_messages where purpose = 'invite' limit 1`).then((r) => r.rows as { provider_ref: string }[]);
+    const ref = row!.provider_ref;
+    const status = async () =>
+      (await db.execute(sql`select status from sms_messages where provider_ref = ${ref}`)).rows[0]!.status;
+    await applySmsDelivery({ db }, ref, "delivered");
+    await applySmsDelivery({ db }, ref, "sent");
+    expect(await status()).toBe("delivered");
   });
 
   it("язык интерфейса сохраняется в профиле", async () => {

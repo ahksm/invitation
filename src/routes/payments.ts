@@ -13,21 +13,34 @@ export const paymentRoutes: FastifyPluginAsync = async (app) => {
     done(null, Object.fromEntries(new URLSearchParams(body as string)));
   });
 
+  // Текст отказа Multicard показывает плательщику.
+  const refusal: Partial<Record<string, string>> = {
+    not_found: "Заказ не найден",
+    amount_mismatch: "Сумма оплаты не совпадает с заказом",
+  };
+  const allowedIps = provider.name === "multicard" ? ctx.config.MULTICARD_CALLBACK_IPS : [];
+
   // Уведомление об оплате от платёжной системы. Подпись проверяет провайдер.
+  // Ошибка базы или Redis даёт 500: Multicard в этом случае не отменяет оплату, а присылает колбэк повторно.
   app.post("/:provider/callback", { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } }, async (req, reply) => {
     const { provider: name } = z.object({ provider: z.string() }).parse(req.params);
     if (name !== provider.name) return reply.code(404).send({ error: "Неизвестный провайдер" });
+    if (allowedIps.length && !allowedIps.includes(req.ip)) {
+      req.log.warn({ ip: req.ip }, "платёжное уведомление с чужого IP");
+      const ack = provider.webhookAck(false, "Доступ запрещён");
+      return reply.code(ack.status).send(ack.body);
+    }
 
     const notification = await provider.verifyWebhook(req.body, req.headers);
     if (!notification) {
       req.log.warn({ ip: req.ip }, "платёжное уведомление с неверной подписью");
-      const ack = provider.webhookAck(false, "invalid sign");
+      const ack = provider.webhookAck(false, "Неверная подпись");
       return reply.code(ack.status).send(ack.body);
     }
     const outcome = await applyPayment(ctx, notification);
     req.log.info({ orderNumber: notification.orderNumber, outcome }, "платёжное уведомление обработано");
     const ok = outcome === "paid" || outcome === "already_paid" || outcome === "marked_failed" || outcome === "ignored";
-    const ack = provider.webhookAck(ok, outcome);
+    const ack = provider.webhookAck(ok, refusal[outcome] ?? outcome);
     return reply.code(ack.status).send(ack.body);
   });
 

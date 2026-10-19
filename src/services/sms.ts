@@ -1,4 +1,4 @@
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, notInArray } from "drizzle-orm";
 import type { Ctx } from "../context.js";
 import { guests, smsMessages, templates } from "../db/schema.js";
 import { HttpError } from "../errors.js";
@@ -91,5 +91,9 @@ export async function guestSmsStatuses(ctx: Pick<Ctx, "db">, invitationId: strin
 }
 
 export async function applySmsDelivery(ctx: Pick<Ctx, "db">, providerRef: string, status: "sent" | "delivered" | "failed") {
-  await ctx.db.update(smsMessages).set({ status }).where(eq(smsMessages.providerRef, providerRef));
+  // Колбэки могут прийти не по порядку: промежуточный статус не затирает итоговый.
+  await ctx.db
+    .update(smsMessages)
+    .set({ status })
+    .where(and(eq(smsMessages.providerRef, providerRef), notInArray(smsMessages.status, ["delivered", "failed"])));
 }

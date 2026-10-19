@@ -89,6 +89,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
       items,
       callbackUrl: `${appUrl}/api/payments/${ctx.payments.name}/callback`,
       returnUrl: `${appUrl}/app/#/orders/${order!.id}`,
+      lang: user.locale === "uz" || user.locale === "en" ? user.locale : "ru",
     });
     const [updated] = await ctx.db
       .update(orders)

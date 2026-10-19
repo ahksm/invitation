@@ -12,6 +12,7 @@ export function createSmsProvider(config: Config, cache: Cache, log: Pick<Fastif
     email: config.ESKIZ_EMAIL,
     password: config.ESKIZ_PASSWORD,
     from: config.ESKIZ_FROM,
+    testMode: config.ESKIZ_TEST_MODE ? { log } : undefined,
     cache,
   });
 }

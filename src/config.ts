@@ -42,6 +42,14 @@ const schema = z
     // ИКПУ (MXIK) и код упаковки для фискального чека; выдаются при регистрации в soliq.uz.
     MULTICARD_MXIK: z.string().default(""),
     MULTICARD_PACKAGE_CODE: z.string().default(""),
+    // Ставка НДС в чеке, %. Пусто: не передаётся.
+    MULTICARD_VAT: z.preprocess((v) => (v === "" ? undefined : v), z.coerce.number().int().min(0).max(100).optional()),
+    // Колбэки Multicard приходят с 195.158.26.90. Пусто: проверяется только подпись.
+    // Включайте, только если TRUST_PROXY настроен верно, иначе настоящие оплаты будут отклонены.
+    MULTICARD_CALLBACK_IPS: z
+      .string()
+      .default("")
+      .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
     MOCK_PAYMENT_SECRET: z.string().default("mock-secret"),
 
     SMS_PROVIDER: z.enum(["eskiz", "mock"]).default("mock"),
@@ -50,6 +58,9 @@ const schema = z
     ESKIZ_PASSWORD: z.string().default(""),
     // Имя отправителя; 4546 — общий номер Eskiz, своё имя подключается через их поддержку.
     ESKIZ_FROM: z.string().default("4546"),
+    // Тестовый аккаунт Eskiz отправляет только фиксированные фразы: вместо текста уходит
+    // «This is test from Eskiz», а настоящий текст (с кодом) пишется в лог. Только для разработки.
+    ESKIZ_TEST_MODE: z.stringbool().default(false),
     // Секрет в адресе колбэка о доставке SMS: Eskiz не подписывает колбэки.
     SMS_CALLBACK_SECRET: z.string().default(""),
   })
@@ -69,6 +80,12 @@ const schema = z
     }
     if (env.PAYMENT_PROVIDER === "multicard" && (!env.MULTICARD_APPLICATION_ID || !env.MULTICARD_SECRET || !env.MULTICARD_STORE_ID)) {
       ctx.addIssue({ code: "custom", message: "Заполните MULTICARD_APPLICATION_ID, MULTICARD_SECRET и MULTICARD_STORE_ID" });
+    }
+    if (env.PAYMENT_PROVIDER === "multicard" && (!env.MULTICARD_MXIK || !env.MULTICARD_PACKAGE_CODE)) {
+      ctx.addIssue({ code: "custom", message: "Заполните MULTICARD_MXIK и MULTICARD_PACKAGE_CODE: без них Multicard не создаёт счёт" });
+    }
+    if (env.ESKIZ_TEST_MODE) {
+      ctx.addIssue({ code: "custom", message: "ESKIZ_TEST_MODE пишет коды входа в лог и запрещён в production" });
     }
   });
 

@@ -15,6 +15,7 @@ export function createPaymentProvider(config: Config, cache: Cache): PaymentProv
     storeId: config.MULTICARD_STORE_ID,
     mxik: config.MULTICARD_MXIK || undefined,
     packageCode: config.MULTICARD_PACKAGE_CODE || undefined,
+    vat: config.MULTICARD_VAT,
     cache,
   });
 }
