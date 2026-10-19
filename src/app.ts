@@ -16,6 +16,7 @@ import { invitationRoutes } from "./routes/invitations.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { publicRoutes } from "./routes/public.js";
 import { smsRoutes } from "./routes/sms.js";
+import { getPublicPage } from "./services/public-page.js";
 import { getUser } from "./services/users.js";
 import { siteHelmet } from "./web/csp.js";
 import { webRoutes } from "./web/pages.js";
@@ -131,7 +132,7 @@ export async function buildApp(deps: Omit<Ctx, "log">, opts: { logger?: boolean 
   await app.register(adminRoutes, { prefix: "/api/admin" });
 
   // Фронтенд из дизайна (web/): /, /app, /i/:slug, /g/:token и файлы под /app/.
-  await app.register(webRoutes);
+  await app.register(webRoutes, { publicPage: (req) => getPublicPage(ctx, req) });
   // Админка и её общие файлы.
   await app.register(fastifyStatic, { root: publicDir, prefix: "/", index: ["index.html"] });
 

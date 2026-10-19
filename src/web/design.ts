@@ -3,6 +3,8 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Script } from "node:vm";
+import { brotliCompressSync, constants as zlib, gzipSync } from "node:zlib";
 import { applyPatches, supportPatches } from "./support-patches.js";
 
 /**
@@ -16,7 +18,15 @@ const require = createRequire(import.meta.url);
 /** Корневой DC: приложение целиком. Остальные *.dc.html подключаются из него через <dc-import>. */
 const ROOT_DC = "Invito";
 
-export type Asset = { body: Buffer; type: string; hash: string };
+export type Encoding = "br" | "gzip";
+
+export type Asset = {
+  body: Buffer;
+  type: string;
+  hash: string;
+  /** Сжатые копии, сделанные один раз при сборке (только если они меньше исходника). */
+  encoded: Partial<Record<Encoding, Buffer>>;
+};
 
 export type Design = {
   /** Файлы по путям, например "/app/support.js". */
@@ -32,15 +42,34 @@ type DcSource = {
   props: Record<string, unknown> | null;
   preview: Record<string, unknown> | null;
   logic: string | null;
+  /** Строка файла, с которой начинается текст логики (для сообщений об ошибках). */
+  logicLine: number;
 };
 
 const JS = "text/javascript; charset=utf-8";
 const ATTRS = `(?:[^>"']|"[^"]*"|'[^']*')*`;
 
+/**
+ * Файл сборки со сжатыми копиями. Сжатие при сборке, а не на каждый ответ: иначе каждый запрос
+ * большого dc-bundle.js стоил бы миллисекунды процессора. Brotli 9 вместо 11: сборка (и пересборка
+ * в development) в 6–7 раз быстрее, а файлы больше всего примерно на 9%.
+ */
 const asset = (body: string | Buffer): Asset => {
   const buf = typeof body === "string" ? Buffer.from(body) : body;
-  return { body: buf, type: JS, hash: createHash("sha256").update(buf).digest("hex").slice(0, 16) };
+  const br = brotliCompressSync(buf, {
+    params: { [zlib.BROTLI_PARAM_QUALITY]: 9, [zlib.BROTLI_PARAM_MODE]: zlib.BROTLI_MODE_TEXT, [zlib.BROTLI_PARAM_SIZE_HINT]: buf.length },
+  });
+  const gzip = gzipSync(buf, { level: 9 });
+  return {
+    body: buf,
+    type: JS,
+    hash: createHash("sha256").update(buf).digest("hex").slice(0, 16),
+    encoded: { ...(br.length < buf.length && { br }), ...(gzip.length < buf.length && { gzip }) },
+  };
 };
+
+/** Текст исходника дизайна с переводами строк LF: в checkout с CRLF (Windows) фрагменты патчей иначе не находятся. */
+const readText = (file: string) => readFileSync(file, "utf8").replace(/\r\n?/g, "\n");
 
 /** Адрес файла с хэшем содержимого: такие ответы кэшируются навсегда. */
 export function assetUrl(design: Design, path: string): string {
@@ -61,7 +90,7 @@ function decodeAttr(s: string, where: string): string {
 }
 
 /** Первый <script data-dc-script>: атрибуты и текст. Комментарии и содержимое других скриптов пропускаются. */
-function findDcScript(src: string): { attrs: string; text: string } | null {
+function findDcScript(src: string): { attrs: string; text: string; start: number } | null {
   const re = new RegExp(`<!--[\\s\\S]*?-->|<script(\\s${ATTRS})?>`, "gi");
   for (let m = re.exec(src); m; m = re.exec(src)) {
     if (m[0].startsWith("<!--")) continue;
@@ -69,7 +98,7 @@ function findDcScript(src: string): { attrs: string; text: string } | null {
     const close = /<\/script[\s/>]/i.exec(src.slice(start));
     const end = close ? start + close.index : src.length;
     const attrs = m[1] ?? "";
-    if (/\sdata-dc-script(?=[\s=/]|$)/i.test(attrs)) return { attrs, text: src.slice(start, end) };
+    if (/\sdata-dc-script(?=[\s=/]|$)/i.test(attrs)) return { attrs, text: src.slice(start, end), start };
     re.lastIndex = end;
   }
   return null;
@@ -105,14 +134,34 @@ export function parseDcFile(file: string, src: string): DcSource {
     const rest = Object.fromEntries(Object.entries(obj).filter(([k]) => k[0] !== "$"));
     props = Object.keys(rest).length ? rest : null;
   }
-  return { template, props, preview, logic: script?.text || null };
+  const logicLine = script ? src.slice(0, script.start).split("\n").length : 1;
+  return { template, props, preview, logic: script?.text || null, logicLine };
 }
 
 /**
- * /app/dc-bundle.js: исходники всех DC для пропатченного support.js. Шаблоны сырым текстом,
- * логика обычными функциями с тем же окружением, что давал new Function в оригинале
+ * Логика DC обычной функцией с тем же окружением, что давал new Function в оригинале
  * (параметры DCLogic, StreamableLogic, React; остальное из window; нестрогий режим).
+ * Текст логики начинается со второй строки функции.
  */
+const logicFunction = (logic: string) =>
+  `function (DCLogic, StreamableLogic, React) {\n${logic}\n;return (typeof Component!=="undefined"&&Component)||undefined;\n}`;
+
+/**
+ * Синтаксис логики проверяется при сборке: логика всех DC идёт одним скриптом, и ошибка в любой
+ * из них в браузере ломает весь dc-bundle.js (пустая страница), а не один DC, как в оригинале.
+ * line — строка файла, с которой начинается логика: номер строки ошибки указывает в .dc.html.
+ */
+function checkLogic(file: string, logic: string, line: number) {
+  try {
+    // Только разбор: функция не вызывается.
+    new Script(`(${logicFunction(logic)})`, { filename: file, lineOffset: line - 2 });
+  } catch (e) {
+    const at = /^[^\n]*:(\d+)\n/.exec(String((e as Error).stack))?.[1];
+    throw new Error(`${file}${at ? `:${at}` : ""}: ошибка в логике DC (${(e as Error).message})`);
+  }
+}
+
+/** /app/dc-bundle.js: исходники всех DC для пропатченного support.js. Шаблоны сырым текстом, логика функциями. */
 function dcBundle(sources: Map<string, DcSource>): string {
   const data = Object.fromEntries(
     [...sources].map(([name, s]) => [name, { template: s.template, props: s.props, ...(s.preview && { preview: s.preview }) }]),
@@ -124,10 +173,7 @@ function dcBundle(sources: Map<string, DcSource>): string {
     "window.__dcLogic = {};",
   ];
   for (const [name, s] of sources) {
-    if (s.logic === null) continue;
-    out.push(
-      `window.__dcLogic[${JSON.stringify(name)}] = function (DCLogic, StreamableLogic, React) {\n${s.logic}\n;return (typeof Component!=="undefined"&&Component)||undefined;\n};`,
-    );
+    if (s.logic !== null) out.push(`window.__dcLogic[${JSON.stringify(name)}] = ${logicFunction(s.logic)};`);
   }
   return out.join("\n") + "\n";
 }
@@ -141,7 +187,7 @@ export function buildDesign(dir = webDir): Design {
   const files = readdirSync(dir).sort();
   const sources = new Map<string, DcSource>();
   for (const f of files.filter((f) => f.endsWith(".dc.html"))) {
-    sources.set(f.slice(0, -".dc.html".length), parseDcFile(`web/${f}`, readFileSync(join(dir, f), "utf8")));
+    sources.set(f.slice(0, -".dc.html".length), parseDcFile(`web/${f}`, readText(join(dir, f))));
   }
   const root = sources.get(ROOT_DC);
   if (!root) throw new Error(`нет web/${ROOT_DC}.dc.html`);
@@ -153,11 +199,12 @@ export function buildDesign(dir = webDir): Design {
     if (/\bimport\(\s*new URL\(/.test(s.logic ?? "")) {
       throw new Error(`web/${name}.dc.html: модули импортируются по абсолютному пути, import('/app/invito-data.js'), иначе /i/… и /g/… ищут их не там`);
     }
+    if (s.logic !== null) checkLogic(`web/${name}.dc.html`, s.logic, s.logicLine);
   }
 
   const assets = new Map<string, Asset>();
   assets.set("/app/dc-bundle.js", asset(dcBundle(sources)));
-  const support = applyPatches(readFileSync(join(dir, "support.js"), "utf8"), supportPatches);
+  const support = applyPatches(readText(join(dir, "support.js")), supportPatches);
   assets.set("/app/support.js", asset(`// web/support.js с патчами сервера (src/web/support-patches.ts).\n${support}`));
   // ES-модули дизайна (invito-data.js, invito-engine.js, invito-api.js и новые) отдаются как есть.
   for (const f of files.filter((f) => f.endsWith(".js") && f !== "support.js")) {

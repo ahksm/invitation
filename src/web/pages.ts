@@ -1,8 +1,7 @@
 import compress from "@fastify/compress";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import type { Ctx } from "../context.js";
 import { appHelmet } from "./csp.js";
-import { assetUrl, createDesignStore, type Asset, type Design } from "./design.js";
+import { assetUrl, createDesignStore, type Asset, type Design, type Encoding } from "./design.js";
 
 /** Загрузочные данные страницы: логика Invito читает их из #invito-boot. */
 export type Boot =
@@ -15,6 +14,30 @@ export type Boot =
 export type ShellMeta = { title: string; description?: string; image?: string; url?: string };
 
 export type ShellOptions = { boot: Boot; meta?: ShellMeta; status?: number; lang?: string };
+
+/** Мета-теги публичной страницы от бэкенда: image — абсолютный адрес или null, пустое description не выводится. */
+export type PageMeta = { title: string; description: string; image: string | null; url: string };
+
+/**
+ * Ответ бэкенда о публичной странице (getPublicPage, раздел 3.6 спецификации). view попадает
+ * в загрузочные данные как есть: это тот же объект, что отдаёт GET /api/public/i|g/…
+ * 401 — приглашение под паролем (look для формы ввода), 429 — исчерпаны попытки пароля.
+ */
+export type PublicPage =
+  | { status: 200; view: { language: string }; meta: PageMeta }
+  | { status: 401; locked: { look: unknown }; meta: PageMeta }
+  | { status: 404 | 429; meta: PageMeta };
+
+export type PublicPageRequest = {
+  kind: "shared" | "personal";
+  key: string;
+  code?: string | undefined;
+  ip?: string | undefined;
+  userAgent?: string | undefined;
+};
+
+/** Источник публичных страниц: подключается в src/app.ts. */
+export type PublicPageResolver = (req: PublicPageRequest) => Promise<PublicPage>;
 
 const DEFAULT_META: ShellMeta = {
   title: "Invito",
@@ -34,6 +57,13 @@ const ENTITIES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITIES[c]!);
 
 /**
+ * Страницы приглашений (/i/…, /g/…, в том числе «не найдено») несут личные данные: имена, адрес,
+ * имя гостя. Поисковики их не индексируют, кэши не хранят. Превью ссылок в мессенджерах это не мешает.
+ */
+const isPrivatePage = (boot: Boot) => boot.mode !== "app";
+const NOINDEX = "noindex, nofollow";
+
+/**
  * Оболочка приложения: одна страница для /, /app, /i/:slug и /g/:token, отличаются только
  * загрузочные данные и OG-теги. status используется маршрутом (sendShell), в разметку не попадает.
  */
@@ -48,6 +78,7 @@ export function renderShell(design: Design, opts: ShellOptions): string {
     "<head>",
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
+    isPrivatePage(opts.boot) && `<meta name="robots" content="${NOINDEX}">`,
     `<title>${esc(meta.title)}</title>`,
     meta.description && `<meta name="description" content="${esc(meta.description)}">`,
     '<meta property="og:type" content="website">',
@@ -82,53 +113,99 @@ export function renderShell(design: Design, opts: ShellOptions): string {
 }
 
 export function sendShell(reply: FastifyReply, design: Design, opts: ShellOptions) {
-  return reply
-    .code(opts.status ?? 200)
-    .type("text/html; charset=utf-8")
-    .header("cache-control", "private, no-cache")
-    .send(renderShell(design, opts));
+  reply.code(opts.status ?? 200).type("text/html; charset=utf-8");
+  if (isPrivatePage(opts.boot)) reply.header("cache-control", "private, no-store").header("x-robots-tag", NOINDEX);
+  else reply.header("cache-control", "private, no-cache");
+  return reply.send(renderShell(design, opts));
+}
+
+const shellMeta = (m: PageMeta): ShellMeta => ({
+  title: m.title,
+  ...(m.description && { description: m.description }),
+  ...(m.image && { image: m.image }),
+  url: m.url,
+});
+
+/**
+ * Оболочка публичной страницы по ответу бэкенда: загрузочные данные, мета-теги, язык приглашения
+ * и статус. Под паролем — { locked: { look } } для формы ввода (200). Попытки пароля из ?code=
+ * исчерпаны (429): та же запертая страница со статусом 429, look берётся из ответа без пароля
+ * (без code попытка не считается). Не найдено (неизвестное, неопубликованное, архивное) — 404.
+ */
+export async function publicShell(resolve: PublicPageResolver, req: PublicPageRequest): Promise<ShellOptions> {
+  const page = await resolve(req);
+  const meta = shellMeta(page.meta);
+  if (page.status === 200) {
+    const { key, kind } = req;
+    const boot: Boot = kind === "shared" ? { mode: "shared", slug: key, view: page.view } : { mode: "personal", token: key, view: page.view };
+    return { boot, meta, lang: page.view.language };
+  }
+  if (page.status === 401 && req.kind === "shared") return { boot: { mode: "shared", slug: req.key, locked: page.locked }, meta };
+  if (page.status === 429 && req.code !== undefined) {
+    const locked = await publicShell(resolve, { ...req, code: undefined });
+    return locked.boot.mode === "notfound" ? locked : { ...locked, status: 429 };
+  }
+  return { boot: { mode: "notfound" }, meta, status: 404 };
 }
 
 /**
- * ТОЧКА ПОДКЛЮЧЕНИЯ публичных страниц. Пока в загрузочные данные попадают только slug и token.
- * Следующий шаг: вызвать здесь getPublicPage(ctx, { kind, key, code }) и вернуть его результат:
- * boot с view (или locked для пароля), meta для OG-тегов, lang приглашения и status
- * (404 с { mode: "notfound" } для неизвестного приглашения). Маршруты ниже менять не нужно.
+ * Сжатие по Accept-Encoding из готовых копий: br, затем gzip; q=0 запрещает, «*» — любое
+ * не названное. null — отдать как есть.
  */
-async function publicPage(_ctx: Ctx, kind: "shared" | "personal", key: string, _code: string | undefined): Promise<ShellOptions> {
-  return { boot: kind === "shared" ? { mode: "shared", slug: key } : { mode: "personal", token: key } };
+export function pickEncoding(header: string | undefined, available: Asset["encoded"]): Encoding | null {
+  if (!header) return null;
+  const q = new Map<string, number>();
+  for (const part of header.toLowerCase().split(",")) {
+    const [name = "", ...params] = part.split(";").map((s) => s.trim());
+    if (!name) continue;
+    const qp = params.find((p) => p.startsWith("q="));
+    const v = qp === undefined ? 1 : Number(qp.slice(2));
+    q.set(name === "x-gzip" ? "gzip" : name, Number.isNaN(v) ? 0 : v);
+  }
+  let best: Encoding | null = null;
+  let bestQ = 0;
+  for (const e of ["br", "gzip"] as const) {
+    const v = q.get(e) ?? q.get("*") ?? 0;
+    if (available[e] && v > bestQ) [best, bestQ] = [e, v];
+  }
+  return best;
 }
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 
-/** Слабый ETag: тело может уйти сжатым, а сравнение If-None-Match всё равно слабое. */
+/** Слабый ETag: одно значение для сжатой и несжатой копии, сравнение If-None-Match всё равно слабое. */
 const etagOf = (a: Asset) => `W/"${a.hash}"`;
 
 function sendAsset(req: FastifyRequest<{ Querystring: { v?: string } }>, reply: FastifyReply, a: Asset) {
   const etag = etagOf(a);
   // Навсегда кэшируется только адрес с хэшем текущей версии. Старый ?v= после выкладки получает
   // новое содержимое без долгого кэша; модули без ?v= (их грузит логика) сверяются по ETag.
+  // Vary всегда, и у несжатого ответа: иначе общий кэш, сохранивший его, год отдавал бы его всем.
   reply
     .type(a.type)
     .header("etag", etag)
+    .header("vary", "accept-encoding")
     .header("cache-control", req.query.v === a.hash ? IMMUTABLE : "no-cache");
   const inm = req.headers["if-none-match"];
   if (inm && inm.split(",").some((t) => t.trim().replace(/^W\//, "") === etag.slice(2))) return reply.code(304).send();
-  return reply.send(a.body);
+  const enc = pickEncoding(req.headers["accept-encoding"], a.encoded);
+  return enc ? reply.header("content-encoding", enc).send(a.encoded[enc]) : reply.send(a.body);
 }
 
-/** Фронтенд: оболочка и файлы рантайма. Регистрируется без префикса. */
-export async function webRoutes(app: FastifyInstance) {
+/** Фронтенд: оболочка и файлы рантайма. Регистрируется без префикса; publicPage — данные /i/ и /g/. */
+export async function webRoutes(app: FastifyInstance, opts: { publicPage: PublicPageResolver }) {
   const { ctx } = app;
   const store = createDesignStore({ watch: ctx.config.NODE_ENV === "development" });
   const appUrl = ctx.config.APP_URL.replace(/\/+$/, "");
 
-  // Сжатие только для маршрутов этого плагина (оболочка и JS), тела запросов не распаковываются.
+  // Сжатие оболочки на лету (страница небольшая), тела запросов не распаковываются.
   await app.register(compress, { global: true, globalDecompression: false, encodings: ["br", "gzip"] });
 
-  // Файлы под /app/ не ограничиваются по частоте: они из памяти и кэшируются, а гости одного
-  // приглашения часто приходят с одного IP оператора.
-  const assetRoute = { helmet: appHelmet, config: { rateLimit: false as const } };
+  // Файлы под /app/ отдаются из памяти уже сжатыми (compress: false, копию выбирает sendAsset).
+  // Лимит отдельный на каждый файл и в 5 раз выше общего (120 в минуту): страница грузит каждый файл
+  // не больше одного раза, а сами страницы ограничены общим лимитом, поэтому гости одного приглашения
+  // с одного IP оператора в него не упираются, а один клиент не выкачивает файлы без конца.
+  const assetRoute = { helmet: appHelmet, compress: false as const, config: { rateLimit: { max: 600, timeWindow: "1 minute" } } };
   for (const path of store.get().assets.keys()) {
     app.get<{ Querystring: { v?: string } }>(path, assetRoute, (req, reply) => {
       const a = store.get().assets.get(path);
@@ -149,10 +226,16 @@ export async function webRoutes(app: FastifyInstance) {
     return appPage(req, reply);
   });
 
-  app.get<{ Params: { slug: string }; Querystring: { code?: string } }>("/i/:slug", pageRoute, async (req, reply) =>
-    sendShell(reply, store.get(), await publicPage(ctx, "shared", req.params.slug, req.query.code)),
-  );
-  app.get<{ Params: { token: string } }>("/g/:token", pageRoute, async (req, reply) =>
-    sendShell(reply, store.get(), await publicPage(ctx, "personal", req.params.token, undefined)),
-  );
+  // Пароль общей ссылки может прийти в ?code= (ссылка вида /i/<slug>?code=…); повтор параметра или
+  // слишком длинное значение считаются отсутствием пароля.
+  app.get<{ Params: { slug: string }; Querystring: { code?: unknown } }>("/i/:slug", pageRoute, async (req, reply) => {
+    const code = typeof req.query.code === "string" && req.query.code.length <= 64 ? req.query.code : undefined;
+    const page = { kind: "shared" as const, key: req.params.slug, code, ip: req.ip, userAgent: req.headers["user-agent"] };
+    return sendShell(reply, store.get(), await publicShell(opts.publicPage, page));
+  });
+  // Сборщики превью (по User-Agent) бэкенд не считает открытием приглашения гостем.
+  app.get<{ Params: { token: string } }>("/g/:token", pageRoute, async (req, reply) => {
+    const page = { kind: "personal" as const, key: req.params.token, ip: req.ip, userAgent: req.headers["user-agent"] };
+    return sendShell(reply, store.get(), await publicShell(opts.publicPage, page));
+  });
 }

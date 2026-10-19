@@ -71,9 +71,14 @@ export const supportPatches: readonly Patch[] = [
     replace: String.raw`    // [invito] Корневой DC (window.__dcRoot) берётся из /app/dc-bundle.js. Его сырой шаблон сразу
     // идёт в updateHtml, как в оригинале после повторной загрузки страницы, так что camelCase-атрибуты
     // и <sc-for> внутри <select> работают с первого кадра. <x-dc> в оболочке — только точка монтирования.
+    if (!doc.querySelector("x-dc")) return null;
     const rootName = window.__dcRoot;
     const parsed = rootName ? dcSource(rootName) : null;
-    if (!parsed || !doc.querySelector("x-dc")) return null;
+    if (!parsed) {
+      // [invito] Без бандла (не загрузился или упал при выполнении) рисовать нечего: страница пустая, причина в консоли.
+      console.error("[invito] /app/dc-bundle.js did not load or failed: no source for the root DC " + JSON.stringify(rootName) + ", nothing to render.");
+      return null;
+    }
     const React = getReact();
     runtime.markFetched(rootName);
     runtime.setRootName(rootName);

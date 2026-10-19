@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
@@ -8,6 +9,9 @@ import { buildApp } from "../../src/app.js";
 import { createCache } from "../../src/cache.js";
 import { loadConfig } from "../../src/config.js";
 import { createDb } from "../../src/db/index.js";
+import { runMigrations } from "../../src/db/migrate.js";
+import { invitations, templates, users } from "../../src/db/schema.js";
+import { seed } from "../../src/db/seed.js";
 import { createPaymentProvider } from "../../src/payments/index.js";
 import { createSmsProvider } from "../../src/sms/index.js";
 import { I18N } from "../../web/invito-data.js";
@@ -56,7 +60,7 @@ type Problems = { console: string[]; page: string[]; csp: string[]; requests: st
  * подменяются заглушками, чтобы проверка не зависела от сети; CSP при этом проверяется браузером
  * до запроса, так что запрещённый адрес всё равно даст нарушение.
  */
-async function open(path: string, viewport: { width: number; height: number }) {
+async function open(path: string, viewport: { width: number; height: number }, status = 200) {
   const context = await browser.newContext({ viewport });
   const problems: Problems = { console: [], page: [], csp: [], requests: [] };
   await context.route(
@@ -79,7 +83,7 @@ async function open(path: string, viewport: { width: number; height: number }) {
   page.on("pageerror", (e) => problems.page.push(String(e)));
   page.on("request", (r) => r.url().startsWith(base) && problems.requests.push(r.url().slice(base.length)));
   const res = await page.goto(base + path);
-  expect(res?.status()).toBe(200);
+  expect(res?.status()).toBe(status);
   // Главная Invito: заголовок героя из словаря ru.
   await page.waitForFunction((text) => document.body.innerText.includes(text), HERO, { timeout: 20_000 });
   // Даём отработать таймерам и циклу анимации после первого кадра.
@@ -105,6 +109,9 @@ async function shot(page: Page, name: string) {
 }
 
 beforeAll(async () => {
+  // Публичные страницы читают приглашения из базы.
+  await runMigrations(db);
+  await seed(db);
   // Счётчики лимита запросов от прошлых тестов.
   await redis.flushdb();
   app = await buildApp(
@@ -157,15 +164,44 @@ describe("фронтенд в браузере", () => {
     await close();
   });
 
-  it("/i/:slug и /g/:token запускают рантайм с загрузочными данными", async () => {
-    for (const [path, boot] of [
-      ["/i/test-slug", { mode: "shared", slug: "test-slug" }],
-      ["/g/test-token", { mode: "personal", token: "test-token" }],
-    ] as const) {
-      const { page, problems, close } = await open(path, { width: 390, height: 844 });
-      expectClean(problems, path);
-      expect(await page.evaluate(() => JSON.parse(document.getElementById("invito-boot")!.textContent!))).toEqual(boot);
+  it("/i/:slug опубликованного приглашения запускает рантайм с view в загрузочных данных", async () => {
+    const [user] = await db.insert(users).values({ phone: `998${String(Date.now()).slice(-9)}` }).returning();
+    const [template] = await db.select().from(templates);
+    const slug = randomBytes(9).toString("base64url");
+    // Данные с «</script>» и кавычками: загрузочный JSON не ломает страницу.
+    const data = { names: 'Азиз & "Мадина"', message: "</script><script>window.__pwned = 1</script>", date: "2026-12-12" };
+    await db.insert(invitations).values({ userId: user!.id, templateId: template!.id, mode: "shared", status: "active", unlocked: true, title: "Той", data, slug });
+    const { page, problems, close } = await open(`/i/${slug}`, { width: 390, height: 844 });
+    expectClean(problems, `/i/${slug}`);
+    const boot = await page.evaluate(() => JSON.parse(document.getElementById("invito-boot")!.textContent!));
+    expect(boot).toMatchObject({ mode: "shared", slug, view: { data } });
+    expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
+    expect(await page.locator('meta[name="robots"]').getAttribute("content")).toBe("noindex, nofollow");
+    await close();
+  });
+
+  it("неизвестные /i/ и /g/ отдают 404 с { mode: \"notfound\" }, рантайм запускается", async () => {
+    for (const path of ["/i/test-slug", "/g/test-token"]) {
+      const { page, problems, close } = await open(path, { width: 390, height: 844 }, 404);
+      // Статус 404 самой страницы Chromium пишет в консоль как ошибку загрузки: это единственная ожидаемая ошибка.
+      const own404 = "Failed to load resource: the server responded with a status of 404 (Not Found)";
+      expect(problems.console).toEqual([own404]);
+      expectClean({ ...problems, console: [] }, path);
+      expect(await page.evaluate(() => JSON.parse(document.getElementById("invito-boot")!.textContent!))).toEqual({ mode: "notfound" });
       await close();
     }
+  });
+
+  it("без dc-bundle.js страница пустая, но причина видна в консоли", async () => {
+    const context = await browser.newContext();
+    await context.route((url) => url.origin !== base, (route) => route.fulfill({ status: 204 }));
+    // Бандл с синтаксической ошибкой: скрипт падает целиком, window.__dcSources не появляется.
+    await context.route((url) => url.pathname === "/app/dc-bundle.js", (route) => route.fulfill({ contentType: "text/javascript", body: "window.__dcSources = ;" }));
+    const page = await context.newPage();
+    const errors: string[] = [];
+    page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+    await page.goto(base + "/app/");
+    await expect.poll(() => errors.some((e) => e.includes("[invito] /app/dc-bundle.js did not load or failed"))).toBe(true);
+    await context.close();
   });
 });
