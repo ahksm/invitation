@@ -289,21 +289,35 @@ describe("публичная страница по ответу бэкенда",
     });
   });
 
-  it("пароль: look для формы ввода; попытки исчерпаны — та же форма со статусом 429", async () => {
+  it("пароль: look для формы ввода на языке приглашения; попытки исчерпаны — та же форма со статусом 429 и limited", async () => {
     expect(await publicShell(backend({ status: 401, locked: { look }, meta }).resolve, { kind: "shared", key: "abc", code: "1" })).toEqual({
       boot: { mode: "shared", slug: "abc", locked: { look } },
       meta: { title: "Той", url: meta.url },
+    });
+    // Язык приглашения из look: атрибут lang страницы, форма пароля на нём же.
+    const uzLook = { ...look, language: "uz" };
+    expect(await publicShell(backend({ status: 401, locked: { look: uzLook }, meta }).resolve, { kind: "shared", key: "abc" })).toEqual({
+      boot: { mode: "shared", slug: "abc", locked: { look: uzLook } },
+      meta: { title: "Той", url: meta.url },
+      lang: "uz",
     });
 
     const limited = backend({ status: 429, meta }, { status: 401, locked: { look }, meta });
     const req = { kind: "shared", key: "abc", code: "bad", ip: "203.0.113.5", userAgent: "UA" } as const;
     expect(await publicShell(limited.resolve, req)).toEqual({
-      boot: { mode: "shared", slug: "abc", locked: { look } },
+      boot: { mode: "shared", slug: "abc", locked: { look, limited: true } },
       meta: { title: "Той", url: meta.url },
       status: 429,
     });
     // Повторный запрос без пароля: он не считается попыткой и возвращает look.
     expect(limited.calls).toEqual([req, { ...req, code: undefined }]);
+    // Пароль сняли между запросами: страница открывается как обычно, без 429.
+    const view = { kind: "shared", language: "ru", data: {} };
+    expect(await publicShell(backend({ status: 429, meta }, { status: 200, view, meta }).resolve, req)).toEqual({
+      boot: { mode: "shared", slug: "abc", view },
+      meta: { title: "Той", url: meta.url },
+      lang: "ru",
+    });
   });
 
   it("не найдено и ответы вне контракта — «не найдено» с 404", async () => {
@@ -336,7 +350,7 @@ describe("публичная страница по ответу бэкенда",
       const limited = await mini.inject({ url: `/i/abc?code=${"x".repeat(64)}`, headers: browser });
       expect(limited.statusCode).toBe(429);
       expect(limited.headers["x-robots-tag"]).toBe("noindex, nofollow");
-      expect(bootOf(limited.body)).toEqual({ mode: "shared", slug: "abc", locked: { look } });
+      expect(bootOf(limited.body)).toEqual({ mode: "shared", slug: "abc", locked: { look, limited: true } });
       // Пароль длиннее 64 символов не бывает: бэкенд получает запрос без него.
       expect(bootOf((await mini.inject({ url: `/i/abc?code=${"x".repeat(65)}`, headers: browser })).body).locked).toEqual({ look });
       const guest = await mini.inject({ url: "/g/tok", headers: bot });

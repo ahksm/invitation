@@ -122,8 +122,8 @@ export async function startE2E() {
     sms,
 
     /** Контекст браузера: внешние ресурсы (Telegram, Google Fonts, Unsplash) — заглушки, CSP-нарушения собираются. */
-    async newContext(opts: { viewport?: { width: number; height: number }; locale?: string } = {}) {
-      const context = await browser.newContext({ viewport: opts.viewport ?? { width: 390, height: 844 }, locale: opts.locale ?? "ru-RU" });
+    async newContext(opts: { viewport?: { width: number; height: number }; locale?: string; timezoneId?: string } = {}) {
+      const context = await browser.newContext({ viewport: opts.viewport ?? { width: 390, height: 844 }, locale: opts.locale ?? "ru-RU", ...(opts.timezoneId && { timezoneId: opts.timezoneId }) });
       // Сеть наружу не нужна: CSP браузер проверяет до запроса, так что запрещённый адрес всё равно даст нарушение.
       await context.route(
         (url) => url.origin !== base,
@@ -165,7 +165,8 @@ export async function startE2E() {
     },
 
     waitText(page: Page, text: string, timeout = 20_000) {
-      return page.waitForFunction((t) => document.body.innerText.includes(t), text, { timeout });
+      // Во время перехода на новую страницу body ещё может не быть.
+      return page.waitForFunction((t) => !!document.body && document.body.innerText.includes(t), text, { timeout });
     },
 
     async csp(page: Page) {

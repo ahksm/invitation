@@ -6,7 +6,7 @@ import { assetUrl, createDesignStore, type Asset, type Design, type Encoding } f
 /** Загрузочные данные страницы: логика Invito читает их из #invito-boot. */
 export type Boot =
   | { mode: "app" }
-  | { mode: "shared"; slug: string; view?: unknown; locked?: unknown }
+  | { mode: "shared"; slug: string; view?: unknown; locked?: { look: unknown; limited?: boolean } }
   | { mode: "personal"; token: string; view?: unknown }
   | { mode: "notfound" };
 
@@ -25,7 +25,7 @@ export type PageMeta = { title: string; description: string; image: string | nul
  */
 export type PublicPage =
   | { status: 200; view: { language: string }; meta: PageMeta }
-  | { status: 401; locked: { look: unknown }; meta: PageMeta }
+  | { status: 401; locked: { look: { language?: string } }; meta: PageMeta }
   | { status: 404 | 429; meta: PageMeta };
 
 export type PublicPageRequest = {
@@ -128,9 +128,10 @@ const shellMeta = (m: PageMeta): ShellMeta => ({
 
 /**
  * Оболочка публичной страницы по ответу бэкенда: загрузочные данные, мета-теги, язык приглашения
- * и статус. Под паролем — { locked: { look } } для формы ввода (200). Попытки пароля из ?code=
- * исчерпаны (429): та же запертая страница со статусом 429, look берётся из ответа без пароля
- * (без code попытка не считается). Не найдено (неизвестное, неопубликованное, архивное) — 404.
+ * и статус. Под паролем — { locked: { look } } для формы ввода (200), на языке приглашения из look.
+ * Попытки пароля из ?code= исчерпаны (429): та же запертая страница со статусом 429 и locked.limited,
+ * чтобы форма сказала «слишком много попыток», а не «неверный пароль»; look берётся из ответа без
+ * пароля (без code попытка не считается). Не найдено (неизвестное, неопубликованное, архивное) — 404.
  */
 export async function publicShell(resolve: PublicPageResolver, req: PublicPageRequest): Promise<ShellOptions> {
   const page = await resolve(req);
@@ -140,10 +141,14 @@ export async function publicShell(resolve: PublicPageResolver, req: PublicPageRe
     const boot: Boot = kind === "shared" ? { mode: "shared", slug: key, view: page.view } : { mode: "personal", token: key, view: page.view };
     return { boot, meta, lang: page.view.language };
   }
-  if (page.status === 401 && req.kind === "shared") return { boot: { mode: "shared", slug: req.key, locked: page.locked }, meta };
+  if (page.status === 401 && req.kind === "shared") {
+    const lang = page.locked.look.language;
+    return { boot: { mode: "shared", slug: req.key, locked: page.locked }, meta, ...(lang && { lang }) };
+  }
   if (page.status === 429 && req.code !== undefined) {
     const locked = await publicShell(resolve, { ...req, code: undefined });
-    return locked.boot.mode === "notfound" ? locked : { ...locked, status: 429 };
+    if (locked.boot.mode !== "shared" || !locked.boot.locked) return locked;
+    return { ...locked, boot: { ...locked.boot, locked: { ...locked.boot.locked, limited: true } }, status: 429 };
   }
   return { boot: { mode: "notfound" }, meta, status: 404 };
 }

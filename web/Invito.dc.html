@@ -303,7 +303,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-family:{{ th.fontCss }};font-size:calc(36px * {{ th.fs }});line-height:1;text-transform:{{ th.tt }}">{{ inv.names }}</div>
 <div style="color:{{ th.muted }}">{{ t.locked }}</div>
 <input type="password" value="{{ pwTry }}" onChange="{{ onPwTry }}" placeholder="{{ t.pwPh }}" style="height:54px;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};padding:0 16px;font-size:16px;text-align:center;outline:none">
-<sc-if value="{{ pwErr }}"><div style="color:{{ th.accent }};font-size:13px">{{ t.wrongPw }}</div></sc-if>
+<sc-if value="{{ pwErr }}"><div role="alert" style="color:{{ th.accent }};font-size:13px">{{ pwErrText }}</div></sc-if>
 <button onClick="{{ unlock }}" style="height:54px;border-radius:{{ th.radius }};border:0;background:{{ th.accent }};color:{{ th.onAccent }};font-size:16px;font-weight:600;cursor:pointer">{{ t.unlock }}</button>
 </div></div></sc-if>
 
@@ -350,7 +350,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-herotext="1" style="font-size:12px;letter-spacing:.38em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:26px;width:min(62vw,340px);aspect-ratio:3/4;border-radius:999px 999px {{ th.radius }} {{ th.radius }};overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }};box-shadow:0 40px 80px -40px rgba(0,0,0,.5)"><img data-par="0.14" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="margin:32px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,12vw,116px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};letter-spacing:-.02em;text-wrap:balance;max-width:14ch;text-shadow:{{ th.glowCss }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div data-herotext="1" onClick="{{ ed.when }}" style="margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:{{ th.muted }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><span style="width:34px;height:1px;background:{{ th.accent }}"></span><span>{{ gDateLong }} · {{ inv.time }}</span><span style="width:34px;height:1px;background:{{ th.accent }}"></span></div>
+<div data-herotext="1" onClick="{{ ed.when }}" style="margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:{{ th.muted }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><span style="width:34px;height:1px;background:{{ th.accent }}"></span><span>{{ gWhen }}</span><span style="width:34px;height:1px;background:{{ th.accent }}"></span></div>
 <div data-herotext="1" onClick="{{ ed.names }}" style="margin-top:14px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 <div style="position:absolute;bottom:22px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.muted }}">{{ t.scroll }}<span style="width:1px;height:36px;background:{{ th.accent }}"></span></div>
@@ -363,8 +363,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }} · {{ evLabel }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,15vw,190px) * {{ th.fs }});line-height:.86;text-transform:{{ th.tt }};letter-spacing:-.02em;text-shadow:{{ th.glowCss }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div onClick="{{ ed.when }}" style="margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;cursor:{{ ec }}">
-<span style="padding:10px 14px;border-radius:{{ th.radius }};background:{{ th.accent }};color:{{ th.onAccent }};font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700">{{ gDateLong }}</span>
-<span style="padding:9px 14px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};font-size:13px;letter-spacing:.08em">{{ inv.time }}</span>
+<sc-if value="{{ gDateLong }}"><span style="padding:10px 14px;border-radius:{{ th.radius }};background:{{ th.accent }};color:{{ th.onAccent }};font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700">{{ gDateLong }}</span></sc-if>
+<sc-if value="{{ inv.time }}"><span style="padding:9px 14px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};font-size:13px;letter-spacing:.08em">{{ inv.time }}</span></sc-if>
 <span style="padding:9px 14px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};font-size:13px;letter-spacing:.08em">{{ inv.venue }}</span>
 </div></div>
 </section></sc-if>
@@ -376,7 +376,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:4/5;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.16" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if><span style="position:absolute;left:12px;bottom:12px;background:{{ th.bg }};padding:6px 10px;font-size:11px;letter-spacing:.2em;text-transform:uppercase">{{ kick }}</span></div>
 <div onClick="{{ ed.when }}" style="display:flex;flex-direction:column;justify-content:space-between;gap:22px;cursor:{{ ec }}">
 <div style="font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">{{ gWeekday }}</div>
-<div><div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(120px,30vw,280px) * {{ th.fs }});line-height:.8;color:{{ th.accent }};letter-spacing:-.04em;font-variant-numeric:lining-nums">{{ gDay }}</div><div style="font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin-top:14px">{{ gMonthYear }} · {{ inv.time }}</div></div>
+<div><div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(120px,30vw,280px) * {{ th.fs }});line-height:.8;color:{{ th.accent }};letter-spacing:-.04em;font-variant-numeric:lining-nums">{{ gDay }}</div><div style="font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin-top:14px">{{ gMyTime }}</div></div>
 <div style="font-style:italic;color:{{ th.muted }};border-top:1px solid {{ th.line }};padding-top:14px">{{ inv.host }}</div>
 </div></div>
 </section></sc-if>
@@ -385,13 +385,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:relative;width:min(76vw,420px);aspect-ratio:3/4;justify-self:center">
 <div data-par="-0.12" style="position:absolute;inset:0;border:1px solid {{ th.accent }};border-radius:50%;margin:5% -5% -5% 5%"></div>
 <div onClick="{{ ed.cover }}" style="position:absolute;inset:0;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:8px;cursor:{{ ec }};box-shadow:0 40px 80px -40px rgba(0,0,0,.45)"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
-<div data-par="-0.35" style="position:absolute;left:-6%;bottom:10%;padding:12px 18px;border-radius:999px;background:{{ th.surface }};font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }};box-shadow:0 14px 30px -14px rgba(0,0,0,.35)">{{ gDateShort }}</div>
+<sc-if value="{{ gDateShort }}"><div data-par="-0.35" style="position:absolute;left:-6%;bottom:10%;padding:12px 18px;border-radius:999px;background:{{ th.surface }};font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }};box-shadow:0 14px 30px -14px rgba(0,0,0,.35)">{{ gDateShort }}</div></sc-if>
 </div>
 <div data-herotext="1" style="display:flex;flex-direction:column;gap:20px">
 <div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-style:italic;font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }});line-height:.92;letter-spacing:-.02em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="width:64px;height:1px;background:{{ th.accent }}"></div>
-<div onClick="{{ ed.when }}" style="font-size:16px;line-height:1.6;cursor:{{ ec }}">{{ gWeekday }}, {{ gDateLong }}<br>{{ inv.time }} · {{ inv.venue }}</div>
+<div onClick="{{ ed.when }}" style="font-size:16px;line-height:1.6;cursor:{{ ec }}">{{ gWdDate }}<br>{{ gTimeVenue }}</div>
 <div onClick="{{ ed.names }}" style="font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 </section></sc-if>
@@ -402,8 +402,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-par="-0.6" style="position:absolute;width:90px;height:90px;border-radius:50%;background:{{ th.surface }};right:14%;top:16%;pointer-events:none"></div>
 <div style="position:relative;z-index:2;width:min(70vw,360px);aspect-ratio:1">
 <div onClick="{{ ed.cover }}" style="position:absolute;inset:0;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};border:10px solid {{ th.surface }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }};box-shadow:0 40px 70px -40px rgba(0,0,0,.4)"><img data-par="0.1" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-10%;width:100%;height:120%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
-<div data-par="-0.25" style="position:absolute;right:-6%;top:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;transform:rotate(8deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.3)">{{ gDateShort }}</div>
-<div data-par="0.3" style="position:absolute;left:-8%;bottom:8%;padding:10px 16px;border-radius:999px;background:{{ th.surface }};color:{{ th.ink }};font-weight:700;font-size:14px;transform:rotate(-6deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.25)">{{ inv.time }}</div>
+<sc-if value="{{ gDateShort }}"><div data-par="-0.25" style="position:absolute;right:-6%;top:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;transform:rotate(8deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.3)">{{ gDateShort }}</div></sc-if>
+<sc-if value="{{ inv.time }}"><div data-par="0.3" style="position:absolute;left:-8%;bottom:8%;padding:10px 16px;border-radius:999px;background:{{ th.surface }};color:{{ th.ink }};font-weight:700;font-size:14px;transform:rotate(-6deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.25)">{{ inv.time }}</div></sc-if>
 </div>
 <div data-herotext="1" style="position:relative;z-index:2;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;z-index:2;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(44px,11vw,104px) * {{ th.fs }});line-height:1;text-transform:{{ th.tt }};text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
@@ -417,7 +417,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-herotext="1" style="position:relative;width:min(46vw,210px);aspect-ratio:1;border-radius:50%;border:1px solid {{ th.accent }};background:{{ th.bg }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:clamp(54px,14vw,86px);color:{{ th.accent }};box-shadow:0 0 0 10px {{ th.bg }},0 0 0 11px {{ th.accentSoft }}">{{ monogram }}</div>
 <div data-herotext="1" style="position:relative;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,96px) * {{ th.fs }});line-height:1;letter-spacing:.06em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span>{{ gDateLong }} · {{ inv.time }}<span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span></div>
+<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span>{{ gWhen }}<span style="width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span></div>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:40px;width:min(100%,760px);aspect-ratio:21/9;overflow:hidden;border:1px solid {{ th.accent }};background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.2" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-25%;width:100%;height:150%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:relative;margin-top:18px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
@@ -447,7 +447,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ th.grid }}"><section data-hero="1" style="position:relative;min-height:100svh;padding:{{ heroPad }} clamp(18px,5vw,56px) 56px;max-width:1240px;margin:0 auto;display:flex;flex-direction:column;justify-content:space-between;gap:30px">
 <div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,{{ th.line }} 0 1px,transparent 1px calc(100% / 6));pointer-events:none"></div>
 <div style="position:relative;display:flex;justify-content:space-between;gap:12px;font-size:11px;letter-spacing:.3em;text-transform:uppercase"><span>{{ kick }}</span><span style="color:{{ th.muted }}">{{ evLabel }}</span></div>
-<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;font-family:{{ th.fontCss }};font-weight:300;font-size:calc(clamp(96px,27vw,330px) * {{ th.fs }});line-height:.8;letter-spacing:-.06em;font-variant-numeric:lining-nums;cursor:{{ ec }}">{{ gDay }}.{{ gMonthNum }}</div>
+<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;font-family:{{ th.fontCss }};font-weight:300;font-size:calc(clamp(96px,27vw,330px) * {{ th.fs }});line-height:.8;letter-spacing:-.06em;font-variant-numeric:lining-nums;cursor:{{ ec }}">{{ gDayDot }}</div>
 <div style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px;align-items:end">
 <div><h1 onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(34px,7vw,72px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1><div style="margin-top:10px;color:{{ th.muted }}">{{ inv.host }}</div></div>
 <div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.14" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
@@ -466,7 +466,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,11vw,112px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:34px;width:min(58vw,300px);aspect-ratio:3/4;border-radius:999px 999px 0 0;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:relative;width:min(100%,720px);height:1px;background:{{ th.accent }}"></div>
-<div onClick="{{ ed.when }}" style="position:relative;margin-top:20px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;cursor:{{ ec }}">{{ gDateLong }} · {{ inv.time }}</div>
+<div onClick="{{ ed.when }}" style="position:relative;margin-top:20px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;cursor:{{ ec }}">{{ gWhen }}</div>
 <div style="position:relative;margin-top:10px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
@@ -480,7 +480,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-herotext="1">
 <div style="font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.ink }}">{{ kick }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,13vw,140px) * {{ th.fs }});line-height:.88;text-transform:{{ th.tt }};text-shadow:.06em .06em 0 {{ th.accent }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div onClick="{{ ed.when }}" style="margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;cursor:{{ ec }}"><span style="padding:10px 14px;background:{{ th.accent2 }};font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg)">{{ gDateLong }}</span><span style="padding:10px 14px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;letter-spacing:.08em;transform:rotate(2deg)">{{ inv.time }}</span></div>
+<div onClick="{{ ed.when }}" style="margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;cursor:{{ ec }}"><sc-if value="{{ gDateLong }}"><span style="padding:10px 14px;background:{{ th.accent2 }};font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg)">{{ gDateLong }}</span></sc-if><sc-if value="{{ inv.time }}"><span style="padding:10px 14px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;letter-spacing:.08em;transform:rotate(2deg)">{{ inv.time }}</span></sc-if></div>
 <div style="margin-top:18px;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 </div>
@@ -492,13 +492,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-par="-0.18" style="position:absolute;left:18%;top:4%;width:70%;padding:4% 4% 16%;background:#fff;transform:rotate(8deg);box-shadow:0 20px 40px -18px rgba(0,0,0,.35)"><div style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ galA }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div></div>
 <div onClick="{{ ed.cover }}" data-par="0.08" style="position:absolute;left:0;top:12%;width:74%;padding:4% 4% 18%;background:#fff;transform:rotate(-5deg);box-shadow:0 30px 50px -20px rgba(0,0,0,.4);cursor:{{ ec }};outline:{{ eo }};outline-offset:6px"><div style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }}"><img data-par="0.06" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div><div style="position:absolute;left:0;right:0;bottom:4%;text-align:center;font-family:'Caveat',cursive;font-size:clamp(20px,5vw,28px);color:#2d2620">{{ gDateShort }}</div></div>
 <div style="position:absolute;left:30%;top:6%;width:32%;height:9%;background:{{ th.accent2 }};opacity:.85;transform:rotate(-9deg);box-shadow:0 2px 4px rgba(0,0,0,.1)"></div>
-<div style="position:absolute;right:2%;bottom:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-family:'Caveat',cursive;font-size:22px;transform:rotate(-8deg)">{{ inv.time }}</div>
+<sc-if value="{{ inv.time }}"><div style="position:absolute;right:2%;bottom:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-family:'Caveat',cursive;font-size:22px;transform:rotate(-8deg)">{{ inv.time }}</div></sc-if>
 </div>
 <div data-herotext="1">
 <div style="font-family:'Caveat',cursive;font-size:26px;color:{{ th.accent }}">{{ kick }}</div>
 <h1 onClick="{{ ed.names }}" style="margin:8px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,13vw,130px) * {{ th.fs }});line-height:.9;transform:rotate(-2deg);text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="width:min(70%,260px);height:6px;margin-top:10px;border-radius:3px;background:{{ th.accent2 }};transform:rotate(-2deg)"></div>
-<div onClick="{{ ed.when }}" style="margin-top:22px;font-size:17px;line-height:1.6;cursor:{{ ec }}">{{ gWeekday }}, {{ gDateLong }}<br>{{ inv.venue }}</div>
+<div onClick="{{ ed.when }}" style="margin-top:22px;font-size:17px;line-height:1.6;cursor:{{ ec }}">{{ gWdDate }}<br>{{ inv.venue }}</div>
 <div style="margin-top:10px;font-family:'Caveat',cursive;font-size:22px;color:{{ th.muted }}">— {{ inv.host }}</div>
 </div></div>
 </section></sc-if>
@@ -524,7 +524,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div onClick="{{ ed.cover }}" style="position:relative;width:min(72vw,400px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};-webkit-mask-image:radial-gradient(closest-side,#000 66%,transparent);mask-image:radial-gradient(closest-side,#000 66%,transparent);cursor:{{ ec }}"><img data-par="0.1" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div data-herotext="1" style="position:relative;margin-top:8px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
 <h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }});line-height:1;text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:18px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }};cursor:{{ ec }}">{{ gDateLong }} · {{ inv.time }}</div>
+<div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:18px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }};cursor:{{ ec }}">{{ gWhen }}</div>
 <div style="position:relative;margin-top:10px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
@@ -571,7 +571,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-cd="{{ u.k }}" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,12vw,124px) * {{ th.fs }});line-height:1;font-variant-numeric:tabular-nums lining-nums;text-shadow:{{ th.glowCss }}">00</div>
 <div style="margin-top:10px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:{{ th.muted }}">{{ u.label }}</div></div></sc-for>
 </div>
-<div style="margin-top:30px;color:{{ th.muted }};font-size:15px">{{ gWeekday }}, {{ gDateLong }} · {{ inv.time }}</div>
+<div style="margin-top:30px;color:{{ th.muted }};font-size:15px">{{ gFull }}</div>
 </section></sc-if>
 
 <sc-if value="{{ sec.gallery }}"><section data-hpin="1" style="order:{{ ord.gallery }};position:relative;height:{{ hpinH }}">
@@ -654,7 +654,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <section id="rsvp" style="order:{{ ord.rsvp }};display:{{ rsvpDisp }};padding:14vh clamp(18px,5vw,48px);background:{{ th.surface }}"><div style="max-width:620px;margin:0 auto">
 <div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">RSVP</div>
 <h2 style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,10vw,100px) * {{ th.fs }});line-height:.92;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ t.rsvp }}</h2>
-<div style="color:{{ th.muted }};margin-top:14px">{{ t.replyBy }} {{ rsvpBy }}</div>
+<sc-if value="{{ rsvpBy }}"><div style="color:{{ th.muted }};margin-top:14px">{{ t.replyBy }} {{ rsvpBy }}</div></sc-if>
 <sc-if value="{{ rsvpForm }}"><div>
 <sc-if value="{{ hasTo }}"><div style="margin-top:26px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:{{ th.radius }};background:{{ th.bg }};border:1px solid {{ th.line }}"><span style="width:36px;height:36px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ toIni }}</span><span style="font-size:13px;color:{{ th.muted }}">{{ t.replying }}</span><span style="font-size:16px;font-weight:600">{{ toName }}</span></div></sc-if>
 <sc-if value="{{ noTo }}"><input value="{{ rsvp.name }}" onChange="{{ onRsvpName }}" placeholder="{{ t.yourName }}" style="margin-top:26px;width:100%;height:58px;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.bg }};color:{{ th.ink }};padding:0 18px;font-size:17px;outline:none"></sc-if>
@@ -671,7 +671,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-family:{{ th.fontCss }};font-size:calc(34px * {{ th.fs }});margin-top:16px;text-transform:{{ th.tt }}">{{ t.thanks }}</div>
 <div style="color:{{ th.muted }};margin-top:8px;line-height:1.5">{{ rsvpSummary }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px">
-<button onClick="{{ addCal }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};background:transparent;color:{{ th.ink }};font-size:14px;cursor:pointer">{{ t.addCal }}</button>
+<sc-if value="{{ hasDate }}"><button onClick="{{ addCal }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};background:transparent;color:{{ th.ink }};font-size:14px;cursor:pointer">{{ t.addCal }}</button></sc-if>
 <sc-if value="{{ hasBot }}"><button onClick="{{ viaBot }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:0;background:{{ th.ink }};color:{{ th.bg }};font-size:14px;cursor:pointer">{{ t.viaBot }}</button></sc-if>
 </div>
 <sc-if value="{{ entry.show }}"><div data-entry-qr="1" style="margin:24px auto 0;max-width:260px;padding:16px 16px 14px;border-radius:{{ th.radius }};background:#ffffff;color:#1a1714;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 24px 44px -30px rgba(0,0,0,.5)">
@@ -797,7 +797,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="border:1px solid rgba({{ ui.inkRgb }},.16);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
 <button onClick="{{ togglePw }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:none;border:0;padding:0;cursor:pointer;color:{{ ui.ink }};text-align:left"><span style="font-size:16px;font-weight:500">{{ t.pw }}</span><span style="width:48px;height:28px;border-radius:99px;background:{{ pwTrack }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ pwKnob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span></button>
 <div style="font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.pwDesc }}</div>
-<sc-if value="{{ share.pwOn }}"><input name="access-code" value="{{ share.pw }}" onChange="{{ onPw }}" placeholder="{{ t.pwPh }}" maxLength="64" autoComplete="off" style="height:46px;border-radius:10px;border:1px solid rgba({{ ui.inkRgb }},.25);background:{{ ui.card }};padding:0 14px;font:500 15px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></sc-if>
+<sc-if value="{{ share.pwOn }}"><input name="access-code" value="{{ share.pw }}" onChange="{{ onPw }}" onBlur="{{ onPwBlur }}" placeholder="{{ t.pwPh }}" maxLength="64" autoComplete="off" style="height:46px;border-radius:10px;border:1px solid rgba({{ ui.inkRgb }},.25);background:{{ ui.card }};padding:0 14px;font:500 15px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></sc-if>
 </div></div></sc-if>
 <sc-if value="{{ sharePersonal }}"><div data-personal-links="1" style="border:1px solid rgba({{ ui.inkRgb }},.16);border-radius:16px;padding:18px">
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div style="font-size:16px;font-weight:500">{{ t.personalLinks }}</div><sc-if value="{{ seatsInfo.show }}"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;color:{{ seatsInfo.color }};white-space:nowrap">{{ seatsInfo.text }}</span></sc-if></div>
@@ -845,7 +845,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 
 <sc-if value="{{ isManage }}"><main style="max-width:1200px;margin:0 auto;padding:24px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
 <button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
-<div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ inv.names }} · {{ gDateShort }}</div>
+<div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ namesDate }}</div>
 <h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ t.guests }}</h2>
 <div style="display:grid;grid-template-columns:{{ statCols }};gap:16px;margin-top:30px">
 <sc-for list="{{ stats }}" as="s"><div style="border-top:1px solid {{ ui.ink }};padding-top:10px"><div style="font:500 52px/1 'Cormorant Garamond',serif;color:{{ s.color }}">{{ s.n }}</div><div style="margin-top:6px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ s.label }}</div></div></sc-for>
@@ -868,6 +868,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ gFilters }}" as="f"><button onClick="{{ f.onClick }}" style="flex:none;height:30px;padding:0 12px;border-radius:999px;border:1px dashed {{ f.border }};background:{{ f.bg }};color:{{ f.color }};font-size:12px;cursor:pointer">{{ f.label }} · {{ f.n }}</button></sc-for>
 </div>
 <div style="margin-top:8px">
+<sc-if value="{{ noReplies }}"><div data-empty="replies" style="padding:18px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12);font-size:14px;line-height:1.5;color:{{ ui.muted }}">{{ t.noReplies }}</div></sc-if>
 <sc-for list="{{ gRows }}" as="g" hint-placeholder-count="0"><div data-guest="{{ g.name }}" style="display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)">
 <span style="width:42px;height:42px;border-radius:50%;background:{{ g.avBg }};color:{{ ui.paper }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">{{ g.ini }}</span>
 <div style="min-width:0"><div style="font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }} <span style="color:#d4452a;font-weight:400">{{ g.plus }}</span></div><div style="margin-top:3px;font:400 12px 'JetBrains Mono',monospace;color:{{ ui.muted }};display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>{{ g.user }}</span><select value="{{ g.group }}" onChange="{{ g.onGroup }}" style="font:400 11px 'JetBrains Mono',monospace;background:transparent;border:0;border-bottom:1px dashed rgba({{ ui.inkRgb }},.3);padding:0 2px;color:{{ ui.muted }};cursor:pointer"><sc-for list="{{ groupOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ g.checked }}"><span style="color:#2e7d4f">✓ {{ t.checkedIn }}</span></sc-if><sc-if value="{{ g.unpaid }}"><span data-unpaid="1" style="color:#d4452a">{{ t.unpaid }}</span></sc-if><sc-if value="{{ g.smsSt }}"><span data-sms="{{ g.smsKey }}" style="color:{{ g.smsColor }}">{{ g.smsSt }}</span></sc-if><sc-if value="{{ g.canSms }}"><button onClick="{{ g.onSms }}" style="height:22px;padding:0 8px;border-radius:99px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 11px 'Onest',sans-serif;cursor:pointer">✉ {{ t.smsOne }}</button></sc-if><sc-if value="{{ g.canDel }}"><button onClick="{{ g.onDel }}" style="height:22px;padding:0 4px;border:0;background:transparent;color:{{ ui.muted }};font:400 11px 'Onest',sans-serif;text-decoration:underline;cursor:pointer">{{ t.removeG }}</button></sc-if></div></div>
@@ -989,7 +990,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-size:14px;color:{{ ui.muted }};margin-top:10px;line-height:1.45">{{ py.hint }}</div>
 <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
 <sc-for list="{{ py.modes }}" as="m" hint-placeholder-count="2"><button data-mode="{{ m.key }}" onClick="{{ m.onClick }}" style="display:flex;flex-direction:column;gap:6px;width:100%;padding:16px;border-radius:16px;border:1.5px solid {{ m.border }};background:{{ m.bg }};color:{{ ui.ink }};text-align:left;cursor:{{ m.cursor }};opacity:{{ m.op }};transition:border-color .2s,background .2s">
-<span style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%"><span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid {{ m.dot }};background:{{ m.fill }};box-shadow:inset 0 0 0 3px {{ ui.paper }}"></span><span style="font:500 24px/1.1 'Cormorant Garamond',serif">{{ m.title }}</span></span><span data-price="{{ m.key }}" style="font:500 12px 'JetBrains Mono',monospace;color:{{ m.priceColor }};white-space:nowrap">{{ m.price }}</span></span>
+<span style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px;width:100%"><span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid {{ m.dot }};background:{{ m.fill }};box-shadow:inset 0 0 0 3px {{ ui.paper }}"></span><span style="font:500 24px/1.1 'Cormorant Garamond',serif">{{ m.title }}</span></span><span data-price="{{ m.key }}" style="margin-left:auto;font:500 12px 'JetBrains Mono',monospace;color:{{ m.priceColor }};white-space:nowrap">{{ m.price }}</span></span>
 <span style="font-size:14px;line-height:1.45;color:{{ ui.muted }};padding-left:28px">{{ m.desc }}</span>
 </button></sc-for>
 </div>
@@ -1112,8 +1113,10 @@ class Component extends DCLogic {
   phoneRef = React.createRef();
   codeRef = React.createRef();
   // Очередь PATCH по приглашению, последние данные автосохранения, ждущего очереди, и число запросов в пути.
+  // _base — то, что по мнению этой вкладки лежит на сервере: автосохранение отправляет только отличия от него.
   _queue = {};
   _snap = {};
+  _base = {};
   _autoQueued = {};
   _inflight = 0;
   // Маршруты из адреса /app/#/<имя>/<параметры>: обработчик получает параметры и сам убирает hash.
@@ -1230,11 +1233,23 @@ class Component extends DCLogic {
   }
   // Язык из профиля важнее сохранённого в браузере; язык, выбранный до входа, уходит в профиль.
   applyMe(me) {
-    const loc = me && me.user && me.user.locale, picked = this._langPicked;
+    const loc = me && me.user && me.user.locale, picked = this._langPicked, uid = me && me.user && me.user.id;
     this._langPicked = null;
+    // Вошёл другой человек (после 401, в мини-аппе другого Telegram): данные прежнего аккаунта не показываются.
+    if (uid && this._uid && uid !== this._uid) this.resetAccountState();
+    if (uid) this._uid = uid;
     this.setState({ me, authReady: true });
     if (picked && picked !== loc) this.call('/api/auth/me', { method: 'PATCH', body: { locale: picked }, quiet: true }).catch(() => {});
     else if (loc && loc !== this.state.lang && this.D.LANGS.some((l) => l.code === loc)) this.setLang(loc, { local: true });
+  }
+  // Фоновое обновление профиля и цен (лист оплаты, оплаченный заказ): профиль заменяется только ответом сервера,
+  // 401 — сессия закончилась; сеть, 429 и 5xx оставляют прежний профиль, вход не теряется.
+  async refreshMe() {
+    try { this.applyMe(await this.A.api('/api/auth/me')); return true; } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) this.sessionLost();
+      return false;
+    }
   }
   // Действие, которому нужен вход: без сессии открывается лист входа, после входа действие продолжается.
   requireLogin(fn) {
@@ -1357,9 +1372,25 @@ class Component extends DCLogic {
     await this.flushSave().catch(() => {});
     try { await this.A.api('/api/auth/logout', { body: {} }); } catch (e) { console.error(e); }
     this.A.setToken(null);
-    const s = this.state, away = ['build', 'share', 'manage'].includes(s.screen) || (s.screen === 'guest' && s.guestMode === 'edit');
-    this.setState({ me: null, invs: [], invsLoaded: false, draftId: null, draft: null, savedAt: null, saveErr: false, account: false, ...(away ? { screen: 'home' } : {}) });
+    this._uid = null;
+    this.setState({ me: null });
+    this.resetAccountState();
     this.toast(this.t().loggedOut);
+  }
+  // Данные аккаунта не переживают выход и вход другим человеком: открытое приглашение, его гости, адрес и пароль
+  // ссылки, листы оплаты и заказа. Конструктор возвращается к первому шаблону, экраны аккаунта — на главную.
+  resetAccountState() {
+    [this._saveT, this._retryT, this._slugT, this._pwT, this._orderT, this._ogT, this._lsT].forEach((x) => clearTimeout(x));
+    this._saveT = null; this._orderT = null; this._afterLogin = null; this._confirmFn = null;
+    this._ogKey = null; this._ogUp = null; this._mgKey = null; this._qrc = {}; this._invView = null; this._base = {};
+    const s = this.state, ev = 'wedding', keep = ['home', 'events', 'templates', 'tour'].includes(s.screen);
+    if (s.camOn) this.stopCam();
+    if (!keep) this.stopMusic();
+    this.setState({ invs: [], invsLoaded: false, draftId: null, draft: null, savedAt: null, saving: false, saveErr: false, demo: false,
+      event: ev, tplId: ev + '-' + this.D.EVENTS[ev].styles[0], inv: this.defaults(ev, s.lang), invLang: s.lang, dirty: false, step: 0,
+      guests: [], activity: [], toGuestId: null, myGuestId: null, share: { slug: '', pwOn: false, pw: '', edited: false }, slugErr: '', manual: '', lastScan: null, picked: {}, importOpen: false,
+      ogImg: null, storyImg: null, pay: null, order: null, mock: null, addSheet: null, confirm: null, sheet: null, account: false, aiBusy: false,
+      unlocked: false, pwTry: '', pwErr: false, rsvp: this.freshRsvp(), ...(keep ? {} : { screen: 'home', music: false }) });
   }
   askConfirm(c, fn) { this._confirmFn = fn; this.setState({ confirm: c }); }
   confirmOk() { const fn = this._confirmFn; this._confirmFn = null; this.setState({ confirm: null }); if (fn) fn(); }
@@ -1411,10 +1442,10 @@ class Component extends DCLogic {
     const s = this.state, dr = opts.dto || s.draft; if (!dr) return;
     const kind = opts.kind || 'publish', G = s.guests || [];
     const unpaid = G.filter((g) => !g.paid).length;
-    const seats = kind === 'seats' ? Math.max(1, unpaid) : dr.mode === 'personal' && dr.paidSeats > 0 ? 0 : Math.max(10, unpaid);
+    const seats = opts.seats > 0 ? opts.seats : kind === 'seats' ? Math.max(1, unpaid) : dr.mode === 'personal' && dr.paidSeats > 0 ? 0 : Math.max(10, unpaid);
     this.setState({ pay: { kind, mode: kind === 'seats' ? 'personal' : dr.mode, seats, months: 1, busy: false, err: '', note: opts.note || '', then: opts.then || (kind === 'upgrade' ? 'edit' : null) } });
     // Цены и доступ могли измениться (подписка, бесплатный доступ, цены в админке).
-    this.loadMe(); this.loadTemplates();
+    this.refreshMe(); this.loadTemplates();
   }
   setPay(patch) { this.setState((x) => (x.pay ? { pay: { ...x.pay, ...patch } } : null)); }
   closePay() { if (this.state.pay && this.state.pay.busy) return; this.setState({ pay: null }); }
@@ -1445,13 +1476,16 @@ class Component extends DCLogic {
   }
   // Подписка: заказ на months месяцев; после оплаты шаблон открывается без оплаты, публикация продолжается.
   async subscribe() {
-    const s = this.state, P = s.pay; if (!P || P.busy) return;
+    const s = this.state, P = s.pay, id = s.draftId; if (!P || P.busy) return;
     this.setPay({ busy: true, err: '' });
     try {
       await this.flushSave();
+      // Выбранный тип уходит до оплаты, как в pay(): после подписки публикация идёт по нему, а не по прежнему.
+      const inv = this.state.draft;
+      if (P.kind === 'publish' && id && inv && inv.mode !== P.mode) await this.patchInvitation(id, { mode: P.mode }, { quiet: true });
       const r = await this.A.api('/api/orders', { body: { kind: 'subscription', months: P.months } });
-      if (r && r.status === 'pending') { this.checkout(r, { inv: s.draftId, then: P.then || (P.kind === 'seats' ? s.screen : 'share'), sub: true }); return; }
-      this.setState({ pay: null }); await this.loadMe();
+      if (r && r.status === 'pending') { this.checkout(r, { inv: id, then: P.then || (P.kind === 'seats' ? s.screen : 'share'), sub: true, ...(P.mode === 'personal' && P.seats > 0 && { seats: P.seats }) }); return; }
+      this.setState({ pay: null }); await this.refreshMe();
     } catch (e) {
       this.logErr(e);
       if (e.status === 401) { this.setPay({ busy: false }); this.sessionLost(() => this.subscribe()); return; }
@@ -1519,7 +1553,7 @@ class Component extends DCLogic {
     const cont = this.orderCont(o.id), t = this.t();
     try {
       if (o.kind === 'subscription') {
-        await this.loadMe(); this.toast(t.subDone);
+        await this.refreshMe(); this.toast(t.subDone);
         const id = cont.inv;
         if (!id) { this.dropOrderCont(o.id); this.clearHash(); this.goHome(); return; }
         let dto = await this.call('/api/invitations/' + id);
@@ -1533,7 +1567,7 @@ class Component extends DCLogic {
           if (!dto.unlocked) await this.A.api('/api/orders', { body: { kind: 'template', invitationId: id } });
           await this.afterPaid(id, cont.then);
         } else if (dto.mode === 'personal' && dto.paidSeats < 1) {
-          this.clearHash(); this.go('build', { step: 0 }); this.openPay({ dto });
+          this.clearHash(); this.go('build', { step: 0 }); this.openPay({ dto, seats: cont.seats });
         } else await this.afterPaid(id, cont.then);
       } else if (o.invitationId) await this.afterPaid(o.invitationId, cont.then, cont.pub !== false);
       else { this.clearHash(); this.goHome(); }
@@ -1588,10 +1622,13 @@ class Component extends DCLogic {
     const ev = D.EVENTS[dto.event] ? dto.event : 'wedding'; return ev + '-' + D.EVENTS[ev].styles[0];
   }
   langOf(code) { return this.D.LANGS.some((l) => l.code === code) ? code : this.state.lang; }
-  // inv конструктора из приглашения сервера: недостающие поля — тексты по умолчанию на языке приглашения.
+  // inv конструктора и страницы гостя из приглашения сервера. Недостающие поля оформления (секции, шрифт,
+  // палитра, интро, музыка, обложка) берутся из шаблона, а содержимого (дата, программа, контакты, галерея и т.д.)
+  // остаются пустыми: гость видит только то, что владелец сохранил, без выдуманных дат и телефонов.
   invOf(dto) {
     const tid = this.tplOf(dto), data = dto.data || {};
-    const inv = { ...this.defaults(tid.split('-')[0], this.langOf(dto.language)), ...data };
+    const EMPTY = { names: '', host: '', message: '', venue: '', address: '', dress: '', gifts: '', notes: '', contact: '', secret: '', date: '', time: '', dressColors: [], program: [], gallery: [] };
+    const inv = { ...this.defaults(tid.split('-')[0], this.langOf(dto.language)), ...EMPTY, ...data };
     if (!data.font) inv.font = this.D.STYLES[tid.split('-')[1]].fonts[0];
     return inv;
   }
@@ -1606,7 +1643,7 @@ class Component extends DCLogic {
     const out = { names: str(inv.names, 200), host: str(inv.host, 200), message: str(inv.message, 3000), venue: str(inv.venue, 200), address: str(inv.address, 300), contact: str(inv.contact, 300), dress: str(inv.dress, 500), secret: str(inv.secret, 500), gifts: str(inv.gifts, 1000), notes: str(inv.notes, 1000),
       dressColors: (inv.dressColors || []).filter((c) => /^#[0-9a-fA-F]{6}$/.test(c)).slice(0, 6),
       program: (inv.program || []).slice(0, 8).map((p) => ({ time: hhmm(p.time) ? p.time : '', title: str(p.title, 120), place: str(p.place, 200) })),
-      countdown: inv.countdown !== false, showGuests: inv.showGuests !== false,
+      countdown: inv.countdown !== false, showGuests: inv.showGuests === true,
       cover: media(inv.cover), musicSrc: media(inv.musicSrc), video: media(inv.video), gallery: (inv.gallery || []).map(media).filter(Boolean).slice(0, 12),
       font: str(inv.font, 60), palette: Math.max(0, Math.min(2, inv.palette | 0)),
       music: oneOf(inv.music, D.TRACKS.concat('custom')), intro: oneOf(inv.intro, ['envelope', 'curtain', 'scratch', 'none']), mapMode: oneOf(inv.mapMode, ['drawn', 'real']), motion: oneOf(inv.motion, ['still', 'zoom', 'video']),
@@ -1628,9 +1665,26 @@ class Component extends DCLogic {
     this.flushSave();
     const tid = this.tplOf(dto), lang = this.langOf(dto.language), inv = this.invOf(dto);
     this._lastInv = inv; this._lastTpl = tid; this._lastLang = lang;
+    this._base[dto.id] = { template: tid, language: lang, data: this.payload(inv) };
     clearTimeout(this._retryT);
     clearTimeout(this._slugT); clearTimeout(this._pwT);
     this.setState({ draftId: dto.id, draft: dto, event: tid.split('-')[0], tplId: tid, invLang: lang, inv, dirty: true, step: 0, savedAt: dto.updatedAt, saveErr: false, demo: false, guests: [], activity: [], toGuestId: null, slugErr: '', manual: '', share: { slug: dto.slug || '', pwOn: !!dto.accessCode, pw: dto.accessCode || '', edited: !!dto.slug } });
+  }
+  // Приглашение из списка «Мои приглашения» открывается по свежему GET /api/invitations/:id: список загружен
+  // при входе и мог устареть (правки в другой вкладке или на другом устройстве). then(dto) — после загрузки.
+  async openInv(d, then) {
+    const seq = (this._openSeq = (this._openSeq || 0) + 1);
+    await this.flushSave(); await (this._queue[d.id] || Promise.resolve());
+    let r;
+    try { r = await this.call('/api/invitations/' + d.id, { retry: () => this.openInv(d, then) }); } catch (e) {
+      if (e.status === 404) this.setState((x) => ({ invs: x.invs.filter((y) => y.id !== d.id) }));
+      return;
+    }
+    if (seq !== this._openSeq) return;
+    const { guests, ...dto } = r;
+    this.upsertInv(dto); this.loadDraft(dto);
+    this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
+    if (then) then(dto);
   }
   // «Использовать шаблон»: новый черновик POST /api/invitations с тем, что сейчас в конструкторе; then(dto) после создания.
   async createDraft(then) {
@@ -1660,10 +1714,14 @@ class Component extends DCLogic {
     opts = opts || {};
     if (opts.auto) { this._snap[id] = body; if (this._autoQueued[id]) return this._queue[id]; this._autoQueued[id] = true; }
     const run = async () => {
-      if (opts.auto) { this._autoQueued[id] = false; body = this._snap[id]; }
+      if (opts.auto) {
+        this._autoQueued[id] = false; body = this.changedOf(id, this._snap[id]);
+        if (!body) { this.setState((x) => ({ saving: this._inflight > 0 || !!this._saveT, ...(x.draftId === id ? { saveErr: false } : {}) })); return null; }
+      }
       this._inflight++; this.setState({ saving: true });
       try {
         const dto = await this.A.api('/api/invitations/' + id, { method: 'PATCH', body, keepalive: !!opts.keepalive });
+        this.rebase(id, body);
         this.onSaved(dto);
         return dto;
       } catch (e) {
@@ -1675,6 +1733,23 @@ class Component extends DCLogic {
     const p = (this._queue[id] || Promise.resolve()).then(run);
     this._queue[id] = p.catch(() => null);
     return p;
+  }
+  // Отличия автосохранения от _base: шаблон, язык и ключи data, которые поменялись (сервер сливает data по ключам,
+  // поэтому остальные поля, может быть изменённые в другой вкладке, не затираются). null — отправлять нечего.
+  changedOf(id, full) {
+    const base = this._base[id]; if (!base) return full;
+    const out = {}, data = {}, same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    if (full.template !== base.template) out.template = full.template;
+    if (full.language !== base.language) out.language = full.language;
+    Object.keys(full.data || {}).forEach((k) => { if (!same(full.data[k], base.data[k])) data[k] = full.data[k]; });
+    if (Object.keys(data).length) out.data = data;
+    return Object.keys(out).length ? out : null;
+  }
+  rebase(id, body) {
+    const b = this._base[id]; if (!b || !body) return;
+    if (body.template) b.template = body.template;
+    if (body.language) b.language = body.language;
+    if (body.data) b.data = { ...b.data, ...body.data };
   }
   // Ответ сервера после сохранения: «Сохранено · ЧЧ:ММ» по updatedAt сервера.
   onSaved(dto) {
@@ -1693,7 +1768,10 @@ class Component extends DCLogic {
       this.setState((x) => ({ invs: x.invs.filter((d) => d.id !== id), ...(x.draftId === id ? { draftId: null, draft: null, savedAt: null, saveErr: true } : {}) }));
       return;
     }
-    if (e.status === 400) { this.toast(this.errText(e)); if (cur) this.setState({ saveErr: true }); return; }
+    // Нет телефона (428): шаг телефона в листе входа, после него сохранение повторяется.
+    if (e.status === 428) { if (cur) this.setState({ saveErr: true }); return this.openLogin({ reason: 'phone' }, () => { if (this.state.draftId === id) this.saveNow(); }); }
+    // Прочие ошибки запроса (400, 403, 413, 415…) повтором не исправить: текст ошибки и «Не сохранено» без таймера.
+    if (e.status && e.status < 500 && e.status !== 429) { this.toast(this.errText(e)); if (cur) this.setState({ saveErr: true }); return; }
     // Сеть, 429, 5xx: повтор через 5 секунд.
     if (cur && !s.saveErr) this.toast(this.errText(e));
     if (cur) {
@@ -1726,7 +1804,8 @@ class Component extends DCLogic {
     const activity = [{ kind: 'published', t: now - 3 * 864e5 }];
     guests.forEach((g, i) => { activity.push({ kind: 'opened', gid: g.id, t: now - (2 * 864e5 - i * 97 * M) }); if (g.status !== 'pending') activity.push({ kind: g.status, gid: g.id, t: now - (40 * 3600e3 - i * 211 * M) }); });
     activity.push({ kind: 'reminder', n: 3, t: now - 5 * 3600e3 });
-    this.setState({ demo: true, draftId: null, draft: null, savedAt: null, saveErr: false, guests, activity });
+    // Адрес и пароль ссылки, превью и гость личной ссылки — свои у демо, не открытого приглашения.
+    this.setState({ demo: true, draftId: null, draft: null, savedAt: null, saveErr: false, guests, activity, share: { slug: '', pwOn: false, pw: '', edited: false }, toGuestId: null, myGuestId: null, ogImg: null, storyImg: null });
   }
   exitDemo() {
     if (!this.state.demo) return;
@@ -1766,12 +1845,13 @@ class Component extends DCLogic {
   // Картинки превью ссылки и сторис (renderCard). У опубликованного приглашения превью уходит на сервер
   // (PUT /og) и становится og:image страницы; одна и та же картинка повторно не загружается.
   async genImages() {
-    const s = this.state, D = this.D, t = D.I18N[s.lang], key = this._ogKey;
+    // Картинки видят гости: текст и дата — на языке приглашения, как на его странице.
+    const s = this.state, D = this.D, L = D.I18N[s.invLang] ? s.invLang : s.lang, t = D.I18N[L], key = this._ogKey;
     const th = this.theme(s.tplId, s.inv.font, s.inv.palette);
     const dr = !s.demo && s.draft, host = this.appUrl().replace(/^https?:\/\//, '');
     const link = dr && dr.mode === 'personal' ? host : host + '/i/' + (dr ? dr.slug : s.share.slug || D.slugify(s.inv.names));
-    const date = this.fmt(s.inv.date, s.inv.time, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + s.inv.time;
-    const args = { th, names: s.inv.names, kick: t.youreInvited, date, link, cover: s.inv.cover, tt: th.tt };
+    const date = [this.fmt(s.inv.date, s.inv.time, { day: 'numeric', month: 'long', year: 'numeric' }, L), s.inv.time].filter(Boolean).join(' · ');
+    const args = { th, names: s.inv.names.trim() || D.EVENTS[s.event].label[L], kick: t.youreInvited, date, link, cover: s.inv.cover, tt: th.tt };
     this.setState({ ogImg: null, storyImg: null });
     try {
       const og = await this.E.renderCard({ ...args, W: 1200, H: 630 });
@@ -1804,6 +1884,8 @@ class Component extends DCLogic {
   // Текст приглашения: POST /api/ai/write на языке приглашения; без входа, в демо, при 503 и любой ошибке — готовые тексты дизайна.
   async aiWrite() {
     const s = this.state, D = this.D, t = D.I18N[s.lang], inv = s.inv, L0 = s.invLang;
+    // Пока текст пишется, человек мог открыть другое приглашение: ответ относится только к тому, для которого просили.
+    const key = [s.draftId, s.demo, s.event].join('|'), stale = () => { const x = this.state; return [x.draftId, x.demo, x.event].join('|') !== key || !['build', 'guest'].includes(x.screen); };
     this.setState({ aiBusy: true });
     let out = '';
     if (!s.demo && s.me && !(s.cfg && s.cfg.ai === false)) {
@@ -1813,6 +1895,7 @@ class Component extends DCLogic {
         out = String((r && r.text) || '').trim();
       } catch (e) { console.error(e); out = ''; }
     }
+    if (stale()) { this.setState({ aiBusy: false }); return; }
     if (!out) {
       const F = { en: { warm: 'We would love to share this day with you — it would not be the same without you.', formal: 'We request the pleasure of your company at this special occasion.', playful: 'Clear your calendar, charge your phone and bring your best mood — this one is going to be good!', poetic: 'Some evenings are written in light; we would like you to be in ours.', short: 'Come celebrate with us!' },
         ru: { warm: 'Нам очень хочется разделить этот день с вами — без вас он будет не тем.', formal: 'Имеем честь пригласить вас разделить с нами этот особенный день.', playful: 'Освободите вечер, зарядите телефон и захватите отличное настроение — будет весело!', poetic: 'Есть вечера, написанные светом; мы хотим, чтобы вы были в нашем.', short: 'Приходите праздновать с нами!' },
@@ -1912,6 +1995,8 @@ class Component extends DCLogic {
       const id = this.state.draftId; if (!id) return;
       try { await this.call('/api/invitations/' + id + '/guests/' + g.id, { method: 'DELETE', retry: () => this.delGuest(g) }); } catch (e) { if (e.status !== 404) return; }
       this.setState((x) => ({ guests: x.guests.filter((y) => y.id !== g.id) }));
+      // Освободившееся место переходит следующему гостю: отметки «оплачено» и кнопки SMS — с сервера.
+      this.loadManage();
     });
   }
   // Лист «Добавить гостей» (вместо импорта из Telegram): быстрая форма и список «Имя, телефон» по строкам.
@@ -2000,6 +2085,15 @@ class Component extends DCLogic {
       this.loadActivity();
     } catch (e) { /* тост уже показан */ } finally { this._remBusy = false; this.setState({ remindBusy: false }); }
   }
+  // «SMS всем» и «Напомнить» отправляют настоящие сообщения: сначала подтверждение с числом получателей
+  // (как их выберет сервер: SMS — с телефоном, местом и без прежнего SMS; напоминание — ждущие ответа с местом).
+  confirmSend(kind) {
+    const t = this.t(), G = this.state.guests, sms = kind === 'sms';
+    const n = sms ? G.filter((g) => g.phone && g.paid && !g.sms).length : G.filter((g) => g.status === 'pending' && g.paid).length;
+    const go = () => (sms ? this.sendSms(null) : this.remindAll());
+    if (!n) return go();
+    this.askConfirm({ title: sms ? t.smsAllT : t.remindT, text: (sms ? t.smsAllQ : t.remindQ).replace('{n}', n), ok: t.sendNow }, go);
+  }
   // Настройки приглашения (столы, уведомления бота): PATCH settings, на экране — сразу.
   async setSettings(patch) {
     const s = this.state, id = s.draftId, dr = s.draft; if (!id || !dr) return;
@@ -2018,7 +2112,9 @@ class Component extends DCLogic {
     }
   }
   exportGuests() {
-    const q = (v) => { v = String(v == null ? '' : v); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    // Имя и группу пишут гости: значение с =, +, -, @ в начале таблица приняла бы за формулу, перед ним ставится
+    // апостроф (кроме телефона +998…).
+    const q = (v) => { v = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(v) && !/^\+\d{7,15}$/.test(v)) v = "'" + v; return /[",\n\r;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
     const rows = [['name', 'phone', 'status', 'plus_ones', 'group', 'table', 'checked_in', 'paid', 'link']].concat(this.state.guests.map((g) => [g.lat, g.phone ? '+' + g.phone : '', g.status, g.plus, g.group, g.table || '', g.checked ? 'yes' : '', g.paid ? 'yes' : 'no', g.link || '']));
     this.download('guests.csv', '\ufeff' + rows.map((r) => r.map(q).join(',')).join('\n'), 'text/csv');
   }
@@ -2051,7 +2147,8 @@ class Component extends DCLogic {
     const s = this.state, on = !s.share.pwOn;
     this.setState((x) => ({ share: { ...x.share, pwOn: on, ...(on ? {} : { pw: '' }) } }));
     clearTimeout(this._pwT);
-    if (!on && !s.demo && s.draft && s.draft.accessCode) this.savePw(null);
+    // Снять пароль нужно и тогда, когда только что набранный ещё сохраняется (_pwBusy): запросы идут по очереди.
+    if (!on && !s.demo && s.draft && (s.draft.accessCode || this._pwBusy)) this.savePw(null, true);
   }
   onPwInput(v) {
     v = String(v || '').slice(0, 64);
@@ -2060,10 +2157,22 @@ class Component extends DCLogic {
     if (this.state.demo || !v.trim()) return;
     this._pwT = setTimeout(() => this.savePw(v.trim()), 700);
   }
-  async savePw(code) {
+  // Поле пароля потеряло фокус: набранный пароль сохраняется сразу, а пустое поле возвращает сохранённый пароль,
+  // чтобы на экране не было «пароля нет», пока на сервере он есть. Снимает пароль переключатель.
+  onPwBlur() {
+    const s = this.state; if (s.demo || !s.draft || !s.share.pwOn) return;
+    const v = s.share.pw.trim(), saved = s.draft.accessCode || '';
+    clearTimeout(this._pwT);
+    if (v) this.savePw(v);
+    else if (saved) this.setState((x) => ({ share: { ...x.share, pw: saved } }));
+  }
+  async savePw(code, force) {
     const s = this.state, id = s.draftId, t = this.t(); if (!id || !s.draft) return;
-    if ((s.draft.accessCode || null) === code) return;
-    try { await this.patchInvitation(id, { accessCode: code }); this.toast(code ? t.pwSaved : t.pwRemoved); } catch (e) { /* тост уже показан */ }
+    // _pwSent — пароль, который уже уходит на сервер: потеря фокуса сразу после таймера не шлёт его второй раз.
+    const k = id + ':' + code;
+    if (!force && ((s.draft.accessCode || null) === code || this._pwSent === k)) return;
+    this._pwBusy = (this._pwBusy || 0) + 1; this._pwSent = k;
+    try { await this.patchInvitation(id, { accessCode: code }); this.toast(code ? t.pwSaved : t.pwRemoved); } catch (e) { /* тост уже показан */ } finally { this._pwBusy--; if (this._pwSent === k) this._pwSent = null; }
   }
 
   // ---------- публичная страница: ответ гостя ----------
@@ -2178,7 +2287,7 @@ class Component extends DCLogic {
     // OG images: ссылка на картинке — сохранённый адрес приглашения.
     if (s.screen === 'share') {
       const dr = !s.demo && s.draft;
-      const key = JSON.stringify([s.tplId, s.inv.names, s.inv.date, s.inv.time, s.inv.cover, s.inv.font, s.inv.palette, s.lang, dr ? dr.id + '/' + dr.slug + '/' + dr.mode + '/' + dr.status : s.share.slug]);
+      const key = JSON.stringify([s.tplId, s.inv.names, s.inv.date, s.inv.time, s.inv.cover, s.inv.font, s.inv.palette, s.invLang, dr ? dr.id + '/' + dr.slug + '/' + dr.mode + '/' + dr.status : s.share.slug]);
       if (key !== this._ogKey) { this._ogKey = key; clearTimeout(this._ogT); this._ogT = setTimeout(() => this.genImages(), 250); }
     }
     // Гости и активность с сервера при входе на экраны гостей и «Поделиться».
@@ -2197,10 +2306,9 @@ class Component extends DCLogic {
 
   // ---------- data helpers ----------
   defaults(ev, lang) {
-    const E = this.D.EVENTS[ev], L = E.text[lang] || E.text.en;
-    const d = new Date(Date.now() + E.days * 864e5);
-    const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    return { names: L.names, host: L.host, message: L.message, venue: L.venue, address: L.address, dress: L.dress, gifts: L.gifts, notes: L.notes, contact: L.contact, dressColors: E.dressColors.slice(), program: E.program.map((p) => ({ time: p.t, title: p[lang] || p.en, place: p.place || '' })), date: iso, time: E.time, countdown: true, showGuests: true, cover: E.img[0], gallery: E.img.slice(1), font: this.D.STYLES[E.styles[0]].fonts[0],
+    const E = this.D.EVENTS[ev], L = E.text[lang] || E.text.en, iso = this.todayIso(E.days);
+    // showGuests выключен, пока владелец сам не включит «Кто придёт»: имена гостей видны всем, у кого есть ссылка.
+    return { names: L.names, host: L.host, message: L.message, venue: L.venue, address: L.address, dress: L.dress, gifts: L.gifts, notes: L.notes, contact: L.contact, dressColors: E.dressColors.slice(), program: E.program.map((p) => ({ time: p.t, title: p[lang] || p.en, place: p.place || '' })), date: iso, time: E.time, countdown: true, showGuests: false, cover: E.img[0], gallery: E.img.slice(1), font: this.D.STYLES[E.styles[0]].fonts[0],
       palette: 0, music: this.D.EVENT_MUSIC[ev] || 'lullaby', musicSrc: '', intro: 'envelope', mapMode: 'drawn', motion: 'zoom', video: '',
       secret: ev === 'baby' ? this.D.I18N[lang].secretBaby : this.D.I18N[lang].secretDef,
       sections: this.D.SECTIONS.map((k) => ({ k, on: k !== 'reveal' || ev === 'baby' })) };
@@ -2214,10 +2322,31 @@ class Component extends DCLogic {
     return { ...st, font: f, fontCss: `'${f}', serif`, bodyCss: `'${st.body}', sans-serif`, fs, tt: script ? 'none' : st.tt, msgCss: heavy ? `'${st.body}', sans-serif` : `'${f}', serif`, fsMsg: heavy ? 0.8 : Math.min(fs, 1.05) };
   }
   freshRsvp() { return { status: null, count: 1, diet: [], msg: '', name: '', sent: false }; }
-  fmt(iso, time, opts) {
-    const d = new Date(iso + 'T' + (time || '12:00'));
-    try { return new Intl.DateTimeFormat(this.D.LOCALE[this.state.lang], opts).format(d); } catch (e) { return new Intl.DateTimeFormat('en-GB', opts).format(d); }
+  // Момент события: data.date и data.time — местное время Ташкента (UTC+5, без летнего времени), а не часовой
+  // пояс того, кто смотрит. null — даты нет или она неверная; без времени — полдень.
+  at(iso, time) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return null;
+    const d = new Date(iso + 'T' + (/^([01]\d|2[0-3]):[0-5]\d$/.test(time || '') ? time : '12:00') + ':00+05:00');
+    return isNaN(d) ? null : d;
   }
+  // Дата на языке lang (по умолчанию интерфейса) по календарю Ташкента; нет даты — пустая строка.
+  // uz и uzc — из таблиц UZ_DATES (браузеры часто не знают узбекских месяцев), в том же виде, что у сервера.
+  fmt(iso, time, opts, lang) {
+    lang = lang || this.state.lang;
+    const d = this.at(iso, time); if (!d) return '';
+    const U = this.D.UZ_DATES[lang];
+    if (U) {
+      const [y, m, day] = iso.split('-').map(Number), wd = new Date(Date.UTC(y, m - 1, day)).getUTCDay();
+      const mon = opts.month === 'long' ? U.months[m - 1] : opts.month === 'short' ? U.monthsShort[m - 1] : '';
+      let out = opts.day ? (mon ? day + U.daySep + mon : String(day)) : mon;
+      if (opts.year) out = out ? out + ', ' + y : String(y);
+      if (opts.weekday) out = (opts.weekday === 'long' ? U.weekdays : U.weekdaysShort)[wd] + (out ? ', ' + out : '');
+      return out;
+    }
+    try { return new Intl.DateTimeFormat(this.D.LOCALE[lang], { ...opts, timeZone: 'Asia/Tashkent' }).format(d); } catch (e) { return ''; }
+  }
+  // Сегодняшняя дата в Ташкенте (ГГГГ-ММ-ДД).
+  todayIso(days) { return new Date(Date.now() + (days || 0) * 864e5 + 5 * 36e5).toISOString().slice(0, 10); }
   pname(o) { const l = this.state.lang; return (l === 'ru' || l === 'uzc') ? o.cyr : o.lat; }
   ini(n) { return n.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase(); }
   tplIndex() { const s = this.state; return this.D.EVENTS[s.event].styles.indexOf(s.tplId.split('-')[1]); }
@@ -2235,7 +2364,7 @@ class Component extends DCLogic {
     const tid = tplId || ev + '-' + this.D.EVENTS[ev].styles[0], lang = this.state.lang;
     const inv = this.defaults(ev, lang);
     inv.font = this.D.STYLES[tid.split('-')[1]].fonts[0];
-    this.setState({ event: ev, tplId: tid, inv, invLang: lang, dirty: false, screen: 'templates', step: 0, draftId: null, draft: null, savedAt: null, saveErr: false });
+    this.setState({ event: ev, tplId: tid, inv, invLang: lang, dirty: false, screen: 'templates', step: 0, draftId: null, draft: null, savedAt: null, saveErr: false, guests: [], activity: [], toGuestId: null, myGuestId: null, share: { slug: '', pwOn: false, pw: '', edited: false }, slugErr: '' });
   }
   pickTpl(tid) { this.setState((s) => ({ tplId: tid, inv: { ...s.inv, font: this.D.STYLES[tid.split('-')[1]].fonts[0], palette: 0 } })); }
   centerCard(idx, behavior) {
@@ -2313,16 +2442,22 @@ class Component extends DCLogic {
   // Под паролем (locked) — только форма пароля в стиле шаблона; пароль проверяет сервер (?code=).
   openPublic(b) {
     const v = b.view, look = b.locked && b.locked.look;
-    const src = v || (look ? { template: look.template, language: this.state.lang, data: { font: look.font, palette: look.palette } } : null);
+    // Форма пароля — на языке приглашения (look.language), без него — на языке этого браузера.
+    const src = v || (look ? { template: look.template, language: look.language || this.state.lang, data: { font: look.font, palette: look.palette } } : null);
     if (!src) { this.setState({ screen: 'notfound', authReady: true }); return; }
     const lang = this.langOf(src.language), tid = this.tplOf(src), inv = this.invOf({ ...src, language: lang });
-    if (!v) { inv.names = ''; inv.host = ''; }
+    // Без имён в приглашении (старые записи) заголовком служит событие, как в og:title сервера.
+    if (v && !inv.names.trim()) inv.names = this.D.EVENTS[tid.split('-')[0]].label[lang];
     this.applyLang(lang);
     let code = null; try { code = new URLSearchParams(location.search).get('code'); } catch (e) {}
+    // Пароль подошёл: он остаётся в памяти страницы (для ответа гостя), а из адреса убирается, чтобы не уйти
+    // дальше вместе со скопированной ссылкой.
+    if (v && code) { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {} }
     const pub = { kind: b.mode, slug: b.slug || (v && v.slug) || '', token: b.mode === 'personal' ? b.token : null, code: code || null, view: v || null };
     this.setState({ lang, invLang: lang, event: tid.split('-')[0], tplId: tid, inv, dirty: true, authReady: true, pubLocked: !v, pub });
     this.openGuest('live');
-    if (!v && code) this.setState({ pwErr: true });
+    // Неверный пароль или исчерпаны попытки (429, locked.limited): сервер отвечает одной и той же формой.
+    if (!v && code) this.setState({ pwErr: b.locked && b.locked.limited ? 'limited' : true });
     // Прежний ответ: личная ссылка — из представления, общая — сохранённый в этом браузере.
     const R = this.freshRsvp(), g = v && v.guest, saved = v && b.mode === 'shared' ? this.savedReply(pub.slug) : null;
     if (g && g.rsvp !== 'pending') Object.assign(R, { status: g.rsvp, count: Math.max(1, g.count || 1), diet: g.diet || [], msg: g.msg || '', sent: true });
@@ -2408,8 +2543,8 @@ class Component extends DCLogic {
   }
   updateCountdown() {
     const r = this.rootRef.current; if (!r || !this.state.ready) return;
-    const inv = this.state.inv; const tgt = new Date(inv.date + 'T' + (inv.time || '12:00')).getTime();
-    const ms = Math.max(0, tgt - Date.now());
+    const inv = this.state.inv, at = this.at(inv.date, inv.time);
+    const ms = at ? Math.max(0, at.getTime() - Date.now()) : 0;
     const v = { d: Math.floor(ms / 864e5), h: Math.floor(ms / 36e5) % 24, m: Math.floor(ms / 6e4) % 60, s: Math.floor(ms / 1e3) % 60 };
     r.querySelectorAll('[data-cd]').forEach((el) => { const s = String(v[el.dataset.cd]).padStart(2, '0'); if (el.textContent !== s) el.textContent = s; });
     const t = this.D.I18N[this.state.lang];
@@ -2492,7 +2627,7 @@ class Component extends DCLogic {
     const gDateShort = this.fmt(inv.date, inv.time, { day: 'numeric', month: 'short', year: 'numeric' });
     const gDateLong = this.fmt(inv.date, inv.time, { day: 'numeric', month: 'long', year: 'numeric' });
     const shortOf = (iso) => this.fmt(iso, '12:00', { day: 'numeric', month: 'short', year: 'numeric' });
-    const isoIn = (days) => { const d = new Date(Date.now() + days * 864e5); return d.toISOString().slice(0, 10); };
+    const isoIn = (days) => this.todayIso(days);
 
     const langs = D.LANGS.map((l) => ({ label: l.label, bg: l.code === lang ? U.ink : 'transparent', color: l.code === lang ? U.paper : U.ink, onClick: () => this.setLang(l.code, { save: true }) }));
     const chipO = (a) => ({ bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)' });
@@ -2539,9 +2674,9 @@ class Component extends DCLogic {
       if (!v) { const tid = this.tplOf(d), di = this.invOf(d); v = { tid, di }; this._invView.set(d, v); }
       const { tid, di } = v, ev = tid.split('-')[0], st = tid.split('-')[1], EE = D.EVENTS[ev], live = d.status === 'active';
       const n = (d.stats && d.stats.replies) || 0;
-      return { th: this.theme(tid, di.font, di.palette), names: di.names, cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: EE.names[EE.styles.indexOf(st)], date: this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + di.time, dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + t.replies, canDel: true,
-        onGuests: () => { this.loadDraft(d); this.go('manage', { mtab: 'list' }); }, onEdit: () => { this.loadDraft(d); this.go('build', { step: 0 }); },
-        onOpen: () => { if (live && d.links && d.links.shared) { this.openUrl(d.links.shared); return; } this.loadDraft(d); setTimeout(() => this.openGuest('live'), 0); },
+      return { th: this.theme(tid, di.font, di.palette), names: di.names.trim() || EE.label[lang], cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: EE.names[EE.styles.indexOf(st)], date: [this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }), di.time].filter(Boolean).join(' · '), dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + t.replies, canDel: true,
+        onGuests: () => this.openInv(d, () => this.go('manage', { mtab: 'list' })), onEdit: () => this.openInv(d, () => this.go('build', { step: 0 })),
+        onOpen: () => { if (live && d.links && d.links.shared) { this.openUrl(d.links.shared); return; } this.openInv(d, () => setTimeout(() => this.openGuest('live'), 0)); },
         onDup: () => this.dupInv(d), onDel: () => this.delInv(d) };
     });
 
@@ -2576,10 +2711,13 @@ class Component extends DCLogic {
 
     // guest
     const words = (inv.message || '').split(/\s+/).filter(Boolean).map((w) => w + ' ');
-    const d0 = new Date(inv.date + 'T' + (inv.time || '12:00'));
-    const gDay = isNaN(d0) ? '' : String(d0.getDate()).padStart(2, '0');
+    // Дата события — по календарю Ташкента, в каком бы поясе ни был гость; без даты строки с ней пустые.
+    const d0 = this.at(inv.date, inv.time), dp = d0 ? inv.date.split('-') : null;
+    const gDay = dp ? dp[2] : '';
     const gMonthYear = this.fmt(inv.date, inv.time, { month: 'long', year: 'numeric' });
     const gWeekday = this.fmt(inv.date, inv.time, { weekday: 'long' });
+    const gWhen = [gDateLong, inv.time].filter(Boolean).join(' · '), gWdDate = [gWeekday, gDateLong].filter(Boolean).join(', '), gTimeVenue = [inv.time, inv.venue].filter(Boolean).join(' · ');
+    const gFull = [gWdDate, inv.time].filter(Boolean).join(' · '), gMyTime = [gMonthYear, inv.time].filter(Boolean).join(' · ');
     const n = inv.program.length;
     const POS = [[30, 36], [68, 64], [78, 30], [22, 72], [58, 20]];
     const stops = inv.program.filter((p) => p.place);
@@ -2598,10 +2736,10 @@ class Component extends DCLogic {
     const R = s.rsvp;
     const rsvpOpts = [['yes', t.yes], ['maybe', t.maybe], ['no', t.no]].map(([k, label]) => { const a = R.status === k; return { label, mark: a ? '✓' : '', bg: a ? th.ink : 'transparent', color: a ? th.bg : th.ink, border: a ? th.ink : th.line, onClick: () => this.setState((x) => ({ rsvp: { ...x.rsvp, status: k } })) }; });
     const dietOpts = [['veg', t.veg], ['halal', t.halal], ['nonut', t.nonut], ['noalc', t.noalc]].map(([k, label]) => { const a = R.diet.includes(k); return { label, bg: a ? th.accent : 'transparent', color: a ? th.onAccent : th.ink, border: a ? th.accent : th.line, onClick: () => this.setState((x) => ({ rsvp: { ...x.rsvp, diet: a ? x.rsvp.diet.filter((y) => y !== k) : x.rsvp.diet.concat(k) } })) }; });
-    const byIso = new Date(Math.max(Date.now(), d0.getTime() - 14 * 864e5)).toISOString().slice(0, 10);
+    const byIso = d0 ? new Date(Math.max(Date.now(), d0.getTime() - 14 * 864e5) + 5 * 36e5).toISOString().slice(0, 10) : '';
     const dietTxt = R.diet.map((k) => t[k]).join(', ');
     const rsvpSummary = R.status === 'no' ? t.sumNo : (R.status === 'yes' ? t.sumYes : t.sumMaybe) + R.count + (dietTxt ? ' · ' + dietTxt : '');
-    const ics = () => { const f = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; const end = new Date(d0.getTime() + 4 * 36e5); this.download('invito.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Invito//EN', 'BEGIN:VEVENT', 'UID:' + Date.now() + '@invito.app', 'DTSTAMP:' + f(new Date()), 'DTSTART:' + f(d0), 'DTEND:' + f(end), 'SUMMARY:' + inv.names, 'LOCATION:' + inv.venue + ', ' + inv.address, 'DESCRIPTION:' + (inv.message || '').replace(/\n/g, ' '), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n'), 'text/calendar'); };
+    const ics = () => { if (!d0) return; const f = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; const end = new Date(d0.getTime() + 4 * 36e5); this.download('invito.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Invito//EN', 'BEGIN:VEVENT', 'UID:' + Date.now() + '@invito.app', 'DTSTAMP:' + f(new Date()), 'DTSTART:' + f(d0), 'DTEND:' + f(end), 'SUMMARY:' + inv.names, 'LOCATION:' + inv.venue + ', ' + inv.address, 'DESCRIPTION:' + (inv.message || '').replace(/\n/g, ' '), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n'), 'text/calendar'); };
     const env = s.env, intro = this.props.showIntro ?? true;
     const gateShow = isGuest && s.guestMode === 'live' && s.share.pwOn && !!s.share.pw && !s.unlocked;
     const density = this.props.particleDensity ?? 1;
@@ -2611,8 +2749,7 @@ class Component extends DCLogic {
     const dr = !s.demo && s.draft ? s.draft : null, appUrl = this.appUrl(), host = appUrl.replace(/^https?:\/\//, '');
     const isPersonalInv = !!dr && dr.mode === 'personal';
     const slug = dr ? dr.slug : s.share.slug || D.slugify(inv.names), link = host + '/i/' + slug, fullLink = appUrl + '/i/' + slug;
-    const metaLocale = D.LOCALE[s.invLang] || D.LOCALE[lang];
-    const longDate = (() => { const d = new Date(inv.date + 'T12:00:00+05:00'); if (isNaN(d)) return ''; try { return new Intl.DateTimeFormat(metaLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Tashkent' }).format(d); } catch (e) { return gDateLong; } })();
+    const longDate = this.fmt(inv.date, '12:00', { day: 'numeric', month: 'long', year: 'numeric' }, D.I18N[s.invLang] ? s.invLang : lang);
     const msgChars = Array.from((inv.message || '').replace(/\s+/g, ' ').trim());
     const locked = !!(dr && dr.accessCode), evName = E.label[s.invLang] || evLabel;
     const metaTitle = locked ? evName : (inv.names.trim() || evName) + (longDate ? ' — ' + longDate : '');
@@ -2621,7 +2758,7 @@ class Component extends DCLogic {
     const metaImg = locked ? '' : absUrl((dr && dr.ogImageUrl) || inv.cover);
     const firstLink = (s.guests.find((g) => g.link) || {}).link || appUrl + '/g/…';
     const shareUrl = isPersonalInv ? firstLink : fullLink;
-    const ogTitle = dr ? metaTitle : inv.names + ' — ' + gDateLong;
+    const ogTitle = dr ? metaTitle : [inv.names, gDateLong].filter(Boolean).join(' — ');
     const ogDesc = dr ? metaDesc : (inv.message || '').length > 110 ? inv.message.slice(0, 108) + '…' : inv.message;
     const esc = (x) => String(x || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     const metaCode = [`<meta property="og:type" content="website">`, `<meta property="og:url" content="${esc(shareUrl)}">`, `<meta property="og:title" content="${esc(ogTitle)}">`, ogDesc && `<meta property="og:description" content="${esc(ogDesc)}">`, metaImg && `<meta property="og:image" content="${esc(metaImg)}">`, `<meta name="twitter:card" content="summary_large_image">`].filter(Boolean).join('\n');
@@ -2683,17 +2820,17 @@ class Component extends DCLogic {
     const PX = {
       kick, hasTo: !!toName, noTo: !toName, toName, toIni: toName ? this.ini(toName) : '', envInk,
       heroCols: wide ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)', stubW: wide ? '110px' : '76px', ticketNo: '№ ' + String((slug.length * 37) % 1000).padStart(4, '0'), monogram,
-      gMonthNum: isNaN(d0) ? '' : String(d0.getMonth() + 1).padStart(2, '0'),
-      showWho: inv.showGuests !== false && whoList.length > 0, comingCount, whoList, whoMore: whoMoreN > 0, whoMoreTxt: t.andMore.replace('{n}', whoMoreN),
+      gDayDot: dp ? dp[2] + '.' + dp[1] : '',
+      showWho: inv.showGuests === true && whoList.length > 0, comingCount, whoList, whoMore: whoMoreN > 0, whoMoreTxt: t.andMore.replace('{n}', whoMoreN),
       personal, personalMore: invitees.length > P_MAX, personalMoreTxt: t.andMore.replace('{n}', invitees.length - P_MAX), personalEmpty: !!dr && invitees.length === 0,
-      toggleWho: () => this.setInv({ showGuests: inv.showGuests === false }), whoTrack: inv.showGuests !== false ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', whoKnob: inv.showGuests !== false ? '23px' : '3px',
+      toggleWho: () => this.setInv({ showGuests: inv.showGuests !== true }), whoTrack: inv.showGuests === true ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', whoKnob: inv.showGuests === true ? '23px' : '3px',
       onRsvpName: (e) => { const v = e.target.value; this.setState((x) => ({ rsvp: { ...x.rsvp, name: v } })); },
     };
     const rsvpReady = !!R.status && (!!toName || !!(R.name || '').trim()) && !s.rsvpBusy;
     // ---- extended features ----
     const segO = (list, cur, set) => list.map(([k, label]) => { const a = cur === k; return { label, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)', onClick: () => set(k) }; });
     const secs = (inv.sections && inv.sections.length ? inv.sections : D.SECTIONS.map((k) => ({ k, on: true })));
-    const avail = { message: !!inv.message, program: inv.program.length > 0, countdown: inv.countdown !== false, gallery: inv.gallery.length > 0, venue: true, dress: !!inv.dress || inv.dressColors.length > 0, info: infoCards.length > 0, reveal: !!inv.secret, who: PX.showWho, guestbook: true, rsvp: true };
+    const avail = { message: !!inv.message, program: inv.program.length > 0, countdown: inv.countdown !== false && !!d0, gallery: inv.gallery.length > 0, venue: !!(inv.venue || inv.address), dress: !!inv.dress || inv.dressColors.length > 0, info: infoCards.length > 0, reveal: !!inv.secret, who: PX.showWho, guestbook: true, rsvp: true };
     const sec = {}, ord = {}; secs.forEach((x, i) => { sec[x.k] = x.on && avail[x.k]; ord[x.k] = i; });
     const moveSec = (i, d) => { const a = secs.slice(); const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; this.setInv({ sections: a }); };
     const secRows = secs.map((x, i) => ({ label: t.sec[x.k], track: x.on ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', knob: x.on ? '23px' : '3px', op: x.on ? 1 : 0.55, bg: s.secDrag === i ? 'rgba(212,69,42,.08)' : 'transparent',
@@ -2753,16 +2890,17 @@ class Component extends DCLogic {
     // ---- tour ----
     const live = (patch, gid, scrollId, extra) => { this.setState((x) => ({ inv: { ...x.inv, ...(patch || {}) }, share: { ...x.share, pwOn: false }, unlocked: false, ...(extra || {}) })); setTimeout(() => { this.openGuest('live', gid); if (scrollId) setTimeout(() => { this.setState({ env: 4 }); setTimeout(() => { const el = document.getElementById(scrollId); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' }); }, 350); }, 60); }, 0); };
     // Шаблон или демо из тура: открытый черновик отвязывается, чтобы его не перезаписать.
-    const loadEv = (ev, id) => { this.flushSave(); const iv = this.defaults(ev, lang); iv.font = D.STYLES[id.split('-')[1]].fonts[0]; this.setState({ event: ev, tplId: id, inv: iv, invLang: lang, dirty: false, draftId: null, draft: null, savedAt: null, saveErr: false }); };
+    // Гости, активность и ссылка открытого приглашения в превью не попадают; в демо остаются гости демо (enterDemo).
+    const loadEv = (ev, id) => { this.flushSave(); const iv = this.defaults(ev, lang); iv.font = D.STYLES[id.split('-')[1]].fonts[0]; this.setState((x) => ({ event: ev, tplId: id, inv: iv, invLang: lang, dirty: false, draftId: null, draft: null, savedAt: null, saveErr: false, ...(x.demo ? {} : { guests: [], activity: [], toGuestId: null, myGuestId: null, share: { slug: '', pwOn: false, pw: '', edited: false } }) })); };
     const toBuild = (step) => this.go('build', { step });
     const DEMO = [
       ['envelope', '✉', '#93723f', t.sec.rsvp, () => { loadEv('wedding', 'wedding-classic'); live({ intro: 'envelope' }, 1); }],
       ['curtain', '◫', '#a9564f', t.fIntro, () => { loadEv('anniversary', 'anniversary-cinema'); live({ intro: 'curtain' }); }],
       ['scratchIntro', '▒', '#ff5a5f', t.fIntro, () => { loadEv('birthday', 'birthday-riso'); live({ intro: 'scratch' }); }],
       ['personal', '☺', '#d4452a', t.personalLinks, () => live({ intro: 'envelope' }, 1)],
-      ['password', '✱', '#1a1714', t.pw, () => { live(null, null, null, { share: { ...s.share, pwOn: true, pw: '2026' } }); this.toast(t.demoPw); }],
+      ['password', '✱', '#1a1714', t.pw, () => { live(null, null, null, { share: { slug: '', edited: false, pwOn: true, pw: '2026' } }); this.toast(t.demoPw); }],
       ['reveal', '?', '#8f6fb8', t.sec.reveal, () => { loadEv('baby', 'baby-watercolor'); live({}, null, 'sec-reveal'); }],
-      ['guestbook', '“', '#2e7d4f', t.guestbook, () => live({}, null, 'sec-who')],
+      ['guestbook', '“', '#2e7d4f', t.guestbook, () => live({ showGuests: true }, null, 'sec-who')],
       ['map', '⌖', '#3f7a6c', t.fMap, () => { loadEv('date', 'date-cinema'); live({ mapMode: 'real' }, null, 'sec-venue'); }],
       ['motion', '◐', '#3df5c8', t.fMotion, () => { loadEv('party', 'party-neon'); live({ motion: 'zoom', intro: 'none' }); }],
       ['editor', '✎', '#d4452a', t.edit, () => this.openGuest('edit')],
@@ -2843,7 +2981,9 @@ class Component extends DCLogic {
       addOne: () => this.addOne(), oneOp: AS.name.trim() && !AS.busy ? 1 : 0.45,
       text: AS.text, onText: (e) => this.setAdd({ text: e.target.value, err: '' }), ph: t.addName + ', +998 90 123-45-67\n' + t.addName, lines: addLines, addList: () => this.addList(), listOp: addLines && !AS.busy ? 1 : 0.45, err: AS.err || '' } : {};
     const paidN = dr ? dr.paidSeats || 0 : 0, unpaidN = G.filter((g) => g.paid === false).length;
-    const seatsInfo = { show: isPersonalInv, text: t.seatsLine.replace('{paid}', paidN).replace('{n}', G.length), short: paidN + ' / ' + G.length, color: unpaidN ? '#d4452a' : U.muted };
+    // Мест может быть больше, чем гостей (места купили заранее): тогда — сколько свободно, а не «3 из 0».
+    const freeN = Math.max(0, paidN - G.length);
+    const seatsInfo = { show: isPersonalInv, text: freeN ? t.seatsLeft.replace('{paid}', paidN).replace('{left}', freeN) : t.seatsLine.replace('{paid}', paidN).replace('{n}', G.length), short: Math.min(paidN, G.length) + ' / ' + G.length, color: unpaidN ? '#d4452a' : U.muted };
     // Ответ гостя на публичной странице: ссылка на бота и QR для входа (личная ссылка гостя) после «да».
     const myToken = s.pub ? s.pub.token : null;
     const hasBot = s.pub ? !!(PV && PV.botUsername && myToken) : true;
@@ -2852,7 +2992,7 @@ class Component extends DCLogic {
     const isShareScr = s.screen === 'share' && !isPersonalInv;
     const X = {
       isTour: s.screen === 'tour', goTour: () => { this.stopMusic(); this.setState({ music: false, fromTour: true }); this.go('tour'); }, fromTourLive: isGuest && !!s.fromTour && s.guestMode !== 'preview' && s.guestMode !== 'edit', backTour: () => { this.stopMusic(); this.setState((x) => ({ music: false, share: { ...x.share, pwOn: false }, unlocked: false })); this.go('tour'); }, tourColor: s.screen === 'tour' ? '#d4452a' : U.ink, demos, demoCount: String(demos.length).padStart(2, '0'), styleChips, eventChips, allTpls, galleryCount: allTpls.length + ' / ' + D.TEMPLATES.length,
-      galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill(kick + ' ✦ ' + inv.names + ' ✦ ' + gDateShort).join('   ✦   '),
+      galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill([kick, inv.names, gDateShort].filter(Boolean).join(' ✦ ')).join('   ✦   '), namesDate: [inv.names, gDateShort].filter(Boolean).join(' · '),
       ui: U, notTg: !tg, tgSim, tgBack: backFn, tgBackLabel: scr === 'home' && !closeTop ? '✕ ' + t.close : '← ' + t.back,
       mainBtn: { show: tgSim && !!MB, label: MB ? MB[0] : '', onClick: () => MB && MB[1](), bg: '#d4452a', barBg: isGuest ? th.bg : U.paper },
       palettes, mapOpts: segO([['drawn', t.mapDrawn], ['real', t.mapReal]], inv.mapMode || 'drawn', (k) => this.setInv({ mapMode: k })),
@@ -2880,14 +3020,14 @@ class Component extends DCLogic {
       lastScan: { show: !!ls, name: ls ? this.pname(ls) : '', info: ls ? (ls.plus ? '+' + ls.plus + ' · ' : '') + (ls.table ? t.table + ' ' + ls.table : t.unseated) : '' },
       checkedN, checkTotal: yesAll.length, checkPct: (yesAll.length ? Math.round(checkedN / yesAll.length * 100) : 0) + '%', checkRows,
       activity, botFeed, botOpts, botTest: () => { if (dr) return this.botTestSend(); this.logAct({ kind: 'test' }); this.toast(t.botT.sent); },
-      remind: () => { if (dr) return this.remindAll(); const n = cnt('pending'); this.logAct({ kind: 'reminder', n }); this.toast(t.reminded + ' · ' + n); },
+      remind: () => { if (dr) return s.remindBusy ? null : this.confirmSend('remind'); const n = cnt('pending'); this.logAct({ kind: 'reminder', n }); this.toast(t.reminded + ' · ' + n); },
       allowDrop: (e) => e.preventDefault(), dropUnseat: (e) => { e.preventDefault(); if (this.dragId) this.seat(this.dragId, 0); this.dragId = null; },
       ogImg: s.ogImg || '', storyImg: s.storyImg || '', ogReady: !!s.ogImg, ogBusy: !s.ogImg, storyReady: !!s.storyImg,
       // гости: добавление, SMS, места, столы, ручной чек-ин, бот
       demoMode: !!s.demo, manualOn: !!dr, manualVal: s.manual || '', onManual: (e) => this.setState({ manual: e.target.value }), onManualKey: (e) => { if (e.key === 'Enter') this.manualCheckIn(); }, manualGo: () => this.manualCheckIn(),
       tablesCtl: !!dr, tablesN, tablesDec: () => { if (tablesN > 1) this.setSettings({ tables: tablesN - 1 }); }, tablesInc: () => { if (tablesN < 30) this.setSettings({ tables: tablesN + 1 }); }, tablesDecOp: tablesN > 1 ? 1 : 0.35, tablesIncOp: tablesN < 30 ? 1 : 0.35,
-      importLabel: s.demo ? t.importTg : t.addGuests, smsAvail: smsOn, smsAll: () => this.sendSms(null), smsOp: s.smsBusy ? 0.5 : 1, remindOp: s.remindBusy ? 0.5 : 1,
-      seatsAvail: isPersonalInv, buySeats: () => this.buySeats(), seatsInfo,
+      importLabel: s.demo ? t.importTg : t.addGuests, smsAvail: smsOn, smsAll: () => { if (!s.smsBusy) this.confirmSend('sms'); }, smsOp: s.smsBusy ? 0.5 : 1, remindOp: s.remindBusy ? 0.5 : 1,
+      seatsAvail: isPersonalInv, buySeats: () => this.buySeats(), seatsInfo, noReplies: !!dr && !isPersonalInv && G.length === 0,
       botNeedTg: !!dr && !!mu && !mu.telegramId, botCanTg: !!cfg.telegram && !this.tgReal,
       openAdd: () => this.openAdd(), addOpen: !!s.addSheet, closeAdd: () => { if (!(s.addSheet && s.addSheet.busy)) this.setState({ addSheet: null }); }, ad,
       payOpen: !!s.pay && !!pd, closePay: () => this.closePay(), py,
@@ -2903,7 +3043,7 @@ class Component extends DCLogic {
       headTop: topOff + 'px', floatTop: (topOff + 12) + 'px', heroPad: (topOff + 78) + 'px',
       showHeader: !isGuest && s.screen !== 'notfound', isHome: s.screen === 'home', isEvents: s.screen === 'events', isTemplates: s.screen === 'templates', isBuild: s.screen === 'build', isGuest, isShare: s.screen === 'share', isManage: s.screen === 'manage', isNotFound: s.screen === 'notfound',
       goHome: () => this.goHome(), goEvents: () => { this.flushSave(); this.exitDemo(); this.setState({ screen: 'events', fromTour: false }); }, toApp: () => { location.href = '/app/'; },
-      monthYear: new Intl.DateTimeFormat(D.LOCALE[lang], { month: 'long', year: 'numeric' }).format(new Date()),
+      monthYear: this.fmt(this.todayIso(), '12:00', { month: 'long', year: 'numeric' }),
       showcase, marqW: wide ? '200px' : '150px', myInvites, myCount: me ? String(myInvites.length).padStart(2, '0') : '',
       // «Мои приглашения»: без входа — подсказка и кнопка входа, затем загрузка, пустое состояние или список.
       invOut: s.authReady && !me, invLoading: !s.authReady || (!!me && !s.invsLoaded), invEmpty: !!me && s.invsLoaded && myInvites.length === 0,
@@ -2941,11 +3081,11 @@ class Component extends DCLogic {
       tplChips: E.styles.map((st, i) => { const id = s.event + '-' + st, a = id === s.tplId; return { name: E.names[i], bg: a ? U.paper : 'transparent', color: a ? U.ink : U.paper, onClick: () => this.pickTpl(id) }; }),
       ed, eo: isEdit ? `1.5px dashed ${th.accent}` : 'none', ec: isEdit ? 'pointer' : 'auto',
       goShare: () => this.goShare(),
-      gateShow: gateShow || (isGuest && s.pubLocked), pwTry: s.pwTry, pwErr: s.pwErr, onPwTry: (e) => this.setState({ pwTry: e.target.value, pwErr: false }),
+      gateShow: gateShow || (isGuest && s.pubLocked), pwTry: s.pwTry, pwErr: !!s.pwErr, pwErrText: s.pwErr === 'limited' ? t.tooManyPw : t.wrongPw, onPwTry: (e) => this.setState({ pwTry: e.target.value, pwErr: false }),
       // Пароль публичной страницы проверяет сервер: страница перезагружается с ?code=.
       unlock: () => { if (s.pubLocked) { const c = (s.pwTry || '').trim(); if (c) location.search = '?code=' + encodeURIComponent(c); return; } if (s.pwTry === s.share.pw) this.setState({ unlocked: true }); else this.setState({ pwErr: true }); },
       envShow: isGuest && intro && env < 4 && !isEdit && (inv.intro || 'envelope') === 'envelope', curtainShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'curtain', scratchIntroShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'scratch', curL: env >= 1 ? '-102%' : '0%', curR: env >= 1 ? '102%' : '0%', openEnv: () => this.openEnv(), envOp: env >= 3 ? 0 : 1, envCardY: env >= 2 ? '-62%' : '0%', envFlap: env >= 1 ? 'rotateX(180deg)' : 'rotateX(0deg)', envFlapZ: env >= 1 ? 1 : 4, sealOp: env >= 1 ? 0 : 1, sealScale: env >= 1 ? 1.4 : 1, initials: this.ini(inv.names.replace(/&|и|va|and/gi, ' ')) || '✦',
-      gDateLong, gWeekday, gDay, gMonthYear, words,
+      gDateLong, gWeekday, gDay, gMonthYear, gWhen, gWdDate, gTimeVenue, gFull, gMyTime, hasDate: !!d0, words,
       progN: n, progTotal: String(n).padStart(2, '0'), pinH: (n * 90 + 60) + 'vh', pinCols: wide ? 'minmax(0,1fr) minmax(0,1.4fr)' : 'minmax(0,1fr)',
       cdUnits: [['d', t.days], ['h', t.hours], ['m', t.min], ['s', t.secs]].map(([k, label], i) => ({ k, label, delay: i * 90 + 'ms' })),
       hasGallery: inv.gallery.length > 0, hpinH: (100 + inv.gallery.length * 55) + 'vh', galCount: String(inv.gallery.length).padStart(2, '0'), galW: wide ? '380px' : '66vw',
@@ -2974,7 +3114,7 @@ class Component extends DCLogic {
       qrSrc: isShareScr ? qrOf(fullLink, 300, '#1a1714', '#f3efe6') : '',
       qrBig: isShareScr ? qrOf(fullLink, 1000, '#1a1714', '#ffffff') : '',
       togglePw: () => this.togglePw(), pwTrack: s.share.pwOn ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', pwKnob: s.share.pwOn ? '23px' : '3px',
-      onPw: (e) => this.onPwInput(e.target.value),
+      onPw: (e) => this.onPwInput(e.target.value), onPwBlur: () => this.onPwBlur(),
       openLive: () => (dr && dr.status === 'active' && !isPersonalInv ? this.openUrl(fullLink) : this.openGuest('live')), goManage: () => this.goManage(), backToRefine: () => this.openGuest('edit'),
       statCols: wide ? 'repeat(4,minmax(0,1fr))' : 'repeat(2,minmax(0,1fr))',
       stats: [[cnt('yes'), t.attending, U.ink], [cnt('pending') + cnt('maybe'), t.pending, '#d4452a'], [cnt('no'), t.declined, '#8a8378'], [seatsTaken, t.seats, U.ink]].map(([nn, label, color]) => ({ n: nn, label, color })),
@@ -2987,7 +3127,8 @@ class Component extends DCLogic {
       addPicked: () => { if (!pickedN) return; const add = D.CONTACTS.filter((c) => s.picked[c.id] && !G.some((g) => g.id === c.id)).map((c) => ({ ...c, status: 'pending', plus: 0, table: 0 })); this.setState({ guests: G.concat(add), importOpen: false, picked: {} }); this.toast(t.added + ' · ' + add.length); },
       toastMsg: s.toast, toastOp: s.toastOn ? 1 : 0, toastY: s.toastOn ? '0px' : '16px',
       // Над открытым листом тост уходит наверх, чтобы не закрывать его текст и кнопки.
-      toastBottom: L || s.account || s.confirm || s.pay || s.addSheet ? 'calc(100% - ' + (topOff + 128) + 'px)' : tgSim ? '150px' : '96px',
+      // В конструкторе на телефоне над нижней панелью ещё полоска превью (peek): тост — выше неё.
+      toastBottom: L || s.account || s.confirm || s.pay || s.addSheet ? 'calc(100% - ' + (topOff + 128) + 'px)' : s.screen === 'build' && !wide ? (this.tgReal ? 0 : tgSim ? 70 : 78) + 76 + 'px' : tgSim ? '150px' : '96px',
       ...X,
     };
   }

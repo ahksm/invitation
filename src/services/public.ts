@@ -38,8 +38,8 @@ export type PublicView = {
   appUrl: string;
 };
 
-/** Внешний вид страницы ввода пароля: шаблон, шрифт и палитра без содержимого. */
-export type Look = { template: string; font: string | null; palette: number };
+/** Внешний вид страницы ввода пароля: шаблон, шрифт, палитра и язык приглашения, без содержимого. */
+export type Look = { template: string; font: string | null; palette: number; language: Locale };
 
 /** Мета-теги страницы: og:title, og:description, og:image (абсолютный адрес или null), og:url. */
 export type PageMeta = { title: string; description: string; image: string | null; url: string };
@@ -163,7 +163,7 @@ async function sharedEntry(ctx: Pick<Ctx, "db" | "cache" | "config">, slug: stri
       invitationId: row.inv.id,
       slug: row.inv.slug,
       accessCode: row.inv.accessCode,
-      look: { template: row.tpl.slug, font: data.font ?? null, palette: data.palette ?? 0 },
+      look: { template: row.tpl.slug, font: data.font ?? null, palette: data.palette ?? 0, language: pickLocale(row.inv.language) },
       view: { ...baseView(ctx, "shared", row, data), ...(await social(ctx, row.inv.id, data)) },
       meta: pageMeta(ctx, row, data, url),
       lockedMeta: lockedMeta(ctx, row, url),

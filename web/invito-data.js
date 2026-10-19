@@ -112,9 +112,13 @@ const en = {
   addShared:'With one link for everyone, guests add themselves when they reply. To add guests yourself, switch to personal invitations.', toPersonal:'Switch to personal invitations',
   delGuestT:'Remove guest?', delGuest:'“{name}” will be removed from the list and their link will stop working.', removeG:'Remove',
   smsAll:'Send SMS', smsOne:'SMS', smsSent:'SMS sent: {n}', smsSkipped:'skipped: {n}', smsSt:{ queued:'SMS queued', sent:'SMS sent', delivered:'SMS delivered', failed:'SMS not delivered' },
-  skip:{ no_phone:'no phone', seat_unpaid:'seat not paid', already_sent:'already sent', limit_reached:'SMS limit for the guest', invitation_limit:'SMS limit of the invitation', rate_limited:'too many SMS this hour', send_failed:'sending failed', no_channel:'no Telegram or phone', recently_reminded:'reminded recently' },
+  skip:{ no_phone:'no phone', seat_unpaid:'seat not paid', already_sent:'already sent', limit_reached:'SMS limit for the guest', invitation_limit:'SMS limit of the invitation', rate_limited:'too many SMS this hour', send_failed:'sending failed', no_channel:'no Telegram, SMS unavailable', recently_reminded:'reminded recently' },
   remindDone:'Reminders: Telegram {tg} · SMS {sms}', unpaid:'Not paid', tablesL:'Tables', manualTitle:'Check in by link', manualPh:'Guest link or code', manualBad:'Paste the guest’s personal link',
   botTg:'Connect Telegram to get guest replies and test messages from the bot.',
+  seatsLeft:'Seats paid: {paid} · free: {left}', tooManyPw:'Too many attempts. Try again in a minute.', sendNow:'Send',
+  smsAllT:'Send SMS invitations?', smsAllQ:'The invitation goes by SMS to guests who haven’t received it yet: {n}. Sent messages can’t be recalled.',
+  remindT:'Send reminders?', remindQ:'Guests who haven’t replied get a reminder in Telegram or by SMS: {n}. Sent messages can’t be recalled.',
+  noReplies:'No replies yet. Guests appear here once they answer via the link.',
 };
 const ru = {
   close:'Закрыть', miniApp:'мини-приложение', myInv:'Мои приглашения', issueTag:'Конструктор приглашений',
@@ -206,9 +210,13 @@ const ru = {
   addShared:'С одной ссылкой для всех гости добавляются сами, когда отвечают. Чтобы добавлять гостей самому, переключитесь на персональные приглашения.', toPersonal:'Перейти на персональные приглашения',
   delGuestT:'Удалить гостя?', delGuest:'«{name}» пропадёт из списка, а его ссылка перестанет работать.', removeG:'Удалить',
   smsAll:'Разослать SMS', smsOne:'SMS', smsSent:'SMS отправлено: {n}', smsSkipped:'пропущено: {n}', smsSt:{ queued:'SMS в очереди', sent:'SMS отправлено', delivered:'SMS доставлено', failed:'SMS не доставлено' },
-  skip:{ no_phone:'нет телефона', seat_unpaid:'место не оплачено', already_sent:'уже отправлено', limit_reached:'лимит SMS гостю', invitation_limit:'лимит SMS приглашения', rate_limited:'слишком много SMS за час', send_failed:'не удалось отправить', no_channel:'нет Telegram и телефона', recently_reminded:'недавно напоминали' },
+  skip:{ no_phone:'нет телефона', seat_unpaid:'место не оплачено', already_sent:'уже отправлено', limit_reached:'лимит SMS гостю', invitation_limit:'лимит SMS приглашения', rate_limited:'слишком много SMS за час', send_failed:'не удалось отправить', no_channel:'нет Telegram, SMS недоступны', recently_reminded:'недавно напоминали' },
   remindDone:'Напоминания: Telegram {tg} · SMS {sms}', unpaid:'Не оплачено', tablesL:'Столы', manualTitle:'Отметить по ссылке', manualPh:'Ссылка или код гостя', manualBad:'Вставьте личную ссылку гостя',
   botTg:'Подключите Telegram, чтобы получать ответы гостей и тестовые сообщения от бота.',
+  seatsLeft:'Оплачено мест: {paid} · свободно: {left}', tooManyPw:'Слишком много попыток. Попробуйте через минуту.', sendNow:'Отправить',
+  smsAllT:'Разослать приглашения по SMS?', smsAllQ:'Приглашение уйдёт по SMS гостям, которым его ещё не отправляли: {n}. Отправленные сообщения не отозвать.',
+  remindT:'Отправить напоминания?', remindQ:'Напоминание в Telegram или по SMS получат гости, которые ещё не ответили: {n}. Отправленные сообщения не отозвать.',
+  noReplies:'Ответов пока нет. Гости появятся здесь, когда ответят по ссылке.',
 };
 const uz = {
   close:'Yopish', miniApp:'mini ilova', myInv:'Mening taklifnomalarim', issueTag:'Taklifnoma konstruktori',
@@ -300,13 +308,25 @@ const uz = {
   addShared:'Hamma uchun bitta havolada mehmonlar javob berganda o‘zlari qo‘shiladi. Mehmonlarni o‘zingiz qo‘shish uchun shaxsiy taklifnomalarga o‘ting.', toPersonal:'Shaxsiy taklifnomalarga o‘tish',
   delGuestT:'Mehmon o‘chirilsinmi?', delGuest:'“{name}” ro‘yxatdan o‘chadi va uning havolasi ishlamay qoladi.', removeG:'O‘chirish',
   smsAll:'SMS yuborish', smsOne:'SMS', smsSent:'SMS yuborildi: {n}', smsSkipped:'o‘tkazib yuborildi: {n}', smsSt:{ queued:'SMS navbatda', sent:'SMS yuborildi', delivered:'SMS yetkazildi', failed:'SMS yetkazilmadi' },
-  skip:{ no_phone:'telefon yo‘q', seat_unpaid:'joy to‘lanmagan', already_sent:'allaqachon yuborilgan', limit_reached:'mehmon uchun SMS limiti', invitation_limit:'taklifnoma SMS limiti', rate_limited:'bir soatda juda ko‘p SMS', send_failed:'yuborib bo‘lmadi', no_channel:'Telegram ham, telefon ham yo‘q', recently_reminded:'yaqinda eslatilgan' },
+  skip:{ no_phone:'telefon yo‘q', seat_unpaid:'joy to‘lanmagan', already_sent:'allaqachon yuborilgan', limit_reached:'mehmon uchun SMS limiti', invitation_limit:'taklifnoma SMS limiti', rate_limited:'bir soatda juda ko‘p SMS', send_failed:'yuborib bo‘lmadi', no_channel:'Telegram yo‘q, SMS mavjud emas', recently_reminded:'yaqinda eslatilgan' },
   remindDone:'Eslatmalar: Telegram {tg} · SMS {sms}', unpaid:'To‘lanmagan', tablesL:'Stollar', manualTitle:'Havola bo‘yicha belgilash', manualPh:'Mehmon havolasi yoki kodi', manualBad:'Mehmonning shaxsiy havolasini qo‘ying',
   botTg:'Mehmon javoblari va sinov xabarlarini botdan olish uchun Telegramni ulang.',
+  seatsLeft:'To‘langan joylar: {paid} · bo‘sh: {left}', tooManyPw:'Urinishlar juda ko‘p. Bir daqiqadan so‘ng qayta urinib ko‘ring.', sendNow:'Yuborish',
+  smsAllT:'Taklifnomalar SMS orqali yuborilsinmi?', smsAllQ:'Taklifnoma hali yuborilmagan mehmonlarga SMS orqali boradi: {n}. Yuborilgan xabarlarni qaytarib bo‘lmaydi.',
+  remindT:'Eslatmalar yuborilsinmi?', remindQ:'Hali javob bermagan mehmonlarga Telegram yoki SMS orqali eslatma boradi: {n}. Yuborilgan xabarlarni qaytarib bo‘lmaydi.',
+  noReplies:'Hozircha javoblar yo‘q. Mehmonlar havola orqali javob berganda shu yerda paydo bo‘ladi.',
 };
 export const I18N = { en, ru, uz, uzc: deep(uz) };
 export const LANGS = [ { code:'ru', label:'RU' }, { code:'en', label:'EN' }, { code:'uz', label:'UZ' }, { code:'uzc', label:'ЎЗ' } ];
 export const LOCALE = { ru:'ru-RU', en:'en-GB', uz:'uz-Latn-UZ', uzc:'uz-Cyrl-UZ' };
+// Месяцы и дни недели для uz и uzc: ICU многих браузеров (Chromium) узбекских названий не знает и пишет «2026 M12 26».
+// Даты собираются в том же виде, что у Intl в Node на сервере (og:title, SMS): «26-dekabr, 2026», «26 декабр, 2026».
+export const UZ_DATES = {
+  uz: { daySep:'-', months:['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'], monthsShort:['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'],
+    weekdays:['yakshanba','dushanba','seshanba','chorshanba','payshanba','juma','shanba'], weekdaysShort:['Yak','Dush','Sesh','Chor','Pay','Jum','Shan'] },
+  uzc: { daySep:' ', months:['январ','феврал','март','апрел','май','июн','июл','август','сентябр','октябр','ноябр','декабр'], monthsShort:['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],
+    weekdays:['якшанба','душанба','сешанба','чоршанба','пайшанба','жума','шанба'], weekdaysShort:['якш','душ','сеш','чор','пай','жум','шан'] },
+};
 // Названия языков на них самих: в переключателе языка приглашения.
 export const LANG_NAMES = { ru:'Русский', en:'English', uz:'Oʻzbekcha', uzc:'Ўзбекча' };
 
@@ -472,5 +492,5 @@ export const CONTACTS = [
 const RU2LAT = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',ў:'o',қ:'q',ғ:'g',ҳ:'h'};
 export function slugify(s){ return (s||'').toLowerCase().replace(/&/g,' and ').split('').map(c=>RU2LAT[c]??c).join('').replace(/[‘'ʻ’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'invite'; }
 
-export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LANG_NAMES, LOCALE, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr };
+export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LANG_NAMES, LOCALE, UZ_DATES, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr };
 if (typeof window !== 'undefined') window.INVITO = INVITO;

@@ -199,7 +199,7 @@ describe("пароль общей ссылки", () => {
     expect(locked.statusCode).toBe(401);
     expect(locked.headers["cache-control"]).toBe("private, no-store");
     const body = locked.json();
-    expect(body).toEqual({ locked: true, look: { template: "wedding-classic", font: expect.any(String), palette: 2 }, error: "Приглашение защищено паролем" });
+    expect(body).toEqual({ locked: true, look: { template: "wedding-classic", font: expect.any(String), palette: 2, language: "ru" }, error: "Приглашение защищено паролем" });
     expect(locked.body).not.toContain("секрет");
     expect(locked.body).not.toContain("Азиз");
 

@@ -15,6 +15,8 @@ import { signInitData, startE2E, uniquePhone, type E2E } from "./helpers.js";
 type Dict = Record<string, any>;
 const ru = I18N.ru as Dict;
 const uz = I18N.uz as Dict;
+const uzc = I18N.uzc as Dict;
+const en = I18N.en as Dict;
 const D = INVITO as Dict;
 let e: E2E;
 
@@ -272,6 +274,92 @@ describe("публикация и оплата", () => {
   });
 });
 
+describe("публикация и оплата: подписка и профиль", () => {
+  it("подписка при выбранных «Личных приглашениях»: тип уходит до оплаты, после неё — лист мест", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Подписка тест", intro: "none" } });
+    const P = await pricesFor(user.id);
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Подписка тест" });
+    await toShare(page);
+    const pay = sheet(page, "pay");
+    await pay.locator('[data-mode="personal"]').click();
+    await pay.locator("input[name=seats]").fill("3");
+    await pay.locator('[data-pay="sub"]').click();
+    await page.locator('[data-screen="mock-pay"]').waitFor();
+    // Тип приглашения сохранён до заказа подписки.
+    expect((await invOf(inv.id)).mode).toBe("personal");
+    await page.locator('[data-mock="paid"]').click();
+    await e.waitText(page, ru.subDone);
+    // Подписка не публикует общую ссылку: открыт лист мест персонального приглашения с выбранным числом.
+    await pay.waitFor();
+    await expect.poll(() => pay.locator("input[name=seats]").inputValue()).toBe("3");
+    expect(await invOf(inv.id)).toMatchObject({ mode: "personal", status: "draft", unlocked: false });
+    expect((await ordersOf(inv.id)).map((o) => o.kind)).toEqual([]);
+    await page.waitForTimeout(400);
+    await e.shot(page, "pay-seats-after-sub-ru-390x844.png");
+    await pay.locator('[data-pay="go"]').click();
+    await page.locator('[data-screen="mock-pay"]').waitFor();
+    expect((await ordersOf(inv.id))[0]).toMatchObject({ kind: "seats", quantity: 3, amount: 3 * P.seat });
+    await page.locator('[data-mock="paid"]').click();
+    await e.waitText(page, ru.linkReady);
+    expect(await invOf(inv.id)).toMatchObject({ mode: "personal", status: "active", paidSeats: 3 });
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("сбой фонового обновления профиля (503) не выходит из аккаунта", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    await personalWith(user.id, [{ name: "Гость Профиль" }], { data: { names: "Профиль тест", intro: "none" } }, 1);
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Профиль тест" });
+    await toManage(page);
+    // Дальше /api/auth/me отвечает 503: лист оплаты перечитывает профиль и цены в фоне.
+    const before = problems.requests.filter((u) => u === "/api/auth/me").length;
+    await context.route(e.base + "/api/auth/me", (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
+    await page.getByRole("button", { name: new RegExp("^" + ru.buySeats + " · ") }).click();
+    await sheet(page, "pay").waitFor();
+    await expect.poll(() => problems.requests.filter((u) => u === "/api/auth/me").length).toBe(before + 1);
+    await page.waitForTimeout(600);
+    // Человек по-прежнему вошёл: лист оплаты открыт, листа входа нет, в шапке не «Войти».
+    expect(await sheet(page, "login").count()).toBe(0);
+    expect(await sheet(page, "pay").count()).toBe(1);
+    expect(await page.locator("[data-account]").first().innerText()).not.toContain(ru.login);
+    // В консоли — ответ 503 и сбой сервера, который приложение пишет само (logErr); выхода нет.
+    expect(problems.console[0]).toBe(failed(503, "Service Unavailable"));
+    expect(problems.console.slice(1).every((m) => m.startsWith("Error: HTTP 503"))).toBe(true);
+    problems.console = [];
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("лист оплаты на узбекском (латиница и кириллица) на 390 px: цена не наезжает на название", async () => {
+    for (const [lang, t] of [["uz", uz], ["uzc", uzc]] as const) {
+      const context = await e.newContext();
+      const user = await e.signIn(context, { locale: lang });
+      await createInvitation(user.id, { language: lang, data: { names: "Narx " + lang, intro: "none" } });
+      const { page, problems, close } = await e.open("/app/", { context, waitText: "Narx " + lang });
+      await toShare(page, t);
+      const pay = sheet(page, "pay");
+      await pay.locator('[data-price="personal"]').waitFor();
+      await page.waitForTimeout(400);
+      for (const key of ["shared", "personal"]) {
+        // Название и цена в одной строке или цена под названием — но не поверх него.
+        const boxes = await pay.locator(`[data-price="${key}"]`).evaluate((el) => {
+          const r = (x: Element) => { const b = x.getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom }; };
+          return { price: r(el), title: r(el.previousElementSibling!), row: r(el.parentElement!) };
+        });
+        const overlap = boxes.price.l < boxes.title.r && boxes.title.l < boxes.price.r && boxes.price.t < boxes.title.b && boxes.title.t < boxes.price.b;
+        expect(overlap, `${lang} ${key}: ${JSON.stringify(boxes)}`).toBe(false);
+        expect(boxes.price.r).toBeLessThanOrEqual(boxes.row.r + 0.5);
+      }
+      await e.shot(page, `pay-sheet-${lang}-390x844.png`);
+      await e.expectClean(page, problems);
+      await close();
+    }
+  });
+});
+
 describe("персональные приглашения", () => {
   it("места, гости списком, неоплаченные ссылки, «Докупить места» и личная ссылка гостя", async () => {
     const context = await e.newContext();
@@ -300,6 +388,8 @@ describe("персональные приглашения", () => {
     expect(await page.locator("input[name=slug]").count()).toBe(0);
     const links = page.locator("[data-personal-links]");
     await expect.poll(() => links.innerText()).toContain(ru.noGuests);
+    // Мест больше, чем гостей: сколько свободно, а не «2 из 0».
+    expect(await links.innerText()).toContain(ru.seatsLeft.replace("{paid}", "2").replace("{left}", "2"));
     await e.shot(page, "share-personal-empty-ru-390x844.png");
 
     // «Добавить гостей»: по гостю на строку, «Имя, телефон».
@@ -472,6 +562,97 @@ describe("страница гостя", () => {
     await p2.close();
   });
 
+  it("приглашение без даты и программы: на странице только то, что сохранил владелец", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    // Так выглядят старые приглашения после миграции 0004: даты нет, остальное — имена, место и текст.
+    const inv = await createInvitation(user.id, { data: { names: "Олег и Ира", host: "Семья", venue: "Кафе «Ромашка»", address: "ул. Навои, 1", message: "Ждём вас!", intro: "none" } });
+    await activate(inv.id, { unlocked: true });
+    const { page, problems, close } = await e.open(`/i/${inv.slug}`, { waitText: "Олег и Ира" });
+    await page.locator("#rsvp").scrollIntoViewIfNeeded();
+    const body = await page.locator("body").innerText();
+    const W = D.EVENTS.wedding, L = W.text.ru;
+    // Ни выдуманной даты, ни программы, ни телефона, ни дресс-кода, подарков и «Ответьте до».
+    for (const made of [L.contact, L.dress, L.gifts, L.notes, ...W.program.map((x: Dict) => x.ru), ru.replyBy]) expect(body).not.toContain(made);
+    expect(body).not.toMatch(/\d{4} г\./);
+    expect(body).not.toMatch(/^\s*·|·\s*$/m);
+    for (const own of ["Кафе «Ромашка»", "ул. Навои, 1", "Ждём вас!"]) expect(body).toContain(own);
+    // Мета-теги «Поделиться» совпадают с теми, что отдаёт сервер: без даты и без выдуманного описания.
+    const html = (await e.app.inject({ method: "GET", url: `/i/${inv.slug}` })).body;
+    expect(html).toContain('<meta property="og:title" content="Олег и Ира">');
+    await page.waitForTimeout(400);
+    await e.shot(page, "guest-legacy-nodate-ru-390x844.png");
+    // Ответ: кнопки «В календарь» без даты нет.
+    await page.locator(`#rsvp input[placeholder="${ru.yourName}"]`).fill("Гость");
+    await page.locator("#rsvp").getByRole("button", { name: ru.yes }).click();
+    await page.locator("#rsvp").getByRole("button", { name: ru.send }).click();
+    await e.waitText(page, ru.thanks);
+    expect(await page.getByRole("button", { name: ru.addCal }).count()).toBe(0);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("календарь (.ics) — время события по Ташкенту, где бы ни был гость", async () => {
+    const context = await e.newContext({ timezoneId: "America/New_York" });
+    const user = await e.signIn(context);
+    const { added } = await personalWith(user.id, [{ name: "Гость Нью-Йорк" }], { data: { names: "Календарь тест", date: "2026-12-26", time: "17:00", intro: "none" } });
+    const { page, problems, close } = await e.open(`/g/${added[0]!.token}`, { context, waitText: "Календарь тест" });
+    // Дата на странице — по календарю события, не гостя.
+    await e.waitText(page, "26 декабря 2026 г.");
+    await page.locator("#rsvp").scrollIntoViewIfNeeded();
+    await page.locator("#rsvp").getByRole("button", { name: ru.yes }).click();
+    await page.locator("#rsvp").getByRole("button", { name: ru.send }).click();
+    await e.waitText(page, ru.thanks);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: ru.addCal }).click()]);
+    const ics = Buffer.concat((await (await download.createReadStream()).toArray()) as Buffer[]).toString("utf8");
+    // 17:00 в Ташкенте (UTC+5) — 12:00 UTC, а не 17:00 по Нью-Йорку.
+    expect(ics).toContain("DTSTART:20261226T120000Z");
+    expect(ics).toContain("DTEND:20261226T160000Z");
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("даты на всех языках: страница гостя и мета-теги «Поделиться» как у сервера", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    // Ожидаемая длинная дата: так её пишет сервер (Intl Node) — Chromium узбекских месяцев не знает.
+    const want: Record<string, [Dict, string]> = { ru: [ru, "26 декабря 2026 г."], uz: [uz, "26-dekabr, 2026"], uzc: [uzc, "26 декабр, 2026"], en: [en, "26 December 2026"] };
+    for (const [lang, [t, date]] of Object.entries(want)) {
+      const names = { ru: "Анна и Тимур", uz: "Malika va Jasur", uzc: "Малика ва Жасур", en: "Anna and Tim" }[lang]!;
+      const inv = await createInvitation(user.id, { language: lang, data: { names, date: "2026-12-26", time: "17:00", intro: "none", message: "♥" } });
+      await activate(inv.id, { unlocked: true });
+      const html = (await e.app.inject({ method: "GET", url: `/i/${inv.slug}` })).body;
+      expect(html).toContain(`<meta property="og:title" content="${names} — ${date}">`);
+      const g = await e.open(`/i/${inv.slug}`, { locale: "ru-RU", waitText: names });
+      await waitContent(g.page, t.youreInvited);
+      await e.waitText(g.page, date);
+      expect(await g.page.locator("body").innerText()).not.toMatch(/M12/);
+      await g.page.waitForTimeout(600);
+      await e.shot(g.page, `guest-shared-${lang}-390x844.png`);
+      await g.page.locator("#rsvp").scrollIntoViewIfNeeded();
+      await g.page.waitForTimeout(600);
+      await e.shot(g.page, `guest-shared-${lang}-rsvp-390x844.png`);
+      await e.expectClean(g.page, g.problems);
+      await g.page.close();
+    }
+    // «Поделиться» узбекского приглашения: og:title тот же, что у сервера.
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Malika va Jasur" });
+    await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).getByRole("button", { name: ru.edit }).click();
+    await page.getByTitle(ru.stepsX.sections).click();
+    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+    await e.waitText(page, ru.linkReady);
+    await expect.poll(() => page.locator("pre").innerText()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');
+    // Превью ссылки — тоже на языке приглашения (интерфейс здесь русский).
+    const og = page.locator('img[src^="data:image"]:not([data-qr]):not([alt="QR"])').first();
+    await og.waitFor();
+    await og.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    await e.shot(page, "share-og-uz-390x844.png");
+    await e.expectClean(page, problems);
+    await close();
+  });
+
   it("пароль: страница закрыта, неверный пароль, верный открывает, ответ уходит с паролем", async () => {
     const context = await e.newContext();
     const user = await e.signIn(context);
@@ -487,10 +668,12 @@ describe("страница гостя", () => {
     await locked.page.waitForURL(`${e.base}/i/${slug}?code=wrong`);
     await e.waitText(locked.page, ru.unlock);
     expect(await locked.page.locator("body").innerText()).not.toContain("Секрет тест");
+    expect(await locked.page.getByRole("alert").innerText()).toBe(ru.wrongPw);
     await locked.page.locator(`input[type=password]`).fill("tulip-26");
     await locked.page.getByRole("button", { name: ru.unlock }).click();
-    await locked.page.waitForURL(`${e.base}/i/${slug}?code=tulip-26`);
     await e.waitText(locked.page, "Секрет тест");
+    // Пароль подошёл: из адреса он убран (ссылку копируют дальше), а ответ гостя всё равно уходит с ним.
+    expect(locked.page.url()).toBe(`${e.base}/i/${slug}`);
     await locked.page.locator("#rsvp").scrollIntoViewIfNeeded();
     await locked.page.locator(`#rsvp input[placeholder="${ru.yourName}"]`).fill("Гость с паролем");
     await locked.page.locator("#rsvp").getByRole("button", { name: ru.yes }).click();
@@ -499,6 +682,27 @@ describe("страница гостя", () => {
     expect((await guestsOf(inv.id)).map((g) => g.name)).toEqual(["Гость с паролем"]);
     await e.expectClean(locked.page, locked.problems);
     await locked.close();
+
+    // Попытки кончились (10 неверных за минуту): верный пароль не проходит, и форма говорит именно это.
+    for (let i = 0; i < 10; i++) await e.app.inject({ method: "GET", url: `/api/public/i/${slug}?code=nope-${i}` });
+    const limited = await e.open(`/i/${slug}?code=tulip-26`, { status: 429, waitText: ru.unlock });
+    expect(await limited.page.getByRole("alert").innerText()).toBe(ru.tooManyPw);
+    expect(await limited.page.locator("body").innerText()).not.toContain("Секрет тест");
+    expect(limited.problems.console).toEqual([failed(429, "Too Many Requests")]);
+    limited.problems.console = [];
+    await e.expectClean(limited.page, limited.problems);
+    await limited.close();
+    await e.redis.flushdb();
+
+    // Приглашение на узбекском: форма пароля на языке приглашения, а не браузера.
+    const uzInv = await createInvitation(user.id, { language: "uz", data: { names: "Sir tekshiruv", intro: "none" } });
+    await activate(uzInv.id, { unlocked: true, accessCode: "lola" });
+    const uzLocked = await e.open(`/i/${uzInv.slug}`, { locale: "ru-RU", waitText: uz.unlock });
+    expect(await uzLocked.page.evaluate(() => document.documentElement.lang)).toBe("uz-Latn");
+    expect(await uzLocked.page.locator("body").innerText()).not.toContain(ru.unlock);
+    await e.shot(uzLocked.page, "guest-locked-uz-390x844.png");
+    await e.expectClean(uzLocked.page, uzLocked.problems);
+    await uzLocked.close();
   });
 });
 
@@ -538,6 +742,11 @@ describe("«Поделиться»", () => {
     await page.getByRole("button", { name: new RegExp("^" + ru.pw) }).click();
     await page.locator("input[name=access-code]").fill("2026");
     await e.waitText(page, ru.pwSaved);
+    expect((await invOf(inv.id)).accessCode).toBe("2026");
+    // Пустое поле не снимает пароль: после ухода из поля в нём снова сохранённый (снимает переключатель).
+    await page.locator("input[name=access-code]").fill("");
+    await slugIn.click();
+    await expect.poll(() => page.locator("input[name=access-code]").inputValue()).toBe("2026");
     expect((await invOf(inv.id)).accessCode).toBe("2026");
     await page.waitForTimeout(400);
     await e.shot(page, "share-shared-ru-390x844.png");
@@ -602,10 +811,30 @@ describe("экран гостей", () => {
       await expect.poll(() => row("Рустам Ахмедов").locator("[data-sms]").getAttribute("data-sms")).toMatch(/^(queued|sent|delivered)$/);
       expect(e.sms.slice(sent0).map((m) => m.phone)).toEqual(["998901000002"]);
       expect(e.sms[e.sms.length - 1]!.text).toContain(`${e.base}/g/${added[1]!.token}`);
+      // «SMS всем» отправляет только после подтверждения: получатель один (у Рустама SMS уже есть, у Ойбека нет телефона).
+      const confirm = sheet(page, "confirm");
       await page.getByRole("button", { name: "✉ " + ru.smsAll }).click();
+      await confirm.waitFor();
+      expect(await confirm.innerText()).toContain(ru.smsAllQ.replace("{n}", "1"));
+      await e.shot(page, "confirm-sms-ru-390x844.png");
+      expect(e.sms.slice(sent0)).toHaveLength(1);
+      await confirm.getByRole("button", { name: ru.sendNow }).click();
       await e.waitText(page, ru.skip.no_phone);
       expect(e.sms.slice(sent0).map((m) => m.phone).sort()).toEqual(["998901000001", "998901000002"]);
       await expect.poll(() => page.locator("[data-guest] [data-sms]").count()).toBe(2);
+      // «Напомнить ожидающим»: подтверждение с числом ждущих ответа; «Отмена» ничего не отправляет.
+      const sent1 = e.sms.length;
+      await page.getByRole("button", { name: new RegExp("^" + ru.remind + " · ") }).click();
+      await confirm.waitFor();
+      expect(await confirm.innerText()).toContain(ru.remindQ.replace("{n}", "2"));
+      await confirm.getByRole("button", { name: ru.cancel }).click();
+      await confirm.waitFor({ state: "detached" });
+      expect(e.sms.length).toBe(sent1);
+      await page.getByRole("button", { name: new RegExp("^" + ru.remind + " · ") }).click();
+      await confirm.getByRole("button", { name: ru.sendNow }).click();
+      // Бота нет (TELEGRAM_MODE=off): напоминание уходит по SMS тому, у кого есть телефон.
+      await e.waitText(page, ru.remindDone.replace("{tg}", "0").replace("{sms}", "1"));
+      expect(e.sms.slice(sent1).map((m) => m.phone)).toEqual(["998901000002"]);
       // Группа гостя — PATCH.
       await row("Рустам Ахмедов").locator("select").first().selectOption("work");
       await expect.poll(async () => (await guestsOf(inv.id)).find((g) => g.name === "Рустам Ахмедов")!.group).toBe("work");
@@ -678,6 +907,55 @@ describe("экран гостей", () => {
     } finally {
       await e.db.update(templates).set({ smsEnabled: tpl!.smsEnabled }).where(eq(templates.id, tpl!.id));
     }
+  });
+
+  it("удалённый гость освобождает место: отметки «не оплачено» перечитываются с сервера", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    // Три гостя на два места: третий без места.
+    await personalWith(user.id, [{ name: "Гость Один" }, { name: "Гость Два" }, { name: "Гость Три" }], { data: { names: "Места тест", intro: "none" } }, 2);
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Места тест" });
+    await toManage(page);
+    const row = (name: string) => page.locator(`[data-guest="${name}"]`);
+    await expect.poll(() => row("Гость Три").locator("[data-unpaid]").count()).toBe(1);
+    await row("Гость Один").getByRole("button", { name: ru.removeG }).click();
+    await sheet(page, "confirm").getByRole("button", { name: ru.removeG }).click();
+    await expect.poll(() => row("Гость Один").count()).toBe(0);
+    // Место первого гостя перешло третьему: строка без отметки, как на сервере.
+    await expect.poll(() => row("Гость Три").locator("[data-unpaid]").count()).toBe(0);
+    expect(await page.locator("[data-guest] [data-unpaid]").count()).toBe(0);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("общее приглашение: пустой список с подсказкой, ответы по ссылке, CSV без формул", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Ответы тест", intro: "none" } });
+    await activate(inv.id, { unlocked: true });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Ответы тест" });
+    await toManage(page);
+    // Ответов нет: подсказка, откуда возьмутся гости.
+    await page.locator('[data-empty="replies"]').waitFor();
+    expect(await page.locator('[data-empty="replies"]').innerText()).toBe(ru.noReplies);
+    await page.waitForTimeout(400);
+    await e.shot(page, "manage-list-shared-empty-ru-390x844.png");
+    // Имя пишет гость: значение, похожее на формулу, в CSV начинается с апострофа.
+    for (const name of ['=HYPERLINK("https://evil.example";"x")', "@SUM(A1)", "-2+3"]) {
+      const r = await e.app.inject({ method: "POST", url: `/api/public/i/${inv.slug}/rsvp`, headers: { origin: e.base }, payload: { name, status: "yes", count: 1, diet: [], msg: "" } });
+      expect(r.statusCode).toBe(200);
+    }
+    await page.reload();
+    await e.waitText(page, "Ответы тест");
+    await toManage(page);
+    await expect.poll(() => page.locator("[data-guest]").count()).toBe(3);
+    expect(await page.locator('[data-empty="replies"]').count()).toBe(0);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: ru.csv + " ↓" }).click()]);
+    const text = Buffer.concat((await (await download.createReadStream()).toArray()) as Buffer[]).toString("utf8");
+    const names = text.replace(/^\ufeff/, "").split("\n").slice(1).map((l) => (l.startsWith('"') ? l.slice(0, l.indexOf('",') + 1) : l.split(",")[0]));
+    expect(names.sort()).toEqual(['"\'=HYPERLINK(""https://evil.example"";""x"")"', "'-2+3", "'@SUM(A1)"]);
+    await e.expectClean(page, problems);
+    await close();
   });
 
   it("общее приглашение: «Добавить гостей» предлагает перейти на персональные", async () => {

@@ -53,6 +53,7 @@ async function toTemplates(page: Page, t: Dict = ru, lang = "ru") {
 }
 
 const invitationsOf = (userId: string) => e.db.select().from(invitations).where(eq(invitations.userId, userId));
+const invById = async (id: string) => (await e.db.select().from(invitations).where(eq(invitations.id, id)))[0]!;
 
 async function userByPhone(phone: string) {
   const [u] = await e.db.select().from(users).where(eq(users.phone, phone));
@@ -70,6 +71,15 @@ async function createInvitation(userId: string, body: Dict) {
   expect(res.statusCode).toBe(201);
   return res.json() as Dict;
 }
+
+/** PATCH приглашения от имени владельца: правка «из другой вкладки». */
+async function patchAs(userId: string, id: string, body: Dict) {
+  const res = await e.app.inject({ method: "PATCH", url: `/api/invitations/${id}`, headers: { cookie: `session=${e.app.jwt.sign({ sub: userId })}`, origin: e.base }, payload: body });
+  expect(res.statusCode, res.body).toBe(200);
+}
+
+/** «Изменить» у приглашения с этими именами в «Моих приглашениях». */
+const editOf = (page: Page, names: string) => page.locator("#my-inv [data-rv]").filter({ hasText: names }).getByRole("button", { name: ru.edit });
 
 /** Заголовки запросов к API: проверка, что мини-апп ходит с Bearer. */
 function recordApi(page: Page) {
@@ -213,6 +223,8 @@ describe("вход и черновики", () => {
     const saved = (await invitationsOf(user!.id))[0]!;
     expect(saved.data.names).toBe("Мадина и Азиз");
     expect(saved.data.host).toBe(D.EVENTS.wedding.text.uz.host);
+    // «Кто придёт» выключен, пока владелец сам его не включит: имена гостей видны всем, у кого есть ссылка.
+    expect(saved.data.showGuests).toBe(false);
     await expect.poll(() => page.locator("body").innerText()).toMatch(new RegExp(ru.saved + " · \\d\\d:\\d\\d"));
     await e.shot(page, "build-ru-390x844.png");
     // Ответ 400 на неверный код Chromium пишет в консоль сам; других ошибок нет.
@@ -280,11 +292,132 @@ describe("вход и черновики", () => {
     // Не картинка и не звук/видео: тост, ничего не загружается.
     await page.locator('input[type=file][accept="image/*"]').first().setInputFiles({ name: "a.txt", mimeType: "text/plain", buffer: Buffer.from("x") });
     await e.waitText(page, ru.fileType);
+    // Тост над нижней панелью и полоской превью конструктора, а не поверх них.
+    await page.waitForTimeout(400);
+    await e.shot(page, "build-toast-ru-390x844.png");
     // Текст «за меня» без ключа ассистента (config.ai: false) — готовый текст дизайна на языке приглашения.
     await page.getByTitle(ru.steps.words).click();
     await page.getByRole("button", { name: ru.aiWrite }).click();
     await e.waitText(page, ru.aiFail);
     expect(problems.requests.filter((u) => u.startsWith("/api/ai/"))).toEqual([]);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("черновик открывается свежим с сервера, автосохранение отправляет только изменённое", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Имена v1", host: "Хозяева v1", message: "Текст v1" } });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Имена v1" });
+    // Другая вкладка меняет имена: список на этой странице устарел, но открывается то, что на сервере.
+    await patchAs(user.id, inv.id, { data: { names: "Имена v2" } });
+    const bodies: Dict[] = [];
+    page.on("request", (r) => { if (r.method() === "PATCH" && r.url() === `${e.base}/api/invitations/${inv.id}`) bodies.push(JSON.parse(r.postData() || "{}")); });
+    await editOf(page, "Имена v1").click();
+    await expect.poll(() => page.getByLabel(ru.fNames).inputValue()).toBe("Имена v2");
+    // Ещё правка из другой вкладки уже после открытия: её не затирает автосохранение текста.
+    await patchAs(user.id, inv.id, { data: { host: "Хозяева v3" } });
+    await page.getByTitle(ru.steps.words).click();
+    await page.getByLabel(ru.fMessage).first().fill("Текст v2");
+    await expect.poll(async () => (await invById(inv.id)).data.message, { timeout: 10_000 }).toBe("Текст v2");
+    expect((await invById(inv.id)).data).toMatchObject({ names: "Имена v2", host: "Хозяева v3", message: "Текст v2" });
+    expect(bodies.length).toBeGreaterThan(0);
+    expect(bodies.every((b) => JSON.stringify(b) === JSON.stringify({ data: { message: "Текст v2" } }))).toBe(true);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("ответ ассистента для черновика, который уже закрыли, не попадает в другой", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const a = await createInvitation(user.id, { data: { names: "Черновик A", message: "Текст A" } });
+    const b = await createInvitation(user.id, { data: { names: "Черновик B", message: "Текст B" } });
+    // Как в продакшене с ключом ассистента: config.ai = true, ответ /api/ai/write через 2,5 с (к Anthropic запроса нет).
+    await context.route(e.base + "/api/auth/config", async (route) => { const r = await route.fetch(); await route.fulfill({ response: r, json: { ...(await r.json()), ai: true } }); });
+    await context.route(e.base + "/api/ai/write", async (route) => { await new Promise((r) => setTimeout(r, 2500)); await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ text: "Текст ассистента" }) }); });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Черновик A" });
+    await editOf(page, "Черновик A").click();
+    await page.getByTitle(ru.steps.words).click();
+    await page.getByRole("button", { name: ru.aiWrite }).click();
+    // Пока ассистент пишет, человек уходит и открывает B.
+    await page.getByRole("button", { name: "Invito" }).first().click();
+    await editOf(page, "Черновик B").click();
+    await expect.poll(() => page.getByLabel(ru.fNames).inputValue()).toBe("Черновик B");
+    await page.getByTitle(ru.steps.words).click();
+    await page.waitForTimeout(3500);
+    expect(await page.getByLabel(ru.fMessage).first().inputValue()).toBe("Текст B");
+    expect((await invById(b.id)).data.message).toBe("Текст B");
+    expect((await invById(a.id)).data.message).toBe("Текст A");
+    // Ответ для открытого черновика по-прежнему приходит в него.
+    await page.getByRole("button", { name: ru.aiWrite }).click();
+    await expect.poll(async () => (await invById(b.id)).data.message, { timeout: 10_000 }).toBe("Текст ассистента");
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("автосохранение: постоянная ошибка 4xx не повторяется каждые 5 секунд", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Запрет тест" } });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Запрет тест" });
+    await editOf(page, "Запрет тест").click();
+    await page.getByLabel(ru.fNames).waitFor();
+    let patches = 0;
+    await context.route(e.base + "/api/invitations/" + inv.id, (route) => {
+      if (route.request().method() !== "PATCH") return route.continue();
+      patches++;
+      return route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ error: "Аккаунт заблокирован" }) });
+    });
+    await page.getByLabel(ru.fNames).fill("Не сохранится");
+    await e.waitText(page, "Аккаунт заблокирован");
+    await e.waitText(page, ru.notSaved);
+    // Повтор 403 не исправит: за 7 секунд второго запроса нет.
+    await page.waitForTimeout(7000);
+    expect(patches).toBe(1);
+    expect(problems.console).toEqual(["Failed to load resource: the server responded with a status of 403 (Forbidden)"]);
+    problems.console = [];
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("выход: ссылка, пароль и гости прежнего аккаунта не остаются в демо и превью", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Тайна тест", intro: "none", showGuests: true } });
+    await e.db.update(invitations).set({ status: "active", publishedAt: new Date(), unlocked: true, accessCode: "TopSecret42" }).where(eq(invitations.id, inv.id));
+    const r = await e.app.inject({ method: "POST", url: `/api/public/i/${inv.slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Зарина Сабирова", status: "yes", count: 1, diet: [], msg: "Секретное пожелание", code: "TopSecret42" } });
+    expect(r.statusCode).toBe(200);
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Тайна тест" });
+    await editOf(page, "Тайна тест").click();
+    await page.getByTitle(ru.stepsX.sections).click();
+    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+    await e.waitText(page, ru.linkReady);
+    await expect.poll(() => page.locator("input[name=access-code]").inputValue()).toBe("TopSecret42");
+    // Выход из аккаунта.
+    await page.locator("[data-account]").first().click();
+    await sheet(page, "account").waitFor();
+    await page.waitForTimeout(400);
+    await e.shot(page, "account-ru-390x844.png");
+    await sheet(page, "account").getByRole("button", { name: ru.logout }).click();
+    await e.waitText(page, ru.loggedOut);
+    await e.waitText(page, ru.hero1);
+    // Демо «Ссылка» в туре: ни адреса, ни пароля прежнего приглашения.
+    await page.getByRole("button", { name: ru.tour }).first().click();
+    await page.getByRole("button", { name: ru.demos.share[1] }).click();
+    await e.waitText(page, ru.linkReady);
+    expect(await page.locator("input[name=slug]").inputValue()).not.toBe(inv.slug);
+    expect(await page.locator("input[name=access-code]").count()).toBe(0);
+    expect(await page.locator("body").innerText()).not.toContain("TopSecret42");
+    // Превью шаблона: ни имён, ни гостей и пожеланий прежнего приглашения.
+    await page.getByRole("button", { name: "Invito" }).first().click();
+    await e.waitText(page, ru.hero1);
+    await toTemplates(page);
+    await page.getByRole("button", { name: ru.preview, exact: true }).first().click();
+    await page.waitForTimeout(1500);
+    const body = await page.locator("body").innerText();
+    for (const old of ["Тайна тест", "Зарина", "Секретное пожелание", inv.slug as string]) expect(body).not.toContain(old);
+    expect(problems.me401).toBe(0);
     await e.expectClean(page, problems);
     await close();
   });
@@ -373,6 +506,21 @@ describe("языки", () => {
     await e.shot(nf.page, "notfound-uz-390x844.png");
     await nf.close();
     await close();
+  });
+
+  it("главная на всех языках: язык браузера, месяц в шапке — словами, без «M10»", async () => {
+    const uzc = I18N.uzc as Dict;
+    for (const [locale, lang, t] of [["ru-RU", "ru", ru], ["uz-UZ", "uz", uz], ["uz-Cyrl-UZ", "uzc", uzc], ["en-GB", "en", en]] as const) {
+      const { page, problems, close } = await e.open("/app/", { locale, waitText: t.hero1 });
+      expect(await page.evaluate(() => localStorage.getItem("invito.lang"))).toBeNull();
+      const text = await page.evaluate(() => document.body.textContent || "");
+      // Месяц «№ 01 — …» на главной — из таблиц узбекских дат (Chromium их не знает), а не «2026 M10».
+      expect(text).not.toMatch(/\bM\d{1,2}\b/);
+      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].months.some((m: string) => text.includes(m + ", 20"))).toBe(true);
+      await e.shot(page, `home-${lang}-390x844.png`);
+      await e.expectClean(page, problems);
+      await close();
+    }
   });
 });
 
