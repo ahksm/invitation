@@ -3,15 +3,16 @@ import type { Frame, Page } from "playwright-core";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { invitations, users } from "../../src/db/schema.js";
 import { bt } from "../../src/i18n.js";
-import { maskPhone, TELEGRAM_TAKEN } from "../../src/services/phone.js";
+import { formatPhone, maskPhone, TELEGRAM_PHONE_MISMATCH, TELEGRAM_TAKEN } from "../../src/services/phone.js";
 import { I18N } from "../../web/invito-data.js";
 import { botHarness, startE2E, telegramStub, tgState, uniquePhone, type E2E } from "./helpers.js";
 
 /**
  * Общий контракт этапа 4 (docs/invito-integration.md, 3.1, 3.2 и 3.9) в браузере против настоящего сервера:
  * возврат после оплаты из мини-аппа (#/paid/<id>), стёртая дата приглашения, причина отказа в номере в мини-аппе,
- * «Подключить Telegram» (свободный Telegram и Telegram другого аккаунта) и мини-апп во фрейме чужого сайта
- * (Telegram Web), где cookie не сохраняется. Бот — этого же сервера в процессе (botHarness): Telegram не вызывается.
+ * «Подключить Telegram» (Telegram с номером аккаунта, Telegram другого аккаунта и чужой Telegram с другим номером)
+ * и мини-апп во фрейме чужого сайта (Telegram Web), где cookie не сохраняется. Бот — этого же сервера в процессе
+ * (botHarness): Telegram не вызывается.
  */
 
 type Dict = Record<string, any>;
@@ -378,12 +379,12 @@ describe("«Подключить Telegram»", () => {
     return nonce as string;
   }
 
-  it("свободный Telegram (запись выдачи доступа без номера) подключается к этому аккаунту, вход не меняется", async () => {
+  it("Telegram из записи выдачи доступа (без номера): бот просит номер, номер аккаунта — подключается к этому аккаунту, вход не меняется", async () => {
     setBot(true);
     const h = botHarness(e, BOT);
     const context = await e.newContext();
     const user = await e.signIn(context, { firstName: "Нигора" });
-    // Админ заранее выдал бесплатный доступ по Telegram ID: запись без номера — Telegram свободен.
+    // Админ заранее выдал бесплатный доступ по Telegram ID: запись без номера.
     const tg = tgIdOf(7_910_000_000);
     await e.db.insert(users).values({ telegramId: tg, freeAccess: true, freeAccessNote: "подарок" });
     const { page, problems, close } = await e.open("/app/", { context, waitText: ru.hero1 });
@@ -393,12 +394,15 @@ describe("«Подключить Telegram»", () => {
     await login.locator('[data-wait="telegram"]').waitFor();
     expect(await login.locator(`a[href="https://t.me/${BOT}?start=auth_${nonce}"]`).count()).toBe(1);
 
-    // В боте: номер не спрашивается, подтверждение с номером аккаунта, скрытым посередине.
+    // В боте: у Telegram нет номера — сначала он подтверждает номер аккаунта своим контактом,
+    // затем подтверждение с номером аккаунта, скрытым посередине.
     await h.message(tg, `/start auth_${nonce}`);
+    expect(h.replies()).toEqual([bt("ru", "askPhoneLink")]);
+    await h.contact(tg, "+" + user.phone);
     const confirm = h.of("sendMessage").at(-1)!.payload;
     expect(confirm.text).toContain(maskPhone(user.phone!));
+    expect(confirm.reply_markup.inline_keyboard.flat()).toEqual([{ text: bt("ru", "confirmLinkButton"), callback_data: `auth:${nonce}` }]);
     expect(confirm.text).not.toContain(user.phone!.slice(5, 10));
-    expect(h.replies()).not.toContain(bt("ru", "askPhone"));
     await h.press(tg, `auth:${nonce}`);
     expect(h.edits().at(-1)).toBe(bt("ru", "linkConfirmed", { phone: maskPhone(user.phone!) }));
 
@@ -411,7 +415,9 @@ describe("«Подключить Telegram»", () => {
     expect((e.app.jwt.decode(session) as Dict).sub).toBe(user.id);
     const acc = sheet(page, "account");
     await acc.waitFor();
-    expect(await acc.innerText()).toContain("Нигора");
+    // Тот же аккаунт (его номер). Имя теперь из профиля Telegram: бот обновляет его при каждом сообщении
+    // (upsertTelegramUser), а после контакта было ещё нажатие «Подключить».
+    expect(await acc.innerText()).toContain(formatPhone(user.phone!));
     expect(await acc.getByRole("button", { name: new RegExp(ru.tgConnect) }).count()).toBe(0);
     // На сайте токен в опросе не запрашивается.
     expect(poll.length).toBeGreaterThan(0);
@@ -458,6 +464,48 @@ describe("«Подключить Telegram»", () => {
     await acc.waitFor();
     expect(await acc.innerText()).toContain("Азиз");
     expect(await acc.getByRole("button", { name: new RegExp(ru.tgConnect) }).count()).toBe(1);
+    expect(await page.textContent("body")).not.toContain(ru.tgOtherAccount.split(":")[0]);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("ссылка подключения у чужого Telegram: бот просит номер, другой номер — причина в листе, ничего не привязано, вход прежний", async () => {
+    setBot(true);
+    const h = botHarness(e, BOT);
+    const context = await e.newContext();
+    const user = await e.signIn(context, { firstName: "Мадина" });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: ru.hero1 });
+    const cookie = (await context.cookies()).find((c) => c.name === "session")!.value;
+    const nonce = await connect(page);
+    const login = sheet(page, "login");
+    await login.locator('[data-wait="telegram"]').waitFor();
+
+    // Ссылку t.me/<бот>?start=auth_<nonce> открыл другой человек в своём Telegram без номера:
+    // бот просит номер, кнопки «Подключить» и номера аккаунта он не видит.
+    const attacker = tgIdOf(7_940_000_000);
+    await h.message(attacker, `/start auth_${nonce}`);
+    expect(h.replies()).toEqual([bt("ru", "askPhoneLink")]);
+    const own = uniquePhone();
+    await h.contact(attacker, "+" + own);
+    expect(h.replies().at(-1)).toBe(TELEGRAM_PHONE_MISMATCH);
+    expect(h.replies().join("\n")).not.toContain(maskPhone(user.phone!));
+    expect(h.of("sendMessage").some((c) => c.payload.reply_markup?.inline_keyboard)).toBe(false);
+    // Повтор нажатия «Подключить» после отказа ничего не делает.
+    await h.press(attacker, `auth:${nonce}`);
+    expect(h.edits()).toEqual([bt("ru", "loginExpired")]);
+
+    // Сайт: причина в листе, ожидания нет, вход прежний — та же cookie и тот же профиль.
+    await login.getByRole("alert").filter({ hasText: TELEGRAM_PHONE_MISMATCH }).waitFor({ timeout: 10_000 });
+    expect(await login.locator('[data-wait="telegram"]').count()).toBe(0);
+    await login.getByRole("button", { name: new RegExp(ru.tryAgain) }).waitFor();
+    await e.shot(page, "tg-connect-mismatch-ru-390x844.png");
+    expect((await context.cookies()).find((c) => c.name === "session")!.value).toBe(cookie);
+    expect((await page.evaluate(async () => (await (await fetch("/api/auth/me")).json()).user))).toMatchObject({ id: user.id, telegramId: null });
+    // Аккаунт не изменился; Telegram нападающего — отдельный аккаунт с его собственным номером.
+    expect(await e.user(user.id)).toMatchObject({ telegramId: null, phone: user.phone, firstName: "Мадина" });
+    const [row] = await byTelegram(attacker);
+    expect(row).toMatchObject({ phone: own });
+    expect(row!.id).not.toBe(user.id);
     expect(await page.textContent("body")).not.toContain(ru.tgOtherAccount.split(":")[0]);
     await e.expectClean(page, problems);
     await close();

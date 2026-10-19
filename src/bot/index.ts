@@ -18,7 +18,7 @@ import { HttpError } from "../errors.js";
 import { bt, dateLocale, localeNames, locales, pickLocale, translateError, type BotTextKey, type Locale } from "../i18n.js";
 import { getPrices } from "../services/settings.js";
 import { listOwnInvitations } from "../services/invitations.js";
-import { attachPhoneToTelegramUser, formatPhone, linkTelegramToUser, maskPhone, normalizePhone } from "../services/phone.js";
+import { attachPhoneToTelegramUser, formatPhone, linkTelegramToUser, maskPhone, normalizePhone, TELEGRAM_PHONE_MISMATCH } from "../services/phone.js";
 import { linkGuestChat, longDate, personalView, rsvpFromChat, type PublicView } from "../services/public.js";
 import { tashkentDate } from "../services/reminders.js";
 import { track } from "../services/usage.js";
@@ -69,8 +69,8 @@ export function createBot(ctx: Ctx) {
     await next();
   });
 
-  const askPhone = (c: BotContext) =>
-    c.reply(bt(c.lang, "askPhone"), {
+  const askPhone = (c: BotContext, text: BotTextKey = "askPhone") =>
+    c.reply(bt(c.lang, text), {
       reply_markup: new Keyboard().requestContact(bt(c.lang, "sharePhoneButton")).resized().oneTime(),
     });
 
@@ -82,13 +82,29 @@ export function createBot(ctx: Ctx) {
     return { login, user: user && !user.blocked && user.phone ? { ...user, phone: user.phone } : null };
   }
 
-  async function askLoginConfirm(c: BotContext, nonce: string) {
+  /**
+   * Отказ подключения: запрос завершается с причиной (браузер получит её в poll и останется в своём
+   * аккаунте), ничего не привязывается. Возвращает текст причины для бота.
+   */
+  async function refuseLink(c: BotContext, nonce: string, reason: string) {
+    await settleTelegramLogin(ctx.cache, nonce, { conflict: reason });
+    return translateError(reason, c.lang);
+  }
+
+  /** afterContact: запрос продолжается после контакта, о котором бот попросил (см. bot.on("message:contact")). */
+  async function askLoginConfirm(c: BotContext, nonce: string, afterContact = false) {
     const login = await getTelegramLogin(ctx.cache, nonce);
     if (!login || login.userId || login.conflict) return void (await c.reply(bt(c.lang, "loginExpired")));
     if (login.linkUserId) {
-      // Подключение: человек видит, к какому аккаунту (номер со скрытой серединой) и с какого устройства.
       const target = await linkTarget(nonce);
       if (!target?.user) return void (await c.reply(bt(c.lang, "loginExpired")));
+      // Telegram подтвердил номер своим контактом, и номер не тот: это не владелец аккаунта (или его другой
+      // номер). Отказ сразу, без кнопки: аккаунт, Telegram и вход в браузере не меняются.
+      if (afterContact && c.user.id !== target.user.id) {
+        if (!(await claimTelegramApproval(ctx.cache, nonce))) return void (await c.reply(bt(c.lang, "loginExpired")));
+        return void (await c.reply(await refuseLink(c, nonce, TELEGRAM_PHONE_MISMATCH)));
+      }
+      // Подключение: человек видит, к какому аккаунту (номер со скрытой серединой) и с какого устройства.
       return void (await c.reply(bt(c.lang, "confirmLink", { phone: maskPhone(target.user.phone), device: login.device }), {
         reply_markup: new InlineKeyboard().text(bt(c.lang, "confirmLinkButton"), `auth:${nonce}`),
       }));
@@ -99,9 +115,12 @@ export function createBot(ctx: Ctx) {
   }
 
   /**
-   * Нажатие «Подключить»: Telegram привязывается к аккаунту запроса, браузер получает сессию этого
-   * аккаунта. Telegram другого аккаунта (с номером) не привязывается: запрос завершается отказом,
-   * и браузер остаётся в своём аккаунте. Возвращает текст, которым заменяется сообщение с кнопкой.
+   * Нажатие «Подключить»: подключение проходит, только если этот Telegram уже и есть аккаунт запроса
+   * (Telegram подтвердил номер аккаунта своим контактом, и бот объединил их, или Telegram был
+   * подключён раньше); браузер получает сессию этого аккаунта. Telegram другого аккаунта не
+   * подключается: запрос завершается отказом, и браузер остаётся в своём аккаунте. Telegram без
+   * номера сюда не доходит: бот сначала просит контакт. Возвращает текст, которым заменяется
+   * сообщение с кнопкой.
    */
   async function confirmLink(c: BotContext, nonce: string, targetId: string): Promise<string> {
     // Повторное или параллельное нажатие той же кнопки ничего не делает.
@@ -111,8 +130,7 @@ export function createBot(ctx: Ctx) {
       linked = await linkTelegramToUser(ctx, targetId, c.user);
     } catch (err) {
       if (!(err instanceof HttpError)) throw err;
-      await settleTelegramLogin(ctx.cache, nonce, { conflict: err.message });
-      return translateError(err.message, c.lang);
+      return refuseLink(c, nonce, err.message);
     }
     if (!linked?.phone) {
       await dropTelegramLogin(ctx.cache, nonce);
@@ -163,26 +181,48 @@ export function createBot(ctx: Ctx) {
     await c.reply(text, { reply_markup, link_preview_options: { is_disabled: true } });
   }
 
-  /** Параметр /start после того, как номер привязан. */
-  async function handleStart(c: BotContext, payload: string) {
-    if (payload.startsWith("auth_")) return askLoginConfirm(c, payload.slice(5));
+  /** Параметр /start после того, как номер привязан. afterContact: номер привязан только что, по просьбе бота. */
+  async function handleStart(c: BotContext, payload: string, afterContact = false) {
+    if (payload.startsWith("auth_")) return askLoginConfirm(c, payload.slice(5), afterContact);
     const guest = GUEST_PAYLOAD.exec(payload);
     if (guest) return startGuest(c, guest[1]!);
+  }
+
+  /**
+   * Telegram без номера: параметр /start ждёт контакта. Подключение Telegram к аккаунту тоже ждёт его:
+   * Telegram подключается, только подтвердив своим контактом номер аккаунта, поэтому чужая ссылка
+   * подключения (пересланная, увиденная на экране) Telegram другого человека к аккаунту не подключит.
+   */
+  async function waitForPhone(c: BotContext, payload: string) {
+    const auth = payload.startsWith("auth_");
+    await ctx.cache.set(pendingKey(c.from!.id), payload, auth ? 300 : 3600);
+    const link = auth && (await linkTarget(payload.slice(5))) !== null;
+    await askPhone(c, link ? "askPhoneLink" : "askPhone");
+  }
+
+  /**
+   * Контакт отклонён (номер уже у другого Telegram), а его ждало подключение Telegram к аккаунту: номер
+   * этого Telegram не изменится, и подключение не состоится. Запрос сразу завершается отказом с той же
+   * причиной, чтобы сайт показал её, а не ждал, пока запрос истечёт.
+   */
+  async function refusePendingLink(c: BotContext, reason: string) {
+    const payload = await ctx.cache.get<string>(pendingKey(c.from!.id));
+    const nonce = payload?.startsWith("auth_") ? payload.slice(5) : null;
+    const link = nonce ? await linkTarget(nonce) : null;
+    if (!nonce || !link || link.login.userId || link.login.conflict) return;
+    if (!(await claimTelegramApproval(ctx.cache, nonce))) return;
+    await ctx.cache.del(pendingKey(c.from!.id));
+    await refuseLink(c, nonce, reason);
   }
 
   bot.command("start", async (c) => {
     await track(ctx, c.user.id, "bot_start");
     const payload = c.match;
-    // t.me/<бот>?start=auth_<nonce> приходит с кнопки «Войти через Telegram» на сайте,
-    // t.me/<бот>?start=g_<token> — с кнопки «Ответить через бота» на странице гостя.
+    // t.me/<бот>?start=auth_<nonce> приходит с кнопки «Войти через Telegram» или «Подключить Telegram»
+    // на сайте, t.me/<бот>?start=g_<token> — с кнопки «Ответить через бота» на странице гостя.
     const known = (payload.startsWith("auth_") && isNonce(payload.slice(5))) || GUEST_PAYLOAD.test(payload);
     if (known) {
-      // Подключение Telegram к аккаунту на сайте: номер уже есть у аккаунта, в боте его не спрашиваем.
-      const link = payload.startsWith("auth_") && (await linkTarget(payload.slice(5))) !== null;
-      if (!c.user.phone && !link) {
-        await ctx.cache.set(pendingKey(c.from!.id), payload, payload.startsWith("auth_") ? 300 : 3600);
-        return void (await askPhone(c));
-      }
+      if (!c.user.phone) return waitForPhone(c, payload);
       return handleStart(c, payload);
     }
     if (!c.user.phone) return void (await askPhone(c));
@@ -209,11 +249,12 @@ export function createBot(ctx: Ctx) {
     } catch (err) {
       if (!(err instanceof HttpError)) throw err;
       await setContactRejection(ctx.cache, tgId, { error: err.message });
-      return void (await c.reply(translateError(err.message, c.lang), { reply_markup: { remove_keyboard: true } }));
+      await c.reply(translateError(err.message, c.lang), { reply_markup: { remove_keyboard: true } });
+      return refusePendingLink(c, err.message);
     }
     await c.reply(bt(c.lang, "phoneLinked", { phone: phone.startsWith("998") ? formatPhone(phone) : `+${phone}` }), { reply_markup: { remove_keyboard: true } });
     const payload = await ctx.cache.take<string>(pendingKey(c.from.id));
-    if (payload) await handleStart(c, payload);
+    if (payload) await handleStart(c, payload, true);
     else await c.reply(bt(c.lang, "whatNext"), { reply_markup: menu(c.lang) });
   });
 
@@ -222,8 +263,10 @@ export function createBot(ctx: Ctx) {
     const link = await linkTarget(nonce);
     if (link) {
       await c.answerCallbackQuery();
-      const text = link.login.userId || link.login.conflict ? bt(c.lang, "loginExpired") : await confirmLink(c, nonce, link.login.linkUserId!);
-      return void (await c.editMessageText(text));
+      if (link.login.userId || link.login.conflict) return void (await c.editMessageText(bt(c.lang, "loginExpired")));
+      // Кнопка у Telegram без номера (например, из сообщения до обновления бота): сначала контакт.
+      if (!c.user.phone) return waitForPhone(c, `auth_${nonce}`);
+      return void (await c.editMessageText(await confirmLink(c, nonce, link.login.linkUserId!)));
     }
     if (!c.user.phone) {
       await c.answerCallbackQuery();

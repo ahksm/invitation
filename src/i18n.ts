@@ -84,6 +84,10 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Данные Telegram не прошли проверку": { uz: "Telegram ma'lumotlari tekshiruvdan o'tmadi", en: "Telegram data failed verification" },
   "Этот номер уже привязан к другому Telegram-аккаунту": { uz: "Bu raqam boshqa Telegram akkauntiga ulangan", en: "This number is linked to another Telegram account" },
   "Этот Telegram уже привязан к другому аккаунту": { uz: "Bu Telegram boshqa akkauntga ulangan", en: "This Telegram account is linked to another account" },
+  "Номер этого Telegram отличается от номера аккаунта: подключите Telegram с тем же номером": {
+    uz: "Bu Telegram raqami akkaunt raqamidan farq qiladi: xuddi shu raqamli Telegramni ulang",
+    en: "This Telegram has a different phone number than the account: connect a Telegram with the same number",
+  },
   "Эта ссылка уже занята": { uz: "Bu havola band", en: "This link is already taken" },
   "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo'lmaydi", en: "This link cannot be used" },
   "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to'lanmagan qoralamada o'zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
@@ -162,6 +166,12 @@ export const botTexts = {
     ru: "Чтобы пользоваться платформой, поделитесь номером телефона: нажмите кнопку ниже.",
     uz: "Platformadan foydalanish uchun telefon raqamingizni yuboring: quyidagi tugmani bosing.",
     en: "To use the platform, share your phone number: tap the button below.",
+  },
+  // «Подключить Telegram» с сайта, а у Telegram ещё нет номера: номер подтверждает, что это владелец аккаунта.
+  askPhoneLink: {
+    ru: "Чтобы подключить Telegram к аккаунту на сайте, подтвердите номер: нажмите кнопку ниже. Подключить можно только Telegram с тем же номером, что у аккаунта.",
+    uz: "Telegramni saytdagi akkauntga ulash uchun raqamingizni tasdiqlang: quyidagi tugmani bosing. Faqat akkaunt raqami bilan bir xil raqamli Telegramni ulash mumkin.",
+    en: "To connect Telegram to your account on the website, confirm your number: tap the button below. Only a Telegram with the same number as the account can be connected.",
   },
   sharePhoneButton: { ru: "📱 Поделиться номером", uz: "📱 Raqamni yuborish", en: "📱 Share phone number" },
   ownPhoneOnly: {

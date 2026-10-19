@@ -60,8 +60,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   }));
 
   // Шаг 1 входа через Telegram: ссылка на бота и секрет этого браузера в cookie.
-  // С действующей сессией это «Подключить Telegram»: запрос помнит пользователя, и бот привязывает
-  // Telegram к нему (src/auth/telegram.ts), а не входит в аккаунт, которому этот Telegram принадлежит.
+  // С действующей сессией это «Подключить Telegram»: запрос помнит пользователя, и бот подключает к нему
+  // Telegram, подтвердивший номер этого аккаунта (src/auth/telegram.ts), а не входит в аккаунт этого Telegram.
   app.post("/telegram/start", strict, async (req, reply) => {
     const bot = botUsername(ctx.config);
     if (!bot) throw new HttpError(503, "Вход через Telegram не настроен");
@@ -71,8 +71,8 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { nonce, url: `https://t.me/${bot}?start=auth_${nonce}`, ttl };
   });
 
-  // Шаг 2: браузер ждёт, пока человек подтвердит вход в боте. Подключение Telegram, который уже
-  // принадлежит другому аккаунту, заканчивается { status: "conflict", error }: сессия остаётся прежней.
+  // Шаг 2: браузер ждёт, пока человек подтвердит вход в боте. Отказ подключения (Telegram другого
+  // аккаунта или с другим номером) заканчивается { status: "conflict", error }: сессия остаётся прежней.
   app.post("/telegram/poll", { config: { rateLimit: { max: 120, timeWindow: "1 minute" } } }, async (req, reply) => {
     const { nonce, bearer } = z.object({ nonce: z.string().refine(isNonce), bearer: bearerFlag }).parse(req.body);
     const secret = req.cookies[TG_COOKIE];
