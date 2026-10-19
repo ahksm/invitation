@@ -1,0 +1,384 @@
+// Invito — data: i18n, events, styles, templates, sample guests
+const M2 = { sh:'ш', ch:'ч', yo:'ё', yu:'ю', ya:'я', ye:'е', "o‘":'ў', "g‘":'ғ', "o'":'ў', "g'":'ғ', "oʻ":'ў', "gʻ":'ғ' };
+const M1 = { a:'а', b:'б', d:'д', e:'е', f:'ф', g:'г', h:'ҳ', i:'и', j:'ж', k:'к', l:'л', m:'м', n:'н', o:'о', p:'п', q:'қ', r:'р', s:'с', t:'т', u:'у', v:'в', x:'х', y:'й', z:'з', c:'с', w:'в', '‘':'ъ', "'":'ъ', 'ʼ':'ъ' };
+const KEEP = /(Invito|Telegram|CSV|QR|OG|DJ|RSVP|Loft 7|Basement 21|Rooftop 360|Nova|invito\.app\S*|@\S+)/;
+function cyrPart(s){
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const two = s.substr(i, 2), tl = two.toLowerCase(), prev = s[i-1];
+    const ws = !prev || /[^A-Za-z‘'ʻ]/.test(prev);
+    if (M2[tl]) { let r = M2[tl]; if (two[0] !== two[0].toLowerCase()) r = r.toUpperCase(); out += r; i++; continue; }
+    const c = s[i], cl = c.toLowerCase();
+    if (cl === 'e' && ws) { out += c === cl ? 'э' : 'Э'; continue; }
+    if (M1[cl] && !(cl==="'"||cl==='‘') ) { let r = M1[cl]; if (c !== cl) r = r.toUpperCase(); out += r; }
+    else if (cl==="'"||cl==='‘') { out += ws ? c : 'ъ'; }
+    else out += c;
+  }
+  return out;
+}
+export function toCyr(s){ if (typeof s !== 'string') return s; return s.split(KEEP).map((p,i)=> i%2 ? p : cyrPart(p)).join(''); }
+const deep = (o)=> typeof o==='string' ? toCyr(o) : Array.isArray(o) ? o.map(deep) : (o && typeof o==='object') ? Object.fromEntries(Object.entries(o).map(([k,v])=>[k,deep(v)])) : o;
+
+const en = {
+  close:'Close', miniApp:'mini app', myInv:'My invitations', issueTag:'Invitation builder',
+  hero1:'Invitations people', hero2:'want to open.',
+  heroSub:'Pick an event and a template, add your words, route and photos. Get a link with a beautiful preview for any chat.',
+  create:'Create invitation', back:'Back', next:'Next', done:'Done', edit:'Edit', open:'Open', guests:'Guests',
+  flow1:'01 / 04 — Event', flow2:'02 / 04 — Template', flow3:'03 / 04 — Details', flow4:'04 / 04 — Share',
+  chooseEvent:'What are we celebrating?', templatesN:'5 templates', pickTemplate:'Choose a template',
+  template:'Template', fontsLabel:'Fonts', palette:'Palette', preview:'Preview', useTpl:'Use this template',
+  stepWord:'Step',
+  steps:{ basics:'The basics', when:'Date & time', where:'Place & route', words:'Words & program', details:'Details', photos:'Photos', font:'Typography' },
+  hints:{ basics:'Who is inviting and what is the occasion.', when:'Guests will see a live countdown.', where:'Main address plus any stops along the way.', words:'The invitation text and the order of the day.', details:'Dress code, gifts, practical notes and contacts.', photos:'A cover and a few photos for the gallery.', font:'Curated headline fonts for this template.' },
+  fNames:'Names / title', fHost:'From', fDate:'Date', fTime:'Time', fCountdown:'Show countdown',
+  fVenue:'Venue name', fAddress:'Address', fStops:'Route stops', fStopsHint:'Add a place to a program item to show it on the route map.',
+  fMessage:'Invitation text', fProgram:'Program', fPlace:'Place (optional)', addItem:'Add item',
+  fDress:'Dress code', fDressColors:'Palette for guests', fGifts:'Gifts & wishes', fNotes:'Good to know', fContact:'Organizer contact',
+  fCover:'Cover photo', fGallery:'Gallery', upload:'Upload', replace:'Replace',
+  photoHint:'Sample photos are filled in — replace them with yours.',
+  toEditor:'Open editor', livePreview:'Live preview',
+  tapHint:'Tap anything on the invitation to edit it', toShare:'Get link',
+  linkReady:'Your link is ready', slug:'Link address', copy:'Copy link', copied:'Link copied', sendTg:'Send in Telegram',
+  qr:'QR code', qrOpen:'Open full size', pw:'Password protection', pwDesc:'Guests enter a password before opening.', pwPh:'Password',
+  ogTitle:'How the link looks in chats', ogTags:'OG tags', openGuest:'Open as guest', chatQ:'Can you send me the link?',
+  youGotMail:'You have an invitation', tapOpen:'Tap the envelope to open', youreInvited:'You are invited', scroll:'Scroll',
+  invitationWord:'Invitation', program:'Program', route:'Route', untilEvent:'Until the day',
+  days:'days', hours:'hours', min:'min', sec:'sec',
+  gallery:'Moments', venue:'Where', openMap:'Open map', directions:'Directions',
+  dress:'Dress code', gifts:'Gifts', notes:'Good to know', contact:'Questions?', writeHost:'Message the host',
+  rsvp:'Will you come?', replyBy:'Please reply by', yes:'Yes, I will be there', no:'Sorry, I can’t make it', maybe:'Maybe',
+  guestsCount:'Guests including you', diet:'Dietary notes', veg:'Vegetarian', halal:'Halal', nonut:'No nuts', noalc:'No alcohol',
+  msgHost:'Message to the host (optional)', send:'Send reply', thanks:'Thank you!', addCal:'Add to calendar', viaBot:'Reply via Telegram bot', change:'Change reply',
+  sumYes:'You are coming · guests: ', sumNo:'You can’t come — the host will be told.', sumMaybe:'Maybe · guests: ',
+  madeWith:'Made with Invito', makeOwn:'Create your own',
+  locked:'This invitation is protected', unlock:'Open', wrongPw:'Wrong password',
+  guestList:'Guest list', seating:'Seating', attending:'Coming', declined:'Declined', pending:'Waiting', maybeS:'Maybe', seats:'Seats taken', all:'All',
+  importTg:'Import from Telegram', importHint:'Choose contacts to invite. They get the link from the bot.', addSel:'Add selected',
+  remind:'Remind waiting', reminded:'Reminders sent via bot', csv:'Export CSV', added:'Guests added',
+  table:'Table', unseated:'No table', unassignedHint:'Pick a table in the guest list.',
+  to:'To', personal:'{name}, you are invited', whoComing:'Who is coming', comingN:'guests said yes', showGuests:'Show who is coming on the invitation', personalLinks:'Personal links', personalHint:'Each guest gets a link with their name on the envelope. Their reply goes straight to your list.', openAs:'Open as guest', yourName:'Your name', you:'you', copied2:'Personal link copied', linkBtn:'Link', andMore:'and {n} more', replying:'Replying as',
+
+  stepsX:{ style:'Style & colour', music:'Music', sections:'Sections' },
+  hintsX:{ style:'Palette and headline font for this template.', music:'Background music guests can turn on.', sections:'Turn sections on or off, change their order and the opening.' },
+  fPalette:'Colour palette', fFont:'Headline font', fMotion:'Cover motion', still:'Still', zoom:'Slow zoom', video:'Video', uploadVideo:'Upload video',
+  fMap:'Map', mapDrawn:'Illustrated', mapReal:'Real map', fIntro:'Opening', intro:{ envelope:'Envelope', curtain:'Curtain', scratch:'Scratch card', none:'None' },
+  fSecret:'Secret to scratch', secretHint:'Guests scratch to reveal it — great for a gender reveal or a surprise.',
+  aiWrite:'Write for me', aiTones:{ warm:'Warm', formal:'Formal', playful:'Playful', poetic:'Poetic', short:'Short' }, aiBusy:'Writing…', aiFail:'Assistant unavailable — used a ready text instead',
+  saved:'Saved', saving:'Saving…', duplicate:'Duplicate', duplicated:'Copy created', deleteD:'Delete',
+  tracks:{ none:'No music', lullaby:'Music box', waltz:'Waltz', lofi:'Lo-fi evening', celebration:'Celebration', ambient:'Ambient', oriental:'Silk road', custom:'Your track' }, uploadAudio:'Upload your track', play:'Play', stop:'Stop',
+  sec:{ message:'Invitation text', program:'Program', countdown:'Countdown', gallery:'Gallery', venue:'Place & map', dress:'Dress code', info:'Gifts & notes', reveal:'Scratch surprise', who:'Who is coming', guestbook:'Guestbook', rsvp:'RSVP' },
+  guestbook:'Guestbook', guestbookHint:'Wishes from guests appear here after they reply.', scratchHint:'Scratch to reveal', curtainHint:'Tap to open', moveUp:'Up', moveDown:'Down',
+  checkin:'Check-in', activity:'Activity', bot:'Bot', groups:{ family:'Family', friends:'Friends', work:'Work', other:'Other' }, group:'Group',
+  scanTitle:'Scan guest QR', simulate:'Simulate scan', useCamera:'Use camera', checkedIn:'Checked in', checkIn:'Check in', arrived:'arrived', noCamera:'Camera unavailable here — use simulate', dragHint:'Drag guests onto a table, or tap a guest and then a table.', allChecked:'Everyone is here',
+  act:{ opened:'{name} opened the invitation', yes:'{name} is coming', no:'{name} declined', maybe:'{name} replied maybe', reminder:'Reminder sent to {n} guests', checkin:'{name} checked in', created:'Invitation published' },
+  ago:{ now:'just now', m:'{n} min ago', h:'{n} h ago', d:'{n} d ago' },
+  botT:{ title:'Invito bot', subtitle:'What the bot sends you and your guests', r1d:'Remind guests 1 day before', r3h:'Remind 3 hours before', morning:'Morning of the event: route and weather', notify:'Notify me about every reply', test:'Send test message', sent:'Test message sent to your Telegram', testMsg:'Test: your invitation is live and replies will arrive here.' },
+  images:'Preview images', ogImg:'Link preview · 1200×630', storyImg:'Story · 1080×1920', download:'Download', generating:'Generating…',
+  livePeek:'Live preview', openFull:'Open full preview',
+  wishes:['So happy for you both! Counting the days.','We will be there with bells on. Love you!','Can’t wait to celebrate — saving the first dance!','Wishing you a beautiful day and many more.'],
+  secretBaby:'It’s a boy!', secretDef:'See you there ✦', uiTheme:'Theme',
+
+  tour:'Features', tourKick:'Everything Invito can do', tourTitle:'Features & templates', tourSub:'Every template and every feature in one place. Tap a demo to jump straight into it.', allStyles:'All styles', allEvents:'All events', templatesAll:'All templates', featuresAll:'Feature demos', tryIt:'Try it', seeAll:'See all features',
+  demos:{ envelope:['Envelope opening','A sealed envelope with the guest’s name opens into the invitation.'], curtain:['Curtain opening','Two curtain halves slide apart with a confetti burst.'], scratchIntro:['Scratch-card opening','Guests scratch the cover to open the invitation.'], personal:['Personal invitation','“To: Dilnoza” on the envelope, her name in the hero, her reply goes to the list.'], password:['Password protection','Guests enter a password before opening. Demo password: 2026.'], reveal:['Scratch surprise','A hidden line under a scratch layer — e.g. a gender reveal.'], guestbook:['Guestbook & who’s coming','Wishes from replies and a live list of guests who said yes.'], map:['Real map & route','Embedded map, route stops on the illustrated map, directions links.'], motion:['Living cover','Slow zoom or your own video behind the hero.'], editor:['Tap-to-edit editor','Tap any part of the invitation to change it in place.'], ai:['AI writer','Five tones, written in the current language.'], music:['Music','Six generated tracks plus your own upload.'], sections:['Sections & order','Turn sections on/off, drag to reorder, pick the opening.'], palette:['Palettes & fonts','Three palettes and five fonts per template.'], share:['Share link','Custom address, QR, Telegram, OG and story images.'], guests:['Guest list','Groups, filters, Telegram import, CSV export, personal links.'], seating:['Seating','Drag guests onto round tables, plus-ones included.'], checkin:['QR check-in','Scan guests at the door or check them in by hand.'], activity:['Activity','Timeline of opens, replies, reminders and arrivals.'], bot:['Telegram bot','Reminders, morning route and reply notifications.'], languages:['4 languages','Russian, English, Uzbek Latin and Uzbek Cyrillic.'], telegram:['Telegram mini app','Native-style main and back buttons.'], dark:['Dark theme','The builder in dark mode — or follow Telegram.'] },
+  demoPw:'Password: 2026', on:'On', off:'Off',
+  draft:'Draft', live:'Live', replies:'replies', sheetEdit:'Edit',
+  sd:{ minimal:'Swiss grid, huge numerals, clean sans.', classic:'Ivory paper, serif names, double frame.', botanical:'Sage tones, soft arch, falling petals.', retro:'Chrome pink, heavy type, star glitter.', neon:'Night background, glowing ticket.', pastel:'Soft colors, round shapes, bubbles.', editorial:'Magazine cover, huge type, red accent.', luxe:'Black and gold, art-deco sunburst, monogram.', boho:'Terracotta and sand, rising sun, soft arches.', riso:'Two-ink print, offset layers, halftone dots.', polaroid:'Taped instant photos, handwriting, kraft paper.', cinema:'Letterbox, film strip, premiere credits.', watercolor:'Soft paint washes, feathered photo, script.', brutal:'Thick borders, giant type, hard shadows.' },
+};
+const ru = {
+  close:'Закрыть', miniApp:'мини-приложение', myInv:'Мои приглашения', issueTag:'Конструктор приглашений',
+  hero1:'Приглашения, которые', hero2:'хочется открыть.',
+  heroSub:'Выберите событие и шаблон, добавьте текст, маршрут и фото. Получите ссылку с красивым превью для любого чата.',
+  create:'Создать приглашение', back:'Назад', next:'Далее', done:'Готово', edit:'Изменить', open:'Открыть', guests:'Гости',
+  flow1:'01 / 04 — Событие', flow2:'02 / 04 — Шаблон', flow3:'03 / 04 — Детали', flow4:'04 / 04 — Отправка',
+  chooseEvent:'Что празднуем?', templatesN:'5 шаблонов', pickTemplate:'Выберите шаблон',
+  template:'Шаблон', fontsLabel:'Шрифты', palette:'Палитра', preview:'Предпросмотр', useTpl:'Выбрать шаблон',
+  stepWord:'Шаг',
+  steps:{ basics:'Главное', when:'Дата и время', where:'Место и маршрут', words:'Текст и программа', details:'Детали', photos:'Фото', font:'Шрифт' },
+  hints:{ basics:'Кто приглашает и по какому поводу.', when:'Гости увидят живой обратный отсчёт.', where:'Главный адрес и остановки по пути.', words:'Текст приглашения и порядок дня.', details:'Дресс-код, подарки, полезное и контакты.', photos:'Обложка и несколько фото для галереи.', font:'Подобранные шрифты для этого шаблона.' },
+  fNames:'Имена / название', fHost:'От кого', fDate:'Дата', fTime:'Время', fCountdown:'Показывать отсчёт',
+  fVenue:'Название места', fAddress:'Адрес', fStops:'Остановки маршрута', fStopsHint:'Укажите место у пункта программы — он появится на карте маршрута.',
+  fMessage:'Текст приглашения', fProgram:'Программа', fPlace:'Место (необязательно)', addItem:'Добавить пункт',
+  fDress:'Дресс-код', fDressColors:'Палитра для гостей', fGifts:'Подарки и пожелания', fNotes:'Полезно знать', fContact:'Контакт организатора',
+  fCover:'Обложка', fGallery:'Галерея', upload:'Загрузить', replace:'Заменить',
+  photoHint:'Подставлены примеры фото — замените своими.',
+  toEditor:'К редактору', livePreview:'Живой предпросмотр',
+  tapHint:'Нажмите на любой элемент приглашения, чтобы изменить', toShare:'Получить ссылку',
+  linkReady:'Ссылка готова', slug:'Адрес ссылки', copy:'Скопировать', copied:'Ссылка скопирована', sendTg:'Отправить в Telegram',
+  qr:'QR-код', qrOpen:'Открыть крупно', pw:'Защита паролем', pwDesc:'Гости вводят пароль перед открытием.', pwPh:'Пароль',
+  ogTitle:'Как ссылка выглядит в чатах', ogTags:'OG-теги', openGuest:'Открыть как гость', chatQ:'Скинешь ссылку на приглашение?',
+  youGotMail:'Вам приглашение', tapOpen:'Нажмите на конверт, чтобы открыть', youreInvited:'Вы приглашены', scroll:'Листайте',
+  invitationWord:'Приглашение', program:'Программа', route:'Маршрут', untilEvent:'До события',
+  days:'дней', hours:'часов', min:'минут', sec:'секунд',
+  gallery:'Моменты', venue:'Где', openMap:'Открыть карту', directions:'Маршрут',
+  dress:'Дресс-код', gifts:'Подарки', notes:'Полезно знать', contact:'Есть вопросы?', writeHost:'Написать организатору',
+  rsvp:'Вы придёте?', replyBy:'Ответьте, пожалуйста, до', yes:'Да, приду', no:'К сожалению, не смогу', maybe:'Возможно',
+  guestsCount:'Гостей, включая вас', diet:'Питание', veg:'Вегетарианское', halal:'Халяль', nonut:'Без орехов', noalc:'Без алкоголя',
+  msgHost:'Сообщение организатору (необязательно)', send:'Отправить ответ', thanks:'Спасибо!', addCal:'В календарь', viaBot:'Ответить через бота', change:'Изменить ответ',
+  sumYes:'Вы придёте · гостей: ', sumNo:'Вы не сможете — мы передадим организатору.', sumMaybe:'Возможно · гостей: ',
+  madeWith:'Сделано в Invito', makeOwn:'Создать своё',
+  locked:'Приглашение защищено паролем', unlock:'Открыть', wrongPw:'Неверный пароль',
+  guestList:'Список гостей', seating:'Рассадка', attending:'Придут', declined:'Отказались', pending:'Ждём ответа', maybeS:'Возможно', seats:'Занято мест', all:'Все',
+  importTg:'Импорт из Telegram', importHint:'Выберите контакты. Бот отправит им ссылку.', addSel:'Добавить выбранных',
+  remind:'Напомнить ожидающим', reminded:'Напоминания отправлены ботом', csv:'Экспорт CSV', added:'Гости добавлены',
+  table:'Стол', unseated:'Без стола', unassignedHint:'Назначьте стол в списке гостей.',
+  to:'Кому', personal:'{name}, вы приглашены', whoComing:'Кто придёт', comingN:'гостей ответили «да»', showGuests:'Показывать на приглашении, кто придёт', personalLinks:'Персональные ссылки', personalHint:'У каждого гостя своя ссылка — его имя на конверте, а ответ сразу попадает в ваш список.', openAs:'Открыть как гость', yourName:'Ваше имя', you:'вы', copied2:'Персональная ссылка скопирована', linkBtn:'Ссылка', andMore:'и ещё {n}', replying:'Отвечает',
+
+  stepsX:{ style:'Стиль и цвет', music:'Музыка', sections:'Разделы' },
+  hintsX:{ style:'Палитра и шрифт заголовков для этого шаблона.', music:'Фоновая музыка, которую гости могут включить.', sections:'Включайте и выключайте разделы, меняйте порядок и открытие.' },
+  fPalette:'Палитра', fFont:'Шрифт заголовков', fMotion:'Движение обложки', still:'Статично', zoom:'Медленный зум', video:'Видео', uploadVideo:'Загрузить видео',
+  fMap:'Карта', mapDrawn:'Рисованная', mapReal:'Настоящая карта', fIntro:'Открытие', intro:{ envelope:'Конверт', curtain:'Занавес', scratch:'Скретч-карта', none:'Без интро' },
+  fSecret:'Секрет под скретч-слоем', secretHint:'Гости стирают слой, чтобы узнать секрет — идеально для гендер-пати или сюрприза.',
+  aiWrite:'Написать за меня', aiTones:{ warm:'Тепло', formal:'Официально', playful:'Весело', poetic:'Поэтично', short:'Коротко' }, aiBusy:'Пишу…', aiFail:'Ассистент недоступен — подставлен готовый текст',
+  saved:'Сохранено', saving:'Сохраняю…', duplicate:'Дублировать', duplicated:'Копия создана', deleteD:'Удалить',
+  tracks:{ none:'Без музыки', lullaby:'Музыкальная шкатулка', waltz:'Вальс', lofi:'Лоу-фай вечер', celebration:'Праздник', ambient:'Эмбиент', oriental:'Шёлковый путь', custom:'Ваш трек' }, uploadAudio:'Загрузить свой трек', play:'Слушать', stop:'Стоп',
+  sec:{ message:'Текст приглашения', program:'Программа', countdown:'Обратный отсчёт', gallery:'Галерея', venue:'Место и карта', dress:'Дресс-код', info:'Подарки и детали', reveal:'Скретч-сюрприз', who:'Кто придёт', guestbook:'Гостевая книга', rsvp:'Ответ гостя' },
+  guestbook:'Гостевая книга', guestbookHint:'Пожелания гостей появятся здесь после ответа.', scratchHint:'Сотрите, чтобы узнать', curtainHint:'Нажмите, чтобы открыть', moveUp:'Выше', moveDown:'Ниже',
+  checkin:'Чек-ин', activity:'Активность', bot:'Бот', groups:{ family:'Семья', friends:'Друзья', work:'Работа', other:'Другие' }, group:'Группа',
+  scanTitle:'Сканируйте QR гостя', simulate:'Симулировать скан', useCamera:'Включить камеру', checkedIn:'Пришёл', checkIn:'Отметить', arrived:'пришли', noCamera:'Камера здесь недоступна — используйте симуляцию', dragHint:'Перетащите гостя на стол или нажмите на гостя, а затем на стол.', allChecked:'Все на месте',
+  act:{ opened:'{name} открыл(а) приглашение', yes:'{name} придёт', no:'{name} не сможет', maybe:'{name} ответил(а) «возможно»', reminder:'Напоминание отправлено {n} гостям', checkin:'{name} пришёл(ла)', created:'Приглашение опубликовано' },
+  ago:{ now:'только что', m:'{n} мин назад', h:'{n} ч назад', d:'{n} дн назад' },
+  botT:{ title:'Invito бот', subtitle:'Что бот присылает вам и гостям', r1d:'Напомнить гостям за день', r3h:'Напомнить за 3 часа', morning:'Утром в день события: маршрут и погода', notify:'Сообщать мне о каждом ответе', test:'Отправить тестовое сообщение', sent:'Тест отправлен в ваш Telegram', testMsg:'Тест: приглашение опубликовано, ответы будут приходить сюда.' },
+  images:'Картинки для превью', ogImg:'Превью ссылки · 1200×630', storyImg:'Сторис · 1080×1920', download:'Скачать', generating:'Генерирую…',
+  livePeek:'Живой предпросмотр', openFull:'Открыть полностью',
+  wishes:['Так рады за вас! Считаем дни.','Будем обязательно. Любим вас!','Ждём не дождёмся — первый танец за нами!','Желаем прекрасного дня и много счастья.'],
+  secretBaby:'Это мальчик!', secretDef:'До встречи ✦', uiTheme:'Тема',
+
+  tour:'Возможности', tourKick:'Всё, что умеет Invito', tourTitle:'Возможности и шаблоны', tourSub:'Все шаблоны и все функции в одном месте. Нажмите на демо, чтобы сразу попасть в нужный экран.', allStyles:'Все стили', allEvents:'Все события', templatesAll:'Все шаблоны', featuresAll:'Демо функций', tryIt:'Попробовать', seeAll:'Все возможности',
+  demos:{ envelope:['Открытие конвертом','Запечатанный конверт с именем гостя раскрывается в приглашение.'], curtain:['Открытие занавесом','Половины занавеса разъезжаются, вылетает конфетти.'], scratchIntro:['Открытие скретч-картой','Гость стирает обложку, чтобы открыть приглашение.'], personal:['Персональное приглашение','«Кому: Дилноза» на конверте, её имя на обложке, ответ попадает в список.'], password:['Защита паролем','Гость вводит пароль перед открытием. Пароль демо: 2026.'], reveal:['Скретч-сюрприз','Скрытая строка под стираемым слоем — например, пол малыша.'], guestbook:['Гостевая книга и кто придёт','Пожелания из ответов и живой список гостей, ответивших «да».'], map:['Настоящая карта и маршрут','Встроенная карта, остановки маршрута, ссылки на навигацию.'], motion:['Живая обложка','Медленный зум или ваше видео на обложке.'], editor:['Редактор «нажми и измени»','Нажмите на любую часть приглашения, чтобы изменить её.'], ai:['ИИ-автор текста','Пять тонов, текст на текущем языке.'], music:['Музыка','Шесть генеративных треков и загрузка своего.'], sections:['Разделы и порядок','Включайте, выключайте и перетаскивайте разделы, выбирайте открытие.'], palette:['Палитры и шрифты','Три палитры и пять шрифтов для каждого шаблона.'], share:['Ссылка','Свой адрес, QR, Telegram, OG-картинка и сторис.'], guests:['Список гостей','Группы, фильтры, импорт из Telegram, CSV, персональные ссылки.'], seating:['Рассадка','Перетаскивайте гостей за круглые столы, с учётом +1.'], checkin:['QR чек-ин','Сканируйте гостей на входе или отмечайте вручную.'], activity:['Активность','Лента открытий, ответов, напоминаний и прибытий.'], bot:['Telegram-бот','Напоминания, утренний маршрут и уведомления об ответах.'], languages:['4 языка','Русский, английский, узбекский (латиница и кириллица).'], telegram:['Мини-приложение Telegram','Главная кнопка и кнопка «Назад» как в Telegram.'], dark:['Тёмная тема','Конструктор в тёмной теме — или как в Telegram.'] },
+  demoPw:'Пароль: 2026', on:'Вкл', off:'Выкл',
+  draft:'Черновик', live:'Опубликовано', replies:'ответов', sheetEdit:'Изменить',
+  sd:{ minimal:'Тихая сетка, воздух, чистый гротеск.', classic:'Бумага цвета слоновой кости, антиква, двойная рамка.', botanical:'Шалфей, мягкая арка, лепестки.', retro:'Хромово-розовый, тяжёлый шрифт, звёзды.', neon:'Ночной фон, светящийся текст.', pastel:'Мягкие цвета, круглые формы, пузырьки.', editorial:'Обложка журнала, огромный шрифт, красный акцент.', luxe:'Чёрное с золотом, ар-деко, монограмма.', boho:'Терракота и песок, восходящее солнце, мягкие арки.', riso:'Двухцветная ризография, сдвиг слоёв, растровые точки.', polaroid:'Полароиды на скотче, почерк, крафт-бумага.', cinema:'Кинокадр, плёнка, титры премьеры.', watercolor:'Акварельные разводы, мягкое фото, каллиграфия.', brutal:'Толстые рамки, гигантский шрифт, жёсткие тени.' },
+};
+const uz = {
+  close:'Yopish', miniApp:'mini ilova', myInv:'Mening taklifnomalarim', issueTag:'Taklifnoma konstruktori',
+  hero1:'Ochgingiz keladigan', hero2:'taklifnomalar.',
+  heroSub:'Tadbir va shablonni tanlang, matn, yo‘nalish va rasmlarni qo‘shing. Har qanday chat uchun chiroyli ko‘rinishli havolani oling.',
+  create:'Taklifnoma yaratish', back:'Orqaga', next:'Keyingi', done:'Tayyor', edit:'Tahrirlash', open:'Ochish', guests:'Mehmonlar',
+  flow1:'01 / 04 — Tadbir', flow2:'02 / 04 — Shablon', flow3:'03 / 04 — Tafsilotlar', flow4:'04 / 04 — Yuborish',
+  chooseEvent:'Nimani nishonlaymiz?', templatesN:'5 ta shablon', pickTemplate:'Shablonni tanlang',
+  template:'Shablon', fontsLabel:'Shriftlar', palette:'Ranglar', preview:'Ko‘rib chiqish', useTpl:'Shablonni tanlash',
+  stepWord:'Qadam',
+  steps:{ basics:'Asosiy', when:'Sana va vaqt', where:'Joy va yo‘nalish', words:'Matn va dastur', details:'Tafsilotlar', photos:'Rasmlar', font:'Shrift' },
+  hints:{ basics:'Kim taklif qilmoqda va qanday munosabat bilan.', when:'Mehmonlar jonli ortga sanoqni ko‘radi.', where:'Asosiy manzil va yo‘ldagi to‘xtashlar.', words:'Taklif matni va kun tartibi.', details:'Kiyinish qoidasi, sovg‘alar, foydali ma’lumot va aloqa.', photos:'Muqova va galereya uchun bir nechta rasm.', font:'Ushbu shablon uchun tanlangan shriftlar.' },
+  fNames:'Ismlar / nom', fHost:'Kimdan', fDate:'Sana', fTime:'Vaqt', fCountdown:'Ortga sanoqni ko‘rsatish',
+  fVenue:'Joy nomi', fAddress:'Manzil', fStops:'Yo‘nalish nuqtalari', fStopsHint:'Dastur bandiga joy qo‘shing — u yo‘nalish xaritasida chiqadi.',
+  fMessage:'Taklif matni', fProgram:'Dastur', fPlace:'Joy (ixtiyoriy)', addItem:'Band qo‘shish',
+  fDress:'Kiyinish qoidasi', fDressColors:'Mehmonlar uchun ranglar', fGifts:'Sovg‘alar va tilaklar', fNotes:'Bilish foydali', fContact:'Tashkilotchi bilan aloqa',
+  fCover:'Muqova', fGallery:'Galereya', upload:'Yuklash', replace:'Almashtirish',
+  photoHint:'Namuna rasmlar qo‘yilgan — o‘zingiznikiga almashtiring.',
+  toEditor:'Muharrirga', livePreview:'Jonli ko‘rinish',
+  tapHint:'O‘zgartirish uchun taklifnomadagi istalgan elementga bosing', toShare:'Havolani olish',
+  linkReady:'Havola tayyor', slug:'Havola manzili', copy:'Nusxa olish', copied:'Havola nusxalandi', sendTg:'Telegramda yuborish',
+  qr:'QR-kod', qrOpen:'Kattaroq ochish', pw:'Parol bilan himoya', pwDesc:'Mehmonlar ochishdan oldin parol kiritadi.', pwPh:'Parol',
+  ogTitle:'Havola chatda qanday ko‘rinadi', ogTags:'OG teglar', openGuest:'Mehmon sifatida ochish', chatQ:'Taklifnoma havolasini yuborasanmi?',
+  youGotMail:'Sizga taklifnoma', tapOpen:'Ochish uchun konvertga bosing', youreInvited:'Siz taklif qilingansiz', scroll:'Pastga suring',
+  invitationWord:'Taklifnoma', program:'Dastur', route:'Yo‘nalish', untilEvent:'Tadbirgacha',
+  days:'kun', hours:'soat', min:'daqiqa', sec:'soniya',
+  gallery:'Lahzalar', venue:'Qayerda', openMap:'Xaritani ochish', directions:'Yo‘nalish',
+  dress:'Kiyinish qoidasi', gifts:'Sovg‘alar', notes:'Bilish foydali', contact:'Savollar bormi?', writeHost:'Tashkilotchiga yozish',
+  rsvp:'Kelasizmi?', replyBy:'Iltimos, javob bering:', yes:'Ha, kelaman', no:'Afsuski, kela olmayman', maybe:'Balki',
+  guestsCount:'Siz bilan birga mehmonlar', diet:'Ovqatlanish', veg:'Vegetarian', halal:'Halol', nonut:'Yong‘oqsiz', noalc:'Alkogolsiz',
+  msgHost:'Tashkilotchiga xabar (ixtiyoriy)', send:'Javob yuborish', thanks:'Rahmat!', addCal:'Kalendarga qo‘shish', viaBot:'Bot orqali javob berish', change:'Javobni o‘zgartirish',
+  sumYes:'Siz kelasiz · mehmonlar: ', sumNo:'Siz kela olmaysiz — tashkilotchiga yetkazamiz.', sumMaybe:'Balki · mehmonlar: ',
+  madeWith:'Invito’da yaratilgan', makeOwn:'O‘zingiznikini yarating',
+  locked:'Taklifnoma parol bilan himoyalangan', unlock:'Ochish', wrongPw:'Parol noto‘g‘ri',
+  guestList:'Mehmonlar ro‘yxati', seating:'O‘tirish joylari', attending:'Keladi', declined:'Rad etdi', pending:'Kutilmoqda', maybeS:'Balki', seats:'Band joylar', all:'Hammasi',
+  importTg:'Telegramdan import', importHint:'Kontaktlarni tanlang. Bot ularga havolani yuboradi.', addSel:'Tanlanganlarni qo‘shish',
+  remind:'Kutilayotganlarga eslatish', reminded:'Eslatmalar bot orqali yuborildi', csv:'CSV eksport', added:'Mehmonlar qo‘shildi',
+  table:'Stol', unseated:'Stolsiz', unassignedHint:'Mehmonlar ro‘yxatida stolni tanlang.',
+  to:'Kimga', personal:'{name}, siz taklif qilingansiz', whoComing:'Kimlar keladi', comingN:'mehmon “ha” deb javob berdi', showGuests:'Taklifnomada kimlar kelishini ko‘rsatish', personalLinks:'Shaxsiy havolalar', personalHint:'Har bir mehmonga o‘z havolasi — konvertda uning ismi, javobi esa darhol ro‘yxatingizga tushadi.', openAs:'Mehmon sifatida ochish', yourName:'Ismingiz', you:'siz', copied2:'Shaxsiy havola nusxalandi', linkBtn:'Havola', andMore:'va yana {n}', replying:'Javob beruvchi',
+
+  stepsX:{ style:'Uslub va rang', music:'Musiqa', sections:'Bo‘limlar' },
+  hintsX:{ style:'Ushbu shablon uchun ranglar va sarlavha shrifti.', music:'Mehmonlar yoqishi mumkin bo‘lgan fon musiqasi.', sections:'Bo‘limlarni yoqing yoki o‘chiring, tartibini va ochilishini o‘zgartiring.' },
+  fPalette:'Ranglar palitrasi', fFont:'Sarlavha shrifti', fMotion:'Muqova harakati', still:'Harakatsiz', zoom:'Sekin yaqinlashish', video:'Video', uploadVideo:'Video yuklash',
+  fMap:'Xarita', mapDrawn:'Chizilgan', mapReal:'Haqiqiy xarita', fIntro:'Ochilish', intro:{ envelope:'Konvert', curtain:'Parda', scratch:'Skretch-karta', none:'Introsiz' },
+  fSecret:'Skretch ostidagi sir', secretHint:'Mehmonlar qatlamni o‘chirib, sirni bilib oladi — jins ochish bayrami yoki syurpriz uchun ajoyib.',
+  aiWrite:'Men uchun yoz', aiTones:{ warm:'Samimiy', formal:'Rasmiy', playful:'Quvnoq', poetic:'She’riy', short:'Qisqa' }, aiBusy:'Yozyapman…', aiFail:'Yordamchi mavjud emas — tayyor matn qo‘yildi',
+  saved:'Saqlandi', saving:'Saqlanmoqda…', duplicate:'Nusxalash', duplicated:'Nusxa yaratildi', deleteD:'O‘chirish',
+  tracks:{ none:'Musiqasiz', lullaby:'Musiqa qutisi', waltz:'Vals', lofi:'Lo-fi oqshom', celebration:'Bayram', ambient:'Ambient', oriental:'Ipak yo‘li', custom:'Sizning trekingiz' }, uploadAudio:'O‘z trekingizni yuklang', play:'Tinglash', stop:'To‘xtatish',
+  sec:{ message:'Taklif matni', program:'Dastur', countdown:'Ortga sanoq', gallery:'Galereya', venue:'Joy va xarita', dress:'Kiyinish qoidasi', info:'Sovg‘alar va tafsilotlar', reveal:'Skretch-syurpriz', who:'Kimlar keladi', guestbook:'Mehmonlar kitobi', rsvp:'Javob' },
+  guestbook:'Mehmonlar kitobi', guestbookHint:'Mehmonlarning tilaklari javobdan so‘ng shu yerda chiqadi.', scratchHint:'Bilish uchun o‘chiring', curtainHint:'Ochish uchun bosing', moveUp:'Yuqoriga', moveDown:'Pastga',
+  checkin:'Ro‘yxatga olish', activity:'Faollik', bot:'Bot', groups:{ family:'Oila', friends:'Do‘stlar', work:'Ish', other:'Boshqalar' }, group:'Guruh',
+  scanTitle:'Mehmon QR kodini skanerlang', simulate:'Skanerni sinash', useCamera:'Kamerani yoqish', checkedIn:'Keldi', checkIn:'Belgilash', arrived:'keldi', noCamera:'Kamera bu yerda mavjud emas — sinovdan foydalaning', dragHint:'Mehmonni stolga suring yoki avval mehmonga, so‘ng stolga bosing.', allChecked:'Hamma joyida',
+  act:{ opened:'{name} taklifnomani ochdi', yes:'{name} keladi', no:'{name} kela olmaydi', maybe:'{name} “balki” deb javob berdi', reminder:'Eslatma {n} mehmonga yuborildi', checkin:'{name} keldi', created:'Taklifnoma e’lon qilindi' },
+  ago:{ now:'hozirgina', m:'{n} daq oldin', h:'{n} soat oldin', d:'{n} kun oldin' },
+  botT:{ title:'Invito bot', subtitle:'Bot sizga va mehmonlarga nima yuboradi', r1d:'Mehmonlarga bir kun oldin eslatish', r3h:'3 soat oldin eslatish', morning:'Tadbir kuni ertalab: yo‘nalish va ob-havo', notify:'Har bir javob haqida xabar berish', test:'Sinov xabarini yuborish', sent:'Sinov xabari Telegramingizga yuborildi', testMsg:'Sinov: taklifnoma e’lon qilindi, javoblar shu yerga keladi.' },
+  images:'Ko‘rinish rasmlari', ogImg:'Havola ko‘rinishi · 1200×630', storyImg:'Stories · 1080×1920', download:'Yuklab olish', generating:'Yaratilmoqda…',
+  livePeek:'Jonli ko‘rinish', openFull:'To‘liq ochish',
+  wishes:['Siz uchun juda xursandmiz! Kunlarni sanayapmiz.','Albatta kelamiz. Sizni yaxshi ko‘ramiz!','Nishonlashni intiqlik bilan kutyapmiz!','Go‘zal kun va cheksiz baxt tilaymiz.'],
+  secretBaby:'O‘g‘il bola!', secretDef:'Ko‘rishguncha ✦', uiTheme:'Mavzu',
+
+  tour:'Imkoniyatlar', tourKick:'Invito nimalarni qila oladi', tourTitle:'Imkoniyatlar va shablonlar', tourSub:'Barcha shablonlar va funksiyalar bir joyda. Kerakli ekranga o‘tish uchun demoga bosing.', allStyles:'Barcha uslublar', allEvents:'Barcha tadbirlar', templatesAll:'Barcha shablonlar', featuresAll:'Funksiyalar demosi', tryIt:'Sinab ko‘rish', seeAll:'Barcha imkoniyatlar',
+  demos:{ envelope:['Konvert bilan ochilish','Mehmon ismi yozilgan muhrlangan konvert taklifnomaga aylanadi.'], curtain:['Parda bilan ochilish','Parda ikki tomonga ochiladi, konfetti uchadi.'], scratchIntro:['Skretch-karta bilan ochilish','Mehmon muqovani o‘chirib, taklifnomani ochadi.'], personal:['Shaxsiy taklifnoma','Konvertda “Kimga: Dilnoza”, muqovada uning ismi, javobi ro‘yxatga tushadi.'], password:['Parol bilan himoya','Mehmon ochishdan oldin parol kiritadi. Demo paroli: 2026.'], reveal:['Skretch-syurpriz','O‘chiriladigan qatlam ostidagi yashirin satr — masalan, chaqaloq jinsi.'], guestbook:['Mehmonlar kitobi va kimlar keladi','Javoblardagi tilaklar va “ha” deganlar ro‘yxati.'], map:['Haqiqiy xarita va yo‘nalish','Ichki xarita, yo‘nalish nuqtalari, navigatsiya havolalari.'], motion:['Jonli muqova','Sekin yaqinlashish yoki muqovada o‘z videongiz.'], editor:['“Bos va o‘zgartir” muharriri','Taklifnomaning istalgan qismiga bosib, uni o‘zgartiring.'], ai:['SI matn muallifi','Beshta ohang, joriy tilda.'], music:['Musiqa','Oltita generativ trek va o‘zingiznikini yuklash.'], sections:['Bo‘limlar va tartib','Bo‘limlarni yoqing, o‘chiring, suring, ochilishni tanlang.'], palette:['Palitra va shriftlar','Har bir shablon uchun uchta palitra va beshta shrift.'], share:['Havola','O‘z manzilingiz, QR, Telegram, OG rasm va stories.'], guests:['Mehmonlar ro‘yxati','Guruhlar, filtrlar, Telegramdan import, CSV, shaxsiy havolalar.'], seating:['O‘tirish joylari','Mehmonlarni dumaloq stollarga suring, +1 bilan.'], checkin:['QR orqali kirish','Kirishda mehmonlarni skanerlang yoki qo‘lda belgilang.'], activity:['Faollik','Ochilishlar, javoblar, eslatmalar va kelishlar lentasi.'], bot:['Telegram-bot','Eslatmalar, ertalabki yo‘nalish va javob xabarlari.'], languages:['4 til','Rus, ingliz, o‘zbek (lotin va kirill).'], telegram:['Telegram mini ilovasi','Telegramdagidek asosiy va “Orqaga” tugmalari.'], dark:['Qorong‘i mavzu','Konstruktor qorong‘i rejimda — yoki Telegramdagidek.'] },
+  demoPw:'Parol: 2026', on:'Yoq', off:'O‘ch',
+  draft:'Qoralama', live:'E’lon qilingan', replies:'javob', sheetEdit:'Tahrirlash',
+  sd:{ minimal:'Sokin to‘r, keng bo‘shliq, toza shrift.', classic:'Fil suyagi rangidagi qog‘oz, serif ismlar, qo‘sh ramka.', botanical:'Yashil ohanglar, yumshoq ark, gulbarglar.', retro:'Xrom-pushti, qalin shrift, yulduzlar.', neon:'Tungi fon, yonib turuvchi matn.', pastel:'Yumshoq ranglar, dumaloq shakllar, pufakchalar.', editorial:'Jurnal muqovasi, ulkan shrift, qizil urg‘u.', luxe:'Qora va oltin, ar-deko, monogramma.', boho:'Terrakota va qum, chiqayotgan quyosh, yumshoq arklar.', riso:'Ikki rangli bosma, siljigan qatlamlar, rastr nuqtalar.', polaroid:'Skotchli polaroidlar, qo‘lyozma, kraft qog‘oz.', cinema:'Kino kadr, plyonka, premyera titrlari.', watercolor:'Akvarel dog‘lari, yumshoq rasm, kalligrafiya.', brutal:'Qalin ramkalar, ulkan shrift, qattiq soyalar.' },
+};
+export const I18N = { en, ru, uz, uzc: deep(uz) };
+export const LANGS = [ { code:'ru', label:'RU' }, { code:'en', label:'EN' }, { code:'uz', label:'UZ' }, { code:'uzc', label:'ЎЗ' } ];
+export const LOCALE = { ru:'ru-RU', en:'en-GB', uz:'uz-Latn-UZ', uzc:'uz-Cyrl-UZ' };
+
+const U = (id)=>`https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=70`;
+const IMG = {
+  date:['1529634806980-85c3dd6d34ac','1414235077428-338989a2e8c0','1518199266791-5375a83190b7','1517248135467-4c7edcad34c4','1516589178581-6cd7833ae3b2'],
+  wedding:['1519741497674-611481863552','1511285560929-80b456fea0bc','1465495976277-4387d4b0b4c6','1523438885200-e635ba2c371e','1469371670807-013ccf25f16a'],
+  birthday:['1530103862676-de8c9debad1d','1464349095431-e9a21285b5f3','1513151233558-d860c5398176','1558636508-e0db3814bd1d','1527529482837-4698179dc6ce'],
+  baby:['1519689680058-324335c77eba','1555252333-9f8e92e65df9','1515488042361-ee00e0ddd4e4','1544126592-807ade215a0b','1522771930-78848d9293e8'],
+  party:['1492684223066-81342ee5ff30','1514525253161-7a46d19cd819','1470225620780-dba8ba36b745','1501281668745-f7f57925c3b4','1429962714451-bb934ecdc4ec'],
+  corporate:['1540575467063-178a50c2df87','1515187029135-18ee286d815b','1505373877841-8d25f7d46678','1511578314322-379afb476865','1556761175-b413da4baf72'],
+  anniversary:['1522673607200-164d1b6ce486','1490750967868-88aa4486c946','1487530811176-3780de880c2d','1518621736915-f3b1c41bfd00','1529636798458-92182e662485'],
+  engagement:['1515934751635-c81c6bc9a2d8','1605100804763-247f67b3557e','1494774157365-9e04c6720e47','1522673607200-164d1b6ce486','1519741497674-611481863552'],
+  housewarming:['1505691938895-1758d7feb511','1556909114-f6e7ad7d3136','1484154218962-a197022b5858','1493809842364-78817add7ffb','1502672260266-1c1ef2d93688'],
+  kids:['1503454537195-1dcabb73ffb9','1530103862676-de8c9debad1d','1587654780291-39c9404d746b','1558636508-e0db3814bd1d','1513151233558-d860c5398176'],
+  iftar:['1564121211835-e88c852648ab','1542816417-0983c9c9ad53','1532635241-17e820acc59f','1555939594-58d7cb561ad1','1414235077428-338989a2e8c0'],
+  graduation:['1541339907198-e08756dedf3f','1523050854058-8df90110c9f1','1627556704302-624286467c65','1541339907198-e08756dedf3f','1517486808906-6ca8b3f04846','1498243691581-b145c3f54a5a'],
+};
+const P = (t, en, ru, uz, place)=>({ t, en, ru, uz, uzc: toCyr(uz), place: place||null });
+const T = (o)=>({ ...o, uzc: deep(o.uz) });
+
+export const EVENTS = {
+  date: { label:{en:'Date',ru:'Свидание',uz:'Uchrashuv'}, styles:['neon','pastel','editorial','riso','cinema'], names:['Afterglow','Blush','Rendezvous','Love Letter','Midnight Show'], days:9, time:'19:00', dressColors:['#1d1b2e','#c9415f','#efe3d3'],
+    text: T({ en:{names:'Dinner for two', host:'Timur', message:'I have a table by the window and a question I have been saving. Will you join me?', venue:'Terrace Café', address:'12 Amir Temur Ave, Tashkent', dress:'Something you feel great in. Comfortable shoes — we will walk.', gifts:'Just bring yourself.', notes:'I will pick you up at 18:40. Take a light jacket for the evening walk.', contact:'@timur'},
+      ru:{names:'Ужин для двоих', host:'Тимур', message:'Есть столик у окна и вопрос, который я давно берегу. Составишь компанию?', venue:'Кафе «Терраса»', address:'пр. Амира Темура, 12, Ташкент', dress:'То, в чём тебе хорошо. Удобная обувь — будем гулять.', gifts:'Просто приходи.', notes:'Заберу тебя в 18:40. Возьми лёгкую куртку для вечерней прогулки.', contact:'@timur'},
+      uz:{names:'Ikki kishilik kechki ovqat', host:'Temur', message:'Deraza yonida stol va uzoqdan beri saqlab yurgan bitta savolim bor. Hamroh bo‘lasanmi?', venue:'“Terrasa” kafesi', address:'Amir Temur shoh ko‘chasi, 12, Toshkent', dress:'O‘zingni yaxshi his qiladigan kiyim. Qulay poyabzal — sayr qilamiz.', gifts:'Faqat o‘zing kel.', notes:'Seni 18:40 da olib ketaman. Kechki sayr uchun yengil kurtka ol.', contact:'@timur'} }),
+    program:[ P('19:00','Dinner by the window','Ужин у окна','Deraza yonida kechki ovqat','Terrace Café'), P('20:45','Walk along the canal','Прогулка вдоль канала','Kanal bo‘ylab sayr','Ankhor canal'), P('21:30','Dessert & the question','Десерт и тот самый вопрос','Shirinlik va o‘sha savol','Rooftop 360') ] },
+  wedding: { label:{en:'Wedding',ru:'Свадьба',uz:'To‘y'}, styles:['classic','botanical','luxe','boho','watercolor'], names:['Ivory','Sage','Aurum','Desert Rose','Aquarelle'], days:68, time:'16:00', dressColors:['#e9dfcf','#a8b59a','#6b5a48','#2b2420'],
+    text: T({ en:{names:'Anna & Timur', host:'With love, our families', message:'We are getting married and would love you to be there on the day our story begins its next chapter.', venue:'Garden Hall', address:'45 Mustaqillik St, Tashkent', dress:'Black tie optional. We would love to see warm neutrals and sage.', gifts:'Your presence is the gift. If you wish, an envelope box will be at the entrance.', notes:'Free parking at the venue. The evening is adults only. Transfer back to the city at 23:30.', contact:'+998 90 123 45 67'},
+      ru:{names:'Анна и Тимур', host:'С любовью, наши семьи', message:'Мы женимся и будем счастливы, если вы разделите с нами день, с которого начнётся новая глава нашей истории.', venue:'Зал «Сад»', address:'ул. Мустакиллик, 45, Ташкент', dress:'Вечерний, без строгого black tie. Будем рады тёплым нейтральным оттенкам и шалфею.', gifts:'Ваше присутствие — главный подарок. При желании у входа будет бокс для конвертов.', notes:'Бесплатная парковка у зала. Вечер только для взрослых. Трансфер в город в 23:30.', contact:'+998 90 123 45 67'},
+      uz:{names:'Anna va Temur', host:'Muhabbat bilan, oilalarimiz', message:'Biz turmush quryapmiz va hikoyamizning yangi bobi boshlanadigan kunda yonimizda bo‘lishingizdan baxtiyor bo‘lamiz.', venue:'“Bog‘” zali', address:'Mustaqillik ko‘chasi, 45, Toshkent', dress:'Kechki libos. Iliq neytral va yashil ohanglar ma’qul.', gifts:'Sizning ishtirokingiz — eng katta sovg‘a. Kirish joyida konvertlar qutisi bo‘ladi.', notes:'Zal yonida bepul to‘xtash joyi. Kecha faqat kattalar uchun. Shaharga transfer 23:30 da.', contact:'+998 90 123 45 67'} }),
+    program:[ P('16:00','Ceremony','Церемония','Nikoh marosimi'), P('18:00','Dinner','Банкет','Ziyofat'), P('21:00','First dance','Первый танец','Birinchi raqs') ] },
+  birthday: { label:{en:'Birthday',ru:'День рождения',uz:'Tug‘ilgan kun'}, styles:['retro','pastel','editorial','riso','polaroid'], names:['Chrome','Sorbet','Headline','Confetti Press','Scrapbook'], days:21, time:'19:00', dressColors:['#ff4fbf','#7cf0ff','#c0c0c8'],
+    text: T({ en:{names:'Lola turns 30', host:'Lola', message:'Cake, music and everyone I love in one room. Come celebrate with me.', venue:'Loft 7', address:'7 Shota Rustaveli St, Tashkent', dress:'Y2K: something shiny, pink or silver.', gifts:'A wishlist is linked below — or simply bring a good mood.', notes:'Entrance from the courtyard, 3rd floor. Party goes until 2 am.', contact:'@lola'},
+      ru:{names:'Лоле 30', host:'Лола', message:'Торт, музыка и все любимые люди в одной комнате. Приходи праздновать!', venue:'Loft 7', address:'ул. Шота Руставели, 7, Ташкент', dress:'Y2K: что-то блестящее, розовое или серебряное.', gifts:'Вишлист по ссылке ниже — или просто хорошее настроение.', notes:'Вход со двора, 3 этаж. Празднуем до 2 ночи.', contact:'@lola'},
+      uz:{names:'Lola 30 yoshda', host:'Lola', message:'Tort, musiqa va barcha yaqinlarim bir xonada. Birga nishonlaymiz!', venue:'Loft 7', address:'Shota Rustaveli ko‘chasi, 7, Toshkent', dress:'Y2K: yaltiroq, pushti yoki kumush rangli kiyim.', gifts:'Tilaklar ro‘yxati quyidagi havolada — yoki shunchaki yaxshi kayfiyat.', notes:'Kirish hovlidan, 3-qavat. Tungi 2 gacha nishonlaymiz.', contact:'@lola'} }),
+    program:[ P('19:00','Welcome drinks','Велком','Kutib olish'), P('20:00','Dinner & toasts','Ужин и тосты','Ziyofat va tostlar'), P('22:00','Cake & dancing','Торт и танцы','Tort va raqslar') ] },
+  baby: { label:{en:'Baby shower',ru:'Беби-шауэр',uz:'Chaqaloq bayrami'}, styles:['pastel','botanical','minimal','boho','watercolor'], names:['Cloud','Meadow','Nest','Sunbeam','Lullaby'], days:30, time:'15:00', dressColors:['#f6d6dd','#cfe3f1','#f3ead8'],
+    text: T({ en:{names:'Baby Amir is on the way', host:'Madina & Rustam', message:'Join us for tea, sweets and a little guessing game before our family grows by one.', venue:'Our home', address:'18 Bobur St, apt. 24, Tashkent', dress:'Soft pastels — pink or blue, if you want to vote.', gifts:'We have a small wishlist for the nursery.', notes:'Please take off shoes at the door. Kids are welcome.', contact:'+998 93 555 12 12'},
+      ru:{names:'Скоро малыш Амир', host:'Мадина и Рустам', message:'Приходите на чай, сладости и маленькую викторину, пока наша семья не стала больше.', venue:'У нас дома', address:'ул. Бобура, 18, кв. 24, Ташкент', dress:'Мягкие пастельные тона — розовый или голубой, если хотите проголосовать.', gifts:'Есть небольшой вишлист для детской.', notes:'Пожалуйста, разувайтесь у входа. С детьми можно.', contact:'+998 93 555 12 12'},
+      uz:{names:'Tez orada chaqaloq Amir', host:'Madina va Rustam', message:'Oilamiz kattalashmasidan oldin choy, shirinliklar va kichik o‘yinga taklif qilamiz.', venue:'Uyimizda', address:'Bobur ko‘chasi, 18, 24-xonadon, Toshkent', dress:'Yumshoq pastel ranglar — ovoz bermoqchi bo‘lsangiz pushti yoki havorang.', gifts:'Bolalar xonasi uchun kichik tilaklar ro‘yxati bor.', notes:'Iltimos, kirishda poyabzalni yeching. Bolalar bilan kelish mumkin.', contact:'+998 93 555 12 12'} }),
+    program:[ P('15:00','Tea','Чаепитие','Choy'), P('16:00','Guessing game','Викторина','O‘yinlar'), P('17:00','Wishes for Amir','Пожелания Амиру','Amirga tilaklar') ] },
+  party: { label:{en:'Party',ru:'Вечеринка',uz:'Kecha'}, styles:['neon','retro','luxe','riso','brutal'], names:['Voltage','Disco 2000','Noir','Flyer','Warehouse'], days:5, time:'22:00', dressColors:['#0b0a12','#3df5c8','#ff3fa4'],
+    text: T({ en:{names:'Friday Night', host:'DJ Sardor', message:'Lights low, music loud. Bring friends and your best moves.', venue:'Basement 21', address:'21 Afrosiyob St, Tashkent', dress:'All black with one neon detail.', gifts:'No gifts. First drink is on us.', notes:'18+, ID at the door. Name on the list = free entry before 23:00.', contact:'@sardor_dj'},
+      ru:{names:'Пятничная ночь', host:'DJ Sardor', message:'Свет приглушён, музыка громко. Бери друзей и лучшие движения.', venue:'Basement 21', address:'ул. Афросиёб, 21, Ташкент', dress:'Всё чёрное и одна неоновая деталь.', gifts:'Без подарков. Первый напиток за нами.', notes:'18+, документ на входе. Имя в списке — бесплатный вход до 23:00.', contact:'@sardor_dj'},
+      uz:{names:'Juma kechasi', host:'DJ Sardor', message:'Chiroqlar xira, musiqa baland. Do‘stlaringni va eng zo‘r harakatlaringni olib kel.', venue:'Basement 21', address:'Afrosiyob ko‘chasi, 21, Toshkent', dress:'Butunlay qora va bitta neon detal.', gifts:'Sovg‘asiz. Birinchi ichimlik bizdan.', notes:'18+, kirishda hujjat. Ro‘yxatdagi ism — 23:00 gacha bepul kirish.', contact:'@sardor_dj'} }),
+    program:[ P('22:00','Doors open','Открытие','Eshiklar ochiladi'), P('23:00','Live set','Лайв-сет','Jonli set'), P('02:00','Afterparty','Афтепати','Afterparti','Rooftop 360') ] },
+  corporate: { label:{en:'Corporate',ru:'Корпоратив',uz:'Korporativ'}, styles:['minimal','editorial','luxe','neon','brutal'], names:['Grid','Quarterly','Gala','Keynote','Manifesto'], days:40, time:'10:00', dressColors:['#1f2a3a','#e7e3da','#8a8f98'],
+    text: T({ en:{names:'Annual Summit 2026', host:'Team Nova', message:'A day of results and ideas, and a dinner to say thank you for this year.', venue:'City Conference Hall', address:'2 Islam Karimov St, Tashkent', dress:'Business casual by day, cocktail for the gala dinner.', gifts:'Every guest receives a welcome pack at registration.', notes:'Registration opens at 9:30. Bring your badge QR. Parking level -2.', contact:'events@nova.uz'},
+      ru:{names:'Годовой саммит 2026', host:'Команда Nova', message:'День итогов и идей, а вечером ужин в благодарность за этот год.', venue:'Конгресс-холл «Сити»', address:'ул. Ислама Каримова, 2, Ташкент', dress:'Днём business casual, вечером коктейльный.', gifts:'Каждый гость получит welcome-пакет на регистрации.', notes:'Регистрация с 9:30. Возьмите QR бейджа. Парковка на уровне −2.', contact:'events@nova.uz'},
+      uz:{names:'Yillik sammit 2026', host:'Nova jamoasi', message:'Natijalar va g‘oyalar kuni, kechqurun esa shu yil uchun minnatdorlik kechki ovqati.', venue:'“Siti” kongress zali', address:'Islom Karimov ko‘chasi, 2, Toshkent', dress:'Kunduzi business casual, kechqurun kokteyl libosi.', gifts:'Har bir mehmon ro‘yxatdan o‘tishda sovg‘a to‘plamini oladi.', notes:'Ro‘yxatdan o‘tish 9:30 dan. Beyj QR kodini oling. To‘xtash joyi −2 qavatda.', contact:'events@nova.uz'} }),
+    program:[ P('10:00','Keynote','Открытие','Ochilish'), P('13:00','Workshops','Воркшопы','Seminarlar'), P('19:00','Gala dinner','Гала-ужин','Gala-kechki ovqat','Rooftop 360') ] },
+  anniversary: { label:{en:'Anniversary',ru:'Годовщина',uz:'Yubiley'}, styles:['classic','luxe','botanical','boho','cinema'], names:['Heirloom','Champagne','Olive','Golden Hour','Reel'], days:26, time:'18:00', dressColors:['#caa45b','#efe5cf','#3a2f22'],
+    text: T({ en:{names:'Ten years together', host:'Dilnoza & Aziz', message:'Ten years ago we said yes. We would like to celebrate it with the people who were there for all of it.', venue:'Rooftop 360', address:'360 Navoi Ave, 18th floor, Tashkent', dress:'Evening wear in champagne, gold or ivory.', gifts:'No gifts please — bring a favourite photo of us instead.', notes:'Lift to the 18th floor from the main lobby. Evening outdoors — it may be cool.', contact:'+998 97 700 10 10'},
+      ru:{names:'Десять лет вместе', host:'Дилноза и Азиз', message:'Десять лет назад мы сказали «да». Хотим отметить это с теми, кто был рядом всё это время.', venue:'Rooftop 360', address:'пр. Навои, 360, 18 этаж, Ташкент', dress:'Вечерний, в оттенках шампанского, золота или слоновой кости.', gifts:'Без подарков — лучше принесите любимое фото с нами.', notes:'Лифт на 18 этаж из главного лобби. Вечер на открытом воздухе — может быть прохладно.', contact:'+998 97 700 10 10'},
+      uz:{names:'O‘n yil birga', host:'Dilnoza va Aziz', message:'O‘n yil oldin biz “ha” degan edik. Buni shu yillar davomida yonimizda bo‘lganlar bilan nishonlamoqchimiz.', venue:'Rooftop 360', address:'Navoiy shoh ko‘chasi, 360, 18-qavat, Toshkent', dress:'Shampan, oltin yoki fil suyagi rangidagi kechki libos.', gifts:'Sovg‘asiz — o‘rniga biz bilan sevimli rasmingizni olib keling.', notes:'Asosiy foyedan 18-qavatga lift. Kecha ochiq havoda — salqin bo‘lishi mumkin.', contact:'+998 97 700 10 10'} }),
+    program:[ P('18:00','Toast at sunset','Тост на закате','Quyosh botishida tost'), P('19:00','Dinner','Ужин','Kechki ovqat'), P('21:00','Slideshow & dancing','Слайд-шоу и танцы','Slayd-shou va raqs') ] },
+  graduation: { label:{en:'Graduation',ru:'Выпускной',uz:'Bitiruv'}, styles:['editorial','minimal','retro','riso','polaroid'], names:['Honors','Thesis','Pixel','Zine','Yearbook'], days:45, time:'14:00', dressColors:['#111111','#e0421d','#eeeae1'],
+    text: T({ en:{names:'Class of 2026', host:'Kamila', message:'Four years, countless deadlines and one diploma. Celebrate with me.', venue:'University Garden', address:'4 University St, Tashkent', dress:'Smart casual. Caps are optional but encouraged.', gifts:'Cards with advice for my first job are the best gift.', notes:'The ceremony is outdoors — bring sunglasses. Family welcome.', contact:'@kamila'},
+      ru:{names:'Выпуск 2026', host:'Камила', message:'Четыре года, бесконечные дедлайны и один диплом. Отпразднуй со мной!', venue:'Университетский сад', address:'ул. Университетская, 4, Ташкент', dress:'Smart casual. Шапочки по желанию, но приветствуются.', gifts:'Лучший подарок — открытка с советом для первой работы.', notes:'Церемония на улице — возьмите очки от солнца. Семьи приглашены.', contact:'@kamila'},
+      uz:{names:'2026-yil bitiruvchilari', host:'Kamila', message:'To‘rt yil, son-sanoqsiz muddatlar va bitta diplom. Men bilan nishonla!', venue:'Universitet bog‘i', address:'Universitet ko‘chasi, 4, Toshkent', dress:'Smart casual. Bitiruv qalpoqchasi ixtiyoriy, lekin ma’qul.', gifts:'Eng yaxshi sovg‘a — birinchi ishim uchun maslahatli otkritka.', notes:'Marosim ochiq havoda — quyosh ko‘zoynagini oling. Oilalar taklif qilinadi.', contact:'@kamila'} }),
+    program:[ P('14:00','Diploma ceremony','Вручение дипломов','Diplom topshirish'), P('16:00','Photos on campus','Фото в кампусе','Kampusda suratga tushish'), P('19:00','Party','Вечеринка','Bazm','Loft 7') ] },
+  engagement: { label:{en:'Engagement',ru:'Помолвка',uz:'Unashtirish'}, styles:['classic','luxe','pastel','boho','watercolor'], names:['Promise','Gilded','Petal','Terracotta','Blossom'], days:33, time:'18:00', dressColors:['#e9d8b4','#ffffff','#c9a35a'],
+    text: T({ en:{names:'Madina & Jasur', host:'The Karimov and Aliyev families', message:'She said yes. Join our families for an evening of blessings, tea and the first toast to our future.', venue:'Bahor Restaurant', address:'8 Bunyodkor Ave, Tashkent', dress:'Festive, in soft gold or white.', gifts:'Flowers are always welcome.', notes:'Seating by family tables. Valet parking at the entrance.', contact:'+998 90 777 88 99'},
+      ru:{names:'Мадина и Жасур', host:'Семьи Каримовых и Алиевых', message:'Она сказала «да». Приходите на вечер благословений, чая и первого тоста за наше будущее.', venue:'Ресторан «Бахор»', address:'пр. Бунёдкор, 8, Ташкент', dress:'Нарядно, в мягком золоте или белом.', gifts:'Цветы всегда к месту.', notes:'Рассадка по семейным столам. Парковщик у входа.', contact:'+998 90 777 88 99'},
+      uz:{names:'Madina va Jasur', host:'Karimovlar va Aliyevlar oilalari', message:'U “ha” dedi. Duolar, choy va kelajagimiz uchun birinchi tost kechasiga marhamat.', venue:'“Bahor” restorani', address:'Bunyodkor shoh ko‘chasi, 8, Toshkent', dress:'Bayramona, yumshoq oltin yoki oq rangda.', gifts:'Gullar har doim o‘rinli.', notes:'Oilaviy stollar bo‘yicha joylashuv. Kirishda avtoturargoh xizmati.', contact:'+998 90 777 88 99'} }),
+    program:[ P('18:00','Blessing','Благословение','Fotiha duosi'), P('19:00','Dinner','Ужин','Kechki ovqat'), P('20:30','Rings & first toast','Кольца и первый тост','Uzuklar va birinchi tost') ] },
+  housewarming: { label:{en:'Housewarming',ru:'Новоселье',uz:'Yangi uy'}, styles:['boho','minimal','botanical','riso','brutal'], names:['Hearth','Keys','Fern','Doorbell','Concrete'], days:12, time:'17:00', dressColors:['#efe4d6','#8a9a7b','#b85c38'],
+    text: T({ en:{names:'Our new home', host:'Alisher & Nigora', message:'We finally have the keys. Come see the place, eat plov and help us decide where the sofa goes.', venue:'Apartment 52', address:'15 Chilonzor, block 3, Tashkent', dress:'Comfortable — we will sit on the floor too.', gifts:'A plant or a board game would make us very happy.', notes:'Entrance 2, 6th floor, intercom 52. Parking in the yard.', contact:'@alisher'},
+      ru:{names:'Наш новый дом', host:'Алишер и Нигора', message:'Ключи наконец у нас. Приходите посмотреть, поесть плова и помочь решить, куда поставить диван.', venue:'Квартира 52', address:'Чиланзар, 15, корпус 3, Ташкент', dress:'Удобно — будем сидеть и на полу.', gifts:'Растение или настольная игра очень нас порадуют.', notes:'Подъезд 2, 6 этаж, домофон 52. Парковка во дворе.', contact:'@alisher'},
+      uz:{names:'Yangi uyimiz', host:'Alisher va Nigora', message:'Nihoyat kalitlar bizda. Uyni ko‘rgani, osh yegani va divanni qayerga qo‘yishni hal qilgani keling.', venue:'52-xonadon', address:'Chilonzor, 15, 3-bino, Toshkent', dress:'Qulay kiyim — polda ham o‘tiramiz.', gifts:'Gul yoki stol o‘yini bizni juda xursand qiladi.', notes:'2-kirish, 6-qavat, domofon 52. To‘xtash joyi hovlida.', contact:'@alisher'} }),
+    program:[ P('17:00','House tour','Экскурсия по квартире','Uyni ko‘rish'), P('18:00','Plov','Плов','Osh'), P('20:00','Board games','Настолки','Stol o‘yinlari') ] },
+  kids: { label:{en:'Kids party',ru:'Детский праздник',uz:'Bolalar bayrami'}, styles:['pastel','retro','riso','botanical','polaroid'], names:['Balloon','Arcade','Crayon','Treehouse','Snapshots'], days:16, time:'15:00', dressColors:['#ff5a5f','#ffd23f','#3d7bff'],
+    text: T({ en:{names:'Samir turns 6', host:'Samir and parents', message:'Balloons, a magician and a lot of cake. Come in your favourite superhero costume!', venue:'Funky Kids Club', address:'3 Yunusabad St, Tashkent', dress:'Superhero costumes welcome.', gifts:'Samir loves LEGO and books about space.', notes:'Parents can stay — there is a café upstairs. Pick-up at 18:00.', contact:'+998 91 222 33 44'},
+      ru:{names:'Самиру 6 лет', host:'Самир и родители', message:'Шарики, фокусник и много торта. Приходи в костюме любимого супергероя!', venue:'Детский клуб «Фанки»', address:'ул. Юнусабад, 3, Ташкент', dress:'Костюмы супергероев приветствуются.', gifts:'Самир обожает LEGO и книги про космос.', notes:'Родители могут остаться — наверху кафе. Забираем детей в 18:00.', contact:'+998 91 222 33 44'},
+      uz:{names:'Samir 6 yoshda', host:'Samir va ota-onasi', message:'Sharlar, sehrgar va juda ko‘p tort. Sevimli superqahramoning kostyumida kel!', venue:'“Funky” bolalar klubi', address:'Yunusobod ko‘chasi, 3, Toshkent', dress:'Superqahramon kostyumlari ma’qul.', gifts:'Samir LEGO va koinot haqidagi kitoblarni yaxshi ko‘radi.', notes:'Ota-onalar qolishi mumkin — yuqorida kafe bor. Bolalarni 18:00 da olib ketamiz.', contact:'+998 91 222 33 44'} }),
+    program:[ P('15:00','Games','Игры','O‘yinlar'), P('16:00','Magic show','Фокусы','Sehrgar shousi'), P('17:00','Cake','Торт','Tort') ] },
+  iftar: { label:{en:'Iftar',ru:'Ифтар',uz:'Iftorlik'}, styles:['luxe','classic','boho','minimal','cinema'], names:['Crescent','Lantern','Dates','Dusk','Twilight'], days:140, time:'18:40', dressColors:['#1e3a34','#caa45b','#efe5cf'],
+    text: T({ en:{names:'Iftar with family', host:'The Yusupov family', message:'Let us break the fast together. Dates, warm bread and a long table for everyone we love.', venue:'Our garden', address:'27 Beshyogoch St, Tashkent', dress:'Modest and comfortable.', gifts:'No gifts — just your prayers.', notes:'Iftar begins at sunset. A space for prayer is prepared.', contact:'+998 94 600 70 80'},
+      ru:{names:'Ифтар в кругу семьи', host:'Семья Юсуповых', message:'Давайте вместе разговеемся. Финики, тёплые лепёшки и длинный стол для всех, кого мы любим.', venue:'Наш сад', address:'ул. Бешёгоч, 27, Ташкент', dress:'Скромно и удобно.', gifts:'Без подарков — только ваши молитвы.', notes:'Ифтар начинается с закатом. Подготовлено место для намаза.', contact:'+998 94 600 70 80'},
+      uz:{names:'Oila davrasida iftorlik', host:'Yusupovlar oilasi', message:'Keling, birga og‘iz ochaylik. Xurmo, issiq non va barcha yaqinlarimiz uchun uzun dasturxon.', venue:'Bog‘imiz', address:'Beshyog‘och ko‘chasi, 27, Toshkent', dress:'Kamtarona va qulay.', gifts:'Sovg‘asiz — faqat duolaringiz.', notes:'Iftorlik quyosh botishi bilan boshlanadi. Namoz uchun joy tayyorlangan.', contact:'+998 94 600 70 80'} }),
+    program:[ P('18:40','Maghrib & dates','Магриб и финики','Shom va xurmo'), P('19:00','Dinner','Ужин','Dasturxon'), P('20:30','Tea & conversation','Чай и беседа','Choy va suhbat') ] },
+};
+for (const k in EVENTS) { EVENTS[k].label.uzc = toCyr(EVENTS[k].label.uz); EVENTS[k].img = IMG[k].map(U); }
+export const EVENT_ORDER = ['wedding','engagement','date','birthday','kids','baby','party','corporate','anniversary','graduation','housewarming','iftar'];
+
+const shade = (hex, f)=>{ const n = parseInt(hex.slice(1),16); let r=n>>16, g=(n>>8)&255, b=n&255; const m=(c)=>Math.max(0,Math.min(255,Math.round(f<0? c*(1+f) : c+(255-c)*f))); return '#'+[m(r),m(g),m(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); };
+const BASE = {
+  minimal:   { label:'Minimal',   bg:'#f2f1ee', surface:'#ffffff', ink:'#141414', muted:'#66655f', accent:'#141414', accent2:'#d9d6cf', onAccent:'#ffffff', fonts:['Jost','Unbounded','Tenor Sans','Montserrat','Onest'], body:'Onest', hero:'grid', particle:'dots', imgFilter:'grayscale(1) contrast(1.05)', tt:'uppercase', radius:'0px', wt:'500' },
+  classic:   { label:'Classic',   bg:'#f5efe4', surface:'#fbf7ef', ink:'#2a221c', muted:'#76685a', accent:'#93723f', accent2:'#e6d9c3', onAccent:'#ffffff', fonts:['Cormorant Garamond','Playfair Display','Prata','Old Standard TT','Marck Script'], body:'Lora', hero:'center', particle:'sparkle', imgFilter:'sepia(.25) saturate(.8)', tt:'none', radius:'2px', wt:'500', frame:true },
+  botanical: { label:'Botanical', bg:'#e8ebe0', surface:'#f3f4ec', ink:'#26321f', muted:'#56634c', accent:'#56713f', accent2:'#c9d3b8', onAccent:'#ffffff', fonts:['Cormorant Garamond','Alice','Bad Script','Spectral','Lora'], body:'Spectral', hero:'oval', particle:'petals', imgFilter:'saturate(.75) hue-rotate(-8deg)', tt:'none', radius:'18px', wt:'500' },
+  retro:     { label:'Y2K',       bg:'#e4dbff', surface:'#f3eeff', ink:'#1c1240', muted:'#4f4580', accent:'#ff4fbf', accent2:'#7cf0ff', onAccent:'#1c1240', fonts:['Unbounded','Rubik Mono One','Dela Gothic One','Russo One','Press Start 2P'], body:'Rubik', hero:'full', particle:'stars', imgFilter:'saturate(1.3) hue-rotate(15deg)', tt:'uppercase', radius:'22px', wt:'700' },
+  neon:      { label:'Neon',      bg:'#0b0a12', surface:'#15131f', ink:'#f3f0ff', muted:'#a29cc0', accent:'#3df5c8', accent2:'#ff3fa4', onAccent:'#0b0a12', fonts:['Unbounded','Russo One','Oswald','Exo 2','Dela Gothic One'], body:'Exo 2', hero:'ticket', particle:'glow', imgFilter:'saturate(1.2) contrast(1.1) brightness(.75)', tt:'uppercase', radius:'4px', wt:'700', dark:true, glow:true },
+  pastel:    { label:'Pastel',    bg:'#fbedf0', surface:'#fff7f8', ink:'#4b3440', muted:'#83677a', accent:'#d9708f', accent2:'#bcdcf2', onAccent:'#ffffff', fonts:['Comfortaa','Pacifico','Caveat','Nunito','Amatic SC'], body:'Nunito', hero:'bubble', particle:'bubbles', imgFilter:'saturate(.85) brightness(1.05)', tt:'none', radius:'24px', wt:'700' },
+  editorial: { label:'Editorial', bg:'#eeeae1', surface:'#f7f4ec', ink:'#111111', muted:'#57534b', accent:'#d93d18', accent2:'#1a1a1a', onAccent:'#ffffff', fonts:['Playfair Display','Yeseva One','Oswald','Literata','Spectral'], body:'Literata', hero:'editorial', particle:'confetti', imgFilter:'contrast(1.1) saturate(.9)', tt:'none', radius:'0px', wt:'700' },
+  boho:      { label:'Boho',      bg:'#efe4d6', surface:'#f7efe4', ink:'#3b2a20', muted:'#76604f', accent:'#ad5233', accent2:'#e3b98f', onAccent:'#ffffff', fonts:['Cormorant Garamond','Forum','Lora','Caveat','Tenor Sans'], body:'Lora', hero:'sun', particle:'petals', imgFilter:'sepia(.3) saturate(.9)', tt:'none', radius:'14px', wt:'500' },
+  riso:      { label:'Riso',      bg:'#f4efe4', surface:'#fffaf0', ink:'#1c2b6b', muted:'#4a557f', accent:'#ff5a5f', accent2:'#ffd23f', onAccent:'#1c2b6b', fonts:['Unbounded','Dela Gothic One','Oswald','Montserrat','Rubik Mono One'], body:'Rubik', hero:'riso', particle:'confetti', imgFilter:'grayscale(1) contrast(1.25)', tt:'uppercase', radius:'0px', wt:'700' },
+  polaroid:  { label:'Scrapbook', bg:'#e9dfcc', surface:'#f7f1e4', ink:'#2d2620', muted:'#6d6253', accent:'#d2553c', accent2:'#f3d27a', onAccent:'#ffffff', fonts:['Caveat','Bad Script','Marck Script','Amatic SC','Comfortaa'], body:'Nunito', hero:'scrap', particle:'confetti', imgFilter:'saturate(.9) contrast(1.05) sepia(.08)', tt:'none', radius:'4px', wt:'500' },
+  cinema:    { label:'Cinema', bg:'#0c0c0d', surface:'#161618', ink:'#f4f1ea', muted:'#9b978d', accent:'#e8c35a', accent2:'#2a2a2e', onAccent:'#0c0c0d', fonts:['Oswald','Russo One','Forum','Tenor Sans','Montserrat'], body:'Montserrat', hero:'film', particle:'dots', imgFilter:'contrast(1.12) saturate(.85) brightness(.85)', tt:'uppercase', radius:'0px', wt:'600', dark:true },
+  watercolor:{ label:'Watercolor', bg:'#f7f3ef', surface:'#fffdfb', ink:'#3a3540', muted:'#7a7282', accent:'#8f6fb8', accent2:'#f2c6c8', onAccent:'#ffffff', fonts:['Cormorant Garamond','Great Vibes','Marck Script','Lora','Alice'], body:'Lora', hero:'wash', particle:'petals', imgFilter:'saturate(.8) brightness(1.04)', tt:'none', radius:'26px', wt:'500' },
+  brutal:    { label:'Brutal', bg:'#f2f0e9', surface:'#ffffff', ink:'#0a0a0a', muted:'#3d3d3d', accent:'#ffe600', accent2:'#ff4a1c', onAccent:'#0a0a0a', fonts:['Dela Gothic One','Rubik Mono One','Unbounded','Oswald','Russo One'], body:'JetBrains Mono', hero:'brutal', particle:'stars', imgFilter:'grayscale(1) contrast(1.35)', tt:'uppercase', radius:'0px', wt:'700' },
+  luxe:      { label:'Luxe',      bg:'#0f0d0a', surface:'#1a1712', ink:'#efe5cf', muted:'#ad9f82', accent:'#caa45b', accent2:'#4a3d26', onAccent:'#0f0d0a', fonts:['Forum','Cormorant Garamond','Playfair Display','Tenor Sans','Great Vibes'], body:'Cormorant Garamond', hero:'deco', particle:'sparkle', imgFilter:'sepia(.35) brightness(.7) contrast(1.1)', tt:'uppercase', radius:'0px', wt:'400', frame:true, dark:true },
+};
+export function derive(s0){ const s = s0;
+  return { ...s,
+    center: s.hero==='center', full: s.hero==='full', editorial: s.hero==='editorial', oval: s.hero==='oval', bubble: s.hero==='bubble', deco: s.hero==='deco', ticket: s.hero==='ticket', grid: s.hero==='grid', sun: s.hero==='sun', riso: s.hero==='riso', scrap: s.hero==='scrap', film: s.hero==='film', wash: s.hero==='wash', brutal: s.hero==='brutal',
+    line: s.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.13)',
+    fade: `linear-gradient(180deg, ${s.bg}00 25%, ${s.bg}b3 62%, ${s.bg} 96%)`,
+    imgBg: `linear-gradient(135deg, ${s.accent2}, ${s.accent})`,
+    glowCss: s.glow ? `0 0 22px ${s.accent}99, 0 0 2px ${s.accent}` : 'none',
+    accentSoft: s.accent + '33',
+    envBack: shade(s.accent2, -0.18), envFront: s.accent2, envFlap: shade(s.accent2, -0.08),
+  };
+}
+export const STYLES = {};
+for (const k in BASE) STYLES[k] = derive({ ...BASE[k], key:k });
+const V = (name, bg, surface, ink, muted, accent, accent2, onAccent, extra)=>({ name, bg, surface, ink, muted, accent, accent2, onAccent, dark:false, glow:false, ...(extra||{}) });
+export const VARIANTS = {
+  minimal:[ V('Paper'), V('Concrete','#e4e2dd','#efeee9','#1b1b1b','#5f5d58','#ff5b1f','#c9c6bf','#ffffff'), V('Ink','#121212','#1c1c1c','#f1f0ec','#9a9893','#f1f0ec','#3a3a3a','#121212',{dark:true}) ],
+  classic:[ V('Ivory'), V('Blush','#f6ebe6','#fbf4f0','#3a2522','#86655f','#a9564f','#ecd2c9','#ffffff'), V('Navy','#e9ecf1','#f5f7fa','#1d2a44','#5b6780','#8a6d3b','#cfd6e3','#ffffff') ],
+  botanical:[ V('Sage'), V('Eucalyptus','#e3ebe8','#f0f5f3','#1f3430','#53685f','#3f7a6c','#bfd6cf','#ffffff'), V('Wildflower','#f1ece0','#f8f4ea','#36301f','#6f6650','#a95a30','#d9c9a3','#ffffff') ],
+  retro:[ V('Lilac'), V('Acid','#eaffd1','#f5ffe8','#18240c','#4b5f33','#7a2cff','#ff7ad9','#ffffff'), V('Bubblegum','#ffe0f1','#fff0f8','#3a0f2c','#7d4a6c','#008fd1','#ffe14d','#ffffff') ],
+  neon:[ V('Mint glow'), V('Ultraviolet','#0d0820','#170f30','#f2edff','#a79bd0','#b46bff','#29e3ff','#0d0820',{dark:true,glow:true}), V('Inferno','#120806','#1e0f0b','#fff0e8','#c49a8a','#ff6a2b','#ffd23f','#120806',{dark:true,glow:true}) ],
+  pastel:[ V('Rose'), V('Mint','#e8f6ef','#f4fbf7','#2c443a','#5f7d70','#3d9a77','#ffd6e0','#ffffff'), V('Lavender','#efeaf9','#f8f5fd','#3a3150','#6f6590','#7a5fc4','#ffe3b8','#ffffff') ],
+  editorial:[ V('Red'), V('Cobalt','#ecebe7','#f6f5f2','#0f1530','#525870','#2340d9','#0f1530','#ffffff'), V('Newsprint','#e9e4d6','#f3efe3','#161512','#5d594f','#161512','#bdb59f','#ffffff') ],
+  luxe:[ V('Gold'), V('Emerald','#08140f','#0f1f18','#e9efe6','#94a99a','#c9a35a','#1d3a2e','#08140f',{dark:true}), V('Bordeaux','#14070a','#200d12','#f3e6e3','#b39490','#d4a373','#4a1a24','#14070a',{dark:true}) ],
+  boho:[ V('Terracotta'), V('Olive','#ebe8d8','#f4f2e6','#2f2f1e','#6a6a4f','#6d6a2c','#d8c99a','#ffffff'), V('Dusk','#f0e1dc','#f8eeea','#3d2229','#7d5a60','#93404f','#e9b8a5','#ffffff') ],
+  polaroid:[ V('Kraft'), V('Notebook','#f4f4ef','#ffffff','#1f2a44','#5d6680','#2f6fe0','#ffd8e4','#ffffff'), V('Corkboard','#c9a57a','#f5ead6','#2b1d12','#5c4532','#2b7a5f','#f6e27f','#ffffff') ],
+  cinema:[ V('Golden age'), V('Noir','#0a0a0a','#151515','#efefef','#9a9a9a','#efefef','#2a2a2a','#0a0a0a',{dark:true}), V('Technicolor','#14090f','#21101a','#fff0e4','#c9a59a','#ff4d6d','#2b6cff','#ffffff',{dark:true}) ],
+  watercolor:[ V('Lilac wash'), V('Sea glass','#eef5f4','#fbfefe','#24403f','#5e7a79','#3f8f8a','#c7e6e2','#ffffff'), V('Peach','#fbf1ea','#fffaf6','#4a3329','#86685a','#d0785a','#f6d3b4','#ffffff') ],
+  brutal:[ V('Yellow'), V('Acid green','#efefe8','#ffffff','#0a0a0a','#3d3d3d','#b6ff2e','#7a3cff','#0a0a0a'), V('Hot pink','#111111','#1c1c1c','#f5f5f5','#b0b0b0','#ff2e88','#2ee6ff','#111111',{dark:true}) ],
+  riso:[ V('Pink + Yellow'), V('Teal + Orange','#f2efe6','#fffaf0','#0d4f57','#46727a','#ff7a1a','#7fe0d0','#0d4f57'), V('Purple + Mint','#f3f0f7','#fbf9ff','#3b1f78','#6a5a98','#00a884','#ff9ecf','#ffffff') ],
+};
+export const SECTIONS = ['message','program','countdown','gallery','venue','dress','info','reveal','who','guestbook','rsvp'];
+export const TRACKS = ['none','lullaby','waltz','lofi','celebration','ambient','oriental'];
+export const EVENT_MUSIC = { date:'lofi', wedding:'waltz', birthday:'celebration', baby:'lullaby', party:'lofi', corporate:'ambient', anniversary:'waltz', graduation:'celebration', engagement:'waltz', housewarming:'lofi', kids:'celebration', iftar:'oriental' };
+export const SCRIPT = ['Pacifico','Great Vibes','Marck Script','Bad Script','Caveat','Amatic SC'];
+export const HEAVY = ['Press Start 2P','Rubik Mono One','Dela Gothic One','Amatic SC','Great Vibes','Marck Script','Pacifico'];
+export const FS = { 'Press Start 2P':.5, 'Rubik Mono One':.72, 'Unbounded':.82, 'Dela Gothic One':.82, 'Russo One':.9, 'Great Vibes':1.15, 'Pacifico':.88, 'Amatic SC':1.2, 'Marck Script':1.05, 'Bad Script':.95, 'Caveat':1.1, 'Oswald':1.05, 'Montserrat':.85, 'Comfortaa':.85, 'Yeseva One':.92, 'Prata':.9, 'Exo 2':.95, 'Jost':.95 };
+
+export const TEMPLATES = [];
+for (const ev of EVENT_ORDER) EVENTS[ev].styles.forEach((st, i)=> TEMPLATES.push({ id:`${ev}-${st}`, event:ev, style:st, name:EVENTS[ev].names[i] }));
+
+export const GUESTS = [
+  { id:1, group:'family', lat:'Dilnoza Karimova', cyr:'Дилноза Каримова', user:'@dilnoza_k', status:'yes', plus:1, table:1 },
+  { id:2, group:'friends', lat:'Aziz Rahimov', cyr:'Азиз Рахимов', user:'@aziz.r', status:'yes', plus:0, table:1 },
+  { id:3, group:'friends', lat:'Malika Yusupova', cyr:'Малика Юсупова', user:'@malika_y', status:'maybe', plus:1, table:0 },
+  { id:4, group:'work', lat:'Sardor Aliyev', cyr:'Сардор Алиев', user:'@sardor', status:'yes', plus:2, table:2 },
+  { id:5, group:'family', lat:'Nodira Tosheva', cyr:'Нодира Тошева', user:'@nodira_t', status:'no', plus:0, table:0 },
+  { id:6, group:'work', lat:'Bekzod Umarov', cyr:'Бекзод Умаров', user:'@bek_u', status:'pending', plus:0, table:0 },
+  { id:7, group:'friends', lat:'Kamila Saidova', cyr:'Камила Саидова', user:'@kamila', status:'yes', plus:1, table:2 },
+  { id:8, group:'other', lat:'Javlon Ergashev', cyr:'Жавлон Эргашев', user:'@javlon', status:'pending', plus:0, table:0 },
+  { id:9, group:'family', lat:'Zarina Nazarova', cyr:'Зарина Назарова', user:'@zarina_n', status:'yes', plus:0, table:3 },
+  { id:10, group:'work', lat:'Otabek Qodirov', cyr:'Отабек Кодиров', user:'@otabek_q', status:'pending', plus:1, table:0 },
+];
+export const CONTACTS = [
+  { id:101, lat:'Rustam Xolmatov', cyr:'Рустам Холматов', user:'@rustam_x' },
+  { id:102, lat:'Shahnoza Mirzayeva', cyr:'Шахноза Мирзаева', user:'@shahnoza' },
+  { id:103, lat:'Ilyos Karimov', cyr:'Ильёс Каримов', user:'@ilyos' },
+  { id:104, lat:'Feruza Abdullayeva', cyr:'Феруза Абдуллаева', user:'@feruza_a' },
+  { id:105, lat:'Timur Ganiyev', cyr:'Тимур Ганиев', user:'@t_ganiyev' },
+];
+const RU2LAT = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',ў:'o',қ:'q',ғ:'g',ҳ:'h'};
+export function slugify(s){ return (s||'').toLowerCase().replace(/&/g,' and ').split('').map(c=>RU2LAT[c]??c).join('').replace(/[‘'ʻ’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'invite'; }
+
+export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LOCALE, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr };
+if (typeof window !== 'undefined') window.INVITO = INVITO;

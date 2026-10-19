@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;container-type:inline-size;background:{{ th.bg }};color:{{ th.ink }};border-radius:{{ rad }};font-family:{{ th.bodyCss }}">
+<sc-if value="{{ th.center }}">
+<sc-if value="{{ th.frame }}"><div style="position:absolute;inset:3.5cqw;border:1px solid {{ th.accent }};opacity:.6"></div><div style="position:absolute;inset:5cqw;border:1px solid {{ th.accent }};opacity:.3"></div></sc-if>
+<div style="position:absolute;top:10cqw;left:0;right:0;text-align:center;font-size:2.8cqw;letter-spacing:.35em;text-transform:uppercase;color:{{ th.accent }}">{{ kicker }}</div>
+<div style="position:absolute;left:24cqw;right:24cqw;top:19cqw;height:66cqw;border-radius:30cqw 30cqw 2cqw 2cqw;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:7cqw;right:7cqw;top:92cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10cqw * {{ th.fs }});line-height:.98;text-transform:{{ th.tt }}">{{ names }}</div>
+<div style="position:absolute;left:0;right:0;bottom:8cqw;text-align:center;font-size:3cqw;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.oval }}">
+<div style="position:absolute;left:16cqw;top:10cqw;width:60cqw;height:80cqw;border-radius:50%;border:1px solid {{ th.accent }};transform:translate(4cqw,3cqw)"></div>
+<div style="position:absolute;left:16cqw;top:10cqw;width:60cqw;height:80cqw;border-radius:50%;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:7cqw;top:78cqw;padding:1.6cqw 3.4cqw;border-radius:99px;background:{{ th.surface }};font-size:2.6cqw;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }}">{{ date }}</div>
+<div style="position:absolute;left:7cqw;right:7cqw;bottom:8cqw;font-family:{{ th.fontCss }};font-style:italic;font-weight:{{ th.wt }};font-size:calc(11cqw * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }}">{{ names }}</div>
+</sc-if>
+<sc-if value="{{ th.bubble }}">
+<div style="position:absolute;width:56cqw;height:56cqw;border-radius:50%;background:{{ th.accent2 }};left:-14cqw;top:-6cqw"></div>
+<div style="position:absolute;width:34cqw;height:34cqw;border-radius:50%;background:{{ th.accent }};opacity:.45;right:-8cqw;top:52cqw"></div>
+<div style="position:absolute;left:18cqw;top:12cqw;width:64cqw;height:64cqw;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};border:2cqw solid {{ th.surface }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;right:12cqw;top:12cqw;padding:1.6cqw 3.4cqw;border-radius:99px;background:{{ th.accent }};color:{{ th.onAccent }};font-size:2.6cqw;font-weight:700;transform:rotate(8deg)">{{ date }}</div>
+<div style="position:absolute;left:7cqw;right:7cqw;top:84cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10cqw * {{ th.fs }});line-height:1;text-transform:{{ th.tt }}">{{ names }}</div>
+</sc-if>
+<sc-if value="{{ th.deco }}">
+<div style="position:absolute;inset:3.5cqw;border:1px solid {{ th.accent }};opacity:.6"></div><div style="position:absolute;inset:5.5cqw;border:1px solid {{ th.accent }};opacity:.3"></div>
+<div style="position:absolute;left:50%;top:34cqw;width:130cqw;height:130cqw;margin:-65cqw 0 0 -65cqw;border-radius:50%;background:repeating-conic-gradient({{ th.accent }} 0deg .7deg,transparent .7deg 10deg);opacity:.16"></div>
+<div style="position:absolute;left:30cqw;top:14cqw;width:40cqw;height:40cqw;border-radius:50%;border:1px solid {{ th.accent }};background:{{ th.bg }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:13cqw;color:{{ th.accent }}">{{ mono }}</div>
+<div style="position:absolute;left:8cqw;right:8cqw;top:64cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(8.4cqw * {{ th.fs }});letter-spacing:.06em;line-height:1.05;text-transform:{{ th.tt }}">{{ names }}</div>
+<div style="position:absolute;left:0;right:0;top:92cqw;display:flex;align-items:center;justify-content:center;gap:3cqw;font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}"><span style="width:10cqw;height:1px;background:{{ th.accent }}"></span>{{ date }}<span style="width:10cqw;height:1px;background:{{ th.accent }}"></span></div>
+<div style="position:absolute;left:14cqw;right:14cqw;bottom:9cqw;height:18cqw;overflow:hidden;border:1px solid {{ th.accent }};background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+</sc-if>
+<sc-if value="{{ th.full }}">
+<div style="position:absolute;inset:0;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;inset:0;background:{{ th.fade }}"></div>
+<div style="position:absolute;left:7cqw;right:7cqw;bottom:8cqw;display:flex;flex-direction:column;gap:3cqw">
+<div style="font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">{{ kicker }}</div>
+<div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(13cqw * {{ th.fs }});line-height:.88;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ names }}</div>
+<div style="display:flex"><span style="background:{{ th.accent }};color:{{ th.onAccent }};padding:1.6cqw 3cqw;border-radius:{{ th.radius }};font-size:2.8cqw;letter-spacing:.12em;text-transform:uppercase;font-weight:600">{{ date }}</span></div>
+</div>
+</sc-if>
+<sc-if value="{{ th.ticket }}">
+<div style="position:absolute;inset:0;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;inset:0;background:{{ th.bg }};opacity:.7"></div>
+<div style="position:absolute;left:9cqw;right:9cqw;top:16cqw;bottom:16cqw;background:{{ th.surface }};border:1px solid {{ th.accent }};border-radius:3cqw;box-shadow:0 0 6cqw {{ th.accentSoft }};transform:rotate(-3deg);display:flex;flex-direction:column">
+<div style="flex:1;padding:6cqw;display:flex;flex-direction:column;justify-content:center;gap:3cqw"><div style="font-size:2.6cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">Admit one</div><div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10cqw * {{ th.fs }});line-height:.92;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ names }}</div></div>
+<div style="position:relative;border-top:.6cqw dashed {{ th.line }};padding:4cqw 6cqw;display:flex;justify-content:space-between;align-items:center;gap:4cqw"><span style="position:absolute;left:-4cqw;top:-4cqw;width:8cqw;height:8cqw;border-radius:50%;background:{{ th.bg }}"></span><span style="position:absolute;right:-4cqw;top:-4cqw;width:8cqw;height:8cqw;border-radius:50%;background:{{ th.bg }}"></span><span style="font-size:2.8cqw;letter-spacing:.14em;text-transform:uppercase">{{ date }}</span><span style="width:22cqw;height:7cqw;background:repeating-linear-gradient(90deg,{{ th.ink }} 0 .6cqw,transparent .6cqw 1.2cqw,{{ th.ink }} 1.2cqw 1.5cqw,transparent 1.5cqw 2.4cqw)"></span></div>
+</div>
+</sc-if>
+<sc-if value="{{ th.grid }}">
+<div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,{{ th.line }} 0 1px,transparent 1px 25cqw)"></div>
+<div style="position:absolute;left:7cqw;top:7cqw;font-size:2.6cqw;letter-spacing:.3em;text-transform:uppercase">{{ kicker }}</div>
+<div style="position:absolute;right:7cqw;top:18cqw;width:44cqw;height:44cqw;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:7cqw;right:7cqw;top:70cqw;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(9cqw * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }}">{{ names }}</div>
+<div style="position:absolute;left:7cqw;right:7cqw;bottom:7cqw;border-top:1px solid {{ th.ink }};padding-top:2.4cqw;font-size:2.8cqw;letter-spacing:.2em;text-transform:uppercase">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.editorial }}">
+<div style="position:absolute;left:7cqw;right:7cqw;top:7cqw;display:flex;justify-content:space-between;font-size:2.6cqw;letter-spacing:.3em;text-transform:uppercase;border-bottom:.8cqw solid {{ th.ink }};padding-bottom:2cqw"><span style="font-weight:700">Invito</span><span>{{ date }}</span></div>
+<div style="position:absolute;right:7cqw;top:36cqw;width:52cqw;height:80cqw;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:7cqw;right:7cqw;top:17cqw;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(14cqw * {{ th.fs }});line-height:.86;letter-spacing:-.02em;text-transform:{{ th.tt }};mix-blend-mode:{{ blend }}">{{ names }}</div>
+<div style="position:absolute;left:7cqw;bottom:8cqw;width:30cqw;font-size:2.8cqw;line-height:1.4;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }}">{{ kicker }}</div>
+</sc-if>
+<sc-if value="{{ th.sun }}">
+<div style="position:absolute;left:-10cqw;right:-10cqw;top:30cqw;height:120cqw;border-radius:50%;background:{{ th.accent2 }};opacity:.8"></div>
+<div style="position:absolute;left:-22cqw;right:-22cqw;top:18cqw;height:144cqw;border-radius:50%;border:1px solid {{ th.accent }};opacity:.35"></div>
+<div style="position:absolute;left:30cqw;right:30cqw;top:46cqw;height:54cqw;border-radius:20cqw 20cqw 0 0;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:0;right:0;top:100cqw;height:1px;background:{{ th.accent }}"></div>
+<div style="position:absolute;left:7cqw;right:7cqw;top:9cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10cqw * {{ th.fs }});line-height:1;text-transform:{{ th.tt }}">{{ names }}</div>
+<div style="position:absolute;left:0;right:0;bottom:12cqw;text-align:center;font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.ink }}">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.riso }}">
+<div style="position:absolute;inset:0;background-image:radial-gradient({{ th.accentSoft }} .5cqw,transparent .65cqw);background-size:3.2cqw 3.2cqw"></div>
+<div style="position:absolute;left:12cqw;right:12cqw;top:9cqw;height:76cqw;background:{{ th.accent2 }};overflow:hidden"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }};mix-blend-mode:multiply"></div>
+<div style="position:absolute;left:12cqw;right:12cqw;top:9cqw;height:76cqw;background:{{ th.accent }};mix-blend-mode:multiply;opacity:.5;transform:translate(2.4cqw,2cqw)"></div>
+<div style="position:absolute;left:6cqw;right:6cqw;top:74cqw;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(12cqw * {{ th.fs }});line-height:.9;text-transform:{{ th.tt }};text-shadow:.8cqw .8cqw 0 {{ th.accent }}">{{ names }}</div>
+<div style="position:absolute;left:6cqw;bottom:7cqw;padding:1.4cqw 3cqw;background:{{ th.accent2 }};font-size:2.8cqw;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transform:rotate(-3deg)">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.scrap }}">
+<div style="position:absolute;inset:0;background-image:radial-gradient(rgba(0,0,0,.05) 1px,transparent 1.2px);background-size:2.2cqw 2.2cqw"></div>
+<div style="position:absolute;left:22cqw;top:12cqw;width:60cqw;height:66cqw;background:#fff;transform:rotate(7deg);box-shadow:0 2cqw 4cqw rgba(0,0,0,.18)"></div>
+<div style="position:absolute;left:14cqw;top:9cqw;width:62cqw;padding:3cqw 3cqw 12cqw;background:#fff;transform:rotate(-4deg);box-shadow:0 2cqw 5cqw rgba(0,0,0,.22)"><div style="aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div></div>
+<div style="position:absolute;left:34cqw;top:5cqw;width:24cqw;height:7cqw;background:{{ th.accent2 }};opacity:.85;transform:rotate(-8deg)"></div>
+<div style="position:absolute;left:7cqw;right:7cqw;top:84cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(11cqw * {{ th.fs }});line-height:.95;transform:rotate(-2deg)">{{ names }}</div>
+<div style="position:absolute;left:0;right:0;bottom:7cqw;text-align:center;font-family:'Caveat',cursive;font-size:5cqw;color:{{ th.accent }}">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.film }}">
+<div style="position:absolute;left:0;right:0;top:20cqw;height:6cqw;background:repeating-linear-gradient(90deg,{{ th.accent2 }} 0 3cqw,transparent 3cqw 6cqw);opacity:.9"></div>
+<div style="position:absolute;left:0;right:0;top:27cqw;height:44cqw;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:0;right:0;top:72cqw;height:6cqw;background:repeating-linear-gradient(90deg,{{ th.accent2 }} 0 3cqw,transparent 3cqw 6cqw);opacity:.9"></div>
+<div style="position:absolute;left:0;right:0;top:9cqw;text-align:center;font-size:2.6cqw;letter-spacing:.5em;text-transform:uppercase;color:{{ th.accent }}">{{ kicker }}</div>
+<div style="position:absolute;left:6cqw;right:6cqw;top:84cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10cqw * {{ th.fs }});line-height:.95;letter-spacing:.04em;text-transform:{{ th.tt }}">{{ names }}</div>
+<div style="position:absolute;left:0;right:0;bottom:6cqw;text-align:center;font-size:2.6cqw;letter-spacing:.35em;text-transform:uppercase;color:{{ th.muted }}">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.wash }}">
+<div style="position:absolute;width:90cqw;height:70cqw;left:-20cqw;top:-10cqw;border-radius:50%;background:radial-gradient(closest-side,{{ th.accent2 }},transparent);opacity:.9"></div>
+<div style="position:absolute;width:80cqw;height:70cqw;right:-26cqw;top:40cqw;border-radius:50%;background:radial-gradient(closest-side,{{ th.accentSoft }},transparent)"></div>
+<div style="position:absolute;left:20cqw;top:12cqw;width:60cqw;height:60cqw;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};-webkit-mask-image:radial-gradient(closest-side,#000 70%,transparent);mask-image:radial-gradient(closest-side,#000 70%,transparent)"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:6cqw;right:6cqw;top:78cqw;text-align:center;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(11cqw * {{ th.fs }});line-height:1;color:{{ th.ink }}">{{ names }}</div>
+<div style="position:absolute;left:0;right:0;bottom:9cqw;text-align:center;font-size:2.8cqw;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">{{ date }}</div>
+</sc-if>
+<sc-if value="{{ th.brutal }}">
+<div style="position:absolute;inset:4cqw;border:1.6cqw solid {{ th.ink }}"></div>
+<div style="position:absolute;left:9cqw;right:9cqw;top:9cqw;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(10.5cqw * {{ th.fs }});line-height:.9;text-transform:{{ th.tt }};overflow-wrap:break-word;hyphens:auto">{{ names }}</div>
+<div style="position:absolute;right:11cqw;bottom:24cqw;width:46cqw;height:46cqw;overflow:hidden;background:{{ th.imgBg }};border:1cqw solid {{ th.ink }};box-shadow:3cqw 3cqw 0 {{ th.ink }}"><img src="{{ cover }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div>
+<div style="position:absolute;left:9cqw;bottom:11cqw;padding:1.6cqw 3cqw;background:{{ th.accent }};color:{{ th.onAccent }};border:.6cqw solid {{ th.ink }};font-size:3cqw;font-weight:700;letter-spacing:.06em;text-transform:uppercase">{{ date }}</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:300,&quot;height&quot;:400},&quot;th&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;names&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Anna &amp; Timur&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;date&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;26 Dec 2026&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cover&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;kicker&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;You are invited&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;radius&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;0px&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const th = this.props.th || {};
+    const parts = String(this.props.names || '').split(/\s+(?:&|и|va|and|ва)\s+/i).filter(Boolean);
+    const mono = parts.length > 1 ? parts.slice(0, 2).map((p) => p.trim()[0]).join('·') : String(this.props.names || ' ').trim()[0] || '✦';
+    return { rad: this.props.radius ?? '0px', blend: th.dark ? 'normal' : 'multiply', mono };
+  }
+}
+</script>
+</body>
+</html>

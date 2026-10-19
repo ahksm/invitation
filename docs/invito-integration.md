@@ -1,0 +1,215 @@
+# Invito: подключение дизайна к платформе
+
+Рабочая спецификация: как прототип Invito из Claude Design (`web/`) превращается в настоящий продукт поверх существующего бэкенда (`src/`). Её читают все, кто меняет фронтенд или API. Контракт API в разделе 3 общий для фронтенда и бэкенда: менять его можно только вместе с этим файлом.
+
+## 0. Общие правила
+
+- Стек: Node 22, TypeScript (ESM, NodeNext), Fastify 5, Drizzle 0.45 + node-postgres, Redis (ioredis), zod 4, grammY, vitest 5. Комментарии и сообщения об ошибках в коде пишутся по-русски, как в остальном проекте. Сообщения `HttpError` служат ключами перевода в `src/i18n.ts`: для каждого нового сообщения добавить переводы uz, uzc, en.
+- Секреты никогда не коммитятся. `.env` в `.gitignore`. Репозиторий публичный.
+- Миграции: менять `src/db/schema.ts`, затем `npm run db:generate` (drizzle-kit), сгенерированные файлы в `drizzle/` коммитятся.
+- Проверки перед коммитом: `npx tsc --noEmit` и `npx vitest run`. Тесты используют `TEST_DATABASE_URL` и `TEST_REDIS_URL`.
+- Деньги в тийинах (1 сум = 100), как сейчас.
+- Часовой пояс событий: Asia/Tashkent (UTC+5, без перехода на летнее время). `data.date` + `data.time` в приглашении это местное время Ташкента.
+- Языки (Locale): `ru`, `uz` (латиница), `uzc` (узбекский, кириллица), `en`. Бэкенд сейчас знает `ru|uz|en`: добавить `uzc` везде (users.locale, invitations.language, i18n, SMS, бот). Тексты `uzc` получаются из `uz` функцией `toCyr` из `web/invito-data.js` (единый источник; баг с «yo‘» → «йў» исправить в самом `toCyr`).
+
+## 1. Исходники дизайна (`web/`)
+
+- `web/Invito.dc.html`: всё приложение (разметка в `<x-dc>`, логика в `<script type="text/x-dc" data-dc-script>`).
+- `web/InviteCover.dc.html`: обложка шаблона.
+- `web/invito-data.js`: словари (ru/en/uz/uzc), 12 событий, 14 стилей, палитры, 60 шаблонов, утилиты (`slugify`, `toCyr`, `derive`). Демоданные `GUESTS`/`CONTACTS` используются только в демо-режиме тура.
+- `web/invito-engine.js`: музыка, рендер OG/stories-картинок, скретч-карта.
+- `web/support.js`: оригинальный рантайм `.dc.html`. Руками не правится: при отдаче сервер накладывает на него патчи (раздел 2).
+- `web/invito-api.js` (новый): ES-модуль с клиентом API и помощниками (загрузка файлов, сжатие картинок, QR). Логика Invito подгружает его так же, как `invito-data.js`.
+- `web/DESIGN.md`, `web/github.md`: заметки дизайна.
+
+Бэкенд импортирует `web/invito-data.js` во время выполнения (динамический `import()` по абсолютному URL от `import.meta.url`), чтобы брать каталог шаблонов, стили со шрифтами, секции, треки и `toCyr` из одного источника. Типы описать вручную в `src/design-data.ts`.
+
+## 2. Отдача фронтенда (`src/web/`)
+
+Цель: дизайн работает как есть, но без `unsafe-eval`, без CDN и без двойной загрузки страницы.
+
+1. Сборка в памяти при старте (в development пересобирать, если изменилось время файлов в `web/`):
+   - `/app/dc-bundle.js`: классический скрипт.
+     ```js
+     window.__dcSources = { Invito: { template: "<сырой текст внутри <x-dc>>", props: {...data-props} }, InviteCover: {...} };
+     window.__dcLogic = { Invito: function (DCLogic, StreamableLogic, React) { /* текст логики */ ; return Component; }, InviteCover: ... };
+     ```
+   - `/app/support.js`: `web/support.js` с патчами (каждый патч ищет точный фрагмент и падает при старте, если фрагмент не найден):
+     1. логика берётся из `window.__dcLogic[name]`, `new Function` не вызывается;
+     2. корневой шаблон и пропсы берутся из `window.__dcSources` и проходят тот же путь разбора, что и сырой текст (`parseDcText`/`encodeCase`), без `fetch(location.href)`;
+     3. вложенные DC (`InviteCover`) берутся из `__dcSources`, без `fetch`;
+     4. React не грузится с unpkg (его подключает оболочка);
+     5. убрать `postMessage` в `window.parent` и обработчик `message` без проверки источника.
+   - Хэш содержимого в `?v=` для кэша; ответы с `Cache-Control: public, max-age=31536000, immutable` при наличии `v`.
+2. Статика: `/app/invito-data.js`, `/app/invito-engine.js`, `/app/invito-api.js` из `web/` (MIME `text/javascript`); `/app/vendor/react.production.min.js` и `/app/vendor/react-dom.production.min.js` из `node_modules/react@18.3.1/umd` и `react-dom@18.3.1/umd` (добавить зависимости); `/app/vendor/qrcode.js` из пакета `qrcode-generator` (глобальная функция `qrcode`).
+3. Оболочка HTML (одна функция, разные данные):
+   - `GET /`, `GET /app`, `GET /app/*`: приложение. Загрузочные данные `{ "mode": "app" }`.
+   - `GET /i/:slug`: общая ссылка. Загрузочные данные `{ "mode": "shared", "slug", "view"? , "locked"? }` (view из раздела 3.6, при пароле только `locked` с `look`).
+   - `GET /g/:token`: личная ссылка. `{ "mode": "personal", "token", "view" }`.
+   - Неизвестное приглашение: оболочка с `{ "mode": "notfound" }` и HTTP 404.
+   - В `<head>`: charset, viewport (`viewport-fit=cover`), `<title>`, OG-теги (`og:type`, `og:url`, `og:title` = names + « — » + длинная дата на языке приглашения, `og:description` = message до 160 символов, `og:image` = абсолютный URL `ogImageUrl` или обложки, `twitter:card=summary_large_image`), Google Fonts (тот же URL, что в `<helmet>` дизайна), `https://telegram.org/js/telegram-web-app.js` (статически, до рантайма), React, ReactDOM, qrcode, `dc-bundle.js`, `support.js`.
+   - Загрузочные данные: `<script type="application/json" id="invito-boot">` с экранированием `<` как `<`.
+   - Из `<helmet>` в `Invito.dc.html` убрать `<script src="telegram-web-app.js">` (теперь в оболочке). Динамический импорт модулей в логике заменить на абсолютные пути `/app/invito-data.js` и т.д. (страницы `/i/…` и `/g/…` иначе ищут модули не там).
+4. CSP и заголовки:
+   - `script-src 'self' https://telegram.org` (без `unsafe-eval`, без unpkg);
+   - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`; `font-src 'self' https://fonts.gstatic.com data:`;
+   - `img-src 'self' data: blob: https://images.unsplash.com`; `media-src 'self' blob: data:`;
+   - `frame-src https://maps.google.com https://www.google.com https://oauth.telegram.org`;
+   - `connect-src 'self'`;
+   - `frame-ancestors 'self' https://web.telegram.org https://*.telegram.org` для `/`, `/app*`, `/i/*`, `/g/*`; без `X-Frame-Options` на этих путях (иначе мини-апп не открывается в Telegram Web). Админка остаётся `frame-ancestors 'none'`.
+5. Старые страницы `public/app/` и `public/invite/` удалить. `public/admin/` и `public/shared/` (их использует админка) остаются.
+6. Dockerfile копирует `web/`. CI собирает и проверяет как раньше.
+
+## 3. Контракт API
+
+Все ответы JSON. Ошибки: `{ "error": "<переведённый текст>" }` с кодом. Даты в ISO.
+
+### 3.1 Общая конфигурация и сессия
+
+- `GET /api/auth/config` → `{ telegram: boolean, botUsername: string|null, appUrl: string, prices: { sharedTemplate, seat, subscriptionMonth }, currency: "UZS", ai: boolean }`.
+- `GET /api/auth/me` → `{ user: { id, phone, firstName, lastName, username, telegramId: string|null, locale, isAdmin, freeAccess }, access: { free, subscribed, subscriptionEndsAt: string|null }, prices, currency }`. 401 без сессии, 428 без телефона (как сейчас).
+- `PATCH /api/auth/me` `{ locale }` (теперь и `uzc`).
+- Остальные маршруты входа без изменений (`/telegram/start`, `/telegram/poll`, `/webapp`, `/phone/request`, `/phone/verify`, `/link`, `/logout`).
+
+### 3.2 Содержимое приглашения (`InvContent`, колонка `invitations.data`)
+
+zod-схема (лишние ключи отбрасываются):
+
+| Поле | Тип и ограничения |
+| --- | --- |
+| names, host | строка ≤ 200 |
+| message | ≤ 3000 |
+| venue | ≤ 200 |
+| address, contact | ≤ 300 |
+| dress, secret | ≤ 500 |
+| gifts, notes | ≤ 1000 |
+| dressColors | массив `#rrggbb`, не больше 6 |
+| program | массив не больше 8 из `{ time: "HH:MM" или "", title ≤ 120, place ≤ 200 }` |
+| date | `YYYY-MM-DD` |
+| time | `HH:MM` |
+| countdown, showGuests | boolean |
+| cover, musicSrc, video | MediaUrl или "" |
+| gallery | массив MediaUrl, не больше 12 |
+| font | строка ≤ 60; если шрифта нет у стиля шаблона, сервер подставляет первый шрифт стиля |
+| palette | целое 0..2 |
+| music | один из `TRACKS` или `custom` |
+| intro | `envelope|curtain|scratch|none` |
+| mapMode | `drawn|real` |
+| motion | `still|zoom|video` |
+| sections | массив `{ k: одна из SECTIONS, on: boolean }`; сервер убирает повторы и дописывает недостающие секции в конец с `on: false` |
+
+MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://images.unsplash.com/...` (стоковые картинки по умолчанию). `data:`, `blob:` и другие хосты отклоняются с 400.
+
+### 3.3 Шаблоны
+
+- Сид: 60 строк из `TEMPLATES` в `web/invito-data.js`, `slug = "<event>-<style>"`, `title` = имя шаблона, новые колонки `event`, `style`, `sort_order` (порядок `EVENT_ORDER`, затем стили). Сид идемпотентный (upsert по slug, существующие цены и флаги не трогать). Старый шаблон `invite-cover` выключить (`is_active = false`).
+- `GET /api/templates` → `[{ id, slug, event, style, title, price: number|null, smsEnabled }]` (только активные; `price = null` значит общая цена `sharedTemplate`).
+
+### 3.4 Приглашения (нужна сессия)
+
+Объект `Invitation`:
+```
+{ id, slug, mode: "shared"|"personal", status: "draft"|"active"|"archived", language: Locale,
+  template: "<slug>", event, title, data: InvContent, unlocked, paidSeats,
+  accessCode: string|null, settings: { r1d, r3h, morning, notify, tables },
+  ogImageUrl: string|null, publishedAt, createdAt, updatedAt,
+  links: { shared: "<APP_URL>/i/<slug>" | null },
+  stats: { guests, yes, no, maybe, pending, replies, people } }
+```
+`title` сервер берёт из `data.names` (обрезка до 200), отдельно не редактируется. `stats.people` = сумма `1 + plus` по ответившим «да». `settings.tables` = число столов в рассадке (1..30, по умолчанию 4).
+
+- `GET /api/invitations` → `Invitation[]` без архивных, по `updatedAt` убыванию.
+- `POST /api/invitations` `{ template, mode?="shared", language, data }` → 201 `Invitation`. Пишет событие `created`.
+- `GET /api/invitations/:id` → `Invitation & { guests: Guest[] }`.
+- `PATCH /api/invitations/:id` любые из `{ template, mode, language, data, slug, accessCode: string|null, settings }` → `Invitation`.
+  - `mode` можно менять, только пока `status = draft`, `unlocked = false` и `paidSeats = 0`, иначе 409.
+  - `template`: после оплаты нельзя перейти на шаблон с большей ценой (402), на равный или дешевле можно.
+  - `slug`: `^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$`, не из списка зарезервированных (`app`, `admin`, `api`, `media`, `i`, `g`, `health`, `telegram`, `static`, `vendor`), уникальный (409 «Эта ссылка уже занята»).
+  - `accessCode`: 1..64 символа или null.
+- `DELETE /api/invitations/:id` → 204. Черновик без оплат удаляется, оплаченное или опубликованное переводится в `archived` (публичные страницы отдают 404).
+- `POST /api/invitations/:id/duplicate` → 201 новый черновик (данные, шаблон, язык, режим; без slug, оплат, гостей, пароля).
+- `POST /api/invitations/:id/publish` → `Invitation` (status `active`, `publishedAt`), либо 402 с текстом, что оплатить. Событие `published` (один раз).
+- `PUT /api/invitations/:id/og` (тело `image/png` или `image/jpeg`, ≤ 3 МБ) → `{ ogImageUrl }`.
+- `GET /api/invitations/:id/activity?limit=50` → `[{ id, kind, guestId, guestName, meta, createdAt }]`, kind: `created|published|paid|opened|yes|no|maybe|reminder|sms|checkin|test`.
+- `POST /api/invitations/:id/bot/test` → `{ ok: true }`, либо 409 «Подключите Telegram, чтобы получать уведомления», если у владельца нет `telegramId`.
+- `POST /api/invitations/:id/remind` `{ guestIds? }` → `{ telegram, sms, skipped }`. По умолчанию все гости без ответа. Сначала Telegram (если гость подключил бота), иначе SMS по правилам раздела 3.5. Событие `reminder` с `{ n }`.
+- `POST /api/invitations/:id/sms` `{ guestIds? }`: отправка приглашений по SMS, как сейчас (с исправлениями из раздела 6).
+- `POST /api/invitations/:id/checkin` `{ token }` → `{ guest: Guest }`. 404, если токен не этого приглашения. Событие `checkin`.
+
+Гость `Guest`:
+```
+{ id, name, phone, seat, token, link: "<APP_URL>/g/<token>", rsvp: "pending"|"yes"|"no"|"maybe",
+  plus, group: "family"|"friends"|"work"|"other", tableNo, checkedIn, checkedInAt, message,
+  diet: ("veg"|"halal"|"nonut"|"noalc")[], source: "owner"|"self", openedAt, respondedAt,
+  telegramLinked: boolean, paid: boolean, sms: { status, count } | null }
+```
+- `POST /api/invitations/:id/guests` `{ guests: [{ name, phone?, group?, plus? }] }` (только `personal`) → 201 `Guest[]`.
+- `PATCH /api/invitations/:id/guests/:guestId` любые из `{ name, phone, group, plus (0..10), tableNo (0..settings.tables), checkedIn, rsvp }` → `Guest`.
+- `DELETE /api/invitations/:id/guests/:guestId` → 204.
+- Оплаченность гостя: в режиме `personal` гость оплачен, если его порядковый номер среди текущих гостей (по `seat`) не больше `paidSeats`. Удаление гостя сдвигает следующих в оплаченные. Номера `seat` не переиспользуются (счётчик `invitations.next_seat`). В режиме `shared` все гости оплачены.
+
+### 3.5 SMS
+
+- Приглашение по SMS только для `personal`, опубликованного, оплаченного гостя с телефоном, шаблон с `smsEnabled`.
+- Лимит на приглашение: всего не больше `paidSeats × 3` SMS-приглашений (считаются и SMS удалённых гостей), плюс не больше 3 на гостя и 300 в час на пользователя, как сейчас.
+
+### 3.6 Публичные страницы
+
+`PublicView`:
+```
+{ kind: "shared"|"personal", slug, language, template, event, data: InvContent,
+  guest?: { name, token, rsvp, count, diet, msg, checkedIn },
+  who?: { count, list: [{ name: "Анна К.", plus }], more },
+  guestbook?: [{ name: "Анна К.", text }],
+  botUsername: string|null, appUrl }
+```
+- `who` только если `data.showGuests` и секция `who` включена: гости с ответом «да», до 14 имён (имя и первая буква фамилии), `count` = сумма `1 + plus`.
+- `guestbook` только если секция `guestbook` включена: до 30 последних сообщений гостей с ответом «да» или «может быть».
+- `GET /api/public/i/:slug?code=` → `PublicView`. 404, если приглашение не найдено, не опубликовано, не оплачено, в архиве или в режиме `personal`. Если задан пароль и `code` не совпал: 401 `{ locked: true, look: { template, font, palette }, error }` (лимит 10 попыток в минуту на IP).
+- `GET /api/public/g/:token` → `PublicView` с `guest`. 404, если гость не найден, приглашение не опубликовано или место не оплачено. При первом открытии ставит `openedAt` и событие `opened` (запись вне кэша).
+- `POST /api/public/i/:slug/rsvp` `{ name (1..80), status, count (1..8), diet, msg (≤ 500), code?, guestToken? }` → `{ guestToken }`. Создаёт или обновляет гостя с `source: "self"`. Лимит 6 в минуту на IP, не больше 1000 таких гостей на приглашение.
+- `POST /api/public/g/:token/rsvp` `{ status, count, diet, msg }` → `{ ok: true }`.
+- Ответ гостя: `plus = status === "no" ? 0 : count - 1`, `respondedAt`, событие со статусом, уведомление владельцу в Telegram, если `settings.notify` и у владельца есть `telegramId`.
+
+### 3.7 Файлы
+
+- `POST /api/media` (multipart, поле `file`) → 201 `{ id, url: "/media/<id>.<ext>", kind: "image"|"audio"|"video", mime, size }`. Тип определяется по сигнатуре файла, а не по имени: картинки jpeg/png/webp/gif до 10 МБ, аудио mp3/m4a/ogg/wav до 15 МБ, видео mp4/webm/mov до 50 МБ. SVG и прочее запрещено. Квота 500 МБ на пользователя (кроме админов и бесплатного доступа). Лимит 30 загрузок в минуту.
+- `GET /media/<file>` из `MEDIA_DIR` (по умолчанию `./data/media`, в Docker отдельный том): поддержка Range, `Cache-Control: public, max-age=31536000, immutable`, `X-Content-Type-Options: nosniff`.
+
+### 3.8 Текст с помощью ИИ
+
+- `POST /api/ai/write` `{ lang, tone, event, names, host, date, time, venue }` (сессия; 10 в минуту и 50 в сутки на пользователя) → `{ text }`. Без `ANTHROPIC_API_KEY` 503 «Помощник с текстом сейчас недоступен» (клиент берёт готовый текст из дизайна). Запрос к `https://api.anthropic.com/v1/messages` с моделью из `AI_MODEL` (по умолчанию `claude-opus-5-5`), `max_tokens` 400, тот же промпт, что в `aiWrite` дизайна.
+
+### 3.9 Заказы
+
+Без изменений: `POST /api/orders`, `GET /api/orders`, `GET /api/orders/:id`. Возврат после оплаты: `/app/#/orders/<id>`. Тестовая оплата: `/app/#/mock-pay/<id>`.
+
+## 4. Фронтенд: что меняется в логике Invito
+
+Принцип: внешний вид и анимации дизайна сохраняются. Новые экраны и листы (вход, оплата, аккаунт, добавление гостей) рисуются в той же системе: цвета `ui()`, шрифты Onest/Cormorant, акцент `#d4452a`, нижние листы как `sheet`/`importOpen`, тосты.
+
+1. Загрузка. Прочитать `#invito-boot`. Режим `app`: обычное приложение. `shared`/`personal`: сразу `screen: 'guest'`, `guestMode: 'live'`, данные из `view` (без шапки и переходов в конструктор, кроме кнопки «Создать своё» в подвале, ведущей на `/app/`). `notfound`: экран «Приглашение не найдено» в стиле дизайна. Язык интерфейса: из профиля (`/api/auth/me`), иначе из `localStorage`, иначе из `Telegram.WebApp.initDataUnsafe.user.language_code` или `navigator.language`, иначе `ru`.
+2. Telegram. `tgReal` (настоящий Telegram) включает раскладку `tg` без поддельной шапки и поддельной MainButton (они только для симуляции в туре). Вход через `POST /api/auth/webapp`; при `phone_required` вызвать `Telegram.WebApp.requestContact` и опрашивать не чаще, чем позволяет лимит маршрута. Ссылки t.me открывать через `openTelegramLink`, внешние (оплата) через `openLink`.
+3. Вход. Лист входа: телефон (+998) и код из SMS, кнопка «Войти через Telegram» (deep link + опрос). Вход нужен для «Использовать шаблон» (создание черновика), «Мои приглашения», публикации, гостей. Просмотр главной, тура, событий, шаблонов и превью без входа. После входа действие продолжается. Кнопка аккаунта в шапке: телефон, язык, подписка, «Подключить Telegram» (тот же вход через Telegram), выход, ссылка на админку для админов.
+4. Черновики на сервере. «Использовать шаблон» → `POST /api/invitations`. Автосохранение → `PATCH` с `data` (дебаунс как в дизайне, индикатор «Сохранено · HH:MM» по ответу сервера). Смена шаблона в конструкторе или редакторе → `PATCH template`. «Мои приглашения» из `GET /api/invitations` (без примеров-заглушек, пустое состояние с кнопкой «Создать»); дублирование, удаление (с подтверждением), открытие, гости. Выбор события, шаблона или демо из тура сбрасывает `draftId`, чтобы не перезаписать открытый черновик.
+5. Языки. Переключатель интерфейса: 4 языка, сохраняется в профиль (`PATCH /api/auth/me`) или `localStorage`. Язык приглашения отдельно: выбор в шаге «Основное» конструктора и в редакторе, хранится в `invitation.language`, тексты по умолчанию берутся на этом языке, пока пользователь их не правил. Страница гостя показывается на языке приглашения; кнопка языка у гостя меняет только его просмотр.
+6. Файлы. Обложка, галерея, видео и аудио загружаются через `POST /api/media` (картинки перед загрузкой уменьшаются до 2000 px по длинной стороне, JPEG 0.85), в `data` попадает URL. Пока идёт загрузка, показывать прогресс; ошибки тостом.
+7. Публикация и оплата. «Получить ссылку» для неопубликованного приглашения открывает лист публикации: выбор «Одна ссылка для всех» (цена шаблона или бесплатно по подписке и бесплатному доступу) или «Личные приглашения» (N гостей × цена места), карточка подписки (1, 3, 12 месяцев: любые шаблоны без оплаты, места отдельно). Оплата → `POST /api/orders` → если `fulfilled`, сразу публикация; иначе переход на `checkoutUrl` и возврат на `/app/#/orders/<id>` с опросом статуса и публикацией после оплаты. Экран тестовой оплаты `#/mock-pay/<id>`.
+8. Экран «Поделиться». Ссылка `appUrl/i/<slug>` (без домена invito.app). Редактирование slug → `PATCH slug` (дебаунс, ошибка занятости). Пароль → `PATCH accessCode`. QR генерируется локально (`qrcode-generator`), без api.qrserver.com. OG-картинка из `renderCard` после генерации загружается `PUT /og`. Блок мета-тегов показывает настоящие URL. Для `personal`: список личных ссылок гостей (`guest.link`), отметка неоплаченных, кнопка «Докупить места».
+9. Страница гостя. Данные из `PublicView`. Личная: «{имя}, вы приглашены», конверт «Кому», ответ предзаполнен, после ответа «да» показывается QR для отметки на входе (кодирует `guest.link`). Общая: ответ с именем → `POST /rsvp`, `guestToken` хранится в `localStorage` по slug, чтобы можно было изменить ответ. Пароль проверяет сервер (`?code=`). «Кто придёт» и гостевая книга из `who`/`guestbook`. «Ответить через бота» → `https://t.me/<botUsername>?start=g_<token>` (скрыть без бота). Музыка, интро, карта, календарь как в дизайне.
+10. Гости (`manage`). Список из `GET /api/invitations/:id`. «Импорт из Telegram» заменяется листом «Добавить гостей»: одна строка на гостя «Имя, телефон» плюс быстрая форма. Группа, стол, отметка входа, удаление → `PATCH`/`DELETE`. «Напомнить» → `POST /remind`. Отправка приглашений по SMS (одному и всем) с статусом SMS у гостя. CSV с телефонами. Рассадка с числом столов из `settings.tables` (кнопки +/-). Отметка входа камерой: QR с `/g/<token>` → `POST /checkin`. Вкладка «Активность» из `/activity`. Вкладка «Бот»: переключатели → `PATCH settings`, «Тест» → `POST /bot/test`, лента из активности, подсказка подключить Telegram.
+11. Тур. Остаётся витриной: демо работают в демо-режиме (`state.demo`) на данных `GUESTS` из `invito-data.js`, без запросов к API и без записи в черновики. Видимая метка «Демо».
+12. ИИ. `aiWrite` вызывает `POST /api/ai/write`, при 503 или ошибке берёт готовые тексты дизайна (как сейчас при отсутствии `window.claude`).
+13. Ошибки и пустые состояния: сеть, 401 (снова вход), 402 (лист оплаты), 404, 409, 429 показываются тостом на языке интерфейса. Красная плашка рантайма `.sc-logic-error` скрыта CSS в оболочке; ошибки пишутся в консоль.
+14. Убрать заглушки прототипа: примеры приглашений на главной, фальшивую активность, `CONTACTS`, фальшивые пожелания `msgIdx` (кроме демо-режима).
+
+## 5. Бот
+
+- `/start g_<token>` (гость открыл бота со страницы приглашения): после обязательного телефона (ожидающий payload хранится в Redis, пока человек делится контактом) бот привязывает чат к гостю (`guests.telegram_chat_id`), присылает карточку приглашения с кнопкой открыть (`/g/<token>`) и кнопками ответа «Приду / Возможно / Не приду». Ответ через кнопки идёт тем же путём, что `POST /api/public/g/:token/rsvp`.
+- Уведомления владельцу (`settings.notify`): ответ гостя, отметка на входе. Через интерфейс `ctx.notifier` (`sendToUser(userId, text, opts)`), который реализует бот; без бота это no-op.
+- Напоминания гостям в Telegram по `settings.r1d` (за сутки), `r3h` (за 3 часа), `morning` (в 9:00 по Ташкенту в день события): задача раз в минуту, гости с привязанным чатом и ответом «да», «может быть» или без ответа, учёт отправленных в таблице `guest_reminders (guest_id, kind)` с уникальным ключом, отправка только если вставка прошла.
+- Язык бота: добавить `uzc` в меню `/lang`. Тексты бота для `uzc` через `toCyr`.
+
+## 6. Найденные проблемы бэкенда, которые нужно исправить
+
+Список с шагами воспроизведения ведётся вне репозитория (он публичный). Для старых страниц `public/app` (заменяются дизайном) исправления переносятся в новый фронтенд: опрос `/webapp` медленнее лимита, `initData` важнее старой сессии в мини-аппе, понятная ошибка вместо пустой страницы.
