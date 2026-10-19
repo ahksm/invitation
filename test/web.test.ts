@@ -113,7 +113,7 @@ describe("сборка дизайна", () => {
     for (const p of ["/app/invito-data.js", "/app/invito-engine.js", "/app/invito-api.js", "/app/vendor/qrcode.js"]) expect(design.assets.has(p)).toBe(true);
     expect(text("/app/vendor/react.production.min.js")).toContain("18.3.1");
     expect(text("/app/vendor/qrcode.js")).toContain("var qrcode = function");
-    expect(design.preload).toEqual(["/app/invito-data.js", "/app/invito-engine.js"]);
+    expect(design.preload).toEqual(["/app/invito-data.js", "/app/invito-engine.js", "/app/invito-api.js"]);
     expect(design.fontsHref).toMatch(/^https:\/\/fonts\.googleapis\.com\/css2\?family=Cormorant\+Garamond.*&family=Onest/);
   });
 

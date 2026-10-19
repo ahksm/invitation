@@ -1,7 +1,8 @@
 // Invito — data: i18n, events, styles, templates, sample guests
 const M2 = { sh:'ш', ch:'ч', yo:'ё', yu:'ю', ya:'я', ye:'е', "o‘":'ў', "g‘":'ғ', "o'":'ў', "g'":'ғ', "oʻ":'ў', "gʻ":'ғ' };
 const M1 = { a:'а', b:'б', d:'д', e:'е', f:'ф', g:'г', h:'ҳ', i:'и', j:'ж', k:'к', l:'л', m:'м', n:'н', o:'о', p:'п', q:'қ', r:'р', s:'с', t:'т', u:'у', v:'в', x:'х', y:'й', z:'з', c:'с', w:'в', '‘':'ъ', "'":'ъ', 'ʼ':'ъ' };
-const KEEP = /(Invito|Telegram|CSV|QR|OG|DJ|RSVP|Loft 7|Basement 21|Rooftop 360|Nova|invito\.app\S*|@\S+)/;
+// Подстановки вида {name} не транслитерируются: их заменяет код ({наме} уже не нашлось бы).
+const KEEP = /(Invito|Telegram|CSV|QR|OG|DJ|RSVP|Loft 7|Basement 21|Rooftop 360|Nova|invito\.app\S*|@\S+|\{\w+\})/;
 function cyrPart(s){
   let out = '';
   for (let i = 0; i < s.length; i++) {
@@ -45,7 +46,7 @@ const en = {
   ogTitle:'How the link looks in chats', ogTags:'OG tags', openGuest:'Open as guest', chatQ:'Can you send me the link?',
   youGotMail:'You have an invitation', tapOpen:'Tap the envelope to open', youreInvited:'You are invited', scroll:'Scroll',
   invitationWord:'Invitation', program:'Program', route:'Route', untilEvent:'Until the day',
-  days:'days', hours:'hours', min:'min', sec:'sec',
+  days:'days', hours:'hours', min:'min', secs:'sec',
   gallery:'Moments', venue:'Where', openMap:'Open map', directions:'Directions',
   dress:'Dress code', gifts:'Gifts', notes:'Good to know', contact:'Questions?', writeHost:'Message the host',
   rsvp:'Will you come?', replyBy:'Please reply by', yes:'Yes, I will be there', no:'Sorry, I can’t make it', maybe:'Maybe',
@@ -85,6 +86,18 @@ const en = {
   demoPw:'Password: 2026', on:'On', off:'Off',
   draft:'Draft', live:'Live', replies:'replies', sheetEdit:'Edit',
   sd:{ minimal:'Swiss grid, huge numerals, clean sans.', classic:'Ivory paper, serif names, double frame.', botanical:'Sage tones, soft arch, falling petals.', retro:'Chrome pink, heavy type, star glitter.', neon:'Night background, glowing ticket.', pastel:'Soft colors, round shapes, bubbles.', editorial:'Magazine cover, huge type, red accent.', luxe:'Black and gold, art-deco sunburst, monogram.', boho:'Terracotta and sand, rising sun, soft arches.', riso:'Two-ink print, offset layers, halftone dots.', polaroid:'Taped instant photos, handwriting, kraft paper.', cinema:'Letterbox, film strip, premiere credits.', watercolor:'Soft paint washes, feathered photo, script.', brutal:'Thick borders, giant type, hard shadows.' },
+  login:'Log in', loginTitle:'Log in', loginHint:'Log in with your phone number to save invitations and share them.', loginExpired:'The login link has expired or was already used. Log in again.', loginAgain:'Your session has ended — log in again.', phoneNeeded:'Add a phone number to your account to continue.',
+  phoneLabel:'Phone number', getCode:'Get code', codeLabel:'Code from SMS', codeSent:'We sent a code to {phone}', verify:'Log in', resend:'Send the code again', resendIn:'New code in {n} s', changePhone:'Change number', orWord:'or',
+  tgLogin:'Log in with Telegram', tgWait:'Confirm the login in the Telegram bot. This page will update by itself.', tgOpen:'Open Telegram', tgExpired:'The login request has expired. Try again.', cancel:'Cancel',
+  sharePhone:'Share phone number', sharePhoneHint:'Invito needs your phone number once to create your account. Share it in Telegram and wait a few seconds.', tgWaitPhone:'Waiting for your number…', welcome:'You are logged in',
+  account:'Account', uiLang:'Interface language', subscription:'Subscription', subNone:'No subscription', subActive:'Active until {date}', subFree:'Free access',
+  tgConnect:'Connect Telegram', tgConnected:'Telegram connected', tgConnectHint:'Guest replies and reminders will come to the bot.', adminPanel:'Admin panel', logout:'Log out', loggedOut:'You have logged out',
+  invLoginHint:'Log in to see your invitations.', noInv:'No invitations yet. Create the first one — it takes a few minutes.', loading:'Loading…',
+  delTitle:'Delete invitation?', delConfirm:'“{name}”: a draft is deleted for good, a paid or published invitation goes to the archive and its link stops working.', deleted:'Invitation deleted', notSaved:'Not saved',
+  invLang:'Invitation language', invLangHint:'Guests see the invitation in this language. Sample texts switch with it until you edit them.',
+  uploading:'Uploading', fileBig:'The file is too large', fileType:'This file type is not supported',
+  errNetwork:'No connection to the server. Check the internet and try again.', errServer:'Server error. Please try again later.', errPay:'Payment required', errNotFound:'Not found', errConflict:'The data has changed. Reload the page.', errTooMany:'Too many requests. Wait a minute.', errGeneric:'Something went wrong',
+  nfTitle:'Invitation not found', nfText:'The link may have a typo, or the host has removed the invitation or not published it yet.', demo:'Demo · nothing is saved',
 };
 const ru = {
   close:'Закрыть', miniApp:'мини-приложение', myInv:'Мои приглашения', issueTag:'Конструктор приглашений',
@@ -110,7 +123,7 @@ const ru = {
   ogTitle:'Как ссылка выглядит в чатах', ogTags:'OG-теги', openGuest:'Открыть как гость', chatQ:'Скинешь ссылку на приглашение?',
   youGotMail:'Вам приглашение', tapOpen:'Нажмите на конверт, чтобы открыть', youreInvited:'Вы приглашены', scroll:'Листайте',
   invitationWord:'Приглашение', program:'Программа', route:'Маршрут', untilEvent:'До события',
-  days:'дней', hours:'часов', min:'минут', sec:'секунд',
+  days:'дней', hours:'часов', min:'минут', secs:'секунд',
   gallery:'Моменты', venue:'Где', openMap:'Открыть карту', directions:'Маршрут',
   dress:'Дресс-код', gifts:'Подарки', notes:'Полезно знать', contact:'Есть вопросы?', writeHost:'Написать организатору',
   rsvp:'Вы придёте?', replyBy:'Ответьте, пожалуйста, до', yes:'Да, приду', no:'К сожалению, не смогу', maybe:'Возможно',
@@ -150,6 +163,18 @@ const ru = {
   demoPw:'Пароль: 2026', on:'Вкл', off:'Выкл',
   draft:'Черновик', live:'Опубликовано', replies:'ответов', sheetEdit:'Изменить',
   sd:{ minimal:'Тихая сетка, воздух, чистый гротеск.', classic:'Бумага цвета слоновой кости, антиква, двойная рамка.', botanical:'Шалфей, мягкая арка, лепестки.', retro:'Хромово-розовый, тяжёлый шрифт, звёзды.', neon:'Ночной фон, светящийся текст.', pastel:'Мягкие цвета, круглые формы, пузырьки.', editorial:'Обложка журнала, огромный шрифт, красный акцент.', luxe:'Чёрное с золотом, ар-деко, монограмма.', boho:'Терракота и песок, восходящее солнце, мягкие арки.', riso:'Двухцветная ризография, сдвиг слоёв, растровые точки.', polaroid:'Полароиды на скотче, почерк, крафт-бумага.', cinema:'Кинокадр, плёнка, титры премьеры.', watercolor:'Акварельные разводы, мягкое фото, каллиграфия.', brutal:'Толстые рамки, гигантский шрифт, жёсткие тени.' },
+  login:'Войти', loginTitle:'Вход', loginHint:'Войдите по номеру телефона, чтобы сохранять приглашения и делиться ими.', loginExpired:'Ссылка для входа устарела или уже использована. Войдите снова.', loginAgain:'Сессия закончилась — войдите снова.', phoneNeeded:'Чтобы продолжить, привяжите к аккаунту номер телефона.',
+  phoneLabel:'Номер телефона', getCode:'Получить код', codeLabel:'Код из SMS', codeSent:'Мы отправили код на {phone}', verify:'Войти', resend:'Отправить код ещё раз', resendIn:'Новый код через {n} с', changePhone:'Изменить номер', orWord:'или',
+  tgLogin:'Войти через Telegram', tgWait:'Подтвердите вход в боте Telegram — страница обновится сама.', tgOpen:'Открыть Telegram', tgExpired:'Запрос на вход устарел. Попробуйте ещё раз.', cancel:'Отмена',
+  sharePhone:'Поделиться номером', sharePhoneHint:'Номер телефона нужен один раз, чтобы создать аккаунт. Поделитесь им в Telegram и подождите несколько секунд.', tgWaitPhone:'Ждём номер…', welcome:'Вы вошли',
+  account:'Аккаунт', uiLang:'Язык интерфейса', subscription:'Подписка', subNone:'Нет подписки', subActive:'Действует до {date}', subFree:'Бесплатный доступ',
+  tgConnect:'Подключить Telegram', tgConnected:'Telegram подключён', tgConnectHint:'Ответы гостей и напоминания будут приходить в бота.', adminPanel:'Админка', logout:'Выйти', loggedOut:'Вы вышли из аккаунта',
+  invLoginHint:'Войдите, чтобы увидеть свои приглашения.', noInv:'Приглашений пока нет. Создайте первое — это займёт несколько минут.', loading:'Загрузка…',
+  delTitle:'Удалить приглашение?', delConfirm:'«{name}»: черновик удалится насовсем, а оплаченное или опубликованное приглашение уйдёт в архив, и ссылка перестанет работать.', deleted:'Приглашение удалено', notSaved:'Не сохранено',
+  invLang:'Язык приглашения', invLangHint:'Гости увидят приглашение на этом языке. Тексты-примеры меняются вместе с ним, пока вы их не исправили.',
+  uploading:'Загрузка', fileBig:'Файл слишком большой', fileType:'Такой тип файла не подходит',
+  errNetwork:'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.', errServer:'Ошибка на сервере. Попробуйте позже.', errPay:'Нужна оплата', errNotFound:'Не найдено', errConflict:'Данные изменились. Обновите страницу.', errTooMany:'Слишком много запросов. Подождите минуту.', errGeneric:'Что-то пошло не так',
+  nfTitle:'Приглашение не найдено', nfText:'Возможно, в ссылке опечатка или организатор удалил приглашение либо ещё не опубликовал его.', demo:'Демо · ничего не сохраняется',
 };
 const uz = {
   close:'Yopish', miniApp:'mini ilova', myInv:'Mening taklifnomalarim', issueTag:'Taklifnoma konstruktori',
@@ -175,7 +200,7 @@ const uz = {
   ogTitle:'Havola chatda qanday ko‘rinadi', ogTags:'OG teglar', openGuest:'Mehmon sifatida ochish', chatQ:'Taklifnoma havolasini yuborasanmi?',
   youGotMail:'Sizga taklifnoma', tapOpen:'Ochish uchun konvertga bosing', youreInvited:'Siz taklif qilingansiz', scroll:'Pastga suring',
   invitationWord:'Taklifnoma', program:'Dastur', route:'Yo‘nalish', untilEvent:'Tadbirgacha',
-  days:'kun', hours:'soat', min:'daqiqa', sec:'soniya',
+  days:'kun', hours:'soat', min:'daqiqa', secs:'soniya',
   gallery:'Lahzalar', venue:'Qayerda', openMap:'Xaritani ochish', directions:'Yo‘nalish',
   dress:'Kiyinish qoidasi', gifts:'Sovg‘alar', notes:'Bilish foydali', contact:'Savollar bormi?', writeHost:'Tashkilotchiga yozish',
   rsvp:'Kelasizmi?', replyBy:'Iltimos, javob bering:', yes:'Ha, kelaman', no:'Afsuski, kela olmayman', maybe:'Balki',
@@ -215,10 +240,24 @@ const uz = {
   demoPw:'Parol: 2026', on:'Yoq', off:'O‘ch',
   draft:'Qoralama', live:'E’lon qilingan', replies:'javob', sheetEdit:'Tahrirlash',
   sd:{ minimal:'Sokin to‘r, keng bo‘shliq, toza shrift.', classic:'Fil suyagi rangidagi qog‘oz, serif ismlar, qo‘sh ramka.', botanical:'Yashil ohanglar, yumshoq ark, gulbarglar.', retro:'Xrom-pushti, qalin shrift, yulduzlar.', neon:'Tungi fon, yonib turuvchi matn.', pastel:'Yumshoq ranglar, dumaloq shakllar, pufakchalar.', editorial:'Jurnal muqovasi, ulkan shrift, qizil urg‘u.', luxe:'Qora va oltin, ar-deko, monogramma.', boho:'Terrakota va qum, chiqayotgan quyosh, yumshoq arklar.', riso:'Ikki rangli bosma, siljigan qatlamlar, rastr nuqtalar.', polaroid:'Skotchli polaroidlar, qo‘lyozma, kraft qog‘oz.', cinema:'Kino kadr, plyonka, premyera titrlari.', watercolor:'Akvarel dog‘lari, yumshoq rasm, kalligrafiya.', brutal:'Qalin ramkalar, ulkan shrift, qattiq soyalar.' },
+  login:'Kirish', loginTitle:'Kirish', loginHint:'Taklifnomalarni saqlash va ulashish uchun telefon raqamingiz bilan kiring.', loginExpired:'Kirish havolasi eskirgan yoki allaqachon ishlatilgan. Qaytadan kiring.', loginAgain:'Seans tugadi — qaytadan kiring.', phoneNeeded:'Davom etish uchun hisobingizga telefon raqamini ulang.',
+  phoneLabel:'Telefon raqami', getCode:'Kodni olish', codeLabel:'SMS-dagi kod', codeSent:'Kodni {phone} raqamiga yubordik', verify:'Kirish', resend:'Kodni qayta yuborish', resendIn:'Yangi kod {n} soniyadan keyin', changePhone:'Raqamni o‘zgartirish', orWord:'yoki',
+  tgLogin:'Telegram orqali kirish', tgWait:'Telegram botida kirishni tasdiqlang — sahifa o‘zi yangilanadi.', tgOpen:'Telegramni ochish', tgExpired:'Kirish so‘rovi eskirdi. Qaytadan urinib ko‘ring.', cancel:'Bekor qilish',
+  sharePhone:'Raqamni ulashish', sharePhoneHint:'Hisob yaratish uchun telefon raqamingiz bir marta kerak. Uni Telegramda ulashing va bir necha soniya kuting.', tgWaitPhone:'Raqam kutilmoqda…', welcome:'Siz tizimga kirdingiz',
+  account:'Hisob', uiLang:'Interfeys tili', subscription:'Obuna', subNone:'Obuna yo‘q', subActive:'Amal qilish muddati: {date}', subFree:'Bepul foydalanish',
+  tgConnect:'Telegramni ulash', tgConnected:'Telegram ulangan', tgConnectHint:'Mehmonlarning javoblari va eslatmalar botga keladi.', adminPanel:'Admin panel', logout:'Chiqish', loggedOut:'Hisobdan chiqdingiz',
+  invLoginHint:'Taklifnomalaringizni ko‘rish uchun kiring.', noInv:'Hozircha taklifnomalar yo‘q. Birinchisini yarating — bir necha daqiqa vaqt oladi.', loading:'Yuklanmoqda…',
+  delTitle:'Taklifnoma o‘chirilsinmi?', delConfirm:'“{name}”: qoralama butunlay o‘chadi, to‘langan yoki eʼlon qilingan taklifnoma esa arxivga o‘tadi va havola ishlamay qoladi.', deleted:'Taklifnoma o‘chirildi', notSaved:'Saqlanmadi',
+  invLang:'Taklifnoma tili', invLangHint:'Mehmonlar taklifnomani shu tilda ko‘radi. Namuna matnlar siz ularni tahrirlamaguningizcha u bilan birga o‘zgaradi.',
+  uploading:'Yuklanmoqda', fileBig:'Fayl juda katta', fileType:'Bu turdagi fayl mos emas',
+  errNetwork:'Server bilan aloqa yo‘q. Internetni tekshirib, qaytadan urinib ko‘ring.', errServer:'Serverda xatolik. Keyinroq urinib ko‘ring.', errPay:'To‘lov kerak', errNotFound:'Topilmadi', errConflict:'Maʼlumotlar o‘zgargan. Sahifani yangilang.', errTooMany:'So‘rovlar juda ko‘p. Bir daqiqa kuting.', errGeneric:'Nimadir xato ketdi',
+  nfTitle:'Taklifnoma topilmadi', nfText:'Havolada xato bo‘lishi mumkin yoki tashkilotchi taklifnomani o‘chirgan yoxud hali eʼlon qilmagan.', demo:'Demo · hech narsa saqlanmaydi',
 };
 export const I18N = { en, ru, uz, uzc: deep(uz) };
 export const LANGS = [ { code:'ru', label:'RU' }, { code:'en', label:'EN' }, { code:'uz', label:'UZ' }, { code:'uzc', label:'ЎЗ' } ];
 export const LOCALE = { ru:'ru-RU', en:'en-GB', uz:'uz-Latn-UZ', uzc:'uz-Cyrl-UZ' };
+// Названия языков на них самих: в переключателе языка приглашения.
+export const LANG_NAMES = { ru:'Русский', en:'English', uz:'Oʻzbekcha', uzc:'Ўзбекча' };
 
 const U = (id)=>`https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=900&q=70`;
 const IMG = {
@@ -382,5 +421,5 @@ export const CONTACTS = [
 const RU2LAT = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',ў:'o',қ:'q',ғ:'g',ҳ:'h'};
 export function slugify(s){ return (s||'').toLowerCase().replace(/&/g,' and ').split('').map(c=>RU2LAT[c]??c).join('').replace(/[‘'ʻ’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'invite'; }
 
-export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LOCALE, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr };
+export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LANG_NAMES, LOCALE, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr };
 if (typeof window !== 'undefined') window.INVITO = INVITO;

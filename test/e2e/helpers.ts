@@ -1,0 +1,227 @@
+import { createHmac } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { createServer, type AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { eq } from "drizzle-orm";
+import { Redis } from "ioredis";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
+import { expect } from "vitest";
+import { buildApp } from "../../src/app.js";
+import { createCache } from "../../src/cache.js";
+import { loadConfig } from "../../src/config.js";
+import { createDb } from "../../src/db/index.js";
+import { runMigrations } from "../../src/db/migrate.js";
+import { users } from "../../src/db/schema.js";
+import { seed } from "../../src/db/seed.js";
+import { createPaymentProvider } from "../../src/payments/index.js";
+import { createMockSms } from "../../src/sms/mock.js";
+
+/**
+ * Общее окружение проверок в браузере (npm run test:e2e): приложение на свободном порту
+ * (APP_URL совпадает с адресом, иначе защита от CSRF отклонит запросы страницы), тестовая база,
+ * Redis, SMS в память и Chromium. Браузер: PLAYWRIGHT_CHROMIUM, /opt/pw-browsers/chromium или
+ * установленный `npx playwright-core install chromium`. Скриншоты пишутся в E2E_SHOTS_DIR, если задана.
+ */
+
+/** Ключ бота для подписи initData: ненастоящий, Telegram не вызывается (TELEGRAM_MODE=off). */
+export const BOT_TOKEN = "123456:e2e-fake-token";
+
+// 1×1 прозрачный PNG вместо внешних картинок.
+export const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
+
+/** Ошибка загрузки, которую Chromium пишет в консоль на ответ 401 от GET /api/auth/me без сессии. */
+export const ME_401 = "Failed to load resource: the server responded with a status of 401 (Unauthorized)";
+
+// PLAYWRIGHT_CHROMIUM, затем браузер этой машины; undefined — тот, что поставил `npx playwright-core install chromium`.
+function chromiumPath(): string | undefined {
+  if (process.env.PLAYWRIGHT_CHROMIUM) return process.env.PLAYWRIGHT_CHROMIUM;
+  return existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined;
+}
+
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const srv = createServer();
+    srv.once("error", reject);
+    srv.listen(0, "127.0.0.1", () => {
+      const { port } = srv.address() as AddressInfo;
+      srv.close(() => resolve(port));
+    });
+  });
+}
+
+/** initData мини-аппа с подписью, как её считает Telegram (ключ — HMAC от токена бота). */
+export function signInitData(fields: Record<string, string>, token = BOT_TOKEN) {
+  const check = Object.keys(fields).sort().map((k) => `${k}=${fields[k]}`).join("\n");
+  const secret = createHmac("sha256", "WebAppData").update(token).digest();
+  const hash = createHmac("sha256", secret).update(check).digest("hex");
+  return new URLSearchParams({ ...fields, hash }).toString();
+}
+
+export type Problems = {
+  /** Ошибки консоли, кроме ожидаемых 401 от /api/auth/me (они в me401). */
+  console: string[];
+  me401: number;
+  page: string[];
+  csp: string[];
+  /** Запросы к своему серверу: путь с query. */
+  requests: string[];
+};
+
+export type OpenOptions = {
+  viewport?: { width: number; height: number };
+  status?: number;
+  /** Текст, появление которого значит, что страница отрисована. */
+  waitText?: string;
+  locale?: string;
+  /** Уже готовый контекст (cookie, init-скрипты); иначе создаётся новый. */
+  context?: BrowserContext;
+};
+
+export async function startE2E() {
+  const port = await freePort();
+  const base = `http://127.0.0.1:${port}`;
+  const mediaDir = mkdtempSync(join(tmpdir(), "invite-e2e-media-"));
+  const config = loadConfig({
+    NODE_ENV: "test",
+    APP_URL: base,
+    DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://invite:invite@localhost:5432/invite_test",
+    REDIS_URL: process.env.TEST_REDIS_URL ?? "redis://localhost:6379/15",
+    JWT_SECRET: "test-secret-test-secret-test-secret-123",
+    PAYMENT_PROVIDER: "mock",
+    SMS_PROVIDER: "mock",
+    TELEGRAM_MODE: "off",
+    TELEGRAM_BOT_TOKEN: BOT_TOKEN,
+    ANTHROPIC_API_KEY: "",
+    MEDIA_DIR: mediaDir,
+  });
+  const { db, pool } = createDb(config.DATABASE_URL);
+  const redis = new Redis(config.REDIS_URL);
+  const cache = createCache(redis);
+  // Публичные страницы и шаблоны читают из базы.
+  await runMigrations(db);
+  await seed(db);
+  // Счётчики лимита запросов от прошлых запусков.
+  await redis.flushdb();
+  const sms: { phone: string; text: string }[] = [];
+  const app = await buildApp(
+    { config, db, cache, payments: createPaymentProvider(config, cache), sms: createMockSms({ info: () => {} }, sms) },
+    { logger: false },
+  );
+  await app.listen({ port, host: "127.0.0.1" });
+  const browser: Browser = await chromium.launch({ executablePath: chromiumPath() });
+  const shotsDir = process.env.E2E_SHOTS_DIR;
+
+  const e = {
+    config,
+    db,
+    redis,
+    app,
+    base,
+    browser,
+    sms,
+
+    /** Контекст браузера: внешние ресурсы (Telegram, Google Fonts, Unsplash) — заглушки, CSP-нарушения собираются. */
+    async newContext(opts: { viewport?: { width: number; height: number }; locale?: string } = {}) {
+      const context = await browser.newContext({ viewport: opts.viewport ?? { width: 390, height: 844 }, locale: opts.locale ?? "ru-RU" });
+      // Сеть наружу не нужна: CSP браузер проверяет до запроса, так что запрещённый адрес всё равно даст нарушение.
+      await context.route(
+        (url) => url.origin !== base,
+        (route) => {
+          const type = route.request().resourceType();
+          if (type === "script") return route.fulfill({ contentType: "text/javascript", body: "/* заглушка */" });
+          if (type === "stylesheet") return route.fulfill({ contentType: "text/css", body: "" });
+          if (type === "image") return route.fulfill({ contentType: "image/png", body: PIXEL, headers: { "access-control-allow-origin": "*" } });
+          return route.fulfill({ status: 204 });
+        },
+      );
+      await context.addInitScript(() => {
+        const w = window as unknown as { __csp: string[] };
+        w.__csp = [];
+        document.addEventListener("securitypolicyviolation", (ev) => w.__csp.push(`${ev.violatedDirective} ${ev.blockedURI}`));
+      });
+      return context;
+    },
+
+    /** Открывает страницу и собирает ошибки консоли, исключения, нарушения CSP и запросы к серверу. */
+    async open(path: string, opts: OpenOptions = {}) {
+      const context = opts.context ?? (await e.newContext(opts));
+      const problems: Problems = { console: [], me401: 0, page: [], csp: [], requests: [] };
+      const page = await context.newPage();
+      page.on("console", (m) => {
+        if (m.type() !== "error") return;
+        // Без сессии GET /api/auth/me отвечает 401, и Chromium пишет это в консоль: ожидаемо, считается отдельно.
+        if (m.text() === ME_401 && m.location().url === base + "/api/auth/me") problems.me401++;
+        else problems.console.push(m.text());
+      });
+      page.on("pageerror", (err) => problems.page.push(String(err)));
+      page.on("request", (r) => r.url().startsWith(base) && problems.requests.push(r.url().slice(base.length)));
+      const res = await page.goto(base + path);
+      expect(res?.status()).toBe(opts.status ?? 200);
+      if (opts.waitText) await e.waitText(page, opts.waitText);
+      // Даём отработать таймерам и циклу анимации после первого кадра.
+      await page.waitForTimeout(1200);
+      return { page, context, problems, close: () => context.close() };
+    },
+
+    waitText(page: Page, text: string, timeout = 20_000) {
+      return page.waitForFunction((t) => document.body.innerText.includes(t), text, { timeout });
+    },
+
+    async csp(page: Page) {
+      return page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+    },
+
+    /** Нет ошибок в консоли (кроме ожидаемых 401 от /api/auth/me), исключений и нарушений CSP. */
+    async expectClean(page: Page, p: Problems) {
+      p.csp = await e.csp(page);
+      expect(p.console, "ошибки в консоли").toEqual([]);
+      expect(p.page, "исключения на странице").toEqual([]);
+      expect(p.csp, "нарушения CSP").toEqual([]);
+    },
+
+    async shot(page: Page, name: string) {
+      if (!shotsDir) return;
+      mkdirSync(shotsDir, { recursive: true });
+      await page.screenshot({ path: join(shotsDir, name) });
+    },
+
+    /** Последний код входа, отправленный на номер (998XXXXXXXXX). */
+    lastCode(phone: string) {
+      const m = [...sms].reverse().find((s) => s.phone === phone);
+      return m ? /\b(\d{6})\b/.exec(m.text)?.[1] ?? null : null;
+    },
+
+    /** Пользователь в базе и cookie его сессии в контексте браузера. */
+    async signIn(context: BrowserContext, values: Partial<typeof users.$inferInsert> = {}) {
+      const [user] = await db
+        .insert(users)
+        .values({ phone: uniquePhone(), ...values })
+        .returning();
+      await context.addCookies([{ name: "session", value: app.jwt.sign({ sub: user!.id }), url: base }]);
+      return user!;
+    },
+
+    async user(id: string) {
+      const [u] = await db.select().from(users).where(eq(users.id, id));
+      return u!;
+    },
+
+    async close() {
+      await browser?.close();
+      await app?.close();
+      await Promise.allSettled([pool.end(), redis.quit()]);
+      rmSync(mediaDir, { recursive: true, force: true });
+    },
+  };
+  return e;
+}
+
+export type E2E = Awaited<ReturnType<typeof startE2E>>;
+
+let phoneSeq = 0;
+/** Неповторяющийся номер 99890XXXXXXX: лимиты на номер и уникальность в базе не мешают тестам. */
+export function uniquePhone() {
+  phoneSeq++;
+  return "99890" + String((Date.now() * 10 + phoneSeq) % 1e7).padStart(7, "0");
+}

@@ -19,13 +19,14 @@ html::-webkit-scrollbar{width:0;height:0}
 [data-carousel]::-webkit-scrollbar{display:none}
 input,textarea,select,button{font-family:inherit}
 input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-height:46px}
+@keyframes invPulse{0%,100%{opacity:.35}50%{opacity:1}}
 </style>
 </helmet>
 <div ref="{{ rootRef }}" style="min-height:100vh;background:{{ rootBg }};color:{{ rootInk }};font-family:'Onest',sans-serif;transition:background .5s ease">
-<sc-if value="{{ notReady }}" hint-placeholder-val="{{ true }}"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font:italic 500 44px 'Cormorant Garamond',serif;color:{{ ui.ink }}">Invito</div></sc-if>
+<sc-if value="{{ notReady }}" hint-placeholder-val="{{ true }}"><div style="min-height:100vh;display:flex;flex-direction:column;gap:24px;align-items:center;justify-content:center;font:italic 500 44px 'Cormorant Garamond',serif;color:#1a1714">Invito<sc-if value="{{ bootFail }}"><button onClick="{{ reload }}" aria-label="Reload" style="width:52px;height:52px;border-radius:50%;border:1px solid rgba(26,23,20,.3);background:transparent;color:#1a1714;font:400 22px 'Onest',sans-serif;cursor:pointer">↻</button></sc-if></div></sc-if>
 <sc-if value="{{ ready }}" hint-placeholder-val="{{ false }}">
 
-<sc-if value="{{ tg }}"><div style="position:sticky;top:0;z-index:70;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:{{ tgBg }};color:{{ tgInk }};border-bottom:1px solid {{ tgLine }}">
+<sc-if value="{{ tgSim }}"><div style="position:sticky;top:0;z-index:70;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:{{ tgBg }};color:{{ tgInk }};border-bottom:1px solid {{ tgLine }}">
 <button onClick="{{ tgBack }}" style="height:40px;padding:0 10px;border:0;background:none;color:inherit;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ tgBackLabel }}</button>
 <div style="text-align:center;line-height:1.15"><div style="font:600 15px 'Onest',sans-serif">Invito</div><div style="font:400 11px 'Onest',sans-serif;opacity:.6">{{ t.miniApp }}</div></div>
 <button style="width:40px;height:40px;border:0;background:none;color:inherit;font-size:20px;cursor:pointer">⋯</button>
@@ -34,12 +35,15 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ showHeader }}"><header style="position:sticky;top:{{ headTop }};z-index:60;background:rgba({{ ui.paperRgb }},.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba({{ ui.inkRgb }},.12)">
 <div style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px);height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px">
 <button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:italic 500 32px/1 'Cormorant Garamond',serif;color:{{ ui.ink }};letter-spacing:-.01em">Invito</button>
-<div style="display:flex;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:{{ headGap }}">
 <button onClick="{{ goTour }}" style="background:none;border:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ tourColor }};padding:0">{{ t.tour }}</button>
-<sc-if value="{{ wide }}"><button onClick="{{ goHome }}" style="background:none;border:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.ink }}">{{ t.myInv }}</button></sc-if>
-<div style="display:flex;border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:999px;padding:3px;gap:2px">
+<sc-if value="{{ wide }}"><button onClick="{{ goMyInv }}" style="background:none;border:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.ink }}">{{ t.myInv }}</button></sc-if>
+<sc-if value="{{ headPills }}"><div style="display:flex;border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:999px;padding:3px;gap:2px">
 <sc-for list="{{ langs }}" as="l" hint-placeholder-count="4"><button onClick="{{ l.onClick }}" style="border:0;cursor:pointer;border-radius:999px;padding:6px 9px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;background:{{ l.bg }};color:{{ l.color }};transition:background .2s">{{ l.label }}</button></sc-for>
-</div></div></div></header></sc-if>
+</div>
+<button onClick="{{ openAccount }}" data-account="1" title="{{ t.account }}" style="height:34px;min-width:34px;padding:0 {{ accPad }};border-radius:999px;border:1px solid {{ accBorder }};background:{{ accBg }};color:{{ accColor }};font:500 12px 'Onest',sans-serif;letter-spacing:.02em;cursor:pointer;white-space:nowrap;transition:background .2s">{{ accLabel }}</button></sc-if>
+<sc-if value="{{ headCompact }}"><button onClick="{{ openAccount }}" data-account="1" title="{{ t.account }}" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 3px 0 11px;border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:999px;background:transparent;color:{{ ui.ink }};cursor:pointer"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em">{{ langCode }}</span><span style="height:28px;min-width:28px;padding:{{ accChipPad }};border-radius:999px;display:flex;align-items:center;justify-content:center;background:{{ accChipBg }};color:{{ accChipColor }};font:500 11px 'Onest',sans-serif;white-space:nowrap">{{ accLabel }}</span></button></sc-if>
+</div></div></header></sc-if>
 
 <sc-if value="{{ isHome }}">
 <main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
@@ -62,8 +66,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 </section>
 <main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
-<section style="padding:60px 0 90px">
+<section id="my-inv" style="padding:60px 0 90px;scroll-margin-top:{{ headTop }}">
 <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.myInv }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;color:{{ ui.muted }}">{{ myCount }}</span></div>
+<sc-if value="{{ invOut }}"><div style="display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between;padding:26px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><p style="margin:0;max-width:44ch;font-size:16px;line-height:1.5;color:{{ ui.body }}">{{ t.invLoginHint }}</p><button onClick="{{ loginMyInv }}" style="height:46px;padding:0 22px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.login }} →</button></div></sc-if>
+<sc-if value="{{ invLoading }}"><div style="padding:28px 0;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};animation:invPulse 1.4s ease-in-out infinite">{{ t.loading }}</div></sc-if>
+<sc-if value="{{ invEmpty }}"><p style="margin:0;padding:28px 0;max-width:30ch;font:italic 500 26px/1.2 'Cormorant Garamond',serif;color:{{ ui.muted }}">{{ t.noInv }}</p></sc-if>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:0 36px">
 <sc-for list="{{ myInvites }}" as="m" hint-placeholder-count="0"><div data-rv="1" style="opacity:0;transform:translateY(24px);transition:opacity .8s,transform .9s cubic-bezier(.2,.7,.2,1);display:grid;grid-template-columns:100px minmax(0,1fr);gap:18px;padding:24px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
 <div style="width:100px;border-radius:6px;overflow:hidden;box-shadow:0 14px 24px -16px rgba({{ ui.inkRgb }},.5)"><dc-import name="InviteCover" th="{{ m.th }}" names="{{ m.names }}" date="{{ m.dateShort }}" cover="{{ m.cover }}" kicker="{{ m.kicker }}" hint-size="100px,133px"></dc-import></div>
@@ -171,6 +178,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ ws.basics }}"><div style="display:flex;flex-direction:column;gap:26px">
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fNames }}</span><input value="{{ inv.names }}" onChange="{{ on.names }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:8px 0;font:500 32px/1.15 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fHost }}</span><input value="{{ inv.host }}" onChange="{{ on.host }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
+<div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.invLang }}</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><sc-for list="{{ invLangOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div><p style="margin:8px 0 0;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.invLangHint }}</p></div>
 </div></sc-if>
 <sc-if value="{{ ws.when }}"><div style="display:flex;flex-direction:column;gap:26px">
 <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px">
@@ -679,6 +687,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ qs.basics }}"><div style="display:flex;flex-direction:column;gap:26px">
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fNames }}</span><input value="{{ inv.names }}" onChange="{{ on.names }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:8px 0;font:500 32px/1.15 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fHost }}</span><input value="{{ inv.host }}" onChange="{{ on.host }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
+<div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.invLang }}</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><sc-for list="{{ invLangOpts }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div><p style="margin:8px 0 0;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.invLangHint }}</p></div>
 </div></sc-if>
 <sc-if value="{{ qs.when }}"><div style="display:flex;flex-direction:column;gap:26px">
 <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px">
@@ -833,7 +842,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ stats }}" as="s"><div style="border-top:1px solid {{ ui.ink }};padding-top:10px"><div style="font:500 52px/1 'Cormorant Garamond',serif;color:{{ s.color }}">{{ s.n }}</div><div style="margin-top:6px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ s.label }}</div></div></sc-for>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:26px">
-<button onClick="{{ openImport }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer">+ {{ t.importTg }}</button>
+<sc-if value="{{ importAvail }}"><button onClick="{{ openImport }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer">+ {{ t.importTg }}</button></sc-if>
 <button onClick="{{ remind }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.remind }} · {{ pendingN }}</button>
 <button onClick="{{ exportCsv }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.csv }} ↓</button>
 </div>
@@ -925,8 +934,78 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div></sc-if>
 </main></sc-if>
 
+<sc-if value="{{ isNotFound }}"><main style="min-height:100vh;max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px);display:flex;flex-direction:column;color:{{ ui.ink }}">
+<div style="height:60px;display:flex;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><button onClick="{{ toApp }}" style="background:none;border:0;padding:0;cursor:pointer;font:italic 500 32px/1 'Cormorant Garamond',serif;color:{{ ui.ink }};letter-spacing:-.01em">Invito</button></div>
+<section style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0 80px">
+<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span>№ 404</span><span>{{ monthYear }}</span></div>
+<h1 style="margin:30px 0 0;font:500 clamp(52px,12vw,140px)/.9 'Cormorant Garamond',serif;letter-spacing:-.03em;text-wrap:balance">{{ t.nfTitle }}</h1>
+<p style="margin:24px 0 0;max-width:46ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.nfText }}</p>
+<div style="margin-top:34px"><button onClick="{{ toApp }}" style="display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 28px;border-radius:999px;background:{{ ui.ink }};color:{{ ui.paper }};border:0;font:500 16px 'Onest',sans-serif;cursor:pointer;transition:background .2s" style-hover="background:#d4452a">{{ t.makeOwn }}<span style="font-size:20px">→</span></button></div>
+</section></main></sc-if>
+
+<sc-if value="{{ demoBadge }}"><div style="position:fixed;top:{{ demoTop }};left:50%;transform:translateX(-50%);z-index:94;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#d4452a;color:#fff;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.22)"><span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:invPulse 1.6s ease-in-out infinite"></span>{{ t.demo }}</div></sc-if>
+
+<sc-if value="{{ loginOpen }}"><div onClick="{{ closeLogin }}" style="position:fixed;inset:0;z-index:97;background:rgba(10,9,8,.45)"></div>
+<div data-sheet="login" style="position:fixed;left:0;right:0;bottom:0;z-index:98;max-width:560px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;box-shadow:0 -20px 60px rgba(0,0,0,.3);font-family:'Onest',sans-serif">
+<div style="width:40px;height:4px;border-radius:2px;background:rgba({{ ui.inkRgb }},.2);margin:0 auto"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px"><div style="font:500 34px/1 'Cormorant Garamond',serif">{{ lg.title }}</div><button onClick="{{ closeLogin }}" aria-label="{{ t.close }}" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.2);background:transparent;color:{{ ui.ink }};font-size:20px;line-height:1;cursor:pointer">×</button></div>
+<sc-if value="{{ lg.note }}"><div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(212,69,42,.08);color:#d4452a;font-size:14px;line-height:1.45">{{ lg.note }}</div></sc-if>
+<div style="font-size:14px;color:{{ ui.muted }};margin-top:10px;line-height:1.45">{{ lg.hint }}</div>
+<sc-if value="{{ lg.isPhone }}"><div style="margin-top:22px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.phoneLabel }}</span>
+<span style="display:flex;align-items:baseline;gap:10px;border-bottom:1px solid rgba({{ ui.inkRgb }},.22)"><span style="font:500 22px 'JetBrains Mono',monospace;color:{{ ui.muted }}">+998</span><input ref="{{ phoneRef }}" name="phone" type="tel" inputMode="numeric" autoComplete="tel-national" value="{{ lg.phone }}" onChange="{{ lg.onPhone }}" onKeyDown="{{ lg.onPhoneKey }}" placeholder="90 123-45-67" style="flex:1;min-width:0;background:transparent;border:0;padding:10px 0;font:500 22px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none;letter-spacing:.02em"></span></label>
+<button onClick="{{ lg.sendCode }}" style="margin-top:20px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ lg.sendOp }};transition:opacity .2s">{{ lg.sendLabel }} →</button>
+<sc-if value="{{ lg.hasTg }}"><div style="display:flex;align-items:center;gap:12px;margin:18px 0;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}"><span style="flex:1;height:1px;background:rgba({{ ui.inkRgb }},.14)"></span>{{ t.orWord }}<span style="flex:1;height:1px;background:rgba({{ ui.inkRgb }},.14)"></span></div>
+<button onClick="{{ lg.tgLogin }}" style="width:100%;height:54px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:#2f6fe0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px">✈</span>{{ t.tgLogin }}</button></sc-if>
+</div></sc-if>
+<sc-if value="{{ lg.isCode }}"><div style="margin-top:22px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.codeLabel }}</span>
+<input ref="{{ codeRef }}" name="code" type="text" inputMode="numeric" autoComplete="one-time-code" value="{{ lg.code }}" onChange="{{ lg.onCode }}" onKeyDown="{{ lg.onCodeKey }}" placeholder="••••••" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:500 30px 'JetBrains Mono',monospace;letter-spacing:.4em;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
+<button onClick="{{ lg.verify }}" style="margin-top:20px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ lg.verifyOp }};transition:opacity .2s">{{ lg.verifyLabel }} →</button>
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-top:16px;font-size:14px"><button onClick="{{ lg.resend }}" style="background:none;border:0;padding:0;cursor:pointer;color:{{ lg.resendColor }};font:inherit">{{ lg.resendLabel }}</button><button onClick="{{ lg.changePhone }}" style="background:none;border:0;padding:0;cursor:pointer;color:{{ ui.muted }};font:inherit;text-decoration:underline">{{ t.changePhone }}</button></div>
+</div></sc-if>
+<sc-if value="{{ lg.isTgWait }}"><div style="margin-top:22px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2f6fe0"><span style="width:8px;height:8px;border-radius:50%;background:#2f6fe0;animation:invPulse 1.4s ease-in-out infinite"></span>Telegram</div>
+<sc-if value="{{ lg.hasTgUrl }}"><a href="{{ lg.tgUrl }}" target="_blank" rel="noopener" style="height:54px;border-radius:999px;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none">✈ {{ t.tgOpen }} ↗</a></sc-if>
+<button onClick="{{ lg.cancelTg }}" style="height:46px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.cancel }}</button>
+</div></sc-if>
+<sc-if value="{{ lg.isTgPhone }}"><div style="margin-top:22px;display:flex;flex-direction:column;gap:12px">
+<button onClick="{{ lg.askContact }}" style="height:54px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">☎ {{ t.sharePhone }}</button>
+<div style="display:flex;align-items:center;justify-content:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ ui.muted }}"><span style="width:7px;height:7px;border-radius:50%;background:#2f6fe0;animation:invPulse 1.4s ease-in-out infinite"></span>{{ t.tgWaitPhone }}</div>
+</div></sc-if>
+<sc-if value="{{ lg.err }}"><div role="alert" style="margin-top:16px;color:#d4452a;font-size:14px;line-height:1.45">{{ lg.err }}</div></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ accOpen }}"><div onClick="{{ closeAccount }}" style="position:fixed;inset:0;z-index:96;background:rgba(10,9,8,.45)"></div>
+<div data-sheet="account" style="position:fixed;left:0;right:0;bottom:0;z-index:97;max-width:560px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;box-shadow:0 -20px 60px rgba(0,0,0,.3);font-family:'Onest',sans-serif">
+<div style="width:40px;height:4px;border-radius:2px;background:rgba({{ ui.inkRgb }},.2);margin:0 auto"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px"><div style="font:500 34px/1 'Cormorant Garamond',serif">{{ t.account }}</div><button onClick="{{ closeAccount }}" aria-label="{{ t.close }}" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.2);background:transparent;color:{{ ui.ink }};font-size:20px;line-height:1;cursor:pointer">×</button></div>
+<sc-if value="{{ accIn }}"><div style="display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;align-items:center;margin-top:22px;padding-bottom:18px;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><span style="width:52px;height:52px;border-radius:50%;background:{{ ui.ink }};color:{{ ui.paper }};display:flex;align-items:center;justify-content:center;font:500 18px 'Onest',sans-serif">{{ accIni }}</span><div style="min-width:0"><div style="font:500 24px/1.1 'Cormorant Garamond',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ acc.name }}</div><div data-phone="1" style="margin-top:4px;font:500 13px 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ acc.phone }}</div></div></div></sc-if>
+<div style="margin-top:20px;font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.uiLang }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><sc-for list="{{ accLangs }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div>
+<sc-if value="{{ accIn }}"><div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:22px;padding:14px 0;border-top:1px solid rgba({{ ui.inkRgb }},.12);border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.subscription }}</span><span style="font-size:15px;color:{{ acc.subColor }};text-align:right">{{ acc.sub }}</span></div>
+<sc-if value="{{ acc.tgOn }}"><div style="display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12);font-size:15px"><span style="width:26px;height:26px;border-radius:50%;background:#2f6fe0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px">✈</span>{{ t.tgConnected }}<span style="margin-left:auto;color:#2e7d4f">✓</span></div></sc-if>
+<sc-if value="{{ acc.tgCan }}"><div style="padding:14px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><button onClick="{{ accConnectTg }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 14px 'Onest',sans-serif;cursor:pointer">✈ {{ t.tgConnect }}</button><div style="margin-top:8px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.tgConnectHint }}</div></div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px">
+<sc-if value="{{ acc.admin }}"><button onClick="{{ accAdmin }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.adminPanel }} ↗</button></sc-if>
+<button onClick="{{ accLogout }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:transparent;color:#d4452a;font:500 14px 'Onest',sans-serif;cursor:pointer;text-decoration:underline">{{ t.logout }}</button>
+</div></div></sc-if>
+<sc-if value="{{ accOut }}"><div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba({{ ui.inkRgb }},.12)"><div style="font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.loginHint }}</div><button onClick="{{ accLogin }}" style="margin-top:14px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.login }} →</button></div></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ cfOpen }}"><div onClick="{{ cfCancel }}" style="position:fixed;inset:0;z-index:98;background:rgba(10,9,8,.45)"></div>
+<div data-sheet="confirm" style="position:fixed;left:0;right:0;bottom:0;z-index:99;max-width:560px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));box-shadow:0 -20px 60px rgba(0,0,0,.3);font-family:'Onest',sans-serif">
+<div style="width:40px;height:4px;border-radius:2px;background:rgba({{ ui.inkRgb }},.2);margin:0 auto"></div>
+<div style="font:500 34px/1 'Cormorant Garamond',serif;margin-top:18px">{{ cf.title }}</div>
+<div style="font-size:15px;color:{{ ui.body }};margin-top:12px;line-height:1.5">{{ cf.text }}</div>
+<div style="display:flex;gap:8px;margin-top:22px"><button onClick="{{ cfCancel }}" style="flex:1;height:52px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.cancel }}</button><button onClick="{{ cfOk }}" style="flex:1;height:52px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ cf.ok }}</button></div>
+</div></sc-if>
+
+<sc-if value="{{ upOn }}"><div role="status" style="position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:99;width:min(calc(100vw - 32px),280px);padding:12px 16px;border-radius:16px;background:{{ ui.ink }};color:{{ ui.paper }};font:500 13px 'Onest',sans-serif;box-shadow:0 12px 30px rgba(0,0,0,.25);pointer-events:none"><div style="display:flex;justify-content:space-between;gap:12px"><span>{{ upLabel }}</span><span style="font-family:'JetBrains Mono',monospace">{{ upPct }}</span></div><div style="margin-top:8px;height:3px;border-radius:2px;background:rgba({{ ui.paperRgb }},.2);overflow:hidden"><div style="height:100%;width:{{ upPct }};background:#d4452a;transition:width .2s"></div></div></div></sc-if>
+
 <sc-if value="{{ mainBtn.show }}"><div style="position:fixed;left:0;right:0;bottom:0;z-index:95;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:{{ mainBtn.barBg }}"><button onClick="{{ mainBtn.onClick }}" style="width:100%;height:50px;border-radius:12px;border:0;background:{{ mainBtn.bg }};color:#fff;font:600 16px 'Onest',sans-serif;cursor:pointer;letter-spacing:.01em">{{ mainBtn.label }}</button></div></sc-if>
-<div style="position:fixed;left:50%;bottom:{{ toastBottom }};transform:translate(-50%,{{ toastY }});opacity:{{ toastOp }};transition:opacity .35s,transform .35s;z-index:100;background:{{ ui.ink }};color:{{ ui.paper }};padding:12px 20px;border-radius:999px;font:500 14px 'Onest',sans-serif;pointer-events:none;white-space:nowrap;box-shadow:0 12px 30px rgba(0,0,0,.25)">{{ toastMsg }}</div>
+<div role="status" style="position:fixed;left:50%;bottom:{{ toastBottom }};transform:translate(-50%,{{ toastY }});opacity:{{ toastOp }};transition:opacity .35s,transform .35s;z-index:100;width:max-content;max-width:min(calc(100vw - 32px),520px);background:{{ ui.ink }};color:{{ ui.paper }};padding:12px 20px;border-radius:22px;font:500 14px/1.4 'Onest',sans-serif;text-align:center;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.25)">{{ toastMsg }}</div>
 </sc-if>
 </div>
 </x-dc>
@@ -939,6 +1018,17 @@ class Component extends DCLogic {
   scratchIntroRef = React.createRef();
   camRef = React.createRef();
   peekRef = React.createRef();
+  phoneRef = React.createRef();
+  codeRef = React.createRef();
+  // Очередь PATCH по приглашению, последние данные автосохранения, ждущего очереди, и число запросов в пути.
+  _queue = {};
+  _snap = {};
+  _autoQueued = {};
+  _inflight = 0;
+  // Маршруты из адреса /app/#/<имя>/<параметры>: обработчик получает параметры и сам убирает hash.
+  routes = {
+    'login-expired': () => { this.clearHash(); if (this.state.me) this.toast(this.t().loginExpired); else this.openLogin({ reason: 'expired' }); },
+  };
 
   ui() {
     const pref = (this.state && this.state.themeOv) || (this.props.uiTheme ?? 'light');
@@ -948,18 +1038,428 @@ class Component extends DCLogic {
       ? { dark, paper: '#151311', ink: '#f1ebe0', muted: '#a39a8c', card: '#1e1b18', paper2: '#2a2622', body: '#cfc6b8', chat: '#24201c', inkRgb: '241,235,224', paperRgb: '21,19,17' }
       : { dark, paper: '#f3efe6', ink: '#1a1714', muted: '#6e665b', card: '#fbf9f4', paper2: '#e9e3d6', body: '#4a443c', chat: '#e2dbc9', inkRgb: '26,23,20', paperRgb: '243,239,230' };
   }
-  saveDraft() {
-    const s = this.state; if (!s.draftId) return;
-    const strip = (inv) => ({ ...inv, video: '' });
-    const entry = { id: s.draftId, event: s.event, tplId: s.tplId, inv: strip(s.inv), status: (s.drafts.find((d) => d.id === s.draftId) || {}).status || 'draft', updated: Date.now() };
-    const drafts = [entry].concat(s.drafts.filter((d) => d.id !== s.draftId));
-    const write = (list) => localStorage.setItem('invito.v1.drafts', JSON.stringify(list));
-    try { write(drafts); } catch (e) { try { write(drafts.map((d) => ({ ...d, inv: { ...d.inv, cover: /^data:/.test(d.inv.cover) ? '' : d.inv.cover, gallery: d.inv.gallery.filter((g) => !/^data:/.test(g)), musicSrc: '' } }))); } catch (e2) {} }
-    this.setState({ drafts, savedAt: Date.now() });
+  t() { return this.D.I18N[this.state.lang]; }
+  isPublic() { const m = this.boot && this.boot.mode; return m === 'shared' || m === 'personal'; }
+  // Загрузочные данные оболочки (#invito-boot): app, shared, personal или notfound. Без оболочки (превью дизайна) — app.
+  readBoot() {
+    try { const el = document.getElementById('invito-boot'); const b = el && JSON.parse(el.textContent || ''); if (b && b.mode) return b; } catch (e) { console.error('invito-boot', e); }
+    return { mode: 'app' };
   }
-  persist(drafts) { try { localStorage.setItem('invito.v1.drafts', JSON.stringify(drafts)); } catch (e) {} this.setState({ drafts }); }
-  newDraft(extra) { const id = 'd' + Date.now().toString(36); this.setState({ draftId: id, ...(extra || {}) }); return id; }
-  logAct(a) { this.setState((x) => ({ activity: [{ t: Date.now(), ...a }].concat(x.activity) })); }
+  // Язык интерфейса до ответа /api/auth/me: localStorage, затем язык Telegram или браузера, иначе ru.
+  initialLang() {
+    const codes = this.D.LANGS.map((l) => l.code);
+    const pick = (v) => { v = String(v || '').toLowerCase().replace('_', '-'); if (!v) return null; if (codes.includes(v)) return v; if (/^uz-cyrl/.test(v)) return 'uzc'; const b = v.split('-')[0]; return codes.includes(b) ? b : null; };
+    let stored = null; try { stored = localStorage.getItem('invito.lang'); } catch (e) {}
+    const tw = window.Telegram && window.Telegram.WebApp, u = this.tgReal && tw.initDataUnsafe && tw.initDataUnsafe.user;
+    return pick(stored) || pick(u && u.language_code) || pick(navigator.language) || 'ru';
+  }
+  // Язык для сервера (X-Lang: на нём приходят тексты ошибок) и атрибута lang страницы.
+  applyLang(code) {
+    if (this.A) this.A.setLang(code);
+    try { document.documentElement.lang = { ru: 'ru', en: 'en', uz: 'uz-Latn', uzc: 'uz-Cyrl' }[code] || 'ru'; } catch (e) {}
+  }
+  logAct(a) { if (this.state.demo) this.setState((x) => ({ activity: [{ t: Date.now(), ...a }].concat(x.activity) })); }
+
+  // ---------- API ----------
+  // Запрос к API (invito-api.js). Ошибка показывается тостом на языке интерфейса и пробрасывается дальше;
+  // opts.quiet — без тоста, opts.retry — что повторить после нового входа, если сервер ответил 401.
+  async call(path, opts) {
+    const { quiet, retry, ...rest } = opts || {};
+    try { return await this.A.api(path, rest); } catch (e) { if (!quiet) this.showError(e, retry); throw e; }
+  }
+  // Текст ошибки: переведённый текст сервера (он приходит на языке X-Lang), иначе общий по коду ответа.
+  errText(e) {
+    const t = this.t();
+    if (!e || !e.status) return t.errNetwork;
+    if (e.data && typeof e.data === 'object' && typeof e.data.error === 'string' && e.data.error) return e.data.error;
+    return { 402: t.errPay, 404: t.errNotFound, 409: t.errConflict, 429: t.errTooMany }[e.status] || (e.status >= 500 ? t.errServer : t.errGeneric);
+  }
+  // В консоль — сбои сети и сервера; ошибки ввода (4xx) человек видит в интерфейсе.
+  logErr(e) { if (!e || !e.status || e.status >= 500) console.error(e); }
+  showError(e, retry) {
+    this.logErr(e);
+    if (e && e.status === 401) return this.sessionLost(retry);
+    if (e && e.status === 402) return this.onPaymentRequired(e);
+    this.toast(this.errText(e));
+  }
+  // 402: нужна оплата. Пока тост; лист оплаты (раздел 4, п. 7) подключается здесь.
+  onPaymentRequired(e) { this.toast(this.errText(e)); }
+
+  // ---------- вход ----------
+  // Запуск по загрузочным данным: публичная страница, «не найдено» или приложение (конфигурация, вход, маршрут из адреса).
+  async start() {
+    const b = this.boot;
+    if (b.mode === 'notfound') { this.setState({ screen: 'notfound', authReady: true }); return; }
+    if (b.mode === 'shared' || b.mode === 'personal') { this.openPublic(b); return; }
+    this.call('/api/auth/config', { quiet: true }).then((cfg) => this.setState({ cfg }), () => {});
+    let ok = false;
+    if (this.tgReal) ok = await this.tgAuth();
+    if (!ok && !this._tgPhone) ok = await this.loadMe();
+    this.setState({ authReady: true });
+    if (ok) this.loadInvitations();
+    if (this._tgPhone) this.openLogin({ step: 'tgphone' });
+    const fn = this._afterAuth; this._afterAuth = null;
+    if (fn) this.requireLogin(fn);
+    this.route();
+  }
+  // Мини-апп: вход по initData даже при живой cookie (в этом Telegram мог войти другой человек). true — вошли.
+  async tgAuth() {
+    let r; this._tgLast = Date.now();
+    try { r = await this.A.api('/api/auth/webapp', { body: { initData: window.Telegram.WebApp.initData } }); } catch (e) { console.error(e); this.toast(this.errText(e)); return false; }
+    if (r && r.status === 'ok') { this._tgPhone = false; this.A.setToken(r.token); return this.loadMe(); }
+    if (r && r.status === 'phone_required') {
+      this._tgPhone = true;
+      // Cookie прежнего аккаунта не должна действовать вместо этого человека, пока он делится номером.
+      this.A.api('/api/auth/logout', { body: {} }).catch((e) => console.error(e));
+    }
+    return false;
+  }
+  // Профиль и доступ (GET /api/auth/me). 401 — не вошли, 428 — нет телефона, сеть или 5xx — приложение без входа и тост.
+  async loadMe() {
+    try {
+      const me = await this.A.api('/api/auth/me');
+      this.applyMe(me);
+      return true;
+    } catch (e) {
+      this.setState({ me: null, authReady: true });
+      if (e.status === 401) return false;
+      if (e.status === 428) { this.openLogin({ reason: 'phone' }); return false; }
+      console.error(e); this.toast(this.errText(e));
+      return false;
+    }
+  }
+  // Язык из профиля важнее сохранённого в браузере; язык, выбранный до входа, уходит в профиль.
+  applyMe(me) {
+    const loc = me && me.user && me.user.locale, picked = this._langPicked;
+    this._langPicked = null;
+    this.setState({ me, authReady: true });
+    if (picked && picked !== loc) this.call('/api/auth/me', { method: 'PATCH', body: { locale: picked }, quiet: true }).catch(() => {});
+    else if (loc && loc !== this.state.lang && this.D.LANGS.some((l) => l.code === loc)) this.setLang(loc, { local: true });
+  }
+  // Действие, которому нужен вход: без сессии открывается лист входа, после входа действие продолжается.
+  requireLogin(fn) {
+    const s = this.state;
+    if (s.me) return fn();
+    if (!s.authReady) { this._afterAuth = fn; return; }
+    this.openLogin(this.tgReal && this._tgPhone ? { step: 'tgphone' } : {}, fn);
+  }
+  // Сессия закончилась (401): в мини-аппе снова вход по initData, на сайте — лист входа; retry выполнится после входа.
+  async sessionLost(retry) {
+    if (this._lost) return; this._lost = true;
+    try {
+      this.A.setToken(null);
+      this.setState({ me: null });
+      if (this.tgReal && (await this.tgAuth())) { if (retry) retry(); return; }
+      if (this.tgReal && this._tgPhone) { this.openLogin({ step: 'tgphone' }, retry || null); return; }
+      this.openLogin({ reason: 'again' }, retry || null);
+    } finally { this._lost = false; }
+  }
+  openLogin(opts, cont) {
+    opts = opts || {};
+    if (cont !== undefined) this._afterLogin = cont;
+    const step = opts.step || 'phone';
+    this.setState((x) => ({ account: false, login: { step, reason: opts.reason || null, connect: !!opts.connect, phone: (x.login && x.login.phone) || '', code: '', busy: false, err: '', resendAt: 0 } }));
+    if (step === 'tgphone') this.askContact();
+  }
+  closeLogin() {
+    const L = this.state.login;
+    clearTimeout(this._tgT); clearTimeout(this._tgPollT);
+    this._afterLogin = null;
+    this.setState({ login: null, account: !!(L && L.connect) });
+  }
+  setLogin(patch) { this.setState((x) => (x.login ? { login: { ...x.login, ...patch } } : null)); }
+  // Код из SMS: POST /phone/request; лимиты (раз в минуту на номер и т.д.) сервер возвращает текстом ошибки.
+  async sendCode() {
+    const L = this.state.login; if (!L || L.busy || L.phone.length !== 9) return;
+    this.setLogin({ busy: true, err: '' });
+    try {
+      await this.A.api('/api/auth/phone/request', { body: { phone: '+998' + L.phone } });
+      this.setLogin({ step: 'code', busy: false, code: '', resendAt: Date.now() + 60000 });
+    } catch (e) { this.logErr(e); this.setLogin({ busy: false, err: this.errText(e) }); }
+  }
+  async verifyCode(code) {
+    const L = this.state.login; if (!L || L.busy) return;
+    code = code || L.code; if (!/^\d{6}$/.test(code)) return;
+    this.setLogin({ busy: true, err: '' });
+    try {
+      await this.A.api('/api/auth/phone/verify', { body: { phone: '+998' + L.phone, code } });
+      await this.finishLogin();
+    } catch (e) { this.logErr(e); this.setLogin({ busy: false, err: this.errText(e), code: '' }); }
+  }
+  // Вход через Telegram на сайте: ссылка на бота (telegram/start), затем опрос telegram/poll, пока человек подтверждает вход.
+  async tgLogin() {
+    // Окно открывается сразу по нажатию: после await браузер счёл бы его всплывающим окном без жеста.
+    let w = null; if (!this.tgReal) { try { w = window.open('', '_blank'); } catch (e) {} }
+    this.setLogin({ step: 'tgwait', busy: true, err: '', tgUrl: '' });
+    try {
+      const r = await this.A.api('/api/auth/telegram/start', { body: {} });
+      if (w) { try { w.location.href = r.url; } catch (e) {} } else this.openUrl(r.url);
+      this.setLogin({ busy: false, tgUrl: r.url, nonce: r.nonce, tgUntil: Date.now() + (r.ttl || 300) * 1000 });
+      this.pollTg();
+    } catch (e) {
+      if (w) { try { w.close(); } catch (x) {} }
+      console.error(e); this.setLogin({ step: this.state.login && this.state.login.connect ? 'tgwait' : 'phone', busy: false, err: this.errText(e) });
+    }
+  }
+  pollTg() {
+    clearTimeout(this._tgT);
+    this._tgT = setTimeout(async () => {
+      const L = this.state.login; if (!L || L.step !== 'tgwait' || !L.nonce) return;
+      const fail = (err) => this.setLogin({ step: L.connect ? 'tgwait' : 'phone', nonce: null, tgUrl: '', err });
+      if (Date.now() > L.tgUntil) return fail(this.t().tgExpired);
+      try {
+        const r = await this.A.api('/api/auth/telegram/poll', { body: { nonce: L.nonce } });
+        if (r && r.status === 'ok') return this.finishLogin();
+        if (r && r.status === 'expired') return fail(this.t().tgExpired);
+      } catch (e) { console.error(e); if (e.status && e.status < 500 && e.status !== 429) return fail(this.errText(e)); }
+      this.pollTg();
+    }, 2000);
+  }
+  // Мини-апп без номера: Telegram спрашивает контакт, бот привязывает его, а мини-апп повторяет /webapp,
+  // пока не получит status ok: не чаще раза в 3 секунды (лимит маршрута 40 в минуту), после 429 — через 5 секунд.
+  askContact() {
+    if (!this.tgReal) return;
+    try { window.Telegram.WebApp.requestContact((shared) => this.pollWebapp(shared ? 0 : 3000)); } catch (e) { console.error(e); }
+    this.pollWebapp(3000);
+  }
+  pollWebapp(delay) {
+    clearTimeout(this._tgPollT);
+    const wait = Math.max(delay, (this._tgLast || 0) + 3000 - Date.now());
+    this._tgPollT = setTimeout(async () => {
+      const L = this.state.login; if (!L || L.step !== 'tgphone') return;
+      this._tgLast = Date.now();
+      let next = 3000;
+      try {
+        const r = await this.A.api('/api/auth/webapp', { body: { initData: window.Telegram.WebApp.initData } });
+        if (r && r.status === 'ok') { this._tgPhone = false; this.A.setToken(r.token); return this.finishLogin(); }
+      } catch (e) {
+        console.error(e);
+        if (e.status === 429) next = 5000; else if (e.status) return this.setLogin({ err: this.errText(e) });
+      }
+      this.pollWebapp(next);
+    }, wait);
+  }
+  // После входа: профиль, список приглашений и действие, ради которого входили.
+  async finishLogin() {
+    clearTimeout(this._tgT); clearTimeout(this._tgPollT);
+    const L = this.state.login;
+    if (!(await this.loadMe())) { this.setLogin({ busy: false }); return; }
+    const cont = this._afterLogin; this._afterLogin = null;
+    const t = this.t();
+    this.setState({ login: null, account: !!(L && L.connect) });
+    this.toast(L && L.connect ? t.tgConnected : t.welcome);
+    this.loadInvitations();
+    if (cont) cont();
+  }
+  // «Подключить Telegram» в аккаунте: тот же вход через бота, после него профиль перечитывается.
+  connectTg() { this.openLogin({ step: 'tgwait', connect: true }, null); this.tgLogin(); }
+  async logout() {
+    await this.flushSave().catch(() => {});
+    try { await this.A.api('/api/auth/logout', { body: {} }); } catch (e) { console.error(e); }
+    this.A.setToken(null);
+    const s = this.state, away = ['build', 'share', 'manage'].includes(s.screen) || (s.screen === 'guest' && s.guestMode === 'edit');
+    this.setState({ me: null, invs: [], invsLoaded: false, draftId: null, draft: null, savedAt: null, saveErr: false, account: false, ...(away ? { screen: 'home' } : {}) });
+    this.toast(this.t().loggedOut);
+  }
+  askConfirm(c, fn) { this._confirmFn = fn; this.setState({ confirm: c }); }
+  confirmOk() { const fn = this._confirmFn; this._confirmFn = null; this.setState({ confirm: null }); if (fn) fn(); }
+  // Ссылка наружу: в Telegram ссылки t.me открывает сам Telegram, остальные — внешний браузер.
+  openUrl(url) {
+    if (this.tgReal) {
+      const tw = window.Telegram.WebApp;
+      try { if (/^https:\/\/t\.me\//.test(url)) tw.openTelegramLink(url); else tw.openLink(url); return; } catch (e) { console.error(e); }
+    }
+    window.open(url, '_blank', 'noopener');
+  }
+  // Маршрутизатор адреса: /app/#/<имя>/<параметры> (вход по устаревшей ссылке, возврат после оплаты и т.д.).
+  route() {
+    const parts = (location.hash || '').replace(/^#\/?/, '').split('/').filter(Boolean);
+    const fn = parts.length && Object.prototype.hasOwnProperty.call(this.routes, parts[0]) ? this.routes[parts[0]] : null;
+    if (fn) fn(...parts.slice(1).map((p) => { try { return decodeURIComponent(p); } catch (e) { return p; } }));
+  }
+  clearHash() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+
+  // ---------- черновики на сервере ----------
+  // Шаблон дизайна по ответу сервера: неизвестный (старый invite-cover) заменяется первым стилем события.
+  tplOf(dto) {
+    const D = this.D; if (D.TEMPLATES.some((x) => x.id === dto.template)) return dto.template;
+    const ev = D.EVENTS[dto.event] ? dto.event : 'wedding'; return ev + '-' + D.EVENTS[ev].styles[0];
+  }
+  langOf(code) { return this.D.LANGS.some((l) => l.code === code) ? code : this.state.lang; }
+  // inv конструктора из приглашения сервера: недостающие поля — тексты по умолчанию на языке приглашения.
+  invOf(dto) {
+    const tid = this.tplOf(dto), data = dto.data || {};
+    const inv = { ...this.defaults(tid.split('-')[0], this.langOf(dto.language)), ...data };
+    if (!data.font) inv.font = this.D.STYLES[tid.split('-')[1]].fonts[0];
+    return inv;
+  }
+  // Содержимое для сервера (InvContent, раздел 3.2): известные поля в пределах ограничений. Неверные дата и время
+  // не отправляются (на сервере остаются прежние), адреса data:/blob: (файлы демо) заменяются пустыми.
+  payload(inv) {
+    const D = this.D, str = (v, n) => String(v == null ? '' : v).slice(0, n);
+    const MEDIA = /^\/media\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp|gif|mp3|m4a|ogg|wav|mp4|webm|mov)$|^https:\/\/images\.unsplash\.com\/[A-Za-z0-9\-._~/?&=%+,:]*$/;
+    const media = (v) => (typeof v === 'string' && v.length <= 500 && MEDIA.test(v) ? v : '');
+    const hhmm = (v) => /^([01]\d|2[0-3]):[0-5]\d$/.test(v || '');
+    const oneOf = (v, list) => (list.includes(v) ? v : undefined);
+    const out = { names: str(inv.names, 200), host: str(inv.host, 200), message: str(inv.message, 3000), venue: str(inv.venue, 200), address: str(inv.address, 300), contact: str(inv.contact, 300), dress: str(inv.dress, 500), secret: str(inv.secret, 500), gifts: str(inv.gifts, 1000), notes: str(inv.notes, 1000),
+      dressColors: (inv.dressColors || []).filter((c) => /^#[0-9a-fA-F]{6}$/.test(c)).slice(0, 6),
+      program: (inv.program || []).slice(0, 8).map((p) => ({ time: hhmm(p.time) ? p.time : '', title: str(p.title, 120), place: str(p.place, 200) })),
+      countdown: inv.countdown !== false, showGuests: inv.showGuests !== false,
+      cover: media(inv.cover), musicSrc: media(inv.musicSrc), video: media(inv.video), gallery: (inv.gallery || []).map(media).filter(Boolean).slice(0, 12),
+      font: str(inv.font, 60), palette: Math.max(0, Math.min(2, inv.palette | 0)),
+      music: oneOf(inv.music, D.TRACKS.concat('custom')), intro: oneOf(inv.intro, ['envelope', 'curtain', 'scratch', 'none']), mapMode: oneOf(inv.mapMode, ['drawn', 'real']), motion: oneOf(inv.motion, ['still', 'zoom', 'video']),
+      sections: (inv.sections || []).filter((x) => x && D.SECTIONS.includes(x.k)).map((x) => ({ k: x.k, on: !!x.on })) };
+    if (out.music === 'custom' && !out.musicSrc) out.music = undefined;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(inv.date || '') && !isNaN(new Date(inv.date + 'T00:00:00Z'))) out.date = inv.date;
+    if (hhmm(inv.time)) out.time = inv.time;
+    Object.keys(out).forEach((k) => { if (out[k] === undefined) delete out[k]; });
+    return out;
+  }
+  upsertInv(dto) { this.setState((x) => ({ invs: x.invs.some((d) => d.id === dto.id) ? x.invs.map((d) => (d.id === dto.id ? dto : d)) : [dto].concat(x.invs) })); }
+  // «Мои приглашения»: GET /api/invitations (без архивных, новые сверху).
+  async loadInvitations() {
+    if (!this.state.me) return;
+    try { const list = await this.call('/api/invitations'); this.setState({ invs: Array.isArray(list) ? list : [], invsLoaded: true }); } catch (e) { this.setState({ invsLoaded: true }); }
+  }
+  // Открыть приглашение сервера в конструкторе. Отметки _last* ставятся сразу: загрузка не считается правкой.
+  loadDraft(dto) {
+    this.flushSave();
+    const tid = this.tplOf(dto), lang = this.langOf(dto.language), inv = this.invOf(dto);
+    this._lastInv = inv; this._lastTpl = tid; this._lastLang = lang;
+    clearTimeout(this._retryT);
+    this.setState({ draftId: dto.id, draft: dto, event: tid.split('-')[0], tplId: tid, invLang: lang, inv, dirty: true, step: 0, savedAt: dto.updatedAt, saveErr: false, demo: false, guests: [], activity: [], toGuestId: null, share: { slug: dto.slug || '', pwOn: false, pw: '', edited: !!dto.slug } });
+  }
+  // «Использовать шаблон»: новый черновик POST /api/invitations с тем, что сейчас в конструкторе; then(dto) после создания.
+  async createDraft(then) {
+    if (this._creating) return; this._creating = true;
+    const s = this.state;
+    try {
+      const dto = await this.call('/api/invitations', { body: { template: s.tplId, mode: 'shared', language: s.invLang, data: this.payload(s.inv) }, retry: () => this.createDraft(then) });
+      this.upsertInv(dto);
+      this.loadDraft(dto);
+      if (then) then(dto);
+    } catch (e) { /* тост уже показан */ } finally { this._creating = false; }
+  }
+  // Черновик для действия (публикация, «Поделиться»): открытый или новый из текущего содержимого.
+  ensureDraft(then) { if (this.state.draftId) { this.flushSave(); then(this.state.draft); } else this.createDraft(then); }
+  // Сохранить открытый черновик сейчас: таймер автосохранения, уход с черновика, сворачивание страницы (keepalive).
+  saveNow(opts) {
+    clearTimeout(this._saveT); this._saveT = null;
+    const s = this.state, id = s.draftId;
+    if (!id || s.demo) return Promise.resolve(null);
+    return this.patchInvitation(id, { template: s.tplId, language: s.invLang, data: this.payload(s.inv) }, { auto: true, keepalive: !!(opts && opts.keepalive) });
+  }
+  flushSave(opts) { if (this._saveT) return this.saveNow(opts); return this._queue[this.state.draftId] || Promise.resolve(null); }
+  // PATCH /api/invitations/:id. Запросы одного приглашения идут строго по очереди, поэтому старое сохранение не может
+  // прийти позже нового и затереть его; автосохранения, ждущие очереди, сливаются в одно с последними данными.
+  // Не автосохранение (opts.auto нет) показывает ошибку (кроме opts.quiet) и пробрасывает её.
+  patchInvitation(id, body, opts) {
+    opts = opts || {};
+    if (opts.auto) { this._snap[id] = body; if (this._autoQueued[id]) return this._queue[id]; this._autoQueued[id] = true; }
+    const run = async () => {
+      if (opts.auto) { this._autoQueued[id] = false; body = this._snap[id]; }
+      this._inflight++; this.setState({ saving: true });
+      try {
+        const dto = await this.A.api('/api/invitations/' + id, { method: 'PATCH', body, keepalive: !!opts.keepalive });
+        this.onSaved(dto);
+        return dto;
+      } catch (e) {
+        if (!opts.auto) { if (!opts.quiet) this.showError(e); throw e; }
+        this.onSaveError(id, e);
+        return null;
+      } finally { this._inflight--; this.setState({ saving: this._inflight > 0 || !!this._saveT }); }
+    };
+    const p = (this._queue[id] || Promise.resolve()).then(run);
+    this._queue[id] = p.catch(() => null);
+    return p;
+  }
+  // Ответ сервера после сохранения: «Сохранено · ЧЧ:ММ» по updatedAt сервера.
+  onSaved(dto) {
+    if (!dto || !dto.id) return;
+    this.setState((x) => ({ invs: x.invs.some((d) => d.id === dto.id) ? x.invs.map((d) => (d.id === dto.id ? dto : d)) : x.invs, ...(x.draftId === dto.id ? { draft: dto, savedAt: dto.updatedAt, saveErr: false } : {}) }));
+  }
+  onSaveError(id, e) {
+    const s = this.state, cur = s.draftId === id;
+    console.error(e);
+    if (e.status === 401) return this.sessionLost(() => { if (this.state.draftId === id) this.saveNow(); });
+    // Шаблон дороже оплаченного: возвращается сохранённый шаблон, данные уйдут следующим сохранением.
+    if (e.status === 402) { if (cur && s.draft) this.setState({ tplId: this.tplOf(s.draft) }); return this.onPaymentRequired(e); }
+    // Приглашение удалено или в архиве: черновик отвязывается, правки остаются на экране несохранёнными.
+    if (e.status === 404 || e.status === 409) {
+      this.toast(this.errText(e));
+      this.setState((x) => ({ invs: x.invs.filter((d) => d.id !== id), ...(x.draftId === id ? { draftId: null, draft: null, savedAt: null, saveErr: true } : {}) }));
+      return;
+    }
+    if (e.status === 400) { this.toast(this.errText(e)); if (cur) this.setState({ saveErr: true }); return; }
+    // Сеть, 429, 5xx: повтор через 5 секунд.
+    if (cur && !s.saveErr) this.toast(this.errText(e));
+    if (cur) {
+      this.setState({ saveErr: true });
+      clearTimeout(this._retryT); this._retryT = setTimeout(() => { if (this.state.draftId === id && !this._saveT) this.saveNow(); }, 5000);
+    }
+  }
+  dupInv(d) {
+    this.call('/api/invitations/' + d.id + '/duplicate', { body: {}, retry: () => this.dupInv(d) }).then((dto) => { this.upsertInv(dto); this.toast(this.t().duplicated); }, () => {});
+  }
+  delInv(d) {
+    const t = this.t(), name = (d.data && d.data.names) || d.title || '';
+    this.askConfirm({ title: t.delTitle, text: t.delConfirm.replace('{name}', name), ok: t.deleteD }, async () => {
+      if (this.state.draftId === d.id) { clearTimeout(this._saveT); this._saveT = null; }
+      await (this._queue[d.id] || Promise.resolve());
+      try { await this.call('/api/invitations/' + d.id, { method: 'DELETE', retry: () => this.delInv(d) }); } catch (e) { if (e.status !== 404) return; }
+      this.setState((x) => ({ invs: x.invs.filter((y) => y.id !== d.id), ...(x.draftId === d.id ? { draftId: null, draft: null, savedAt: null } : {}) }));
+      this.toast(t.deleted);
+    });
+  }
+
+  // ---------- демо ----------
+  // Демо тура: данные GUESTS из invito-data.js и выдуманная активность, без запросов к API и без черновика.
+  enterDemo() {
+    if (this.state.demo && !this.state.draftId) return;
+    this.flushSave();
+    const guests = this.D.GUESTS.map((g) => ({ ...g, checked: false, msg: '' }));
+    let wi = 0; guests.forEach((g) => { if (g.status === 'yes' && wi < 4) g.msgIdx = wi++; });
+    const now = Date.now(), M = 6e4;
+    const activity = [{ kind: 'created', t: now - 3 * 864e5 }];
+    guests.forEach((g, i) => { activity.push({ kind: 'opened', gid: g.id, t: now - (2 * 864e5 - i * 97 * M) }); if (g.status !== 'pending') activity.push({ kind: g.status, gid: g.id, t: now - (40 * 3600e3 - i * 211 * M) }); });
+    activity.push({ kind: 'reminder', n: 3, t: now - 5 * 3600e3 });
+    this.setState({ demo: true, draftId: null, draft: null, savedAt: null, saveErr: false, guests, activity });
+  }
+  exitDemo() {
+    if (!this.state.demo) return;
+    this.setState({ demo: false, guests: [], activity: [], toGuestId: null, unlocked: false, share: { slug: '', pwOn: false, pw: '', edited: false } });
+  }
+
+  // ---------- файлы ----------
+  // Файл приглашения: картинка уменьшается до 2000 px (JPEG 0.85), затем POST /api/media. Возвращает URL или null.
+  async uploadMedia(file, step) {
+    const t = this.t(); if (!file) return null;
+    const kind = /^image\//.test(file.type) ? 'image' : /^audio\//.test(file.type) ? 'audio' : /^video\//.test(file.type) ? 'video' : null;
+    if (!kind) { this.toast(t.fileType); return null; }
+    let blob = file;
+    if (kind === 'image') { try { blob = await this.A.downscaleImage(file, 2000, 0.85); } catch (e) { console.error(e); } }
+    const LIMIT = { image: 10, audio: 15, video: 50 };
+    if (blob.size > LIMIT[kind] * 1048576) { this.toast(t.fileBig + ' · ' + LIMIT[kind] + ' MB'); return null; }
+    const name = blob !== file ? 'photo.jpg' : file.name || 'file';
+    const up = { p: 0, i: (step && step.i) || 0, n: (step && step.n) || 1 };
+    this.setState({ upload: up });
+    try {
+      const r = await this.A.upload('/api/media', blob, { filename: name, onProgress: (p) => this.setState({ upload: { ...up, p } }) });
+      return r && r.url ? r.url : null;
+    } catch (e) { this.showError(e); return null; } finally { this.setState({ upload: null }); }
+  }
+  // Выбор файла в конструкторе: в демо — локальный адрес, как в дизайне; иначе загрузка, в inv попадает URL сервера.
+  pickMedia(e, apply) {
+    const input = e.target, files = Array.from(input.files || []); input.value = '';
+    if (!files.length) return;
+    const s = this.state;
+    if (s.demo || !s.draftId) {
+      files.forEach((f) => { if (/^image\//.test(f.type)) this.readFiles([f], (src) => apply(src)); else apply(URL.createObjectURL(f)); });
+      return;
+    }
+    const id = s.draftId;
+    (async () => { for (let i = 0; i < files.length; i++) { const url = await this.uploadMedia(files[i], { i, n: files.length }); if (!url) break; if (this.state.draftId === id) apply(url); } })();
+  }
   async genImages() {
     const s = this.state, D = this.D, t = D.I18N[s.lang];
     const th = this.theme(s.tplId, s.inv.font, s.inv.palette);
@@ -974,30 +1474,37 @@ class Component extends DCLogic {
     } catch (e) { console.warn(e); }
   }
   mainAction() { const f = this._mainFn; if (f) f(); }
+  // Кнопки Telegram (MainButton, BackButton) в настоящем мини-аппе; меняются, только когда меняется их состояние.
   syncTelegram() {
     if (!this.tgReal) return; const tw = window.Telegram.WebApp; const mb = this._main || {};
     try {
-      if (mb.show) { tw.MainButton.setText(mb.label); tw.MainButton.show(); } else tw.MainButton.hide();
       if (!this._mbBound) { this._mbBound = true; tw.MainButton.onClick(() => this.mainAction()); tw.BackButton.onClick(() => this._backFn && this._backFn()); }
-      if (this.state.screen !== 'home') tw.BackButton.show(); else tw.BackButton.hide();
-    } catch (e) {}
+      const mk = mb.show ? mb.label : '';
+      if (mk !== this._mbKey) { this._mbKey = mk; if (mb.show) { tw.MainButton.setText(mb.label); tw.MainButton.show(); } else tw.MainButton.hide(); }
+      const bk = !!this._backShow;
+      if (bk !== this._bbKey) { this._bbKey = bk; if (bk) tw.BackButton.show(); else tw.BackButton.hide(); }
+    } catch (e) { console.error(e); }
   }
+  // Текст приглашения: POST /api/ai/write на языке приглашения; без входа, в демо, при 503 и любой ошибке — готовые тексты дизайна.
   async aiWrite() {
-    const s = this.state, D = this.D, t = D.I18N[s.lang], inv = s.inv;
-    const LN = { ru: 'Russian', en: 'English', uz: 'Uzbek in Latin script', uzc: 'Uzbek in Cyrillic script' }[s.lang];
-    const tone = { warm: 'warm and personal', formal: 'formal and elegant', playful: 'playful and fun', poetic: 'poetic and lyrical', short: 'very short, one sentence' }[s.aiTone];
-    const prompt = `Write the main text of an invitation in ${LN}. Event: ${D.EVENTS[s.event].label.en}. Title/names: ${inv.names}. From: ${inv.host}. Date: ${inv.date} ${inv.time}. Venue: ${inv.venue}. Tone: ${tone}. 2–3 sentences max (unless asked shorter). Address the guest directly. Do not repeat the date or address. No quotes, no emoji, no greeting line, no signature. Return only the text.`;
+    const s = this.state, D = this.D, t = D.I18N[s.lang], inv = s.inv, L0 = s.invLang;
     this.setState({ aiBusy: true });
     let out = '';
-    try { if (window.claude && window.claude.complete) out = String(await window.claude.complete(prompt)).trim().replace(/^["«“]|["»”]$/g, ''); } catch (e) { out = ''; }
+    if (!s.demo && s.me && !(s.cfg && s.cfg.ai === false)) {
+      const str = (v) => String(v || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+      try {
+        const r = await this.A.api('/api/ai/write', { body: { lang: L0, tone: s.aiTone, event: s.event, names: str(inv.names), host: str(inv.host), date: /^\d{4}-\d{2}-\d{2}$/.test(inv.date || '') ? inv.date : '', time: /^([01]\d|2[0-3]):[0-5]\d$/.test(inv.time || '') ? inv.time : '', venue: str(inv.venue) } });
+        out = String((r && r.text) || '').trim();
+      } catch (e) { console.error(e); out = ''; }
+    }
     if (!out) {
       const F = { en: { warm: 'We would love to share this day with you — it would not be the same without you.', formal: 'We request the pleasure of your company at this special occasion.', playful: 'Clear your calendar, charge your phone and bring your best mood — this one is going to be good!', poetic: 'Some evenings are written in light; we would like you to be in ours.', short: 'Come celebrate with us!' },
         ru: { warm: 'Нам очень хочется разделить этот день с вами — без вас он будет не тем.', formal: 'Имеем честь пригласить вас разделить с нами этот особенный день.', playful: 'Освободите вечер, зарядите телефон и захватите отличное настроение — будет весело!', poetic: 'Есть вечера, написанные светом; мы хотим, чтобы вы были в нашем.', short: 'Приходите праздновать с нами!' },
-        uz: { warm: 'Bu kunni siz bilan baham ko‘rishni juda xohlaymiz — sizsiz u to‘liq bo‘lmaydi.', formal: 'Sizni ushbu alohida kunimizda ishtirok etishga taklif qilish sharafiga egamiz.', playful: 'Kechani bo‘shating, telefonni quvvatlang va zo‘r kayfiyat olib keling — qiziq bo‘ladi!', poetic: 'Ba’zi oqshomlar nur bilan yoziladi; biznikida siz bo‘lishingizni istaymiz.', short: 'Biz bilan nishonlang!' } };
-      const L = s.lang === 'uzc' ? 'uz' : s.lang; out = F[L][s.aiTone]; if (s.lang === 'uzc') out = D.toCyr(out);
+        uz: { warm: 'Bu kunni siz bilan baham ko‘rishni juda xohlaymiz — sizsiz u to‘liq bo‘lmaydi.', formal: 'Sizni ushbu alohida kunimizda ishtirok etishga taklif qilish sharafiga egamiz.', playful: 'Kechani bo‘shating, telefonni quvvatlang va zo‘r kayfiyat olib keling — qiziq bo‘ladi!', poetic: 'Baʼzi oqshomlar nur bilan yoziladi; biznikida siz bo‘lishingizni istaymiz.', short: 'Biz bilan nishonlang!' } };
+      const L = L0 === 'uzc' ? 'uz' : L0; out = F[L][s.aiTone]; if (L0 === 'uzc') out = D.toCyr(out);
       this.toast(t.aiFail);
     }
-    this.setState((x) => ({ aiBusy: false, inv: { ...x.inv, message: out }, dirty: true }));
+    this.setState((x) => ({ aiBusy: false, inv: { ...x.inv, message: out.slice(0, 3000) }, dirty: true }));
   }
   async toggleCam() {
     if (this.state.camOn) { this.stopCam(); return; }
@@ -1021,26 +1528,35 @@ class Component extends DCLogic {
   seat(gid, table) { this.setState((x) => ({ guests: x.guests.map((g) => g.id === gid ? { ...g, table } : g), pick: null, overTable: null })); }
 
   componentDidMount() {
-    Promise.all([import('/app/invito-data.js'), import('/app/invito-engine.js')]).then(([m, eng]) => {
-      this.D = m.INVITO; this.E = eng; this.music = eng.createMusic();
-      const lang = 'ru', ev = 'wedding';
-      let drafts = []; try { drafts = JSON.parse(localStorage.getItem('invito.v1.drafts') || '[]'); } catch (e) {}
-      const guests = this.D.GUESTS.map((g) => ({ ...g, checked: false, msg: '' }));
-      let wi = 0; guests.forEach((g) => { if (g.status === 'yes' && wi < 4) g.msgIdx = wi++; });
-      const now = Date.now(), M = 6e4;
-      const activity = [{ kind: 'created', t: now - 3 * 864e5 }];
-      guests.forEach((g, i) => { activity.push({ kind: 'opened', gid: g.id, t: now - (2 * 864e5 - i * 97 * M) }); if (g.status !== 'pending') activity.push({ kind: g.status, gid: g.id, t: now - (40 * 3600e3 - i * 211 * M) }); });
-      activity.push({ kind: 'reminder', n: 3, t: now - 5 * 3600e3 });
-      const tgw = window.Telegram && window.Telegram.WebApp; this.tgReal = !!(tgw && tgw.initData);
-      if (this.tgReal) { try { tgw.ready(); tgw.expand(); } catch (e) {} }
-      this.setState({ ready: true, lang, screen: 'home', event: ev, tplId: ev + '-' + this.D.EVENTS[ev].styles[0], inv: this.defaults(ev, lang), step: 0, dirty: false, env: 0, rsvp: this.freshRsvp(), sheet: null, music: false, toast: '', toastOn: false, guests, mtab: 'list', mfilter: 'all', gfilter: 'all', importOpen: false, picked: {}, guestMode: 'preview', unlocked: false, pwTry: '', pwErr: false, share: { slug: '', pwOn: false, pw: '', edited: false }, drafts, draftId: null, savedAt: null, peek: false, aiTone: 'warm', aiBusy: false, secDrag: null, pick: null, overTable: null, lastScan: null, camOn: false, activity, bot: { r1d: true, r3h: true, morning: true, notify: true }, ogImg: null, storyImg: null, previewTrack: null });
-    }).catch((e) => console.error('Invito data failed', e));
+    this.boot = this.readBoot();
+    const tgw = window.Telegram && window.Telegram.WebApp; this.tgReal = !!(tgw && tgw.initData);
+    if (this.tgReal) { try { tgw.ready(); tgw.expand(); } catch (e) {} }
+    Promise.all([import('/app/invito-data.js'), import('/app/invito-engine.js'), import('/app/invito-api.js')]).then(([m, eng, api]) => {
+      this.D = m.INVITO; this.E = eng; this.A = api; this.music = eng.createMusic();
+      const lang = this.initialLang(), ev = 'wedding';
+      this.applyLang(lang);
+      // Гости и активность заполняются только в демо тура (enterDemo); настоящие приходят с сервера.
+      this.setState({ ready: true, lang, invLang: lang, screen: 'home', event: ev, tplId: ev + '-' + this.D.EVENTS[ev].styles[0], inv: this.defaults(ev, lang), step: 0, dirty: false, env: 0, rsvp: this.freshRsvp(), sheet: null, music: false, toast: '', toastOn: false, guests: [], mtab: 'list', mfilter: 'all', gfilter: 'all', importOpen: false, picked: {}, guestMode: 'preview', unlocked: false, pwTry: '', pwErr: false, share: { slug: '', pwOn: false, pw: '', edited: false }, draftId: null, draft: null, savedAt: null, saving: false, saveErr: false, peek: false, aiTone: 'warm', aiBusy: false, secDrag: null, pick: null, overTable: null, lastScan: null, camOn: false, activity: [], bot: { r1d: true, r3h: true, morning: true, notify: true }, ogImg: null, storyImg: null, previewTrack: null,
+        me: null, authReady: false, cfg: null, login: null, account: false, confirm: null, invs: [], invsLoaded: false, upload: null, demo: false, pubLocked: false });
+      this.start();
+    }).catch((e) => { console.error('Invito data failed', e); this.setState({ bootFail: true }); });
     this.onScroll = () => { if (!this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.fx(); }); };
     window.addEventListener('scroll', this.onScroll, true);
     this.onResize = () => { this.setState({ w: window.innerWidth }); this.fx(); };
     window.addEventListener('resize', this.onResize);
+    this.onHash = () => { if (this.state.ready && this.boot.mode === 'app') this.route(); };
+    window.addEventListener('hashchange', this.onHash);
+    // Страницу сворачивают или закрывают: несохранённая правка уходит сразу (keepalive переживает закрытие).
+    this.onVis = () => { if (document.visibilityState === 'hidden' && this.state.ready) this.flushSave({ keepalive: true }); };
+    document.addEventListener('visibilitychange', this.onVis);
+    // В Telegram внешние ссылки открываются через openLink/openTelegramLink, а не внутри мини-аппа.
+    if (this.tgReal) {
+      this.onLink = (e) => { const a = e.target && e.target.closest && e.target.closest('a[target="_blank"]'); if (!a || a.hasAttribute('download') || !/^https?:/.test(a.href)) return; e.preventDefault(); this.openUrl(a.href); };
+      document.addEventListener('click', this.onLink, true);
+    }
     this.io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'none'; this.io.unobserve(e.target); } }), { threshold: 0.1 });
-    this.tick = setInterval(() => this.updateCountdown(), 1000);
+    // Раз в секунду: обратный отсчёт и счётчик «Новый код через N с» в листе входа.
+    this.tick = setInterval(() => { this.updateCountdown(); const L = this.state.login; if (L && L.step === 'code' && Date.now() < L.resendAt + 1000) this.setState({ clock: Date.now() }); }, 1000);
     this.onImgErr = (e) => { const el = e.target; if (el && el.tagName === 'IMG') el.style.opacity = '0'; };
     document.addEventListener('error', this.onImgErr, true);
     let fcount = 0;
@@ -1049,15 +1565,26 @@ class Component extends DCLogic {
   }
   componentWillUnmount() {
     window.removeEventListener('scroll', this.onScroll, true); window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('hashchange', this.onHash); document.removeEventListener('visibilitychange', this.onVis);
+    if (this.onLink) document.removeEventListener('click', this.onLink, true);
+    [this._saveT, this._retryT, this._tgT, this._tgPollT].forEach((x) => clearTimeout(x));
     clearInterval(this.tick); cancelAnimationFrame(this.loopId); this.io && this.io.disconnect(); this.stopMusic();
   }
   componentDidUpdate() {
     const s = this.state;
     if (!s.ready) return;
-    // autosave
-    if (s.draftId && (this._lastInv !== s.inv || this._lastTpl !== s.tplId)) {
-      this._lastInv = s.inv; this._lastTpl = s.tplId; clearTimeout(this._saveT);
-      this._saveT = setTimeout(() => this.saveDraft(), 700);
+    // Автосохранение черновика на сервере: PATCH через 700 мс после последней правки содержимого, шаблона или языка.
+    if (s.draftId && !s.demo && (this._lastInv !== s.inv || this._lastTpl !== s.tplId || this._lastLang !== s.invLang)) {
+      this._lastInv = s.inv; this._lastTpl = s.tplId; this._lastLang = s.invLang; clearTimeout(this._saveT);
+      this._saveT = setTimeout(() => this.saveNow(), 700);
+      if (!s.saving) this.setState({ saving: true });
+    }
+    // Фокус в поле листа входа при смене шага.
+    const ls = s.login ? s.login.step : null;
+    if (ls !== this._loginStep) {
+      this._loginStep = ls;
+      const el = ls === 'phone' ? this.phoneRef.current : ls === 'code' ? this.codeRef.current : null;
+      if (el) setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) {} }, 80);
     }
     // scratch cards
     const sc = this.scratchRef.current;
@@ -1111,17 +1638,19 @@ class Component extends DCLogic {
   tplIndex() { const s = this.state; return this.D.EVENTS[s.event].styles.indexOf(s.tplId.split('-')[1]); }
   setInv(patch) { this.setState((s) => ({ inv: { ...s.inv, ...patch }, dirty: true })); }
   setProg(i, patch) { this.setState((s) => ({ inv: { ...s.inv, program: s.inv.program.map((p, j) => j === i ? { ...p, ...patch } : p) }, dirty: true })); }
-  toast(msg) { this.setState({ toast: msg, toastOn: true }); clearTimeout(this.tT); this.tT = setTimeout(() => this.setState({ toastOn: false }), 2200); }
+  toast(msg) { msg = String(msg || ''); this.setState({ toast: msg, toastOn: true }); clearTimeout(this.tT); this.tT = setTimeout(() => this.setState({ toastOn: false }), Math.min(6000, 2200 + msg.length * 35)); }
   download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
   readFiles(files, cb) { Array.from(files || []).forEach((f) => { const r = new FileReader(); r.onload = () => cb(r.result); r.readAsDataURL(f); }); }
 
   // ---------- navigation ----------
-  go(screen, extra) { this.setState({ screen, ...(extra || {}) }); }
+  go(screen, extra) { if (screen !== this.state.screen) this.flushSave(); this.setState({ screen, ...(extra || {}) }); }
+  // Новое приглашение с выбранного события (и шаблона): открытый черновик отвязывается, чтобы его не перезаписать.
   pickEvent(ev, tplId) {
-    const tid = tplId || ev + '-' + this.D.EVENTS[ev].styles[0];
-    const inv = this.defaults(ev, this.state.lang);
+    this.flushSave(); this.exitDemo();
+    const tid = tplId || ev + '-' + this.D.EVENTS[ev].styles[0], lang = this.state.lang;
+    const inv = this.defaults(ev, lang);
     inv.font = this.D.STYLES[tid.split('-')[1]].fonts[0];
-    this.setState({ event: ev, tplId: tid, inv, dirty: false, screen: 'templates', step: 0 });
+    this.setState({ event: ev, tplId: tid, inv, invLang: lang, dirty: false, screen: 'templates', step: 0, draftId: null, draft: null, savedAt: null, saveErr: false });
   }
   pickTpl(tid) { this.setState((s) => ({ tplId: tid, inv: { ...s.inv, font: this.D.STYLES[tid.split('-')[1]].fonts[0], palette: 0 } })); }
   centerCard(idx, behavior) {
@@ -1165,14 +1694,44 @@ class Component extends DCLogic {
     setTimeout(() => { this.setState({ env: 3 }); this.fireBurst(); }, 1650);
     setTimeout(() => this.setState({ env: 4 }), 2450);
   }
+  // «Получить ссылку»: в демо — экран как в дизайне; иначе нужен вход и черновик на сервере (публикация — раздел 4, п. 7).
   goShare() {
     this.stopMusic();
-    const s = this.state;
-    if (!s.draftId) this.newDraft();
-    this.setState((x) => ({ screen: 'share', music: false, share: { ...x.share, slug: x.share.edited ? x.share.slug : this.D.slugify(x.inv.names) } }));
-    setTimeout(() => { this.saveDraft(); const d = this.state.drafts.map((y) => y.id === this.state.draftId ? { ...y, status: 'live' } : y); this.persist(d); if (!s.drafts.some((y) => y.id === s.draftId && y.status === 'live')) this.logAct({ kind: 'created' }); }, 50);
+    const show = () => { this.flushSave(); this.setState((x) => ({ screen: 'share', music: false, share: { ...x.share, slug: x.share.edited ? x.share.slug : this.D.slugify(x.inv.names) } })); };
+    if (this.state.demo) return show();
+    this.requireLogin(() => this.ensureDraft(show));
   }
-  loadDraft(d) { this.setState({ draftId: d.id, event: d.event, tplId: d.tplId, inv: { ...this.defaults(d.event, this.state.lang), ...d.inv }, dirty: true, step: 0 }); }
+  goManage(extra) { if (this.state.demo) return this.go('manage', extra); this.requireLogin(() => this.go('manage', extra)); }
+  // «Использовать шаблон»: открытый черновик продолжается, иначе после входа создаётся новый.
+  useTpl() {
+    this.stopMusic(); this.setState({ music: false }); this.exitDemo();
+    if (this.state.draftId) return this.go('build', { step: 0 });
+    this.requireLogin(() => this.createDraft(() => this.go('build', { step: 0 })));
+  }
+  goHome() {
+    if (this.isPublic() || this.boot.mode === 'notfound') { location.href = '/app/'; return; }
+    this.stopMusic(); this.exitDemo(); this.setState({ music: false, fromTour: false }); this.go('home');
+  }
+  // Свои приглашения на главной: нужен вход.
+  goMyInv() {
+    this.requireLogin(() => {
+      if (this.state.screen !== 'home') this.goHome();
+      setTimeout(() => { const el = document.getElementById('my-inv'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 120);
+    });
+  }
+  // Публичная страница /i/… или /g/…: сразу страница гостя на языке приглашения, без шапки и конструктора.
+  // Под паролем (locked) — только форма пароля в стиле шаблона; пароль проверяет сервер (?code=).
+  openPublic(b) {
+    const v = b.view, look = b.locked && b.locked.look;
+    const src = v || (look ? { template: look.template, language: this.state.lang, data: { font: look.font, palette: look.palette } } : null);
+    if (!src) { this.setState({ screen: 'notfound', authReady: true }); return; }
+    const lang = this.langOf(src.language), tid = this.tplOf(src), inv = this.invOf({ ...src, language: lang });
+    if (!v) { inv.names = ''; inv.host = ''; }
+    this.applyLang(lang);
+    this.setState({ lang, invLang: lang, event: tid.split('-')[0], tplId: tid, inv, dirty: true, authReady: true, pubLocked: !v });
+    this.openGuest('live');
+    if (!v && /[?&]code=/.test(location.search)) this.setState({ pwErr: true });
+  }
 
   // ---------- music ----------
   toggleMusic() {
@@ -1324,9 +1883,11 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state;
     const hideImg = (e) => { e.currentTarget.style.opacity = '0'; };
-    if (!s.ready) return { rootRef: this.rootRef, canvasRef: this.canvasRef, hideImg, ready: false, notReady: true, rootBg: '#f3efe6', rootInk: '#1a1714', ui: {} };
+    if (!s.ready) return { rootRef: this.rootRef, canvasRef: this.canvasRef, hideImg, ready: false, notReady: true, rootBg: '#f3efe6', rootInk: '#1a1714', ui: {}, bootFail: !!s.bootFail, reload: () => location.reload() };
     const D = this.D, t = D.I18N[s.lang], lang = s.lang, inv = s.inv, wide = s.w >= 900; const U = this.ui();
-    const tg = (s.tgOv || (this.props.platform ?? 'web')) === 'telegram', topOff = tg ? 52 : 0;
+    // tgReal — настоящий Telegram (кнопки Telegram, без поддельной шапки); tgSim — симуляция из тура.
+    const tgSim = !this.tgReal && (s.tgOv || (this.props.platform ?? 'web')) === 'telegram', tg = this.tgReal || tgSim, topOff = tgSim ? 52 : 0;
+    const pub = this.isPublic(), me = s.me, mu = me && me.user, cfg = s.cfg || {};
     const th = this.theme(s.tplId, inv.font, inv.palette); this.curTh = s.screen === 'guest' ? th : null;
     const E = D.EVENTS[s.event], evLabel = E.label[lang];
     const tplStyle = s.tplId.split('-')[1], tplIdx = E.styles.indexOf(tplStyle), tplName = E.names[tplIdx];
@@ -1336,16 +1897,61 @@ class Component extends DCLogic {
     const shortOf = (iso) => this.fmt(iso, '12:00', { day: 'numeric', month: 'short', year: 'numeric' });
     const isoIn = (days) => { const d = new Date(Date.now() + days * 864e5); return d.toISOString().slice(0, 10); };
 
-    const langs = D.LANGS.map((l) => ({ label: l.label, bg: l.code === lang ? U.ink : 'transparent', color: l.code === lang ? U.paper : U.ink, onClick: () => this.setLang(l.code) }));
+    const langs = D.LANGS.map((l) => ({ label: l.label, bg: l.code === lang ? U.ink : 'transparent', color: l.code === lang ? U.paper : U.ink, onClick: () => this.setLang(l.code, { save: true }) }));
+    const chipO = (a) => ({ bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)' });
+    const invLangOpts = D.LANGS.map((l) => ({ label: D.LANG_NAMES[l.code], ...chipO(s.invLang === l.code), onClick: () => this.setInvLang(l.code) }));
+    const fmtPhone = (d) => { d = String(d || ''); return d.slice(0, 2) + (d.length > 2 ? ' ' + d.slice(2, 5) : '') + (d.length > 5 ? '-' + d.slice(5, 7) : '') + (d.length > 7 ? '-' + d.slice(7, 9) : ''); };
+    const hhmmOf = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+
+    // вход и аккаунт
+    const L = s.login, now = Date.now();
+    const lg = L ? {
+      title: L.connect ? t.tgConnect : t.loginTitle,
+      note: L.reason === 'expired' ? t.loginExpired : L.reason === 'again' ? t.loginAgain : L.reason === 'phone' ? t.phoneNeeded : '',
+      hint: L.step === 'code' ? t.codeSent.replace('{phone}', '+998 ' + fmtPhone(L.phone)) : L.step === 'tgwait' ? t.tgWait : L.step === 'tgphone' ? t.sharePhoneHint : L.connect ? t.tgConnectHint : t.loginHint,
+      isPhone: L.step === 'phone', isCode: L.step === 'code', isTgWait: L.step === 'tgwait', isTgPhone: L.step === 'tgphone',
+      phone: fmtPhone(L.phone), onPhone: (e) => { let d = e.target.value.replace(/\D/g, ''); if (d.length > 9 && d.startsWith('998')) d = d.slice(3); this.setLogin({ phone: d.slice(0, 9), err: '' }); },
+      onPhoneKey: (e) => { if (e.key === 'Enter') this.sendCode(); },
+      sendCode: () => this.sendCode(), sendOp: L.phone.length === 9 && !L.busy ? 1 : 0.45, sendLabel: L.busy && L.step === 'phone' ? t.loading : t.getCode,
+      hasTg: !!cfg.telegram && !this.tgReal, tgLogin: () => this.tgLogin(),
+      code: L.code, onCode: (e) => { const c = e.target.value.replace(/\D/g, '').slice(0, 6); this.setLogin({ code: c, err: '' }); if (c.length === 6) this.verifyCode(c); },
+      onCodeKey: (e) => { if (e.key === 'Enter') this.verifyCode(); },
+      verify: () => this.verifyCode(), verifyOp: L.code.length === 6 && !L.busy ? 1 : 0.45, verifyLabel: L.busy && L.step === 'code' ? t.loading : t.verify,
+      resend: () => { if (!L.busy && now >= L.resendAt) this.sendCode(); }, resendLabel: now >= L.resendAt ? t.resend : t.resendIn.replace('{n}', Math.ceil((L.resendAt - now) / 1000)), resendColor: now >= L.resendAt && !L.busy ? '#d4452a' : U.muted,
+      changePhone: () => this.setLogin({ step: 'phone', code: '', err: '' }),
+      tgUrl: L.tgUrl || '', hasTgUrl: !!L.tgUrl, cancelTg: () => { clearTimeout(this._tgT); if (L.connect) this.closeLogin(); else this.setLogin({ step: 'phone', nonce: null, tgUrl: '', err: '' }); },
+      askContact: () => this.askContact(), err: L.err || '',
+    } : {};
+    const accLangs = D.LANGS.map((l) => ({ label: D.LANG_NAMES[l.code], ...chipO(l.code === lang), onClick: () => this.setLang(l.code, { save: true }) }));
+    const myName = mu ? [mu.firstName, mu.lastName].filter(Boolean).join(' ') : '';
+    const myIni = myName ? this.ini(myName) : mu && mu.username ? mu.username[0].toUpperCase() : '◉';
+    const myPhone = mu && mu.phone ? '+998 ' + fmtPhone(String(mu.phone).replace(/^\+?998/, '')) : '';
+    // Без имени в профиле (вход по SMS) заголовком аккаунта служит номер.
+    const accName = myName || (mu && mu.username ? '@' + mu.username : '') || myPhone || t.account;
+    const acc = me ? {
+      name: accName, phone: accName === myPhone ? '' : myPhone,
+      sub: me.access && me.access.free ? t.subFree : me.access && me.access.subscribed ? t.subActive.replace('{date}', me.access.subscriptionEndsAt ? this.fmt(me.access.subscriptionEndsAt.slice(0, 10), '12:00', { day: 'numeric', month: 'long', year: 'numeric' }) : '∞') : t.subNone,
+      subColor: me.access && (me.access.free || me.access.subscribed) ? '#2e7d4f' : U.muted,
+      tgOn: !!mu.telegramId, tgCan: !mu.telegramId && !!cfg.telegram, admin: !!mu.isAdmin,
+    } : {};
+
+    // приглашения пользователя (GET /api/invitations)
+    this._invView = this._invView || new WeakMap();
+    const myInvites = (me ? s.invs : []).map((d) => {
+      let v = this._invView.get(d);
+      if (!v) { const tid = this.tplOf(d), di = this.invOf(d); v = { tid, di }; this._invView.set(d, v); }
+      const { tid, di } = v, ev = tid.split('-')[0], st = tid.split('-')[1], EE = D.EVENTS[ev], live = d.status === 'active';
+      const n = (d.stats && d.stats.replies) || 0;
+      return { th: this.theme(tid, di.font, di.palette), names: di.names, cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: EE.names[EE.styles.indexOf(st)], date: this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + di.time, dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + t.replies, canDel: true,
+        onGuests: () => { this.loadDraft(d); this.go('manage', { mtab: 'list' }); }, onEdit: () => { this.loadDraft(d); this.go('build', { step: 0 }); },
+        onOpen: () => { if (live && d.links && d.links.shared) { this.openUrl(d.links.shared); return; } this.loadDraft(d); setTimeout(() => this.openGuest('live'), 0); },
+        onDup: () => this.dupInv(d), onDel: () => this.delInv(d) };
+    });
 
     // home
     const SHOW = ['wedding-classic', 'party-neon', 'birthday-polaroid', 'baby-watercolor', 'corporate-brutal', 'date-cinema', 'graduation-editorial', 'anniversary-luxe', 'kids-pastel', 'housewarming-boho', 'engagement-watercolor', 'birthday-riso', 'iftar-cinema', 'wedding-botanical'];
     const show1 = SHOW.map((id, i) => { const [ev, st] = id.split('-'); const EE = D.EVENTS[ev]; const L = EE.text[lang]; return { th: this.theme(id), names: L.names, date: shortOf(isoIn(EE.days)), cover: EE.img[0], kicker: t.youreInvited, name: EE.names[EE.styles.indexOf(st)], event: EE.label[lang], rot: (i % 2 ? 1.5 : -1.5) + 'deg', onClick: () => this.pickEvent(ev, id) }; });
     const showcase = show1.concat(show1);
-    const G0 = s.guests; const sample = (ev, id, status, replies) => { const EE = D.EVENTS[ev], L = EE.text[lang], st = id.split('-')[1], iso = isoIn(EE.days); return { th: this.theme(id), names: L.names, cover: EE.img[0], kicker: t.youreInvited, event: EE.label[lang], tplName: EE.names[EE.styles.indexOf(st)], date: this.fmt(iso, EE.time, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + EE.time, dateShort: shortOf(iso), status: status === 'live' ? t.live : t.draft, stBg: status === 'live' ? U.ink : 'transparent', stColor: status === 'live' ? U.paper : U.ink, stBorder: status === 'live' ? U.ink : 'rgba(' + U.inkRgb + ',.3)', replies: replies + ' ' + t.replies, onGuests: () => { this.setState({ event: ev, tplId: id, inv: this.defaults(ev, lang), dirty: false }); this.go('manage'); }, onEdit: () => { this.setState({ event: ev, tplId: id, inv: this.defaults(ev, lang), dirty: false, step: 0, draftId: 'd' + Date.now().toString(36) }); this.go('build'); }, onOpen: () => { this.setState({ event: ev, tplId: id, inv: this.defaults(ev, lang), dirty: false }); setTimeout(() => this.openGuest('live'), 0); }, canDel: false, onDup: () => { const id2 = 'd' + Date.now().toString(36); this.persist([{ id: id2, event: ev, tplId: id, inv: this.defaults(ev, lang), status: 'draft', updated: Date.now() }].concat(s.drafts)); this.toast(t.duplicated); } }; };
-    const myInvites = [];
-    s.drafts.forEach((d) => { const EE = D.EVENTS[d.event]; if (!EE) return; const st = d.tplId.split('-')[1]; const di = d.inv; const live = d.status === 'live'; myInvites.push({ th: this.theme(d.tplId, di.font, di.palette), names: di.names, cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: EE.names[EE.styles.indexOf(st)], date: this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + di.time, dateShort: shortOf(di.date), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: (live ? G0.filter((g) => g.status !== 'pending').length : 0) + ' ' + t.replies, canDel: true, onGuests: () => { this.loadDraft(d); this.go('manage'); }, onEdit: () => { this.loadDraft(d); this.go('build', { step: 0 }); }, onOpen: () => { this.loadDraft(d); setTimeout(() => this.openGuest('live'), 0); }, onDup: () => { const id = 'd' + Date.now().toString(36); this.persist([{ ...d, id, status: 'draft', updated: Date.now() }].concat(s.drafts)); this.toast(t.duplicated); }, onDel: () => { this.persist(s.drafts.filter((x) => x.id !== d.id)); if (s.draftId === d.id) this.setState({ draftId: null }); } }); });
-    myInvites.push(sample('wedding', 'wedding-classic', 'live', 18), sample('birthday', 'birthday-retro', 'draft', 0));
 
     // events
     const events = D.EVENT_ORDER.map((k, i) => { const EE = D.EVENTS[k], st = D.STYLES[EE.styles[0]]; return { label: EE.label[lang], num: String(i + 1).padStart(2, '0'), img: EE.img[0], bg: st.imgBg, delay: (i % 4) * 70 + 'ms', swatches: EE.styles.map((x) => D.STYLES[x].accent), onClick: () => this.pickEvent(k) }; });
@@ -1427,7 +2033,7 @@ class Component extends DCLogic {
       const over = s.overTable === k, pk = !!s.pick; return { people: at.map((g) => ({ name: this.pname(g).split(' ')[0] + (g.plus ? ' +' + g.plus : ''), onDrag: (e) => { e.stopPropagation(); this.dragId = g.id; try { e.dataTransfer.setData('text/plain', String(g.id)); } catch (x) {} }, onRemove: (e) => { e.stopPropagation(); this.seat(g.id, 0); } })), border: over ? '#d4452a' : pk ? 'rgba(212,69,42,.5)' : 'rgba(' + U.inkRgb + ',.14)', shadow: over ? '0 0 0 3px rgba(212,69,42,.2)' : 'none', cursor: pk ? 'pointer' : 'default', onEnter: () => { if (s.overTable !== k) this.setState({ overTable: k }); }, onDrop: (e) => { e.preventDefault(); const id = this.dragId || +((e.dataTransfer && e.dataTransfer.getData('text/plain')) || 0); if (id) this.seat(id, k); this.dragId = null; }, onTap: () => { if (s.pick) this.seat(s.pick, k); }, name: t.table + ' ' + k, count: Math.min(seatsL.length, CAP) + ' / ' + CAP, seats, names: at.map((g) => this.pname(g).split(' ')[0] + (g.plus ? ' +' + g.plus : '')).join(', ') };
     });
     const unseated = G.filter((g) => !g.table && g.status !== 'no').map((g) => { const a = s.pick === g.id; return { name: this.pname(g) + (g.plus ? ' +' + g.plus : ''), bg: a ? '#d4452a' : 'transparent', color: a ? '#fff' : U.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.35)', onDrag: (e) => { this.dragId = g.id; try { e.dataTransfer.setData('text/plain', String(g.id)); } catch (x) {} }, onPick: () => this.setState({ pick: a ? null : g.id }) }; });
-    const contacts = D.CONTACTS.map((c) => { const nm = this.pname(c), a = !!s.picked[c.id], added = G.some((g) => g.id === c.id); return { name: nm, ini: this.ini(nm), user: c.user, mark: a || added ? '✓' : '', bg: added ? '#b9b2a6' : a ? '#d4452a' : 'transparent', border: added ? '#b9b2a6' : a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', onClick: () => { if (!added) this.setState((x) => ({ picked: { ...x.picked, [c.id]: !x.picked[c.id] } })); } }; });
+    const contacts = (s.demo ? D.CONTACTS : []).map((c) => { const nm = this.pname(c), a = !!s.picked[c.id], added = G.some((g) => g.id === c.id); return { name: nm, ini: this.ini(nm), user: c.user, mark: a || added ? '✓' : '', bg: added ? '#b9b2a6' : a ? '#d4452a' : 'transparent', border: added ? '#b9b2a6' : a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', onClick: () => { if (!added) this.setState((x) => ({ picked: { ...x.picked, [c.id]: !x.picked[c.id] } })); } }; });
     const pickedN = Object.values(s.picked).filter(Boolean).length;
     // personal
     const toG = s.toGuestId ? G.find((g) => g.id === s.toGuestId) : null;
@@ -1467,7 +2073,8 @@ class Component extends DCLogic {
       onToggle: () => this.setInv({ sections: secs.map((y, j) => j === i ? { ...y, on: !y.on } : y) }), onUp: () => moveSec(i, -1), onDown: () => moveSec(i, 1),
       onDragStart: (e) => { this.secDragFrom = i; try { e.dataTransfer.setData('text/plain', 'sec'); } catch (x2) {} }, onDragOver: (e) => { e.preventDefault(); if (s.secDrag !== i) this.setState({ secDrag: i }); },
       onDrop: (e) => { e.preventDefault(); const from = this.secDragFrom; if (from == null) return; const a = secs.slice(); const [it] = a.splice(from, 1); a.splice(i, 0, it); this.secDragFrom = null; this.setState({ secDrag: null }); this.setInv({ sections: a }); } }));
-    const wishes = t.wishes || [];
+    // Выдуманные пожелания (msgIdx) есть только у гостей демо.
+    const wishes = s.demo ? t.wishes || [] : [];
     const gbList = G.filter((g) => (g.status === 'yes' || g.status === 'maybe') && (g.msg || g.msgIdx != null)).map((g) => ({ g, text: g.msg || wishes[g.msgIdx] })).filter((x) => x.text);
     const meIdGB = s.toGuestId || s.myGuestId;
     gbList.sort((a, b) => (b.g.id === meIdGB) - (a.g.id === meIdGB));
@@ -1492,15 +2099,18 @@ class Component extends DCLogic {
     const botOpts = ['r1d', 'r3h', 'morning', 'notify'].map((k) => ({ label: t.botT[k], track: s.bot[k] ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', knob: s.bot[k] ? '23px' : '3px', onClick: () => this.setState((x) => ({ bot: { ...x.bot, [k]: !x.bot[k] } })) }));
     // telegram main/back
     const scr = s.screen, gm = s.guestMode;
-    const backFn = scr === 'home' ? (() => { try { window.Telegram.WebApp.close(); } catch (e) {} }) : scr === 'events' ? () => this.go('home') : scr === 'templates' ? () => this.go('events') : scr === 'build' ? () => (s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates')) : scr === 'guest' ? () => { this.stopMusic(); this.setState({ music: false }); gm === 'preview' ? this.go('templates') : gm === 'edit' ? this.go('build', { step: STEPS.length - 1 }) : this.go('share'); } : scr === 'share' ? () => this.openGuest('edit') : () => this.go('home');
-    if (scr === 'guest' && s.fromTour) this._backFn = () => { this.stopMusic(); this.go('tour'); };
-    this._backFn = backFn;
-    const MB = scr === 'home' ? [t.create, () => this.go('events')] : scr === 'templates' ? [t.useTpl, () => { if (!s.draftId) this.newDraft(); this.go('build', { step: 0 }); }] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toEditor, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit')] : scr === 'share' ? [t.copy, () => { try { navigator.clipboard.writeText('https://' + link).catch(() => {}); } catch (e) {} this.toast(t.copied); }] : scr === 'manage' ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : null;
+    // Открытый лист закрывается кнопкой «Назад» раньше, чем меняется экран.
+    const closeTop = s.confirm ? () => this.setState({ confirm: null }) : L ? () => this.closeLogin() : s.account ? () => this.setState({ account: false }) : s.importOpen ? () => this.setState({ importOpen: false }) : isEdit && s.sheet ? () => this.setState({ sheet: null }) : null;
+    const backFn = closeTop || (scr === 'home' ? (() => { try { window.Telegram.WebApp.close(); } catch (e) {} }) : scr === 'events' || scr === 'tour' ? () => this.goHome() : scr === 'templates' ? () => this.go('events') : scr === 'build' ? () => (s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates')) : scr === 'guest' ? () => { this.stopMusic(); this.setState({ music: false }); if (s.fromTour && gm === 'live') this.go('tour'); else if (gm === 'preview') this.go(s.fromTour ? 'tour' : 'templates'); else if (gm === 'edit') this.go('build', { step: STEPS.length - 1 }); else this.go('share'); } : scr === 'share' ? () => this.openGuest('edit') : () => this.goHome());
+    this._backFn = backFn; this._backShow = !pub && scr !== 'notfound' && (scr !== 'home' || !!closeTop);
+    const anySheet = !!closeTop || !!s.upload;
+    const MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toEditor, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit')] : scr === 'share' ? [t.copy, () => { try { navigator.clipboard.writeText('https://' + link).catch(() => {}); } catch (e) {} this.toast(t.copied); }] : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : null;
     this._mainFn = MB ? MB[1] : null; this._main = { show: !!MB, label: MB ? MB[0] : '' };
     // ---- tour ----
     const live = (patch, gid, scrollId, extra) => { this.setState((x) => ({ inv: { ...x.inv, ...(patch || {}) }, share: { ...x.share, pwOn: false }, unlocked: false, ...(extra || {}) })); setTimeout(() => { this.openGuest('live', gid); if (scrollId) setTimeout(() => { this.setState({ env: 4 }); setTimeout(() => { const el = document.getElementById(scrollId); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' }); }, 350); }, 60); }, 0); };
-    const loadEv = (ev, id) => { const iv = this.defaults(ev, lang); iv.font = D.STYLES[id.split('-')[1]].fonts[0]; this.setState({ event: ev, tplId: id, inv: iv, dirty: false }); };
-    const toBuild = (step) => { if (!s.draftId) this.newDraft(); this.go('build', { step }); };
+    // Шаблон или демо из тура: открытый черновик отвязывается, чтобы его не перезаписать.
+    const loadEv = (ev, id) => { this.flushSave(); const iv = this.defaults(ev, lang); iv.font = D.STYLES[id.split('-')[1]].fonts[0]; this.setState({ event: ev, tplId: id, inv: iv, invLang: lang, dirty: false, draftId: null, draft: null, savedAt: null, saveErr: false }); };
+    const toBuild = (step) => this.go('build', { step });
     const DEMO = [
       ['envelope', '✉', '#93723f', t.sec.rsvp, () => { loadEv('wedding', 'wedding-classic'); live({ intro: 'envelope' }, 1); }],
       ['curtain', '◫', '#a9564f', t.fIntro, () => { loadEv('anniversary', 'anniversary-cinema'); live({ intro: 'curtain' }); }],
@@ -1522,11 +2132,13 @@ class Component extends DCLogic {
       ['checkin', '⌗', '#2e7d4f', t.checkin, () => this.go('manage', { mtab: 'checkin' })],
       ['activity', '↻', '#8a8378', t.activity, () => this.go('manage', { mtab: 'activity' })],
       ['bot', '✉', '#2f6fe0', t.bot, () => this.go('manage', { mtab: 'bot' })],
-      ['languages', 'Aa', '#1a1714', D.LANGS.map((x) => x.label).join(' '), () => { const L = D.LANGS.map((x) => x.code); this.setLang(L[(L.indexOf(lang) + 1) % L.length]); }, lang.toUpperCase()],
-      ['telegram', '✈', '#2f6fe0', 'Telegram', () => this.setState({ tgOv: tg ? 'web' : 'telegram' }), tg ? t.on : t.off],
+      ['languages', 'Aa', '#1a1714', D.LANGS.map((x) => x.label).join(' '), () => { const LC = D.LANGS.map((x) => x.code); this.setLang(LC[(LC.indexOf(lang) + 1) % LC.length]); }, lang.toUpperCase()],
+      ['telegram', '✈', '#2f6fe0', 'Telegram', () => { if (!this.tgReal) this.setState({ tgOv: tgSim ? 'web' : 'telegram' }); }, tg ? t.on : t.off],
       ['dark', '☾', '#151311', t.uiTheme, () => this.setState({ themeOv: U.dark ? 'light' : 'dark' }), U.dark ? t.on : t.off],
     ];
-    const demos = DEMO.map(([k, glyph, bg, area, fn, state], i) => ({ num: String(i + 1).padStart(2, '0'), glyph, bg, area, title: t.demos[k][0], desc: t.demos[k][1], state: state || '', delay: (i % 6) * 50 + 'ms', onClick: fn }));
+    // Карточки-переключатели (язык, Telegram, тема) остаются на странице тура и демо-режим не включают.
+    const TOGGLES = ['languages', 'telegram', 'dark'];
+    const demos = DEMO.map(([k, glyph, bg, area, fn, state], i) => ({ num: String(i + 1).padStart(2, '0'), glyph, bg, area, title: t.demos[k][0], desc: t.demos[k][1], state: state || '', delay: (i % 6) * 50 + 'ms', onClick: () => { if (!TOGGLES.includes(k)) this.enterDemo(); fn(); } }));
     const STY = Object.keys(D.STYLES);
     const styleChips = [['all', t.allStyles, 'conic-gradient(#d4452a,#93723f,#3df5c8,#ff4fbf,#d4452a)']].concat(STY.map((k) => [k, D.STYLES[k].label, D.STYLES[k].accent])).map(([k, label, sw]) => { const a = (s.tStyle || 'all') === k; return { label, sw, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.2)', onClick: () => this.setState({ tStyle: k }) }; });
     const eventChips = [['all', t.allEvents]].concat(D.EVENT_ORDER.map((k) => [k, D.EVENTS[k].label[lang]])).map(([k, label]) => { const a = (s.tEvent || 'all') === k; return { label, bg: a ? 'rgba(212,69,42,.1)' : 'transparent', color: a ? '#d4452a' : U.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ tEvent: k }) }; });
@@ -1534,21 +2146,23 @@ class Component extends DCLogic {
     const X = {
       isTour: s.screen === 'tour', goTour: () => { this.stopMusic(); this.setState({ music: false, fromTour: true }); this.go('tour'); }, fromTourLive: isGuest && !!s.fromTour && s.guestMode !== 'preview' && s.guestMode !== 'edit', backTour: () => { this.stopMusic(); this.setState((x) => ({ music: false, share: { ...x.share, pwOn: false }, unlocked: false })); this.go('tour'); }, tourColor: s.screen === 'tour' ? '#d4452a' : U.ink, demos, demoCount: String(demos.length).padStart(2, '0'), styleChips, eventChips, allTpls, galleryCount: allTpls.length + ' / ' + D.TEMPLATES.length,
       galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill(kick + ' ✦ ' + inv.names + ' ✦ ' + gDateShort).join('   ✦   '),
-      ui: U, notTg: !tg, tgBack: backFn, tgBackLabel: scr === 'home' ? '✕ ' + t.close : '← ' + t.back,
-      mainBtn: { show: tg && !this.tgReal && !!MB, label: MB ? MB[0] : '', onClick: () => MB && MB[1](), bg: '#d4452a', barBg: isGuest ? th.bg : U.paper },
+      ui: U, notTg: !tg, tgSim, tgBack: backFn, tgBackLabel: scr === 'home' && !closeTop ? '✕ ' + t.close : '← ' + t.back,
+      mainBtn: { show: tgSim && !!MB, label: MB ? MB[0] : '', onClick: () => MB && MB[1](), bg: '#d4452a', barBg: isGuest ? th.bg : U.paper },
       palettes, mapOpts: segO([['drawn', t.mapDrawn], ['real', t.mapReal]], inv.mapMode || 'drawn', (k) => this.setInv({ mapMode: k })),
       motionOpts: segO([['still', t.still], ['zoom', t.zoom], ['video', t.video]], inv.motion || 'zoom', (k) => this.setInv({ motion: k })), motionVideo: inv.motion === 'video', videoLabel: inv.video ? t.replace : t.uploadVideo,
-      onVideo: (e) => { const f = e.target.files[0]; if (f) this.setInv({ video: URL.createObjectURL(f), motion: 'video' }); },
+      onVideo: (e) => this.pickMedia(e, (url) => this.setInv({ video: url, motion: 'video' })),
       hasVideo: inv.motion === 'video' && !!inv.video, vidReady: (e) => { const v = e.currentTarget; v.muted = true; v.play().catch(() => {}); },
       introOpts: segO([['envelope', t.intro.envelope], ['curtain', t.intro.curtain], ['scratch', t.intro.scratch], ['none', t.intro.none]], inv.intro || 'envelope', (k) => this.setInv({ intro: k })),
       aiTones: ['warm', 'formal', 'playful', 'poetic', 'short'].map((k) => { const a = s.aiTone === k; return { label: t.aiTones[k], bg: a ? 'rgba(212,69,42,.1)' : 'transparent', color: a ? '#d4452a' : U.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ aiTone: k }) }; }),
       aiGo: () => { if (!s.aiBusy) this.aiWrite(); }, aiLabel: s.aiBusy ? t.aiBusy : t.aiWrite, aiOp: s.aiBusy ? 0.6 : 1,
       tracks, audioLabel: inv.musicSrc ? t.replace + ' · ' + t.tracks.custom : t.uploadAudio,
-      onAudio: (e) => { const f = e.target.files[0]; if (f) this.setInv({ musicSrc: URL.createObjectURL(f), music: 'custom' }); },
+      onAudio: (e) => this.pickMedia(e, (url) => this.setInv({ musicSrc: url, music: 'custom' })),
       secRows, sec, ord, rsvpDisp: sec.rsvp ? 'block' : 'none', guestbook, gbCount: String(guestbook.length).padStart(2, '0'), gbEmpty: guestbook.length === 0,
       mapReal: inv.mapMode === 'real', mapDrawn: inv.mapMode !== 'real', mapEmbed: 'https://maps.google.com/maps?q=' + encodeURIComponent(inv.venue + ', ' + inv.address) + '&z=15&output=embed', mapFilter: th.dark ? 'invert(.9) hue-rotate(180deg) saturate(.5)' : 'saturate(.75) contrast(1.03)',
-      saveDot: s.draftId ? (s.savedAt ? '#2e7d4f' : '#d4452a') : 'transparent', saveLabel: s.draftId ? (s.savedAt ? t.saved + ' · ' + new Date(s.savedAt).toTimeString().slice(0, 5) : t.saving) : '',
-      peekRef: this.peekRef, togglePeek: () => this.setState({ peek: !s.peek }), peekBottom: tg ? '70px' : '78px', peekY: s.peek ? 'translateY(0px)' : 'translateY(calc(100% - 64px))', peekRot: s.peek ? '180deg' : '0deg',
+      // Индикатор сохранения: время из updatedAt ответа сервера.
+      saveDot: s.demo ? '#d4452a' : s.draftId ? (s.saving ? '#93723f' : s.saveErr ? '#d4452a' : s.savedAt ? '#2e7d4f' : 'transparent') : s.saveErr ? '#d4452a' : 'transparent',
+      saveLabel: s.demo ? t.demo : s.draftId ? (s.saving ? t.saving : s.saveErr ? t.notSaved : s.savedAt ? t.saved + ' · ' + hhmmOf(s.savedAt) : '') : s.saveErr ? t.notSaved : '',
+      peekRef: this.peekRef, togglePeek: () => this.setState({ peek: !s.peek }), peekBottom: this.tgReal ? '0px' : tgSim ? '70px' : '78px', peekY: s.peek ? 'translateY(0px)' : 'translateY(calc(100% - 64px))', peekRot: s.peek ? '180deg' : '0deg',
       peekDown: (e) => { this._pd = { y: e.clientY, open: s.peek }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} },
       peekMove: (e) => { const pd = this._pd, el = this.peekRef.current; if (!pd || !el) return; const max = el.offsetHeight - 64; const y = Math.max(0, Math.min(max, (pd.open ? 0 : max) + e.clientY - pd.y)); el.style.transition = 'none'; el.style.transform = `translateY(${y}px)`; },
       peekUp: (e) => { const pd = this._pd, el = this.peekRef.current; this._pd = null; if (!pd || !el) return; const dy = e.clientY - pd.y; const open = Math.abs(dy) < 6 ? !pd.open : dy < 0; el.style.transition = ''; el.style.transform = open ? 'translateY(0px)' : 'translateY(calc(100% - 64px))'; this.setState({ peek: open }); },
@@ -1570,24 +2184,39 @@ class Component extends DCLogic {
       rootBg: isGuest ? th.bg : U.paper, rootInk: isGuest ? th.ink : U.ink,
       tgBg: isGuest ? th.surface : U.card, tgInk: isGuest ? th.ink : U.ink, tgLine: isGuest ? th.line : 'rgba(' + U.inkRgb + ',.12)',
       headTop: topOff + 'px', floatTop: (topOff + 12) + 'px', heroPad: (topOff + 78) + 'px',
-      showHeader: !isGuest, isHome: s.screen === 'home', isEvents: s.screen === 'events', isTemplates: s.screen === 'templates', isBuild: s.screen === 'build', isGuest, isShare: s.screen === 'share', isManage: s.screen === 'manage',
-      goHome: () => { this.stopMusic(); this.setState({ music: false, fromTour: false }); this.go('home'); }, goEvents: () => this.setState({ screen: 'events', fromTour: false }),
+      showHeader: !isGuest && s.screen !== 'notfound', isHome: s.screen === 'home', isEvents: s.screen === 'events', isTemplates: s.screen === 'templates', isBuild: s.screen === 'build', isGuest, isShare: s.screen === 'share', isManage: s.screen === 'manage', isNotFound: s.screen === 'notfound',
+      goHome: () => this.goHome(), goEvents: () => { this.flushSave(); this.exitDemo(); this.setState({ screen: 'events', fromTour: false }); }, toApp: () => { location.href = '/app/'; },
       monthYear: new Intl.DateTimeFormat(D.LOCALE[lang], { month: 'long', year: 'numeric' }).format(new Date()),
-      showcase, marqW: wide ? '200px' : '150px', myInvites, myCount: String(myInvites.length).padStart(2, '0'),
+      showcase, marqW: wide ? '200px' : '150px', myInvites, myCount: me ? String(myInvites.length).padStart(2, '0') : '',
+      // «Мои приглашения»: без входа — подсказка и кнопка входа, затем загрузка, пустое состояние или список.
+      invOut: s.authReady && !me, invLoading: !s.authReady || (!!me && !s.invsLoaded), invEmpty: !!me && s.invsLoaded && myInvites.length === 0,
+      loginMyInv: () => this.requireLogin(() => {}), goMyInv: () => this.goMyInv(),
+      // шапка: язык и аккаунт
+      headPills: s.w >= 480, headCompact: s.w < 480, headGap: s.w >= 480 ? '16px' : '12px', openAccount: () => this.setState({ account: true }),
+      accLabel: me ? myIni : t.login, accPad: me ? '0' : '12px', accBg: me ? U.ink : 'transparent', accColor: me ? U.paper : U.ink, accBorder: me ? U.ink : 'rgba(' + U.inkRgb + ',.3)',
+      accChipBg: me ? U.ink : '#d4452a', accChipColor: me ? U.paper : '#fff', accChipPad: me ? '0' : '0 10px',
       events,
       tpls, cardW: cardWpx + 'px', cardHalf: cardWpx / 2 + 'px',
-      previewTpl: () => this.openGuest('preview'), useTpl: () => { this.stopMusic(); this.setState({ music: false }); if (!s.draftId) this.newDraft(); this.go('build', { step: 0 }); },
+      previewTpl: () => this.openGuest('preview'), useTpl: () => this.useTpl(), invLangOpts,
+      // лист входа, аккаунт, подтверждение
+      loginOpen: !!L, lg, closeLogin: () => this.closeLogin(), phoneRef: this.phoneRef, codeRef: this.codeRef,
+      accOpen: !!s.account && !L, accIn: !!me, accOut: !me, acc, accLangs, accIni: myIni, closeAccount: () => this.setState({ account: false }),
+      accLogin: () => this.openLogin({}, null), accLogout: () => this.logout(), accConnectTg: () => this.connectTg(), accAdmin: () => { location.href = '/admin/'; },
+      cfOpen: !!s.confirm, cf: s.confirm || {}, cfOk: () => this.confirmOk(), cfCancel: () => { this._confirmFn = null; this.setState({ confirm: null }); },
+      // загрузка файла, демо
+      upOn: !!s.upload, upLabel: t.uploading + (s.upload && s.upload.n > 1 ? ' · ' + (s.upload.i + 1) + ' / ' + s.upload.n : ''), upPct: Math.round((s.upload ? s.upload.p : 0) * 100) + '%',
+      demoBadge: s.demo && s.screen !== 'tour', demoTop: (isGuest ? topOff + 18 : topOff + 70) + 'px', importAvail: s.demo,
       buildCols: wide ? 'minmax(0,1fr) 380px' : 'minmax(0,1fr)', steps, stepKicker: t.stepWord + ' ' + (s.step + 1) + ' / ' + STEPS.length, stepLabel: SL[stepKey], stepHint: SH[stepKey],
       ws, qs, on, prog, swatches, gal, fonts, gDateShort,
       toggleCd: () => this.setInv({ countdown: !inv.countdown }), cdTrack: inv.countdown ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', cdKnob: inv.countdown ? '23px' : '3px',
       addProg: () => { if (inv.program.length < 6) this.setInv({ program: inv.program.concat({ time: '20:00', title: '…', place: '' }) }); },
-      onCover: (e) => this.readFiles([e.target.files[0]].filter(Boolean), (src) => this.setInv({ cover: src })),
-      onGallery: (e) => this.readFiles(e.target.files, (src) => this.setState((x) => ({ inv: { ...x.inv, gallery: x.inv.gallery.concat(src) }, dirty: true }))),
+      onCover: (e) => this.pickMedia(e, (src) => this.setInv({ cover: src })),
+      onGallery: (e) => this.pickMedia(e, (src) => this.setState((x) => ({ inv: { ...x.inv, gallery: x.inv.gallery.concat(src).slice(0, 12) }, dirty: true }))),
       previewNow: () => this.openGuest('edit'),
       prevStep: () => s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates'),
       nextStep: () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit'),
       nextLabel: s.step < STEPS.length - 1 ? t.next : t.toEditor,
-      particlesOn: density > 0, cycleLang: () => { const L = D.LANGS.map((x) => x.code); this.setLang(L[(L.indexOf(lang) + 1) % L.length]); }, langCode: D.LANGS.find((x) => x.code === lang).label,
+      particlesOn: density > 0, cycleLang: () => { const LC = D.LANGS.map((x) => x.code); this.setLang(LC[(LC.indexOf(lang) + 1) % LC.length], { save: true }); }, langCode: D.LANGS.find((x) => x.code === lang).label,
       toggleMusic: () => this.toggleMusic(), mb: s.music ? { a: '14px', b: '22px', d: '10px', c: th.accent } : { a: '6px', b: '6px', d: '6px', c: th.muted },
       isPreview: isGuest && s.guestMode === 'preview', isRefine: isEdit,
       backFromPreview: () => { this.stopMusic(); this.setState({ music: false }); this.go(s.fromTour ? 'tour' : 'templates'); },
@@ -1595,11 +2224,13 @@ class Component extends DCLogic {
       tplChips: E.styles.map((st, i) => { const id = s.event + '-' + st, a = id === s.tplId; return { name: E.names[i], bg: a ? U.paper : 'transparent', color: a ? U.ink : U.paper, onClick: () => this.pickTpl(id) }; }),
       ed, eo: isEdit ? `1.5px dashed ${th.accent}` : 'none', ec: isEdit ? 'pointer' : 'auto',
       goShare: () => this.goShare(),
-      gateShow, pwTry: s.pwTry, pwErr: s.pwErr, onPwTry: (e) => this.setState({ pwTry: e.target.value, pwErr: false }), unlock: () => s.pwTry === s.share.pw ? this.setState({ unlocked: true }) : this.setState({ pwErr: true }),
+      gateShow: gateShow || (isGuest && s.pubLocked), pwTry: s.pwTry, pwErr: s.pwErr, onPwTry: (e) => this.setState({ pwTry: e.target.value, pwErr: false }),
+      // Пароль публичной страницы проверяет сервер: страница перезагружается с ?code=.
+      unlock: () => { if (s.pubLocked) { const c = (s.pwTry || '').trim(); if (c) location.search = '?code=' + encodeURIComponent(c); return; } if (s.pwTry === s.share.pw) this.setState({ unlocked: true }); else this.setState({ pwErr: true }); },
       envShow: isGuest && intro && env < 4 && !isEdit && (inv.intro || 'envelope') === 'envelope', curtainShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'curtain', scratchIntroShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'scratch', curL: env >= 1 ? '-102%' : '0%', curR: env >= 1 ? '102%' : '0%', openEnv: () => this.openEnv(), envOp: env >= 3 ? 0 : 1, envCardY: env >= 2 ? '-62%' : '0%', envFlap: env >= 1 ? 'rotateX(180deg)' : 'rotateX(0deg)', envFlapZ: env >= 1 ? 1 : 4, sealOp: env >= 1 ? 0 : 1, sealScale: env >= 1 ? 1.4 : 1, initials: this.ini(inv.names.replace(/&|и|va|and/gi, ' ')) || '✦',
       gDateLong, gWeekday, gDay, gMonthYear, words,
       progN: n, progTotal: String(n).padStart(2, '0'), pinH: (n * 90 + 60) + 'vh', pinCols: wide ? 'minmax(0,1fr) minmax(0,1.4fr)' : 'minmax(0,1fr)',
-      cdUnits: [['d', t.days], ['h', t.hours], ['m', t.min], ['s', t.sec]].map(([k, label], i) => ({ k, label, delay: i * 90 + 'ms' })),
+      cdUnits: [['d', t.days], ['h', t.hours], ['m', t.min], ['s', t.secs]].map(([k, label], i) => ({ k, label, delay: i * 90 + 'ms' })),
       hasGallery: inv.gallery.length > 0, hpinH: (100 + inv.gallery.length * 55) + 'vh', galCount: String(inv.gallery.length).padStart(2, '0'), galW: wide ? '380px' : '66vw',
       gGallery: inv.gallery.map((src, i) => ({ src, n: String(i + 1).padStart(2, '0'), rot: (i % 2 ? 2 : -2) + 'deg', y: (i % 2 ? 24 : -10) + 'px' })),
       mapAR: wide ? '16/7' : '4/5', pins, routePts, routeList, hasRoute: stops.length > 0,
@@ -1612,19 +2243,19 @@ class Component extends DCLogic {
       ...PX,
       sendOp: rsvpReady ? 1 : 0.4,
       sendRsvp: () => { if (rsvpReady) this.submitRsvp(); },
-      rsvpSummary, addCal: ics, viaBot: () => window.open('https://t.me/share/url?url=' + encodeURIComponent('https://' + link) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary), '_blank'),
+      rsvpSummary, addCal: ics, viaBot: () => this.openUrl('https://t.me/share/url?url=' + encodeURIComponent('https://' + link) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary)),
       changeRsvp: () => this.setState((x) => ({ rsvp: { ...x.rsvp, sent: false } })),
       footPad: isEdit || (isGuest && s.guestMode === 'preview') ? '150px' : '60px',
       sheetOpen: isEdit && !!s.sheet, sheetTitle: s.sheet ? SL[s.sheet] : '', closeSheet: () => this.setState({ sheet: null }),
       share: s.share, link, ogTitle, ogDesc, metaCode,
       onSlug: (e) => { const v = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'); this.setState((x) => ({ share: { ...x.share, slug: v, edited: true } })); },
       copyLink: () => { try { navigator.clipboard.writeText('https://' + link).catch(() => {}); } catch (e) {} this.toast(t.copied); },
-      sendTg: () => window.open('https://t.me/share/url?url=' + encodeURIComponent('https://' + link) + '&text=' + encodeURIComponent(ogTitle), '_blank'),
+      sendTg: () => this.openUrl('https://t.me/share/url?url=' + encodeURIComponent('https://' + link) + '&text=' + encodeURIComponent(ogTitle)),
       qrSrc: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&color=1a1714&bgcolor=f3efe6&data=' + encodeURIComponent('https://' + link),
       qrBig: 'https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=20&data=' + encodeURIComponent('https://' + link),
       togglePw: () => this.setState((x) => ({ share: { ...x.share, pwOn: !x.share.pwOn } })), pwTrack: s.share.pwOn ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', pwKnob: s.share.pwOn ? '23px' : '3px',
       onPw: (e) => { const v = e.target.value; this.setState((x) => ({ share: { ...x.share, pw: v } })); },
-      openLive: () => this.openGuest('live'), goManage: () => this.go('manage'), backToRefine: () => this.openGuest('edit'),
+      openLive: () => this.openGuest('live'), goManage: () => this.goManage(), backToRefine: () => this.openGuest('edit'),
       statCols: wide ? 'repeat(4,minmax(0,1fr))' : 'repeat(2,minmax(0,1fr))',
       stats: [[cnt('yes'), t.attending, U.ink], [cnt('pending') + cnt('maybe'), t.pending, '#d4452a'], [cnt('no'), t.declined, '#8a8378'], [seatsTaken, t.seats, U.ink]].map(([nn, label, color]) => ({ n: nn, label, color })),
       openImport: () => this.setState({ importOpen: true, picked: {} }), closeImport: () => this.setState({ importOpen: false }),
@@ -1634,12 +2265,35 @@ class Component extends DCLogic {
       mList: s.mtab === 'list', mSeat: s.mtab === 'seat', mCheck: s.mtab === 'checkin', mAct: s.mtab === 'activity', mBot: s.mtab === 'bot', filters, gRows, tableOpts, tablesV, unseated, unseatedN: unseated.length,
       importOpen: s.importOpen, contacts, pickedN, addOp: pickedN ? 1 : 0.4,
       addPicked: () => { if (!pickedN) return; const add = D.CONTACTS.filter((c) => s.picked[c.id] && !G.some((g) => g.id === c.id)).map((c) => ({ ...c, status: 'pending', plus: 0, table: 0 })); this.setState({ guests: G.concat(add), importOpen: false, picked: {} }); this.toast(t.added + ' · ' + add.length); },
-      toastMsg: s.toast, toastOp: s.toastOn ? 1 : 0, toastY: s.toastOn ? '0px' : '16px', toastBottom: '96px',
+      toastMsg: s.toast, toastOp: s.toastOn ? 1 : 0, toastY: s.toastOn ? '0px' : '16px',
+      // Над открытым листом тост уходит наверх, чтобы не закрывать его текст и кнопки.
+      toastBottom: L || s.account || s.confirm ? 'calc(100% - ' + (topOff + 128) + 'px)' : tgSim ? '150px' : '96px',
       ...X,
     };
   }
-  setLang(code) {
-    this.setState((s) => ({ lang: code, inv: s.dirty ? s.inv : { ...this.defaults(s.event, code), cover: s.inv.cover, gallery: s.inv.gallery, font: s.inv.font, date: s.inv.date } }));
+  // Язык интерфейса. opts.save — выбор человека: в профиль (PATCH /api/auth/me) или, без входа, в localStorage и в профиль после входа;
+  // opts.local — только localStorage. Пока черновик не открыт, за интерфейсом следует и язык приглашения с текстами по умолчанию.
+  // На публичной странице язык меняет только просмотр гостя и нигде не сохраняется.
+  setLang(code, opts) {
+    opts = opts || {};
+    const s = this.state, pub = this.isPublic();
+    if (!this.D.LANGS.some((l) => l.code === code)) return;
+    this.applyLang(code);
+    if (!pub && (opts.save || opts.local)) { try { localStorage.setItem('invito.lang', code); } catch (e) {} }
+    if (!pub && opts.save) {
+      if (s.me) this.call('/api/auth/me', { method: 'PATCH', body: { locale: code } }).catch(() => {});
+      else this._langPicked = code;
+    }
+    this.setState({ lang: code });
+    if (!s.draftId && !pub) this.setInvLang(code);
+  }
+  // Язык приглашения (invitation.language): тексты, совпадающие с текстами по умолчанию прежнего языка, переводятся.
+  setInvLang(code) {
+    const s = this.state; if (code === s.invLang || !this.D.LANGS.some((l) => l.code === code)) return;
+    const a = this.defaults(s.event, s.invLang), b = this.defaults(s.event, code), inv = { ...s.inv };
+    ['names', 'host', 'message', 'venue', 'address', 'dress', 'gifts', 'notes', 'contact', 'secret'].forEach((k) => { if (inv[k] === a[k]) inv[k] = b[k]; });
+    inv.program = (inv.program || []).map((p, i) => (a.program[i] && b.program[i] && p.title === a.program[i].title ? { ...p, title: b.program[i].title } : p));
+    this.setState({ invLang: code, inv });
   }
 }
 </script>

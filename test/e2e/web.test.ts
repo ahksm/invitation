@@ -1,138 +1,40 @@
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync } from "node:fs";
-import type { AddressInfo } from "node:net";
-import { join } from "node:path";
-import { Redis } from "ioredis";
-import { chromium, type Browser, type Page } from "playwright-core";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { buildApp } from "../../src/app.js";
-import { createCache } from "../../src/cache.js";
-import { loadConfig } from "../../src/config.js";
-import { createDb } from "../../src/db/index.js";
-import { runMigrations } from "../../src/db/migrate.js";
 import { invitations, templates, users } from "../../src/db/schema.js";
-import { seed } from "../../src/db/seed.js";
-import { createPaymentProvider } from "../../src/payments/index.js";
-import { createSmsProvider } from "../../src/sms/index.js";
 import { I18N } from "../../web/invito-data.js";
+import { startE2E, uniquePhone, type E2E, type Problems } from "./helpers.js";
 
 /**
  * Дымовая проверка фронтенда в настоящем Chromium: оболочка, пропатченный рантайм и логика
  * Invito запускаются без ошибок в консоли и без нарушений CSP (то есть без eval и CDN).
- * Запуск: npm run test:e2e. Браузер: PLAYWRIGHT_CHROMIUM, /opt/pw-browsers/chromium или
- * установленный `npx playwright-core install chromium`. Скриншоты пишутся в E2E_SHOTS_DIR, если задана.
+ * Запуск: npm run test:e2e (окружение — test/e2e/helpers.ts).
  */
-
-const config = loadConfig({
-  NODE_ENV: "test",
-  APP_URL: "http://127.0.0.1",
-  DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://invite:invite@localhost:5432/invite_test",
-  REDIS_URL: process.env.TEST_REDIS_URL ?? "redis://localhost:6379/15",
-  JWT_SECRET: "test-secret-test-secret-test-secret-123",
-  PAYMENT_PROVIDER: "mock",
-  SMS_PROVIDER: "mock",
-  TELEGRAM_MODE: "off",
-});
-
-const { db, pool } = createDb(config.DATABASE_URL);
-const redis = new Redis(config.REDIS_URL);
-const cache = createCache(redis);
-let app: Awaited<ReturnType<typeof buildApp>>;
-let base: string;
-let browser: Browser;
 
 const HERO = I18N.ru.hero1 as string;
-const shotsDir = process.env.E2E_SHOTS_DIR;
+let e: E2E;
 
-// PLAYWRIGHT_CHROMIUM, затем браузер этой машины; undefined — тот, что поставил `npx playwright-core install chromium`.
-function chromiumPath(): string | undefined {
-  if (process.env.PLAYWRIGHT_CHROMIUM) return process.env.PLAYWRIGHT_CHROMIUM;
-  return existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined;
-}
-
-// 1×1 прозрачный PNG вместо внешних картинок.
-const PIXEL = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
-
-type Problems = { console: string[]; page: string[]; csp: string[]; requests: string[] };
-
-/**
- * Открывает страницу и собирает ошибки. Внешние ресурсы (Telegram, Google Fonts, Unsplash)
- * подменяются заглушками, чтобы проверка не зависела от сети; CSP при этом проверяется браузером
- * до запроса, так что запрещённый адрес всё равно даст нарушение.
- */
-async function open(path: string, viewport: { width: number; height: number }, status = 200) {
-  const context = await browser.newContext({ viewport });
-  const problems: Problems = { console: [], page: [], csp: [], requests: [] };
-  await context.route(
-    (url) => url.origin !== base,
-    (route) => {
-      const type = route.request().resourceType();
-      if (type === "script") return route.fulfill({ contentType: "text/javascript", body: "/* заглушка */" });
-      if (type === "stylesheet") return route.fulfill({ contentType: "text/css", body: "" });
-      if (type === "image") return route.fulfill({ contentType: "image/png", body: PIXEL, headers: { "access-control-allow-origin": "*" } });
-      return route.fulfill({ status: 204 });
-    },
-  );
-  await context.addInitScript(() => {
-    const w = window as unknown as { __csp: string[] };
-    w.__csp = [];
-    document.addEventListener("securitypolicyviolation", (e) => w.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
-  });
-  const page = await context.newPage();
-  page.on("console", (m) => m.type() === "error" && problems.console.push(m.text()));
-  page.on("pageerror", (e) => problems.page.push(String(e)));
-  page.on("request", (r) => r.url().startsWith(base) && problems.requests.push(r.url().slice(base.length)));
-  const res = await page.goto(base + path);
-  expect(res?.status()).toBe(status);
-  // Главная Invito: заголовок героя из словаря ru.
-  await page.waitForFunction((text) => document.body.innerText.includes(text), HERO, { timeout: 20_000 });
-  // Даём отработать таймерам и циклу анимации после первого кадра.
-  await page.waitForTimeout(1500);
-  problems.csp = await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
-  return { page, problems, close: () => context.close() };
-}
-
-function expectClean(p: Problems, path: string) {
-  expect(p.console, "ошибки в консоли").toEqual([]);
-  expect(p.page, "исключения на странице").toEqual([]);
-  expect(p.csp, "нарушения CSP").toEqual([]);
+function expectLoaded(p: Problems, path: string) {
   // Страница загружается один раз: рантайм не перечитывает её через fetch(location.href).
   expect(p.requests.filter((u) => u === path)).toHaveLength(1);
   // Вложенные DC берутся из бандла, а не из *.dc.html.
   expect(p.requests.filter((u) => u.includes(".dc.html"))).toEqual([]);
 }
 
-async function shot(page: Page, name: string) {
-  if (!shotsDir) return;
-  mkdirSync(shotsDir, { recursive: true });
-  await page.screenshot({ path: join(shotsDir, name) });
-}
-
 beforeAll(async () => {
-  // Публичные страницы читают приглашения из базы.
-  await runMigrations(db);
-  await seed(db);
-  // Счётчики лимита запросов от прошлых тестов.
-  await redis.flushdb();
-  app = await buildApp(
-    { config, db, cache, payments: createPaymentProvider(config, cache), sms: createSmsProvider(config, cache, { info: () => {} }) },
-    { logger: false },
-  );
-  await app.listen({ port: 0, host: "127.0.0.1" });
-  base = `http://127.0.0.1:${(app.server.address() as AddressInfo).port}`;
-  browser = await chromium.launch({ executablePath: chromiumPath() });
+  e = await startE2E();
 });
 
 afterAll(async () => {
-  await browser?.close();
-  await app?.close();
-  await Promise.allSettled([pool.end(), redis.quit()]);
+  await e?.close();
 });
 
 describe("фронтенд в браузере", () => {
   it("/app/ показывает главную Invito без ошибок и нарушений CSP", async () => {
-    const { page, problems, close } = await open("/app/", { width: 390, height: 844 });
-    expectClean(problems, "/app/");
+    const { page, problems, close } = await e.open("/app/", { waitText: HERO });
+    await e.expectClean(page, problems);
+    // Без сессии единственная ошибка консоли — 401 от /api/auth/me.
+    expect(problems.me401).toBe(1);
+    expectLoaded(problems, "/app/");
     // React из /app/vendor, логика из бандла, шаблон InviteCover отрисован без заглушки.
     expect(await page.evaluate(() => (window as unknown as { React: { version: string } }).React.version)).toBe("18.3.1");
     expect(await page.locator('[data-sc-name="InviteCover"]').count()).toBeGreaterThan(0);
@@ -143,36 +45,41 @@ describe("фронтенд в браузере", () => {
     expect(compiled).toContain("sc-camel-on-loaded-data=");
     expect(compiled).toMatch(/<sc-raw-select[^>]*>\s*<sc-for/);
     expect(problems.requests.some((u) => u.startsWith("/app/invito-data.js"))).toBe(true);
-    await shot(page, "app-390x844.png");
+    expect(problems.requests.some((u) => u.startsWith("/app/invito-api.js"))).toBe(true);
+    await e.shot(page, "app-390x844.png");
     // Переход в конструктор: выбор события рисуется без новых ошибок.
     await page.getByRole("button", { name: I18N.ru.create }).first().click();
-    await page.waitForFunction((t) => document.body.innerText.includes(t), I18N.ru.chooseEvent as string);
+    await e.waitText(page, I18N.ru.chooseEvent as string);
     await page.waitForTimeout(500);
-    problems.csp = await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
-    expectClean(problems, "/app/");
-    await shot(page, "app-events-390x844.png");
+    await e.expectClean(page, problems);
+    await e.shot(page, "app-events-390x844.png");
     // Проверка самой проверки: адрес, запрещённый CSP, попадает в список нарушений.
     await page.evaluate(() => void (new Image().src = "https://example.com/csp-probe.png"));
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __csp: string[] }).__csp)).toEqual(["img-src https://example.com/csp-probe.png"]);
+    await expect.poll(() => e.csp(page)).toEqual(["img-src https://example.com/csp-probe.png"]);
     await close();
   });
 
   it("/app/ на широком экране", async () => {
-    const { page, problems, close } = await open("/app/", { width: 1280, height: 800 });
-    expectClean(problems, "/app/");
-    await shot(page, "app-1280x800.png");
+    const { page, problems, close } = await e.open("/app/", { viewport: { width: 1280, height: 800 }, waitText: HERO });
+    await e.expectClean(page, problems);
+    expectLoaded(problems, "/app/");
+    await e.shot(page, "app-1280x800.png");
     await close();
   });
 
   it("/i/:slug опубликованного приглашения запускает рантайм с view в загрузочных данных", async () => {
-    const [user] = await db.insert(users).values({ phone: `998${String(Date.now()).slice(-9)}` }).returning();
-    const [template] = await db.select().from(templates);
+    const [user] = await e.db.insert(users).values({ phone: uniquePhone() }).returning();
+    const [template] = await e.db.select().from(templates);
     const slug = randomBytes(9).toString("base64url");
     // Данные с «</script>» и кавычками: загрузочный JSON не ломает страницу.
     const data = { names: 'Азиз & "Мадина"', message: "</script><script>window.__pwned = 1</script>", date: "2026-12-12" };
-    await db.insert(invitations).values({ userId: user!.id, templateId: template!.id, mode: "shared", status: "active", unlocked: true, title: "Той", data, slug });
-    const { page, problems, close } = await open(`/i/${slug}`, { width: 390, height: 844 });
-    expectClean(problems, `/i/${slug}`);
+    await e.db.insert(invitations).values({ userId: user!.id, templateId: template!.id, mode: "shared", status: "active", unlocked: true, title: "Той", data, slug });
+    const { page, problems, close } = await e.open(`/i/${slug}`, { waitText: 'Азиз & "Мадина"' });
+    await e.expectClean(page, problems);
+    expectLoaded(problems, `/i/${slug}`);
+    // Публичная страница не спрашивает сессию и не показывает шапку конструктора.
+    expect(problems.requests.filter((u) => u.startsWith("/api/"))).toEqual([]);
+    expect(await page.locator("[data-account]").count()).toBe(0);
     const boot = await page.evaluate(() => JSON.parse(document.getElementById("invito-boot")!.textContent!));
     expect(boot).toMatchObject({ mode: "shared", slug, view: { data } });
     expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
@@ -180,28 +87,35 @@ describe("фронтенд в браузере", () => {
     await close();
   });
 
-  it("неизвестные /i/ и /g/ отдают 404 с { mode: \"notfound\" }, рантайм запускается", async () => {
+  it("неизвестные /i/ и /g/ отдают 404 с { mode: \"notfound\" } и страницей «не найдено»", async () => {
     for (const path of ["/i/test-slug", "/g/test-token"]) {
-      const { page, problems, close } = await open(path, { width: 390, height: 844 }, 404);
+      const { page, problems, close } = await e.open(path, { status: 404, waitText: I18N.ru.nfTitle as string });
       // Статус 404 самой страницы Chromium пишет в консоль как ошибку загрузки: это единственная ожидаемая ошибка.
       const own404 = "Failed to load resource: the server responded with a status of 404 (Not Found)";
       expect(problems.console).toEqual([own404]);
-      expectClean({ ...problems, console: [] }, path);
+      await e.expectClean(page, { ...problems, console: [] });
+      expectLoaded(problems, path);
+      expect(problems.requests.filter((u) => u.startsWith("/api/"))).toEqual([]);
       expect(await page.evaluate(() => JSON.parse(document.getElementById("invito-boot")!.textContent!))).toEqual({ mode: "notfound" });
+      expect(await page.locator(".sc-placeholder, .sc-logic-error").count()).toBe(0);
+      if (path.startsWith("/i/")) await e.shot(page, "notfound-ru-390x844.png");
+      // Кнопка ведёт в конструктор.
+      await page.getByRole("button", { name: I18N.ru.makeOwn as string }).click();
+      await page.waitForURL(e.base + "/app/");
       await close();
     }
   });
 
   it("без dc-bundle.js страница пустая, но причина видна в консоли", async () => {
-    const context = await browser.newContext();
-    await context.route((url) => url.origin !== base, (route) => route.fulfill({ status: 204 }));
+    const context = await e.browser.newContext();
+    await context.route((url) => url.origin !== e.base, (route) => route.fulfill({ status: 204 }));
     // Бандл с синтаксической ошибкой: скрипт падает целиком, window.__dcSources не появляется.
     await context.route((url) => url.pathname === "/app/dc-bundle.js", (route) => route.fulfill({ contentType: "text/javascript", body: "window.__dcSources = ;" }));
     const page = await context.newPage();
     const errors: string[] = [];
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
-    await page.goto(base + "/app/");
-    await expect.poll(() => errors.some((e) => e.includes("[invito] /app/dc-bundle.js did not load or failed"))).toBe(true);
+    await page.goto(e.base + "/app/");
+    await expect.poll(() => errors.some((x) => x.includes("[invito] /app/dc-bundle.js did not load or failed"))).toBe(true);
     await context.close();
   });
 });

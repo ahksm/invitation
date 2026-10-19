@@ -14,10 +14,32 @@ export function setLang(code) { lang = code; }
  */
 export function setToken(value) { token = value || null; }
 
+export function getToken() { return token; }
+
+const headersFor = (extra) => ({
+  accept: 'application/json',
+  'x-lang': lang,
+  ...(token && { authorization: 'Bearer ' + token }),
+  ...extra,
+});
+
+/** Ошибка ответа не 2xx: status и data (тело ответа), message — переведённый текст ошибки сервера. */
+function httpError(status, data) {
+  const err = new Error((data && typeof data === 'object' && typeof data.error === 'string' && data.error) || 'HTTP ' + status);
+  err.status = status;
+  err.data = data;
+  return err;
+}
+
+const parse = (text) => {
+  if (!text) return null;
+  try { return JSON.parse(text); } catch (e) { return text; }
+};
+
 /**
  * Запрос к API. body отправляется как JSON (метод по умолчанию POST, без тела GET), ответ
  * разбирается как JSON (204 даёт null). При ответе не 2xx бросает Error с полями status и data
- * (тело ответа); message — переведённый текст ошибки сервера.
+ * (тело ответа); message — переведённый текст ошибки сервера. Ошибка сети — Error без status.
  */
 export async function api(path, opts = {}) {
   const { body, headers, ...rest } = opts;
@@ -25,23 +47,62 @@ export async function api(path, opts = {}) {
     method: body === undefined ? 'GET' : 'POST',
     ...rest,
     credentials: 'include',
-    headers: {
-      accept: 'application/json',
-      'x-lang': lang,
-      ...(token && { authorization: 'Bearer ' + token }),
-      ...(body !== undefined && { 'content-type': 'application/json' }),
-      ...headers,
-    },
+    headers: headersFor({ ...(body !== undefined && { 'content-type': 'application/json' }), ...headers }),
     body: body === undefined ? undefined : JSON.stringify(body),
   });
-  const text = await res.text();
-  let data = null;
-  if (text) { try { data = JSON.parse(text); } catch (e) { data = text; } }
-  if (!res.ok) {
-    const err = new Error((data && typeof data === 'object' && typeof data.error === 'string' && data.error) || 'HTTP ' + res.status);
-    err.status = res.status;
-    err.data = data;
-    throw err;
-  }
+  const data = parse(await res.text());
+  if (!res.ok) throw httpError(res.status, data);
   return data;
+}
+
+/**
+ * Загрузка файла multipart-формой (поле file) с прогрессом: fetch не сообщает, сколько отправлено,
+ * поэтому XMLHttpRequest. onProgress(доля 0..1). Ошибки — как у api().
+ */
+export function upload(path, blob, opts = {}) {
+  const { filename = 'file', onProgress, field = 'file' } = opts;
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', path);
+    xhr.withCredentials = true;
+    const h = headersFor();
+    for (const k of Object.keys(h)) xhr.setRequestHeader(k, h[k]);
+    if (onProgress) xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      const data = parse(xhr.responseText);
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else reject(httpError(xhr.status, data));
+    };
+    xhr.onerror = () => reject(new Error('network'));
+    xhr.onabort = () => reject(new Error('aborted'));
+    const form = new FormData();
+    form.append(field, blob, filename);
+    xhr.send(form);
+  });
+}
+
+/**
+ * Картинка перед загрузкой: длинная сторона не больше max пикселей, JPEG с качеством quality.
+ * GIF остаётся как есть (анимация), картинка, которую браузер не смог разобрать, тоже: тип
+ * всё равно проверит сервер. Прозрачный фон PNG становится белым.
+ */
+export async function downscaleImage(file, max = 2000, quality = 0.85) {
+  if (!file || file.type === 'image/gif') return file;
+  let img;
+  try {
+    img = await createImageBitmap(file);
+  } catch (e) {
+    return file;
+  }
+  const k = Math.min(1, max / Math.max(img.width, img.height));
+  const w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(img, 0, 0, w, h);
+  if (img.close) img.close();
+  const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
+  return blob || file;
 }
