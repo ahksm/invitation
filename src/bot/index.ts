@@ -32,12 +32,17 @@ export function formatMoney(minor: number, currency: string, l: Locale = "ru") {
   return `${(minor / 100).toLocaleString(dateLocale[l], { maximumFractionDigits: 2 })} ${unit}`;
 }
 
-/** Номер из контакта Telegram: узбекский приводим к 998XXXXXXXXX, остальные храним цифрами. */
+/**
+ * Номер из контакта Telegram. Telegram присылает его в международном виде (с кодом страны, «+» может
+ * не быть), поэтому узбекский номер — только 998 и девять цифр, остальные храним цифрами (7–15, E.164).
+ * Девять цифр — это не узбекский номер без +998 (так normalizePhone понимает ввод на сайте), а короткий
+ * номер другой страны: иначе Telegram с номером +508 55 12 34 «подтвердил» бы чужой +998 50 855-12-34
+ * и вошёл бы в аккаунт с ним (или подключился бы к нему).
+ */
 export function contactPhone(raw: string): string | null {
-  const uz = normalizePhone(raw);
-  if (uz) return uz;
   const digits = raw.replace(/\D/g, "");
-  return digits.length >= 10 && digits.length <= 15 ? digits : null;
+  if (digits.startsWith("998")) return normalizePhone(digits) === digits ? digits : null;
+  return digits.length >= 7 && digits.length <= 15 ? digits : null;
 }
 
 const RSVP_BUTTONS = { yes: "rsvpYes", maybe: "rsvpMaybe", no: "rsvpNo" } as const satisfies Record<string, BotTextKey>;

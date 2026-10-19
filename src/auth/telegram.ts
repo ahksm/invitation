@@ -54,17 +54,20 @@ const settled = (login: TelegramLogin) => Boolean(login.userId || login.conflict
 
 /**
  * Бот завершает запрос: подтверждает вход (userId) или отклоняет подключение (conflict).
- * false, если запрос истёк или уже завершён.
+ * false, если запрос истёк или уже завершён. Запрос подключения входом завершается только в аккаунт,
+ * из которого он начат: браузер, начавший «Подключить Telegram», не переключается на чужой аккаунт,
+ * даже если бы вход другим пользователем попал на этот nonce (например, approveTelegramLogin обычного входа).
  */
 export async function settleTelegramLogin(cache: Cache, nonce: string, outcome: { userId: string } | { conflict: string }): Promise<boolean> {
   const login = await getTelegramLogin(cache, nonce);
   if (!login || settled(login)) return false;
+  if ("userId" in outcome && login.linkUserId !== undefined && outcome.userId !== login.linkUserId) return false;
   const ttl = await cache.redis.ttl(`inv:${key(nonce)}`);
   await cache.set(key(nonce), { ...login, ...outcome }, Math.max(ttl, 30));
   return true;
 }
 
-/** Бот подтверждает вход. false, если запрос истёк или уже подтверждён. */
+/** Бот подтверждает вход. false, если запрос истёк, уже подтверждён или это подключение к другому аккаунту. */
 export const approveTelegramLogin = (cache: Cache, nonce: string, userId: string) => settleTelegramLogin(cache, nonce, { userId });
 
 /**
