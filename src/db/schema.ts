@@ -11,8 +11,10 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  primaryKey,
   uuid,
 } from "drizzle-orm/pg-core";
+import type { InvContent } from "../content.js";
 
 export const invitationMode = pgEnum("invitation_mode", ["shared", "personal"]);
 export const invitationStatus = pgEnum("invitation_status", ["draft", "active", "archived"]);
@@ -21,6 +23,8 @@ export const orderStatus = pgEnum("order_status", ["pending", "paid", "failed", 
 export const rsvpStatus = pgEnum("rsvp_status", ["pending", "yes", "no", "maybe"]);
 export const smsPurpose = pgEnum("sms_purpose", ["otp", "invite"]);
 export const smsStatus = pgEnum("sms_status", ["queued", "sent", "delivered", "failed"]);
+export const guestGroup = pgEnum("guest_group", ["family", "friends", "work", "other"]);
+export const guestSource = pgEnum("guest_source", ["owner", "self"]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -41,7 +45,7 @@ export const users = pgTable(
     username: text("username"),
     firstName: text("first_name"),
     lastName: text("last_name"),
-    // Язык интерфейса: ru, uz или en.
+    // Язык интерфейса: ru, uz, uzc или en.
     locale: text("locale").notNull().default("ru"),
     isAdmin: boolean("is_admin").notNull().default(false),
     // Бесплатный доступ ко всей платформе, выдаётся владельцем вручную.
@@ -69,6 +73,11 @@ export const templates = pgTable("templates", {
   fields: jsonb("fields").$type<TemplateField[]>().notNull().default([]),
   // Название и описание на других языках: { uz: { title, description }, en: {...} }.
   translations: jsonb("translations").$type<TemplateTranslations>().notNull().default({}),
+  // Шаблоны Invito: событие и стиль из web/invito-data.js (slug = "<event>-<style>"). У старых шаблонов пусто.
+  event: text("event"),
+  style: text("style"),
+  // Порядок в каталоге: события по EVENT_ORDER, внутри события по стилям.
+  sortOrder: integer("sort_order").notNull().default(0),
   ...timestamps,
 });
 
@@ -81,6 +90,10 @@ export type TemplateField = {
   type: "text" | "textarea" | "date" | "time" | "url";
   required?: boolean;
 };
+
+/** Настройки приглашения: напоминания и уведомления бота, число столов в рассадке. */
+export type InvitationSettings = { r1d: boolean; r3h: boolean; morning: boolean; notify: boolean; tables: number };
+export const defaultInvitationSettings: InvitationSettings = { r1d: true, r3h: true, morning: true, notify: true, tables: 4 };
 
 export const invitations = pgTable(
   "invitations",
@@ -97,13 +110,23 @@ export const invitations = pgTable(
     title: text("title").notNull(),
     // Язык, на котором гости видят приглашение и получают SMS.
     language: text("language").notNull().default("ru"),
-    data: jsonb("data").$type<Record<string, string>>().notNull().default({}),
+    // Содержимое приглашения (InvContent, проверяется схемой из src/content.ts).
+    data: jsonb("data").$type<InvContent>().notNull().default({}),
     // Публичная ссылка общего приглашения.
     slug: text("slug").notNull().unique(),
     // Общий шаблон оплачен (или открыт подпиской / бесплатным доступом).
     unlocked: boolean("unlocked").notNull().default(false),
     // Сколько персональных мест оплачено.
     paidSeats: integer("paid_seats").notNull().default(0),
+    // Номер места для следующего гостя. Номера не переиспользуются, даже после удаления гостя.
+    nextSeat: integer("next_seat").notNull().default(1),
+    // Пароль общей ссылки; null — без пароля.
+    accessCode: text("access_code"),
+    settings: jsonb("settings").$type<InvitationSettings>().notNull().default(defaultInvitationSettings),
+    // Картинка для превью ссылки (og:image), загружается фронтендом: /media/<id>.<ext>.
+    ogImageUrl: text("og_image_url"),
+    // Время первой публикации.
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [index("invitations_user_idx").on(t.userId)],
@@ -118,14 +141,83 @@ export const guests = pgTable(
       .references(() => invitations.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     phone: text("phone"),
-    // Порядковый номер гостя: ссылка работает, только если seat <= paid_seats.
+    // Номер места из invitations.next_seat. Гость оплачен, если его порядковый номер
+    // среди текущих гостей (по seat) не больше paid_seats; см. src/services/seats.ts.
     seat: integer("seat").notNull(),
     token: text("token").notNull().unique(),
     rsvp: rsvpStatus("rsvp").notNull().default("pending"),
+    group: guestGroup("group").notNull().default("other"),
+    // Сколько человек придёт вместе с гостем.
+    plus: integer("plus").notNull().default(0),
+    // Стол в рассадке; 0 — без стола.
+    tableNo: integer("table_no").notNull().default(0),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
+    // Пожелание гостя (гостевая книга).
+    message: text("message"),
+    diet: text("diet").array().$type<GuestDiet[]>().notNull().default(sql`'{}'::text[]`),
+    // owner — добавил владелец, self — ответил сам по общей ссылке.
+    source: guestSource("source").notNull().default("owner"),
     openedAt: timestamp("opened_at", { withTimezone: true }),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+    // Чат гостя с ботом, если он подключил напоминания.
+    telegramChatId: bigint("telegram_chat_id", { mode: "number" }),
     ...timestamps,
   },
   (t) => [uniqueIndex("guests_invitation_seat_idx").on(t.invitationId, t.seat)],
+);
+
+export const guestDiets = ["veg", "halal", "nonut", "noalc"] as const;
+export type GuestDiet = (typeof guestDiets)[number];
+
+// Лента приглашения: открытия, ответы, оплаты, напоминания.
+export const invitationEvents = pgTable(
+  "invitation_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    invitationId: uuid("invitation_id")
+      .notNull()
+      .references(() => invitations.id, { onDelete: "cascade" }),
+    guestId: uuid("guest_id").references(() => guests.id, { onDelete: "set null" }),
+    kind: text("kind").$type<InvitationEventKind>().notNull(),
+    meta: jsonb("meta").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("invitation_events_inv_idx").on(t.invitationId, t.createdAt)],
+);
+
+export const invitationEventKinds = ["created", "published", "paid", "opened", "yes", "no", "maybe", "reminder", "sms", "checkin", "test"] as const;
+export type InvitationEventKind = (typeof invitationEventKinds)[number];
+
+// Загруженные файлы (картинки, аудио, видео). Файл лежит в MEDIA_DIR под именем <id>.<ext>.
+export const media = pgTable(
+  "media",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<MediaKind>().notNull(),
+    mime: text("mime").notNull(),
+    ext: text("ext").notNull(),
+    size: integer("size").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("media_user_idx").on(t.userId)],
+);
+
+export type MediaKind = "image" | "audio" | "video";
+
+// Отправленные напоминания гостям: строка вставляется до отправки, повторная вставка не проходит.
+export const guestReminders = pgTable(
+  "guest_reminders",
+  {
+    guestId: uuid("guest_id")
+      .notNull()
+      .references(() => guests.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.guestId, t.kind] })],
 );
 
 export const orders = pgTable(
@@ -218,3 +310,5 @@ export type Guest = typeof guests.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type SmsMessage = typeof smsMessages.$inferSelect;
+export type InvitationEvent = typeof invitationEvents.$inferSelect;
+export type Media = typeof media.$inferSelect;

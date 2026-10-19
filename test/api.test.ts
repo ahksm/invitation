@@ -1,119 +1,18 @@
 import { sql } from "drizzle-orm";
-import { Redis } from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { buildApp } from "../src/app.js";
-import { createCache } from "../src/cache.js";
-import { loadConfig } from "../src/config.js";
-import { createDb } from "../src/db/index.js";
-import { runMigrations } from "../src/db/migrate.js";
-import { users } from "../src/db/schema.js";
-import { seed } from "../src/db/seed.js";
-import { createMulticardProvider, multicardSign } from "../src/payments/multicard.js";
-import { defaultPrices } from "../src/pricing.js";
-import { createMockSms } from "../src/sms/mock.js";
 import { approveTelegramLogin } from "../src/auth/telegram.js";
-import { templates } from "../src/db/schema.js";
-import { signInitData } from "./telegram.test.js";
+import { templates, users } from "../src/db/schema.js";
+import { defaultPrices } from "../src/pricing.js";
 import { applySmsDelivery } from "../src/services/sms.js";
+import { APP_URL, phoneOf, sessionCookie, testContext } from "./helpers.js";
+import { signInitData } from "./telegram.test.js";
 
-const APP_URL = "http://localhost:3000";
-const config = loadConfig({
-  NODE_ENV: "test",
-  APP_URL,
-  DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://invite:invite@localhost:5432/invite_test",
-  REDIS_URL: process.env.TEST_REDIS_URL ?? "redis://localhost:6379/15",
-  JWT_SECRET: "test-secret-test-secret-test-secret-123",
-  ADMIN_TELEGRAM_IDS: "1",
-  PAYMENT_PROVIDER: "multicard",
-  MULTICARD_APPLICATION_ID: "app",
-  MULTICARD_SECRET: "mc-secret",
-  MULTICARD_STORE_ID: "6",
-  MULTICARD_MXIK: "10305008002000000",
-  MULTICARD_PACKAGE_CODE: "1545643",
-  TELEGRAM_BOT_TOKEN: "123:abc",
-  TELEGRAM_BOT_USERNAME: "invite_test_bot",
-  SMS_CALLBACK_SECRET: "sms-cb-secret",
-});
-
-// Подменяем сеть: Multicard отвечает как в документации, а запросы сохраняются для проверки.
-const calls: { url: string; body: any }[] = [];
-const fakeFetch: typeof fetch = async (input, init) => {
-  const url = String(input);
-  const body = init?.body ? JSON.parse(String(init.body)) : undefined;
-  calls.push({ url, body });
-  if (url.endsWith("/auth")) return Response.json({ token: "tok", role: "merchant", expiry: "2099-01-01 12:00:00" });
-  if (url.endsWith("/payment/invoice")) {
-    return Response.json({ success: true, data: { uuid: `uuid-${body.invoice_id}`, checkout_url: `https://checkout.test/${body.invoice_id}` } });
-  }
-  return new Response("not found", { status: 404 });
-};
-
-const { db, pool } = createDb(config.DATABASE_URL);
-const redis = new Redis(config.REDIS_URL);
-const cache = createCache(redis);
-const payments = createMulticardProvider({
-  baseUrl: config.MULTICARD_BASE_URL,
-  applicationId: "app",
-  secret: "mc-secret",
-  storeId: "6",
-  mxik: config.MULTICARD_MXIK,
-  packageCode: config.MULTICARD_PACKAGE_CODE,
-  cache,
-  fetch: fakeFetch,
-});
-const smsSent: { phone: string; text: string }[] = [];
-const sms = createMockSms({ info: () => {} }, smsSent);
-let app: Awaited<ReturnType<typeof buildApp>>;
-
-const phoneOf = (telegramId: number) => `99890${String(telegramId).padStart(7, "0")}`;
-
-async function login(telegramId: number, extra: Partial<typeof users.$inferInsert> = {}) {
-  const [u] = await db
-    .insert(users)
-    .values({ telegramId, phone: phoneOf(telegramId), isAdmin: telegramId === 1, ...extra })
-    .onConflictDoUpdate({ target: users.telegramId, set: { phone: phoneOf(telegramId), ...(extra.freeAccess !== undefined && { freeAccess: extra.freeAccess }) } })
-    .returning();
-  const token = app.jwt.sign({ sub: u!.id });
-  return { user: u!, cookie: `session=${token}` };
-}
-
-function req(cookie: string | null, method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE", url: string, payload?: unknown, headers: Record<string, string> = {}) {
-  return app.inject({
-    method,
-    url,
-    payload: payload as any,
-    headers: { ...(cookie && { cookie }), origin: APP_URL, ...headers },
-  });
-}
-
-const sessionCookie = (res: { cookies: { name: string; value: string }[] }) => {
-  const c = res.cookies.find((x) => x.name === "session");
-  return c ? `session=${c.value}` : null;
-};
-
-function callback(orderNumber: number, amount: number, secret = "mc-secret") {
-  return app.inject({
-    method: "POST",
-    url: "/api/payments/multicard/callback",
-    payload: {
-      store_id: 6,
-      invoice_id: String(orderNumber),
-      amount,
-      uuid: `uuid-${orderNumber}`,
-      sign: multicardSign(6, String(orderNumber), amount, secret),
-    },
-  });
-}
-
-let templateId: string;
+const t = testContext();
+const { db, redis, cache, config, smsSent, calls, login, req, callback } = t;
+const template = "wedding-classic";
 
 beforeAll(async () => {
-  await db.execute(sql`drop schema if exists public cascade; drop schema if exists drizzle cascade; create schema public;`);
-  await runMigrations(db);
-  await seed(db);
-  app = await buildApp({ config, db, cache, payments, sms }, { logger: false });
-  const res = await app.inject({ url: "/api/templates" });
-  templateId = res.json()[0].id;
+  await t.start();
 });
 
 beforeEach(async () => {
@@ -121,9 +20,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await app.close();
-  await pool.end();
-  await redis.quit();
+  await t.close();
 });
 
 describe("защита", () => {
@@ -133,7 +30,7 @@ describe("защита", () => {
 
   it("изменяющие запросы с чужого сайта отклоняются", async () => {
     const { cookie } = await login(100);
-    const res = await app.inject({ method: "POST", url: "/api/invitations", headers: { cookie, origin: "https://evil.example" }, payload: {} });
+    const res = await t.app.inject({ method: "POST", url: "/api/invitations", headers: { cookie, origin: "https://evil.example" }, payload: {} });
     expect(res.statusCode).toBe(403);
   });
 
@@ -145,7 +42,7 @@ describe("защита", () => {
   it("чужое приглашение не видно", async () => {
     const a = await login(101);
     const b = await login(102);
-    const inv = (await req(a.cookie, "POST", "/api/invitations", { templateId, mode: "shared", title: "A" })).json();
+    const inv = (await req(a.cookie, "POST", "/api/invitations", { template, mode: "shared" })).json();
     expect((await req(b.cookie, "GET", `/api/invitations/${inv.id}`)).statusCode).toBe(404);
   });
 
@@ -158,7 +55,7 @@ describe("защита", () => {
 describe("оплата общего шаблона", () => {
   it("создаёт счёт Multicard, проверяет подпись и открывает шаблон один раз", async () => {
     const { cookie } = await login(200);
-    const inv = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "shared", title: "Свадьба", data: { hosts: "A & B" } })).json();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template, mode: "shared", data: { names: "A & B" } })).json();
     expect((await req(cookie, "POST", `/api/invitations/${inv.id}/publish`)).statusCode).toBe(402);
 
     calls.length = 0;
@@ -172,7 +69,7 @@ describe("оплата общего шаблона", () => {
     expect(invoiceCall.body.callback_url).toBe(`${APP_URL}/api/payments/multicard/callback`);
     expect(invoiceCall.body.lang).toBe("ru");
     expect(invoiceCall.body.ofd).toEqual([
-      { name: "Шаблон «Обложка приглашения»", qty: 1, price: order.amount, total: order.amount, mxik: "10305008002000000", package_code: "1545643" },
+      { name: "Шаблон «Ivory»", qty: 1, price: order.amount, total: order.amount, mxik: "10305008002000000", package_code: "1545643" },
     ]);
 
     expect((await callback(order.number, order.amount, "wrong")).statusCode).toBe(400);
@@ -188,9 +85,10 @@ describe("оплата общего шаблона", () => {
     expect(paid.status).toBe("paid");
 
     expect((await req(cookie, "POST", `/api/invitations/${inv.id}/publish`)).statusCode).toBe(200);
-    const pub = await app.inject({ url: `/api/public/i/${inv.slug}` });
+    const pub = await t.app.inject({ url: `/api/public/i/${inv.slug}` });
     expect(pub.statusCode).toBe(200);
-    expect(pub.json()).toMatchObject({ title: "Свадьба", data: { hosts: "A & B" }, template: { slug: "invite-cover" } });
+    expect(pub.json()).toMatchObject({ kind: "shared", template, event: "wedding", data: { names: "A & B" } });
+    expect(pub.json()).not.toHaveProperty("title");
 
     // Повторно платить за открытый шаблон нельзя.
     expect((await req(cookie, "POST", "/api/orders", { kind: "template", invitationId: inv.id })).statusCode).toBe(409);
@@ -200,7 +98,7 @@ describe("оплата общего шаблона", () => {
 describe("персональные приглашения", () => {
   it("открываются только ссылки оплаченных гостей", async () => {
     const { cookie } = await login(300);
-    const inv = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "personal", title: "Той" })).json();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal" })).json();
     const added = (await req(cookie, "POST", `/api/invitations/${inv.id}/guests`, { guests: [{ name: "Аня" }, { name: "Боря" }, { name: "Вика" }] })).json();
     expect(added.map((g: any) => g.seat)).toEqual([1, 2, 3]);
 
@@ -209,13 +107,13 @@ describe("персональные приглашения", () => {
     await callback(order.number, order.amount);
     expect((await req(cookie, "POST", `/api/invitations/${inv.id}/publish`)).statusCode).toBe(200);
 
-    const g1 = await app.inject({ url: `/api/public/g/${added[0].token}` });
+    const g1 = await t.app.inject({ url: `/api/public/g/${added[0].token}` });
     expect(g1.json()).toMatchObject({ guest: { name: "Аня" } });
-    expect((await app.inject({ url: `/api/public/g/${added[2].token}` })).statusCode).toBe(404);
+    expect((await t.app.inject({ url: `/api/public/g/${added[2].token}` })).statusCode).toBe(404);
 
-    const rsvp = await app.inject({ method: "POST", url: `/api/public/g/${added[0].token}/rsvp`, payload: { rsvp: "yes" }, headers: { origin: APP_URL } });
+    const rsvp = await t.app.inject({ method: "POST", url: `/api/public/g/${added[0].token}/rsvp`, payload: { status: "yes" }, headers: { origin: APP_URL } });
     expect(rsvp.statusCode).toBe(200);
-    expect((await app.inject({ url: `/api/public/g/${added[0].token}` })).json().guest.rsvp).toBe("yes");
+    expect((await t.app.inject({ url: `/api/public/g/${added[0].token}` })).json().guest.rsvp).toBe("yes");
   });
 });
 
@@ -228,11 +126,11 @@ describe("подписка и бесплатный доступ", () => {
     const me = (await req(cookie, "GET", "/api/auth/me")).json();
     expect(me.access.subscribed).toBe(true);
 
-    const shared = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "shared", title: "S" })).json();
+    const shared = (await req(cookie, "POST", "/api/invitations", { template, mode: "shared" })).json();
     const t = await req(cookie, "POST", "/api/orders", { kind: "template", invitationId: shared.id });
     expect(t.json()).toMatchObject({ status: "fulfilled" });
 
-    const personal = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "personal", title: "P" })).json();
+    const personal = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal" })).json();
     const s = await req(cookie, "POST", "/api/orders", { kind: "seats", invitationId: personal.id, quantity: 5 });
     expect(s.json().order.amount).toBe(5 * defaultPrices.seat);
   });
@@ -243,7 +141,7 @@ describe("подписка и бесплатный доступ", () => {
     expect(grant.statusCode).toBe(200);
 
     const { cookie } = await login(500);
-    const personal = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "personal", title: "P" })).json();
+    const personal = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal" })).json();
     const s = await req(cookie, "POST", "/api/orders", { kind: "seats", invitationId: personal.id, quantity: 50 });
     expect(s.json()).toMatchObject({ status: "fulfilled" });
     expect((await req(cookie, "GET", `/api/invitations/${personal.id}`)).json().paidSeats).toBe(50);
@@ -269,7 +167,7 @@ describe("админка", () => {
     const newPrices = { sharedTemplate: 1000, seat: 10, subscriptionMonth: 5000 };
     expect((await req(admin.cookie, "PUT", "/api/admin/prices", newPrices)).statusCode).toBe(200);
     const { cookie } = await login(600);
-    const inv = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "personal", title: "P" })).json();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal" })).json();
     const o = (await req(cookie, "POST", "/api/orders", { kind: "seats", invitationId: inv.id, quantity: 3 })).json();
     expect(o.order.amount).toBe(30);
   });
@@ -319,7 +217,7 @@ describe("вход по телефону", () => {
 
   it("без номера телефона кабинет закрыт", async () => {
     const [u] = await db.insert(users).values({ telegramId: 800 }).returning();
-    const res = await req(`session=${app.jwt.sign({ sub: u!.id })}`, "GET", "/api/invitations");
+    const res = await req(`session=${t.app.jwt.sign({ sub: u!.id })}`, "GET", "/api/invitations");
     expect(res.statusCode).toBe(428);
   });
 });
@@ -360,7 +258,7 @@ describe("вход через Telegram", () => {
 describe("SMS гостям и язык приглашения", () => {
   it("шлёт SMS только оплаченным гостям с номером, на языке приглашения", async () => {
     const { cookie } = await login(1000);
-    const inv = (await req(cookie, "POST", "/api/invitations", { templateId, mode: "personal", language: "uz", title: "To'y", data: { event: "to'y", date: "2026-12-12" } })).json();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal", language: "uz", data: { names: "Anvar va Malika", date: "2026-12-12" } })).json();
     const added = (
       await req(cookie, "POST", `/api/invitations/${inv.id}/guests`, {
         guests: [{ name: "Aziz", phone: "+998 90 555-11-22" }, { name: "Bek" }, { name: "Dilnoza", phone: "905551133" }],
@@ -380,7 +278,7 @@ describe("SMS гостям и язык приглашения", () => {
     expect(r.sent).toBe(1);
     expect(r.skipped.map((x: any) => x.reason).sort()).toEqual(["no_phone", "seat_unpaid"]);
     expect(smsSent[0]!.phone).toBe("998905551122");
-    expect(smsSent[0]!.text).toBe(`Aziz, sizni to'y (12.12.2026) ga taklif qilamiz. Taklifnomangiz: ${APP_URL}/g/${added[0].token}`);
+    expect(smsSent[0]!.text).toBe(`Aziz, sizni taklif qilamiz: Anvar va Malika, 12.12.2026. Taklifnomangiz: ${APP_URL}/g/${added[0].token}`);
 
     // Не больше трёх SMS одному гостю.
     await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, { guestIds: [added[0].id] });
@@ -388,7 +286,7 @@ describe("SMS гостям и язык приглашения", () => {
     const fourth = (await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, { guestIds: [added[0].id] })).json();
     expect(fourth.skipped[0].reason).toBe("limit_reached");
 
-    const view = (await app.inject({ url: `/api/public/g/${added[0].token}` })).json();
+    const view = (await t.app.inject({ url: `/api/public/g/${added[0].token}` })).json();
     expect(view.language).toBe("uz");
     const detail = (await req(cookie, "GET", `/api/invitations/${inv.id}`)).json();
     expect(detail.guests[0].sms).toMatchObject({ status: "sent", count: 3 });
@@ -397,9 +295,9 @@ describe("SMS гостям и язык приглашения", () => {
   it("колбэк о доставке принимается только с секретом", async () => {
     const [row] = await db.execute(sql`select provider_ref from sms_messages where purpose = 'invite' limit 1`).then((r) => r.rows as { provider_ref: string }[]);
     const ref = row!.provider_ref;
-    const bad = await app.inject({ method: "POST", url: "/api/sms/mock/callback?secret=nope", payload: { request_id: ref, status: "DELIVRD" } });
+    const bad = await t.app.inject({ method: "POST", url: "/api/sms/mock/callback?secret=nope", payload: { request_id: ref, status: "DELIVRD" } });
     expect(bad.statusCode).toBe(404);
-    const ok = await app.inject({ method: "POST", url: "/api/sms/mock/callback?secret=sms-cb-secret", payload: { request_id: ref, status: "DELIVRD" } });
+    const ok = await t.app.inject({ method: "POST", url: "/api/sms/mock/callback?secret=sms-cb-secret", payload: { request_id: ref, status: "DELIVRD" } });
     expect(ok.statusCode).toBe(200);
   });
 
@@ -426,11 +324,11 @@ describe("привязка номера из Telegram", () => {
     const { attachPhoneToTelegramUser } = await import("../src/services/phone.js");
     const [phoneUser] = await db.insert(users).values({ phone: "998977770001", freeAccess: true }).returning();
     const [tgUser] = await db.insert(users).values({ telegramId: 1200, username: "tg1200" }).returning();
-    const { cookie } = { cookie: `session=${app.jwt.sign({ sub: phoneUser!.id })}` };
-    const ctxLike = { db, cache, config, log: app.log };
+    const { cookie } = { cookie: `session=${t.app.jwt.sign({ sub: phoneUser!.id })}` };
+    const ctxLike = { db, cache, config, log: t.app.log };
     const merged = await attachPhoneToTelegramUser(ctxLike, tgUser!, "998977770001");
     expect(merged).toMatchObject({ id: phoneUser!.id, telegramId: 1200, username: "tg1200", freeAccess: true });
-    expect((await req(cookie, "GET", "/api/auth/me")).json().user.telegramId).toBe(1200);
+    expect((await req(cookie, "GET", "/api/auth/me")).json().user.telegramId).toBe("1200");
 
     const [other] = await db.insert(users).values({ telegramId: 1201 }).returning();
     await expect(attachPhoneToTelegramUser(ctxLike, other!, "998977770001")).rejects.toThrow("другому Telegram");

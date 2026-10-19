@@ -14,6 +14,10 @@ COPY --from=build /app/dist ./dist
 COPY package.json ./
 COPY drizzle ./drizzle
 COPY public ./public
+# Данные дизайна (шаблоны, события, toCyr) сервер читает из web/invito-data.js.
+COPY web ./web
+# Загруженные файлы: MEDIA_DIR, в docker-compose сюда монтируется том.
+RUN mkdir -p /app/data/media && chown -R node:node /app/data
 USER node
 EXPOSE 3000
 CMD ["node", "dist/server.js"]

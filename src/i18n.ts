@@ -1,11 +1,27 @@
-/** Языки интерфейса и приглашений. Русский — основной, на нём написаны ключи. */
-export const locales = ["ru", "uz", "en"] as const;
+import { toCyr } from "./design-data.js";
+
+/**
+ * Языки интерфейса и приглашений. Русский — основной, на нём написаны ключи.
+ * uz — узбекский латиницей, uzc — узбекский кириллицей: его тексты получаются из uz через toCyr.
+ */
+export const locales = ["ru", "uz", "uzc", "en"] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = "ru";
 
+/** Код языка из профиля, заголовка или Telegram: «uzc» и «uz-Cyrl…» дают uzc, остальное по двум буквам. */
 export function pickLocale(code: string | null | undefined): Locale {
-  const c = (code ?? "").toLowerCase().slice(0, 2);
-  return (locales as readonly string[]).includes(c) ? (c as Locale) : defaultLocale;
+  const c = (code ?? "").trim().toLowerCase();
+  if (c === "uzc" || c.startsWith("uz-cyrl")) return "uzc";
+  const two = c.slice(0, 2);
+  return two === "ru" || two === "uz" || two === "en" ? two : defaultLocale;
+}
+
+/** toCyr, который не трогает подстановки {name}, команды бота (/login) и ссылки. */
+export function cyrText(s: string): string {
+  return s
+    .split(/(\{\w+\}|\/[a-z_]+|https?:\/\/\S+)/)
+    .map((part, i) => (i % 2 ? part : toCyr(part)))
+    .join("");
 }
 
 /** Язык запроса: заголовок X-Lang от нашего фронтенда, иначе Accept-Language. */
@@ -56,7 +72,26 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Вход через Telegram не настроен": { uz: "Telegram orqali kirish sozlanmagan", en: "Telegram sign-in is not configured" },
   "Данные Telegram не прошли проверку": { uz: "Telegram ma'lumotlari tekshiruvdan o'tmadi", en: "Telegram data failed verification" },
   "Этот номер уже привязан к другому Telegram-аккаунту": { uz: "Bu raqam boshqa Telegram akkauntiga ulangan", en: "This number is linked to another Telegram account" },
+  "Эта ссылка уже занята": { uz: "Bu havola band", en: "This link is already taken" },
+  "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo'lmaydi", en: "This link cannot be used" },
+  "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to'lanmagan qoralamada o'zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
+  "Этот шаблон дороже оплаченного": { uz: "Bu shablon to'langanidan qimmatroq", en: "This template costs more than the one you paid for" },
+  "Такого стола нет": { uz: "Bunday stol yo'q", en: "There is no such table" },
+  "Приглашение защищено паролем": { uz: "Taklifnoma parol bilan himoyalangan", en: "This invitation is protected by a password" },
+  "Неверный пароль": { uz: "Parol noto'g'ri", en: "Wrong password" },
+  "Слишком много попыток, попробуйте через минуту": { uz: "Urinishlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many attempts, try again in a minute" },
+  "Для этого приглашения собрано слишком много ответов": { uz: "Bu taklifnomaga javoblar juda ko'p", en: "This invitation has received too many responses" },
+  "Нужна картинка PNG или JPEG": { uz: "PNG yoki JPEG rasm kerak", uzc: "PNG ёки JPEG расм керак", en: "A PNG or JPEG image is required" },
+  "Файл слишком большой": { uz: "Fayl juda katta", en: "The file is too large" },
+  "Этот тип файла не поддерживается": { uz: "Bu fayl turi qo'llab-quvvatlanmaydi", en: "This file type is not supported" },
+  "Закончилось место для файлов": { uz: "Fayllar uchun joy tugadi", en: "You have run out of file storage" },
+  "Прикрепите файл в поле file": { uz: "Faylni file maydoniga biriktiring", uzc: "Файлни file майдонига бириктиринг", en: "Attach the file in the “file” field" },
+  "Слишком много загрузок, попробуйте через минуту": { uz: "Yuklashlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many uploads, try again in a minute" },
+  "Файл не найден": { uz: "Fayl topilmadi", en: "File not found" },
 };
+
+// Кириллица (uzc) получается из латиницы, если не задана отдельно.
+for (const t of Object.values(errors)) if (t.uz && !t.uzc) t.uzc = cyrText(t.uz);
 
 export function translateError(message: string, locale: Locale): string {
   return locale === "ru" ? message : (errors[message]?.[locale] ?? message);
@@ -135,13 +170,17 @@ export const botTexts = {
   statusDraft: { ru: "черновик", uz: "qoralama", en: "draft" },
   statusActive: { ru: "опубликовано", uz: "e'lon qilingan", en: "published" },
   statusArchived: { ru: "в архиве", uz: "arxivda", en: "archived" },
-} satisfies Record<string, Record<Locale, string>>;
+} satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
 
 export type BotTextKey = keyof typeof botTexts;
 
+// Тексты бота на кириллице получаются из латиницы.
+const botTextsUzc = Object.fromEntries(Object.entries(botTexts).map(([k, v]) => [k, cyrText(v.uz)])) as Record<BotTextKey, string>;
+
 export function bt(locale: Locale, key: BotTextKey, vars: Record<string, string | number> = {}) {
-  return botTexts[key][locale].replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+  const text = locale === "uzc" ? botTextsUzc[key] : botTexts[key][locale];
+  return text.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
 }
 
-export const localeNames: Record<Locale, string> = { ru: "Русский", uz: "O'zbekcha", en: "English" };
-export const dateLocale: Record<Locale, string> = { ru: "ru-RU", uz: "uz-Latn-UZ", en: "en-GB" };
+export const localeNames: Record<Locale, string> = { ru: "Русский", uz: "O'zbekcha", uzc: "Ўзбекча", en: "English" };
+export const dateLocale: Record<Locale, string> = { ru: "ru-RU", uz: "uz-Latn-UZ", uzc: "uz-Cyrl-UZ", en: "en-GB" };

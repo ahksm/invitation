@@ -43,15 +43,21 @@ export function createCache(redis: Redis, prefix = "inv:") {
       if (count === 1) await redis.expire(full, windowSeconds);
       return count > limit;
     },
+
+    /** Текущее значение счётчика hit() без увеличения. */
+    async hits(key: string): Promise<number> {
+      return Number((await redis.get(k(`rl:${key}`))) ?? 0);
+    },
   };
 }
 
 export const cacheKeys = {
   settings: "settings",
-  templates: "templates:active",
+  templates: "templates:catalog",
   user: (id: string) => `user:${id}`,
-  publicShared: (slug: string) => `public:shared:${slug}`,
-  publicGuest: (token: string) => `public:guest:${token}`,
+  // Записи публичных страниц (см. src/services/public.ts).
+  publicShared: (slug: string) => `public:i:${slug}`,
+  publicGuest: (token: string) => `public:g:${token}`,
   loginCode: (code: string) => `login:${code}`,
   multicardToken: "multicard:token",
   eskizToken: "eskiz:token",

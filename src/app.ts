@@ -13,6 +13,7 @@ import { requestLocale, translateError } from "./i18n.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
 import { invitationRoutes } from "./routes/invitations.js";
+import { mediaRoutes } from "./routes/media.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { publicRoutes } from "./routes/public.js";
 import { smsRoutes } from "./routes/sms.js";
@@ -137,6 +138,7 @@ export async function buildApp(deps: Omit<Ctx, "log">, opts: { logger?: boolean 
   await app.register(publicRoutes, { prefix: "/api/public" });
   await app.register(smsRoutes, { prefix: "/api/sms" });
   await app.register(adminRoutes, { prefix: "/api/admin" });
+  await app.register(mediaRoutes);
 
   await app.register(fastifyStatic, { root: publicDir, prefix: "/", index: ["index.html"] });
   // Страницы, которые открывают гости: общая ссылка и персональная.

@@ -4,6 +4,7 @@ import { issueLoginCode } from "../auth/codes.js";
 import { approveTelegramLogin, getTelegramLogin, isNonce } from "../auth/telegram.js";
 import type { Ctx } from "../context.js";
 import { invitations, users, type User } from "../db/schema.js";
+import { eventLabel } from "../design-data.js";
 import { HttpError } from "../errors.js";
 import { bt, dateLocale, localeNames, locales, pickLocale, translateError, type Locale } from "../i18n.js";
 import { getPrices } from "../services/settings.js";
@@ -15,7 +16,7 @@ import { getAccess, invalidateUser, setUserLocale, upsertTelegramUser } from "..
 type BotContext = Context & { user: User; lang: Locale };
 
 export function formatMoney(minor: number, currency: string, l: Locale = "ru") {
-  const unit = currency !== "UZS" ? currency : l === "ru" ? "сум" : l === "uz" ? "so'm" : "UZS";
+  const unit = currency !== "UZS" ? currency : l === "ru" ? "сум" : l === "uz" ? "so'm" : l === "uzc" ? "сўм" : "UZS";
   return `${(minor / 100).toLocaleString(dateLocale[l], { maximumFractionDigits: 2 })} ${unit}`;
 }
 
@@ -123,7 +124,7 @@ export function createBot(ctx: Ctx) {
     await c.answerCallbackQuery();
     await c.reply(bt(c.lang, "chooseLang"), { reply_markup: langKeyboard() });
   });
-  bot.callbackQuery(/^lang:(ru|uz|en)$/, async (c) => {
+  bot.callbackQuery(/^lang:(ru|uz|uzc|en)$/, async (c) => {
     const l = pickLocale(c.match[1]);
     await setUserLocale(ctx, c.user.id, l);
     c.lang = l;
@@ -150,10 +151,10 @@ export function createBot(ctx: Ctx) {
     const rows = await listOwnInvitations(ctx, c.user.id);
     if (!rows.length) return void (await c.reply(bt(c.lang, "noInvitations")));
     const status = { draft: "statusDraft", active: "statusActive", archived: "statusArchived" } as const;
-    const lines = rows.slice(0, 20).map(({ invitation: i, templateTitle: title, templateTranslations, guestCount }) => {
-      const templateTitle = templateTranslations[c.lang]?.title ?? title;
-      const kind = i.mode === "shared" ? bt(c.lang, "invShared") : bt(c.lang, "invPersonal", { guests: guestCount, paid: i.paidSeats });
-      return `• ${i.title} (${templateTitle}): ${kind}, ${bt(c.lang, status[i.status])}`;
+    const lines = rows.slice(0, 20).map((i) => {
+      const label = eventLabel(i.event, c.lang);
+      const kind = i.mode === "shared" ? bt(c.lang, "invShared") : bt(c.lang, "invPersonal", { guests: i.stats.guests, paid: i.paidSeats });
+      return `• ${i.title}${label ? ` (${label})` : ""}: ${kind}, ${bt(c.lang, status[i.status])}`;
     });
     await c.reply(lines.join("\n"));
   }

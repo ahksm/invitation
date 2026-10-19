@@ -6,6 +6,7 @@ import type { CheckoutItem, PaymentNotification } from "../payments/types.js";
 import { HttpError } from "../errors.js";
 import { getPrices } from "./settings.js";
 import { getAccess, getUser } from "./users.js";
+import { logEvent } from "./events.js";
 import { invalidateInvitation } from "./invitations.js";
 import { track } from "./usage.js";
 
@@ -89,7 +90,7 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest): 
       items,
       callbackUrl: `${appUrl}/api/payments/${ctx.payments.name}/callback`,
       returnUrl: `${appUrl}/app/#/orders/${order!.id}`,
-      lang: user.locale === "uz" || user.locale === "en" ? user.locale : "ru",
+      lang: user.locale === "uz" || user.locale === "uzc" ? "uz" : user.locale === "en" ? "en" : "ru",
     });
     const [updated] = await ctx.db
       .update(orders)
@@ -157,7 +158,11 @@ export async function applyPayment(ctx: Ctx, n: PaymentNotification): Promise<Fu
   });
 
   if (outcome.result === "paid") {
-    if (outcome.invitation) await invalidateInvitation(ctx, outcome.invitation);
+    if (outcome.invitation) {
+      await invalidateInvitation(ctx, outcome.invitation);
+      const { id, kind, quantity, amount } = outcome.order;
+      await logEvent(ctx, outcome.invitation.id, "paid", { meta: { orderId: id, kind, quantity, amount } });
+    }
     await track(ctx, outcome.order.userId, "order_paid", { orderId: outcome.order.id, kind: outcome.order.kind, amount: outcome.order.amount });
   }
   if (outcome.result === "amount_mismatch") {

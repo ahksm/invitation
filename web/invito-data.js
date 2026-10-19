@@ -7,6 +7,8 @@ function cyrPart(s){
   for (let i = 0; i < s.length; i++) {
     const two = s.substr(i, 2), tl = two.toLowerCase(), prev = s[i-1];
     const ws = !prev || /[^A-Za-z‘'ʻ]/.test(prev);
+    // "yo‘" is "й" + "ў" (yo‘nalish → йўналиш), not "ё" + "ъ".
+    if (tl[0] === 'y' && M2[s.substr(i + 1, 2).toLowerCase()] === 'ў') { out += (s[i] === 'y' ? 'й' : 'Й') + (s[i + 1] === 'o' ? 'ў' : 'Ў'); i += 2; continue; }
     if (M2[tl]) { let r = M2[tl]; if (two[0] !== two[0].toLowerCase()) r = r.toUpperCase(); out += r; i++; continue; }
     const c = s[i], cl = c.toLowerCase();
     if (cl === 'e' && ws) { out += c === cl ? 'э' : 'Э'; continue; }

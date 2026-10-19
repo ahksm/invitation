@@ -4,7 +4,7 @@ import { SESSION_COOKIE } from "../app.js";
 import { redeemLoginCode } from "../auth/codes.js";
 import { claimTelegramLogin, describeDevice, isNonce, startTelegramLogin, verifyWebAppInitData } from "../auth/telegram.js";
 import { HttpError } from "../errors.js";
-import { locales, requestLocale } from "../i18n.js";
+import { locales, pickLocale, requestLocale } from "../i18n.js";
 import { normalizePhone, requestOtp, upsertPhoneUser, verifyOtp } from "../services/phone.js";
 import { getPrices } from "../services/settings.js";
 import { track } from "../services/usage.js";
@@ -27,7 +27,15 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     reply.setCookie(SESSION_COOKIE, token, { httpOnly: true, secure, sameSite: "lax", path: "/", maxAge: 30 * 24 * 3600 });
   }
 
-  app.get("/config", async () => ({ telegram: Boolean(ctx.config.TELEGRAM_BOT_USERNAME) }));
+  // Общая конфигурация для фронтенда: вход через Telegram, адрес сайта, цены, помощник с текстом.
+  app.get("/config", async () => ({
+    telegram: Boolean(ctx.config.TELEGRAM_BOT_USERNAME),
+    botUsername: ctx.config.TELEGRAM_BOT_USERNAME || null,
+    appUrl: ctx.config.APP_URL.replace(/\/+$/, ""),
+    prices: await getPrices(ctx),
+    currency: ctx.config.CURRENCY,
+    ai: Boolean(ctx.config.ANTHROPIC_API_KEY),
+  }));
 
   // Шаг 1 входа через Telegram: ссылка на бота и секрет этого браузера в cookie.
   app.post("/telegram/start", strict, async (req, reply) => {
@@ -100,9 +108,21 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/me", { onRequest: app.authenticate }, async (req) => {
     const u = req.user;
+    const access = await getAccess(ctx, u);
     return {
-      user: { id: u.id, telegramId: u.telegramId, phone: u.phone, username: u.username, firstName: u.firstName, isAdmin: u.isAdmin, locale: u.locale },
-      access: await getAccess(ctx, u),
+      user: {
+        id: u.id,
+        phone: u.phone,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        username: u.username,
+        // Строкой: Telegram ID может не поместиться в число JavaScript на клиенте.
+        telegramId: u.telegramId === null ? null : String(u.telegramId),
+        locale: pickLocale(u.locale),
+        isAdmin: u.isAdmin,
+        freeAccess: u.freeAccess,
+      },
+      access: { free: access.free, subscribed: access.subscribed, subscriptionEndsAt: access.subscriptionEndsAt?.toISOString() ?? null },
       prices: await getPrices(ctx),
       currency: ctx.config.CURRENCY,
     };

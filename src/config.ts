@@ -25,6 +25,10 @@ const schema = z
     // Админы, которые входят по телефону: номера через запятую в формате 998XXXXXXXXX.
     ADMIN_PHONES: csvIds,
     APP_NAME: z.string().default("Invitations"),
+    // Каталог загруженных файлов (картинки, музыка, видео). В Docker — отдельный том.
+    MEDIA_DIR: z.string().min(1).default("./data/media"),
+    // Помощник с текстом (POST /api/ai/write). Пусто: выключен.
+    ANTHROPIC_API_KEY: z.string().default(""),
 
     TELEGRAM_BOT_TOKEN: z.string().default(""),
     TELEGRAM_BOT_USERNAME: z.string().default(""),

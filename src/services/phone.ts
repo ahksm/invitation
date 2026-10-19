@@ -2,7 +2,7 @@ import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { cacheKeys } from "../cache.js";
 import type { Ctx } from "../context.js";
-import { invitations, orders, smsMessages, subscriptions, usageEvents, users, type User } from "../db/schema.js";
+import { invitations, media, orders, smsMessages, subscriptions, usageEvents, users, type User } from "../db/schema.js";
 import { HttpError } from "../errors.js";
 import type { Locale } from "../i18n.js";
 import { otpText } from "../sms/texts.js";
@@ -92,7 +92,7 @@ export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | 
     if (owner.telegramId !== null && owner.telegramId !== tgUser.telegramId) {
       throw new HttpError(409, "Этот номер уже привязан к другому Telegram-аккаунту");
     }
-    for (const t of [invitations, orders, subscriptions, usageEvents, smsMessages]) {
+    for (const t of [invitations, orders, subscriptions, usageEvents, smsMessages, media]) {
       await tx.update(t).set({ userId: owner.id }).where(eq(t.userId, tgUser.id));
     }
     await tx.delete(users).where(eq(users.id, tgUser.id));
