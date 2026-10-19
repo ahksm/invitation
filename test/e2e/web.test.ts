@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { invitations, templates, users } from "../../src/db/schema.js";
 import { I18N } from "../../web/invito-data.js";
@@ -69,7 +70,8 @@ describe("фронтенд в браузере", () => {
 
   it("/i/:slug опубликованного приглашения запускает рантайм с view в загрузочных данных", async () => {
     const [user] = await e.db.insert(users).values({ phone: uniquePhone() }).returning();
-    const [template] = await e.db.select().from(templates);
+    // Шаблон по slug: порядок строк в таблице меняется после правок шаблонов в других проверках.
+    const [template] = await e.db.select().from(templates).where(eq(templates.slug, "wedding-classic"));
     const slug = randomBytes(9).toString("base64url");
     // Данные с «</script>» и кавычками: загрузочный JSON не ломает страницу.
     const data = { names: 'Азиз & "Мадина"', message: "</script><script>window.__pwned = 1</script>", date: "2026-12-12" };

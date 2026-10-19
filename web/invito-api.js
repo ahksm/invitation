@@ -37,18 +37,20 @@ const parse = (text) => {
 };
 
 /**
- * Запрос к API. body отправляется как JSON (метод по умолчанию POST, без тела GET), ответ
- * разбирается как JSON (204 даёт null). При ответе не 2xx бросает Error с полями status и data
- * (тело ответа); message — переведённый текст ошибки сервера. Ошибка сети — Error без status.
+ * Запрос к API. body отправляется как JSON (метод по умолчанию POST, без тела GET), raw — файл (Blob)
+ * телом запроса с его типом (картинка превью: PUT /og). Ответ разбирается как JSON (204 даёт null).
+ * При ответе не 2xx бросает Error с полями status и data (тело ответа); message — переведённый текст
+ * ошибки сервера. Ошибка сети — Error без status.
  */
 export async function api(path, opts = {}) {
-  const { body, headers, ...rest } = opts;
+  const { body, raw, headers, ...rest } = opts;
+  const json = body !== undefined;
   const res = await fetch(path, {
-    method: body === undefined ? 'GET' : 'POST',
+    method: json || raw ? 'POST' : 'GET',
     ...rest,
     credentials: 'include',
-    headers: headersFor({ ...(body !== undefined && { 'content-type': 'application/json' }), ...headers }),
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: headersFor({ ...(json && { 'content-type': 'application/json' }), ...(raw && { 'content-type': raw.type || 'application/octet-stream' }), ...headers }),
+    body: raw || (json ? JSON.stringify(body) : undefined),
   });
   const data = parse(await res.text());
   if (!res.ok) throw httpError(res.status, data);
@@ -105,4 +107,42 @@ export async function downscaleImage(file, max = 2000, quality = 0.85) {
   if (img.close) img.close();
   const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', quality));
   return blob || file;
+}
+
+/**
+ * Картинка data:-адреса (renderCard) как JPEG-файл для загрузки. fetch(data:) запрещён CSP
+ * (connect-src 'self'), поэтому base64 разбирается здесь. null, если картинку не удалось разобрать.
+ */
+export async function dataUrlToJpeg(dataUrl, quality = 0.88) {
+  const m = /^data:([^;,]+);base64,(.*)$/.exec(dataUrl || '');
+  if (!m) return null;
+  const bin = atob(m[2]), bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const src = new Blob([bytes], { type: m[1] });
+  if (m[1] === 'image/jpeg') return src;
+  const out = await downscaleImage(src, 4000, quality);
+  return out && out.type === 'image/jpeg' ? out : null;
+}
+
+/**
+ * QR-код ссылки PNG-картинкой (data:), рисуется в браузере библиотекой qrcode-generator
+ * (глобальная функция qrcode из /app/vendor/qrcode.js): внешние сервисы QR запрещены CSP.
+ * size — сторона в пикселях (с полями margin в модулях), ink и paper — цвета. Без библиотеки — ''.
+ */
+export function qrDataUrl(text, opts = {}) {
+  const make = typeof window !== 'undefined' && window.qrcode;
+  if (!make || !text) return '';
+  const { size = 300, margin = 2, ink = '#000000', paper = '#ffffff', level = 'M' } = opts;
+  const qr = make(0, level);
+  qr.addData(String(text));
+  qr.make();
+  const n = qr.getModuleCount(), cells = n + margin * 2, k = Math.max(1, Math.floor(size / cells)), px = cells * k;
+  const canvas = document.createElement('canvas');
+  canvas.width = px; canvas.height = px;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = paper;
+  ctx.fillRect(0, 0, px, px);
+  ctx.fillStyle = ink;
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) ctx.fillRect((c + margin) * k, (r + margin) * k, k, k);
+  return canvas.toDataURL('image/png');
 }

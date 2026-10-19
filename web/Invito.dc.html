@@ -672,8 +672,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="color:{{ th.muted }};margin-top:8px;line-height:1.5">{{ rsvpSummary }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px">
 <button onClick="{{ addCal }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};background:transparent;color:{{ th.ink }};font-size:14px;cursor:pointer">{{ t.addCal }}</button>
-<button onClick="{{ viaBot }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:0;background:{{ th.ink }};color:{{ th.bg }};font-size:14px;cursor:pointer">{{ t.viaBot }}</button>
+<sc-if value="{{ hasBot }}"><button onClick="{{ viaBot }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:0;background:{{ th.ink }};color:{{ th.bg }};font-size:14px;cursor:pointer">{{ t.viaBot }}</button></sc-if>
 </div>
+<sc-if value="{{ entry.show }}"><div data-entry-qr="1" style="margin:24px auto 0;max-width:260px;padding:16px 16px 14px;border-radius:{{ th.radius }};background:#ffffff;color:#1a1714;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 24px 44px -30px rgba(0,0,0,.5)">
+<div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6e665b">{{ t.entryQr }}</div>
+<img src="{{ entry.src }}" alt="QR" style="width:200px;height:200px;display:block;image-rendering:pixelated">
+<div style="font-size:13px;line-height:1.4;color:{{ entry.color }};text-align:center">{{ entry.hint }}</div>
+</div></sc-if>
 <button onClick="{{ changeRsvp }}" style="margin-top:16px;background:none;border:0;color:{{ th.muted }};text-decoration:underline;cursor:pointer;font-size:14px">{{ t.change }}</button>
 </div></sc-if>
 </div></section>
@@ -775,35 +780,39 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ t.linkReady }}</h2>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:44px;margin-top:34px;align-items:start">
 <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
-<div style="border:1px solid {{ ui.ink }};border-radius:16px;padding:20px;background:{{ ui.card }}">
+<sc-if value="{{ shareShared }}"><div style="border:1px solid {{ ui.ink }};border-radius:16px;padding:20px;background:{{ ui.card }}">
 <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.slug }}</div>
-<div style="display:flex;align-items:center;margin-top:8px;border-bottom:1px solid rgba({{ ui.inkRgb }},.22)"><span style="font:500 16px 'JetBrains Mono',monospace;color:{{ ui.muted }}">invito.app/</span><input value="{{ share.slug }}" onChange="{{ onSlug }}" style="flex:1;min-width:0;background:transparent;border:0;padding:12px 0;font:500 16px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></div>
+<div style="display:flex;align-items:center;margin-top:8px;border-bottom:1px solid {{ slugLine }}"><span style="font:500 16px 'JetBrains Mono',monospace;color:{{ ui.muted }};white-space:nowrap">{{ slugPrefix }}</span><input name="slug" value="{{ share.slug }}" onChange="{{ onSlug }}" maxLength="40" autoComplete="off" spellCheck="false" style="flex:1;min-width:0;background:transparent;border:0;padding:12px 0;font:500 16px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></div>
+<sc-if value="{{ slugErr }}"><div role="alert" style="margin-top:8px;color:#d4452a;font-size:13px;line-height:1.4">{{ slugErr }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
 <button onClick="{{ copyLink }}" style="flex:1;min-width:140px;height:52px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:#000">{{ t.copy }}</button>
 <button onClick="{{ sendTg }}" style="flex:1;min-width:140px;height:52px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.sendTg }}</button>
 </div></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:14px">
 <div style="border:1px solid rgba({{ ui.inkRgb }},.16);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:12px">
-<div style="width:150px;height:150px;background:{{ ui.paper }};border-radius:8px;overflow:hidden"><img src="{{ qrSrc }}" alt="QR" style="width:100%;height:100%;display:block"></div>
+<div style="width:150px;height:150px;background:{{ ui.paper }};border-radius:8px;overflow:hidden"><img data-qr="share" src="{{ qrSrc }}" alt="QR" style="width:100%;height:100%;display:block;image-rendering:pixelated"></div>
 <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.qr }}</div>
-<a href="{{ qrBig }}" target="_blank" rel="noopener" style="font-size:13px;text-decoration:none">{{ t.qrOpen }} ↗</a>
+<a href="{{ qrBig }}" download="invito-qr.png" style="font-size:13px;text-decoration:none">{{ t.qrSave }} ↓</a>
 </div>
 <div style="border:1px solid rgba({{ ui.inkRgb }},.16);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px">
 <button onClick="{{ togglePw }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:none;border:0;padding:0;cursor:pointer;color:{{ ui.ink }};text-align:left"><span style="font-size:16px;font-weight:500">{{ t.pw }}</span><span style="width:48px;height:28px;border-radius:99px;background:{{ pwTrack }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ pwKnob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span></button>
 <div style="font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.pwDesc }}</div>
-<sc-if value="{{ share.pwOn }}"><input value="{{ share.pw }}" onChange="{{ onPw }}" placeholder="{{ t.pwPh }}" style="height:46px;border-radius:10px;border:1px solid rgba({{ ui.inkRgb }},.25);background:{{ ui.card }};padding:0 14px;font:500 15px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></sc-if>
-</div></div>
-<div style="border:1px solid rgba({{ ui.inkRgb }},.16);border-radius:16px;padding:18px">
-<div style="font-size:16px;font-weight:500">{{ t.personalLinks }}</div>
+<sc-if value="{{ share.pwOn }}"><input name="access-code" value="{{ share.pw }}" onChange="{{ onPw }}" placeholder="{{ t.pwPh }}" maxLength="64" autoComplete="off" style="height:46px;border-radius:10px;border:1px solid rgba({{ ui.inkRgb }},.25);background:{{ ui.card }};padding:0 14px;font:500 15px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></sc-if>
+</div></div></sc-if>
+<sc-if value="{{ sharePersonal }}"><div data-personal-links="1" style="border:1px solid rgba({{ ui.inkRgb }},.16);border-radius:16px;padding:18px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div style="font-size:16px;font-weight:500">{{ t.personalLinks }}</div><sc-if value="{{ seatsInfo.show }}"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;color:{{ seatsInfo.color }};white-space:nowrap">{{ seatsInfo.text }}</span></sc-if></div>
 <div style="font-size:13px;line-height:1.45;color:{{ ui.muted }};margin-top:6px">{{ t.personalHint }}</div>
 <div style="margin-top:10px">
-<sc-for list="{{ personal }}" as="p" hint-placeholder-count="0"><div style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba({{ ui.inkRgb }},.1)">
+<sc-for list="{{ personal }}" as="p" hint-placeholder-count="0"><div data-guest-link="{{ p.name }}" style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba({{ ui.inkRgb }},.1)">
 <span style="width:36px;height:36px;border-radius:50%;background:{{ p.av }};color:{{ ui.paper }};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">{{ p.ini }}</span>
-<div style="min-width:0"><div style="font-size:15px">{{ p.name }}</div><div style="font:400 11px 'JetBrains Mono',monospace;color:{{ ui.muted }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">{{ p.link }}</div></div>
+<div style="min-width:0"><div style="font-size:15px">{{ p.name }}</div><div style="font:400 11px 'JetBrains Mono',monospace;color:{{ ui.muted }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">{{ p.link }}</div><sc-if value="{{ p.unpaid }}"><div data-unpaid="1" style="margin-top:3px;font-size:12px;color:#d4452a">{{ t.unpaidLink }}</div></sc-if></div>
 <div style="display:flex;gap:6px"><button onClick="{{ p.onCopy }}" style="height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:12px;cursor:pointer">{{ t.copy }}</button><button onClick="{{ p.onOpen }}" title="{{ t.openAs }}" style="width:34px;height:34px;border-radius:50%;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font-size:13px;cursor:pointer">↗</button></div>
 </div></sc-for>
 <sc-if value="{{ personalMore }}"><div style="padding-top:10px;border-top:1px solid rgba({{ ui.inkRgb }},.1);font-size:13px;color:{{ ui.muted }}">{{ personalMoreTxt }}</div></sc-if>
-</div></div>
+<sc-if value="{{ personalEmpty }}"><div style="padding:12px 0 2px;border-top:1px solid rgba({{ ui.inkRgb }},.1);font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.noGuests }}</div></sc-if>
+</div>
+<sc-if value="{{ personalActs }}"><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button onClick="{{ openAdd }}" style="height:42px;padding:0 16px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer">+ {{ t.addGuests }}</button><button onClick="{{ buySeats }}" style="height:42px;padding:0 16px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.buySeats }}</button></div></sc-if>
+</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:8px">
 <button onClick="{{ openLive }}" style="height:50px;padding:0 20px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.openGuest }} ↗</button>
 <button onClick="{{ goManage }}" style="height:50px;padding:0 20px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.guests }}</button>
@@ -815,7 +824,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="margin-top:12px;background:{{ ui.chat }};border-radius:24px;padding:22px 14px;display:flex;flex-direction:column;gap:10px">
 <div style="align-self:flex-start;max-width:78%;background:{{ ui.card }};border-radius:18px 18px 18px 6px;padding:10px 14px;font-size:15px">{{ t.chatQ }}</div>
 <div style="align-self:flex-end;width:min(100%,360px);background:{{ ui.ink }};color:{{ ui.paper }};border-radius:18px 18px 6px 18px;padding:8px;overflow:hidden">
-<div style="padding:4px 8px 8px;font-size:14px;color:#f2a693;word-break:break-all">https://{{ link }}</div>
+<div style="padding:4px 8px 8px;font-size:14px;color:#f2a693;word-break:break-all">{{ shareUrl }}</div>
 <sc-if value="{{ ogReady }}"><img src="{{ ogImg }}" alt="" style="display:block;width:100%;border-radius:12px"></sc-if>
 <sc-if value="{{ ogBusy }}"><div style="border-radius:12px;overflow:hidden;aspect-ratio:1.91/1;background:{{ th.bg }};container-type:inline-size;display:grid;grid-template-columns:44% minmax(0,1fr)">
 <div style="position:relative;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ inv.cover }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></div>
@@ -842,8 +851,10 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ stats }}" as="s"><div style="border-top:1px solid {{ ui.ink }};padding-top:10px"><div style="font:500 52px/1 'Cormorant Garamond',serif;color:{{ s.color }}">{{ s.n }}</div><div style="margin-top:6px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ s.label }}</div></div></sc-for>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:26px">
-<sc-if value="{{ importAvail }}"><button onClick="{{ openImport }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer">+ {{ t.importTg }}</button></sc-if>
-<button onClick="{{ remind }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.remind }} · {{ pendingN }}</button>
+<button onClick="{{ openImport }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer">+ {{ importLabel }}</button>
+<sc-if value="{{ smsAvail }}"><button onClick="{{ smsAll }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid #d4452a;background:transparent;color:#d4452a;font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ smsOp }}">✉ {{ t.smsAll }}</button></sc-if>
+<button onClick="{{ remind }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ remindOp }}">{{ t.remind }} · {{ pendingN }}</button>
+<sc-if value="{{ seatsAvail }}"><button onClick="{{ buySeats }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.buySeats }} · {{ seatsInfo.short }}</button></sc-if>
 <button onClick="{{ exportCsv }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer">{{ t.csv }} ↓</button>
 </div>
 <div style="display:flex;gap:26px;border-bottom:1px solid rgba({{ ui.inkRgb }},.14);margin-top:34px;overflow-x:auto;scrollbar-width:none">
@@ -857,14 +868,15 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ gFilters }}" as="f"><button onClick="{{ f.onClick }}" style="flex:none;height:30px;padding:0 12px;border-radius:999px;border:1px dashed {{ f.border }};background:{{ f.bg }};color:{{ f.color }};font-size:12px;cursor:pointer">{{ f.label }} · {{ f.n }}</button></sc-for>
 </div>
 <div style="margin-top:8px">
-<sc-for list="{{ gRows }}" as="g" hint-placeholder-count="0"><div style="display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)">
+<sc-for list="{{ gRows }}" as="g" hint-placeholder-count="0"><div data-guest="{{ g.name }}" style="display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)">
 <span style="width:42px;height:42px;border-radius:50%;background:{{ g.avBg }};color:{{ ui.paper }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">{{ g.ini }}</span>
-<div style="min-width:0"><div style="font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }} <span style="color:#d4452a;font-weight:400">{{ g.plus }}</span></div><div style="margin-top:3px;font:400 12px 'JetBrains Mono',monospace;color:{{ ui.muted }};display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>{{ g.user }}</span><select value="{{ g.group }}" onChange="{{ g.onGroup }}" style="font:400 11px 'JetBrains Mono',monospace;background:transparent;border:0;border-bottom:1px dashed rgba({{ ui.inkRgb }},.3);padding:0 2px;color:{{ ui.muted }};cursor:pointer"><sc-for list="{{ groupOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ g.checked }}"><span style="color:#2e7d4f">✓ {{ t.checkedIn }}</span></sc-if></div></div>
+<div style="min-width:0"><div style="font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }} <span style="color:#d4452a;font-weight:400">{{ g.plus }}</span></div><div style="margin-top:3px;font:400 12px 'JetBrains Mono',monospace;color:{{ ui.muted }};display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>{{ g.user }}</span><select value="{{ g.group }}" onChange="{{ g.onGroup }}" style="font:400 11px 'JetBrains Mono',monospace;background:transparent;border:0;border-bottom:1px dashed rgba({{ ui.inkRgb }},.3);padding:0 2px;color:{{ ui.muted }};cursor:pointer"><sc-for list="{{ groupOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ g.checked }}"><span style="color:#2e7d4f">✓ {{ t.checkedIn }}</span></sc-if><sc-if value="{{ g.unpaid }}"><span data-unpaid="1" style="color:#d4452a">{{ t.unpaid }}</span></sc-if><sc-if value="{{ g.smsSt }}"><span data-sms="{{ g.smsKey }}" style="color:{{ g.smsColor }}">{{ g.smsSt }}</span></sc-if><sc-if value="{{ g.canSms }}"><button onClick="{{ g.onSms }}" style="height:22px;padding:0 8px;border-radius:99px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 11px 'Onest',sans-serif;cursor:pointer">✉ {{ t.smsOne }}</button></sc-if><sc-if value="{{ g.canDel }}"><button onClick="{{ g.onDel }}" style="height:22px;padding:0 4px;border:0;background:transparent;color:{{ ui.muted }};font:400 11px 'Onest',sans-serif;text-decoration:underline;cursor:pointer">{{ t.removeG }}</button></sc-if></div></div>
 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div style="display:flex;gap:6px;align-items:center"><button onClick="{{ g.onOpen }}" title="{{ t.openAs }}" style="height:24px;padding:0 9px;border-radius:99px;border:1px solid rgba({{ ui.inkRgb }},.2);background:transparent;color:{{ ui.ink }};font-size:11px;cursor:pointer">{{ t.linkBtn }} ↗</button><span style="padding:4px 10px;border-radius:99px;font-size:12px;background:{{ g.stBg }};color:{{ g.stColor }};border:1px solid {{ g.stBorder }};white-space:nowrap">{{ g.status }}</span></div>
 <select value="{{ g.table }}" onChange="{{ g.onTable }}" style="font:400 12px 'JetBrains Mono',monospace;background:transparent;border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:6px;padding:4px 6px;color:{{ ui.ink }}"><sc-for list="{{ tableOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
 </div></sc-for>
 </div></div></sc-if>
 <sc-if value="{{ mSeat }}"><div>
+<sc-if value="{{ tablesCtl }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:10px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.tablesL }}</span><div style="display:flex;align-items:center;gap:14px"><button onClick="{{ tablesDec }}" aria-label="−" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer;opacity:{{ tablesDecOp }}">−</button><span data-tables="1" style="font:500 30px/1 'Cormorant Garamond',serif;min-width:32px;text-align:center">{{ tablesN }}</span><button onClick="{{ tablesInc }}" aria-label="+" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer;opacity:{{ tablesIncOp }}">+</button></div></div></sc-if>
 <div onDragOver="{{ allowDrop }}" onDrop="{{ dropUnseat }}" style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border-radius:12px;border:1px dashed rgba({{ ui.inkRgb }},.2);min-height:56px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.unseated }} · {{ unseatedN }}</span><sc-for list="{{ unseated }}" as="u"><button draggable="true" onDragStart="{{ u.onDrag }}" onClick="{{ u.onPick }}" style="padding:6px 12px;border-radius:99px;border:1px solid {{ u.border }};background:{{ u.bg }};color:{{ u.color }};font-size:13px;cursor:grab">{{ u.name }}</button></sc-for></div>
 <div style="margin-top:8px;font-size:13px;color:{{ ui.muted }}">{{ t.dragHint }}</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:16px;margin-top:20px">
@@ -887,7 +899,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:absolute;left:0;right:0;bottom:14px;text-align:center;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:rgba({{ ui.paperRgb }},.7)">{{ t.scanTitle }}</div>
 <sc-if value="{{ lastScan.show }}"><div style="position:absolute;left:14px;right:14px;top:14px;padding:12px 14px;border-radius:14px;background:{{ ui.paper }};color:{{ ui.ink }};display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.4)"><span style="width:38px;height:38px;border-radius:50%;background:#2e7d4f;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">✓</span><div><div style="font-weight:600">{{ lastScan.name }}</div><div style="font-size:12px;color:{{ ui.muted }}">{{ lastScan.info }}</div></div></div></sc-if>
 </div>
-<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button onClick="{{ simulateScan }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font-size:14px;cursor:pointer">{{ t.simulate }}</button><button onClick="{{ toggleCam }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer">{{ camLabel }}</button></div>
+<sc-if value="{{ manualOn }}"><div style="margin-top:14px;max-width:420px"><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.manualTitle }}</div><div style="display:flex;gap:8px;margin-top:8px"><input name="checkin" value="{{ manualVal }}" onChange="{{ onManual }}" onKeyDown="{{ onManualKey }}" placeholder="{{ t.manualPh }}" autoComplete="off" style="flex:1;min-width:0;height:46px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:{{ ui.card }};padding:0 16px;font:400 14px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"><button onClick="{{ manualGo }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font-size:14px;cursor:pointer;white-space:nowrap">{{ t.checkIn }}</button></div></div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><sc-if value="{{ demoMode }}"><button onClick="{{ simulateScan }}" style="height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font-size:14px;cursor:pointer">{{ t.simulate }}</button></sc-if><button onClick="{{ toggleCam }}" style="height:46px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer">{{ camLabel }}</button></div>
 </div>
 <div>
 <div style="display:flex;align-items:baseline;gap:12px"><span style="font:500 64px/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ checkedN }}</span><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">/ {{ checkTotal }} {{ t.arrived }}</span></div>
@@ -910,6 +923,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="margin-top:6px;font-size:14px;color:{{ ui.muted }}">{{ t.botT.subtitle }}</div>
 <div style="margin-top:14px"><sc-for list="{{ botOpts }}" as="b"><button onClick="{{ b.onClick }}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;background:none;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12);padding:14px 0;cursor:pointer;color:{{ ui.ink }};text-align:left"><span style="font-size:15px">{{ b.label }}</span><span style="width:48px;height:28px;border-radius:99px;background:{{ b.track }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ b.knob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span></button></sc-for></div>
 <button onClick="{{ botTest }}" style="margin-top:18px;height:46px;padding:0 18px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font-size:14px;cursor:pointer">{{ t.botT.test }}</button>
+<sc-if value="{{ botNeedTg }}"><div style="margin-top:16px;padding:14px;border-radius:14px;background:rgba(47,111,224,.08);display:flex;flex-direction:column;gap:10px;align-items:flex-start"><div style="font-size:14px;line-height:1.45;color:{{ ui.body }}">{{ t.botTg }}</div><sc-if value="{{ botCanTg }}"><button onClick="{{ accConnectTg }}" style="height:42px;padding:0 16px;border-radius:999px;border:0;background:#2f6fe0;color:#fff;font:500 14px 'Onest',sans-serif;cursor:pointer">✈ {{ t.tgConnect }}</button></sc-if></div></sc-if>
 </div>
 <div style="border-radius:22px;overflow:hidden;background:{{ ui.chat }};max-width:440px">
 <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:{{ ui.ink }};color:{{ ui.paper }}"><span style="width:38px;height:38px;border-radius:50%;background:#d4452a;display:flex;align-items:center;justify-content:center;font:italic 500 20px 'Cormorant Garamond',serif">I</span><div><div style="font-weight:600;font-size:15px">{{ t.botT.title }}</div><div style="font-size:12px;opacity:.6">bot</div></div></div>
@@ -942,6 +956,83 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <p style="margin:24px 0 0;max-width:46ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.nfText }}</p>
 <div style="margin-top:34px"><button onClick="{{ toApp }}" style="display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 28px;border-radius:999px;background:{{ ui.ink }};color:{{ ui.paper }};border:0;font:500 16px 'Onest',sans-serif;cursor:pointer;transition:background .2s" style-hover="background:#d4452a">{{ t.makeOwn }}<span style="font-size:20px">→</span></button></div>
 </section></main></sc-if>
+
+<sc-if value="{{ isOrder }}"><main data-screen="order" style="max-width:1200px;margin:0 auto;padding:26px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
+<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span>{{ od.num }}</span><span style="color:{{ ui.muted }}">{{ od.kind }}</span></div>
+<div style="margin-top:30px;display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ od.color }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ od.color }};animation:{{ od.pulse }}"></span>{{ t.orderKick }}</div>
+<h2 data-order-status="{{ od.status }}" style="margin:12px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ od.title }}</h2>
+<div style="margin-top:20px;font:500 clamp(28px,6vw,40px)/1 'Cormorant Garamond',serif;color:{{ ui.muted }}">{{ od.amount }}</div>
+<p style="margin:18px 0 0;max-width:46ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ od.text }}</p>
+<sc-if value="{{ od.err }}"><div role="alert" style="margin-top:16px;max-width:46ch;padding:12px 14px;border-radius:12px;background:rgba(212,69,42,.08);color:#d4452a;font-size:14px;line-height:1.45">{{ od.err }}</div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:32px">
+<sc-if value="{{ od.canOpen }}"><button onClick="{{ od.open }}" style="height:54px;padding:0 24px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.orderOpen }} ↗</button></sc-if>
+<sc-if value="{{ od.canRetry }}"><button onClick="{{ od.retry }}" style="height:54px;padding:0 24px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.orderRetry }} →</button></sc-if>
+<button onClick="{{ goMyInv }}" style="height:54px;padding:0 22px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.myInv }}</button>
+</div></main></sc-if>
+
+<sc-if value="{{ isMock }}"><main data-screen="mock-pay" style="max-width:640px;margin:0 auto;padding:26px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
+<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span>{{ mk.num }}</span><span style="color:{{ ui.muted }}">{{ mk.kind }}</span></div>
+<div style="margin-top:30px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.mockKick }}</div>
+<h2 style="margin:12px 0 0;font:500 clamp(46px,12vw,96px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ mk.amount }}</h2>
+<div style="margin-top:24px;padding:16px 18px;border-radius:14px;border:1px dashed rgba(212,69,42,.5);background:rgba(212,69,42,.06);font-size:15px;line-height:1.5;color:{{ ui.body }}">{{ t.mockHint }}</div>
+<sc-if value="{{ mk.err }}"><div role="alert" style="margin-top:14px;color:#d4452a;font-size:14px;line-height:1.45">{{ mk.err }}</div></sc-if>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:26px">
+<button data-mock="paid" onClick="{{ mk.pay }}" style="height:56px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 16px 'Onest',sans-serif;cursor:pointer;opacity:{{ mk.op }};transition:opacity .2s" style-hover="background:#2e7d4f">{{ t.mockPay }} · {{ mk.amount }}</button>
+<button data-mock="failed" onClick="{{ mk.fail }}" style="height:52px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ mk.op }}">{{ t.mockFail }}</button>
+</div></main></sc-if>
+
+<sc-if value="{{ payOpen }}"><div onClick="{{ closePay }}" style="position:fixed;inset:0;z-index:91;background:rgba(10,9,8,.45)"></div>
+<div data-sheet="pay" style="position:fixed;left:0;right:0;bottom:0;z-index:92;max-width:560px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;box-shadow:0 -20px 60px rgba(0,0,0,.3);font-family:'Onest',sans-serif">
+<div style="width:40px;height:4px;border-radius:2px;background:rgba({{ ui.inkRgb }},.2);margin:0 auto"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px"><div style="font:500 34px/1 'Cormorant Garamond',serif">{{ py.title }}</div><button onClick="{{ closePay }}" aria-label="{{ t.close }}" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.2);background:transparent;color:{{ ui.ink }};font-size:20px;line-height:1;cursor:pointer">×</button></div>
+<sc-if value="{{ py.note }}"><div style="margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(212,69,42,.08);color:#d4452a;font-size:14px;line-height:1.45">{{ py.note }}</div></sc-if>
+<div style="font-size:14px;color:{{ ui.muted }};margin-top:10px;line-height:1.45">{{ py.hint }}</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+<sc-for list="{{ py.modes }}" as="m" hint-placeholder-count="2"><button data-mode="{{ m.key }}" onClick="{{ m.onClick }}" style="display:flex;flex-direction:column;gap:6px;width:100%;padding:16px;border-radius:16px;border:1.5px solid {{ m.border }};background:{{ m.bg }};color:{{ ui.ink }};text-align:left;cursor:{{ m.cursor }};opacity:{{ m.op }};transition:border-color .2s,background .2s">
+<span style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%"><span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid {{ m.dot }};background:{{ m.fill }};box-shadow:inset 0 0 0 3px {{ ui.paper }}"></span><span style="font:500 24px/1.1 'Cormorant Garamond',serif">{{ m.title }}</span></span><span data-price="{{ m.key }}" style="font:500 12px 'JetBrains Mono',monospace;color:{{ m.priceColor }};white-space:nowrap">{{ m.price }}</span></span>
+<span style="font-size:14px;line-height:1.45;color:{{ ui.muted }};padding-left:28px">{{ m.desc }}</span>
+</button></sc-for>
+</div>
+<sc-if value="{{ py.lock }}"><div style="margin-top:10px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.payLock }}</div></sc-if>
+<sc-if value="{{ py.isPersonal }}"><div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:12px 0;border-top:1px solid rgba({{ ui.inkRgb }},.12);border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><span style="min-width:0"><span style="display:block;font-size:15px">{{ t.payGuests }}</span><span style="display:block;margin-top:4px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.04em;color:{{ ui.muted }}">{{ py.seatNote }}</span></span><div style="display:flex;align-items:center;gap:10px;flex:none"><button onClick="{{ py.dec }}" aria-label="−" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer">−</button><input name="seats" type="text" inputMode="numeric" value="{{ py.seats }}" onChange="{{ py.onSeats }}" style="width:64px;height:40px;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;background:transparent;text-align:center;font:500 26px 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none"><button onClick="{{ py.inc }}" aria-label="+" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer">+</button></div></div>
+<div style="margin-top:10px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.seatsHint }}</div>
+</div></sc-if>
+<sc-if value="{{ py.showMain }}"><div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:18px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.payTotal }}</span><span data-pay-total="1" style="font:500 30px/1 'Cormorant Garamond',serif">{{ py.total }}</span></div>
+<button data-pay="go" onClick="{{ py.go }}" style="margin-top:16px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }};transition:opacity .2s" style-hover="background:#d4452a">{{ py.goLabel }} →</button>
+</div></sc-if>
+<sc-if value="{{ py.err }}"><div role="alert" style="margin-top:14px;color:#d4452a;font-size:14px;line-height:1.45">{{ py.err }}</div></sc-if>
+<sc-if value="{{ py.showSub }}"><div data-sub="1" style="margin-top:24px;padding:18px;border-radius:16px;background:{{ ui.card }};border:1px solid rgba({{ ui.inkRgb }},.14)">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><span style="font:500 24px/1.1 'Cormorant Garamond',serif">{{ t.subTitle }}</span><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a;white-space:nowrap">{{ py.subPer }}</span></div>
+<div style="margin-top:6px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.subDesc }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><sc-for list="{{ py.subOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 14px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:13px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div>
+<button data-pay="sub" onClick="{{ py.subGo }}" style="margin-top:12px;width:100%;height:48px;border-radius:999px;border:1px solid {{ ui.ink }};background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }}">{{ py.subLabel }}</button>
+</div></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ addOpen }}"><div onClick="{{ closeAdd }}" style="position:fixed;inset:0;z-index:91;background:rgba(10,9,8,.45)"></div>
+<div data-sheet="guests" style="position:fixed;left:0;right:0;bottom:0;z-index:92;max-width:560px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;box-shadow:0 -20px 60px rgba(0,0,0,.3);font-family:'Onest',sans-serif">
+<div style="width:40px;height:4px;border-radius:2px;background:rgba({{ ui.inkRgb }},.2);margin:0 auto"></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px"><div style="font:500 34px/1 'Cormorant Garamond',serif">{{ t.addGuests }}</div><button onClick="{{ closeAdd }}" aria-label="{{ t.close }}" style="width:40px;height:40px;flex:none;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.2);background:transparent;color:{{ ui.ink }};font-size:20px;line-height:1;cursor:pointer">×</button></div>
+<sc-if value="{{ ad.shared }}"><div style="margin-top:14px">
+<div style="font-size:15px;line-height:1.5;color:{{ ui.body }}">{{ t.addShared }}</div>
+<sc-if value="{{ ad.canSwitch }}"><button onClick="{{ ad.toPersonal }}" style="margin-top:16px;width:100%;height:52px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ ad.op }}">{{ t.toPersonal }} →</button></sc-if>
+</div></sc-if>
+<sc-if value="{{ ad.personal }}"><div>
+<div style="font-size:14px;color:{{ ui.muted }};margin-top:10px;line-height:1.45">{{ t.addHint }}</div>
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:18px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.addName }}</span><input name="guest-name" value="{{ ad.name }}" onChange="{{ ad.onName }}" onKeyDown="{{ ad.onKey }}" maxLength="120" autoComplete="off" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:8px 0;font:500 26px/1.15 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.addPhone }}</span><span style="display:flex;align-items:baseline;gap:10px;border-bottom:1px solid rgba({{ ui.inkRgb }},.22)"><span style="font:500 18px 'JetBrains Mono',monospace;color:{{ ui.muted }}">+998</span><input name="guest-phone" type="tel" inputMode="numeric" autoComplete="off" value="{{ ad.phone }}" onChange="{{ ad.onPhone }}" onKeyDown="{{ ad.onKey }}" placeholder="90 123-45-67" style="flex:1;min-width:0;background:transparent;border:0;padding:8px 0;font:500 18px 'JetBrains Mono',monospace;color:{{ ui.ink }};outline:none"></span></label>
+<div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ ad.groups }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.onClick }}" style="height:36px;padding:0 14px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:13px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div>
+<button data-add="one" onClick="{{ ad.addOne }}" style="height:50px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ ad.oneOp }};transition:opacity .2s">+ {{ t.addOne }}</button>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin:20px 0 14px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}"><span style="flex:1;height:1px;background:rgba({{ ui.inkRgb }},.14)"></span>{{ t.orWord }}<span style="flex:1;height:1px;background:rgba({{ ui.inkRgb }},.14)"></span></div>
+<textarea name="guest-list" value="{{ ad.text }}" onChange="{{ ad.onText }}" rows="5" placeholder="{{ ad.ph }}" style="width:100%;border-radius:12px;border:1px solid rgba({{ ui.inkRgb }},.22);background:{{ ui.card }};padding:12px 14px;font:400 14px/1.6 'JetBrains Mono',monospace;color:{{ ui.ink }};resize:vertical;outline:none"></textarea>
+<button data-add="list" onClick="{{ ad.addList }}" style="margin-top:12px;width:100%;height:50px;border-radius:999px;border:1px solid {{ ui.ink }};background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ ad.listOp }};transition:opacity .2s">{{ t.addList }} · {{ ad.lines }}</button>
+</div></sc-if>
+<sc-if value="{{ ad.err }}"><div role="alert" style="margin-top:14px;color:#d4452a;font-size:14px;line-height:1.45">{{ ad.err }}</div></sc-if>
+</div></sc-if>
 
 <sc-if value="{{ demoBadge }}"><div style="position:fixed;top:{{ demoTop }};left:50%;transform:translateX(-50%);z-index:94;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;background:#d4452a;color:#fff;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;pointer-events:none;box-shadow:0 8px 20px rgba(0,0,0,.22)"><span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:invPulse 1.6s ease-in-out infinite"></span>{{ t.demo }}</div></sc-if>
 
@@ -1028,6 +1119,9 @@ class Component extends DCLogic {
   // Маршруты из адреса /app/#/<имя>/<параметры>: обработчик получает параметры и сам убирает hash.
   routes = {
     'login-expired': () => { this.clearHash(); if (this.state.me) this.toast(this.t().loginExpired); else this.openLogin({ reason: 'expired' }); },
+    // Возврат со страницы оплаты (returnUrl заказа) и тестовая оплата PAYMENT_PROVIDER=mock.
+    orders: (id) => { if (this.isUuid(id)) this.requireLogin(() => this.openOrder(id)); else this.clearHash(); },
+    'mock-pay': (id) => { if (this.isUuid(id)) this.requireLogin(() => this.openMock(id)); else this.clearHash(); },
   };
 
   ui() {
@@ -1082,8 +1176,13 @@ class Component extends DCLogic {
     if (e && e.status === 402) return this.onPaymentRequired(e);
     this.toast(this.errText(e));
   }
-  // 402: нужна оплата. Пока тост; лист оплаты (раздел 4, п. 7) подключается здесь.
-  onPaymentRequired(e) { this.toast(this.errText(e)); }
+  // 402: нужна оплата — лист оплаты открытого приглашения с текстом сервера; без приглашения — тост.
+  // У оплаченного шаблона 402 значит «шаблон дороже оплаченного»: остаётся подписка.
+  onPaymentRequired(e) {
+    const s = this.state;
+    if (s.draftId && !s.demo && !this.isPublic()) this.openPay({ note: this.errText(e), kind: s.draft && s.draft.unlocked ? 'upgrade' : 'publish' });
+    else this.toast(this.errText(e));
+  }
 
   // ---------- вход ----------
   // Запуск по загрузочным данным: публичная страница, «не найдено» или приложение (конфигурация, вход, маршрут из адреса).
@@ -1092,6 +1191,7 @@ class Component extends DCLogic {
     if (b.mode === 'notfound') { this.setState({ screen: 'notfound', authReady: true }); return; }
     if (b.mode === 'shared' || b.mode === 'personal') { this.openPublic(b); return; }
     this.call('/api/auth/config', { quiet: true }).then((cfg) => this.setState({ cfg }), () => {});
+    this.loadTemplates();
     let ok = false;
     if (this.tgReal) ok = await this.tgAuth();
     if (!ok && !this._tgPhone) ok = await this.loadMe();
@@ -1278,6 +1378,208 @@ class Component extends DCLogic {
     if (fn) fn(...parts.slice(1).map((p) => { try { return decodeURIComponent(p); } catch (e) { return p; } }));
   }
   clearHash() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
+  isUuid(v) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || ''); }
+  // Адрес сайта для ссылок гостям: appUrl конфигурации (или публичной страницы), иначе адрес этой страницы.
+  appUrl() { const s = this.state, v = s.pub && s.pub.view; return String((s.cfg && s.cfg.appUrl) || (v && v.appUrl) || location.origin).replace(/\/+$/, ''); }
+  // Шаблоны каталога (GET /api/templates): цена шаблона и доступность SMS по slug.
+  async loadTemplates() {
+    try { const list = await this.A.api('/api/templates'); this.setState({ tplInfo: Object.fromEntries((list || []).map((x) => [x.slug, x])) }); } catch (e) { this.logErr(e); }
+  }
+
+  // ---------- оплата и публикация ----------
+  // Цены и доступ — только из ответов сервера (/api/auth/me, /api/auth/config, /api/templates), суммы в тийинах.
+  money(amount) {
+    const s = this.state, cur = (s.me && s.me.currency) || (s.cfg && s.cfg.currency) || 'UZS';
+    let v; try { v = new Intl.NumberFormat(this.D.LOCALE[s.lang], { maximumFractionDigits: 2 }).format(amount / 100); } catch (e) { v = String(amount / 100); }
+    return v + ' ' + (cur === 'UZS' ? this.t().sum : cur);
+  }
+  // Что сервер возьмёт за шаблон, места и подписку (как в pricing.ts); null — цены ещё не пришли.
+  quotes() {
+    const s = this.state, me = s.me, P = (me && me.prices) || (s.cfg && s.cfg.prices);
+    if (!P) return null;
+    const acc = (me && me.access) || {}, dr = s.draft, ti = dr && s.tplInfo && s.tplInfo[dr.template];
+    const tplPrice = ti && ti.price != null ? ti.price : P.sharedTemplate;
+    return { P, free: !!acc.free, subscribed: !!acc.subscribed, template: acc.free || acc.subscribed ? 0 : tplPrice, seat: acc.free ? 0 : P.seat, seats: (n) => (acc.free ? 0 : n * P.seat), sub: (m) => m * P.subscriptionMonth };
+  }
+  // Тип приглашения меняется только у неоплаченного черновика без гостей (так проверяет сервер).
+  modeLocked(dr) { return !dr || dr.status !== 'draft' || dr.unlocked || dr.paidSeats > 0 || ((dr.stats && dr.stats.guests) || 0) > 0; }
+  // Лист оплаты. opts.kind: publish — «Получить ссылку» (тип, шаблон или места), seats — докупить места,
+  // upgrade — шаблон дороже оплаченного (только подписка, затем снова редактор); opts.note — текст 402;
+  // opts.dto — приглашение, если оно только что загружено и ещё не попало в state.
+  openPay(opts) {
+    opts = opts || {};
+    const s = this.state, dr = opts.dto || s.draft; if (!dr) return;
+    const kind = opts.kind || 'publish', G = s.guests || [];
+    const unpaid = G.filter((g) => !g.paid).length;
+    const seats = kind === 'seats' ? Math.max(1, unpaid) : dr.mode === 'personal' && dr.paidSeats > 0 ? 0 : Math.max(10, unpaid);
+    this.setState({ pay: { kind, mode: kind === 'seats' ? 'personal' : dr.mode, seats, months: 1, busy: false, err: '', note: opts.note || '', then: opts.then || (kind === 'upgrade' ? 'edit' : null) } });
+    // Цены и доступ могли измениться (подписка, бесплатный доступ, цены в админке).
+    this.loadMe(); this.loadTemplates();
+  }
+  setPay(patch) { this.setState((x) => (x.pay ? { pay: { ...x.pay, ...patch } } : null)); }
+  closePay() { if (this.state.pay && this.state.pay.busy) return; this.setState({ pay: null }); }
+  // «Оплатить» / «Опубликовать»: тип приглашения (PATCH mode), заказ шаблона или мест (POST /api/orders),
+  // бесплатный заказ выполняется сразу, иначе — страница оплаты. После оплаты приглашение публикуется
+  // («Докупить места» черновик не публикует).
+  async pay() {
+    const s = this.state, P = s.pay, id = s.draftId;
+    if (!P || P.busy || P.kind === 'upgrade' || !id || !s.draft || !this.quotes()) return;
+    const then = P.then || (P.kind === 'seats' ? s.screen : 'share'), pub = P.kind === 'publish';
+    this.setPay({ busy: true, err: '' });
+    try {
+      await this.flushSave();
+      let inv = this.state.draft;
+      if (P.kind === 'publish' && inv.mode !== P.mode) inv = await this.patchInvitation(id, { mode: P.mode }, { quiet: true });
+      let r = null;
+      if (P.mode === 'shared') { if (!inv.unlocked) r = await this.A.api('/api/orders', { body: { kind: 'template', invitationId: id } }); }
+      else if (P.seats > 0) r = await this.A.api('/api/orders', { body: { kind: 'seats', invitationId: id, quantity: P.seats } });
+      if (r && r.status === 'pending') { this.checkout(r, { inv: id, then, pub }); return; }
+      if (r && r.message) this.toast(r.message);
+      this.setState({ pay: null });
+      await this.afterPaid(id, then, pub);
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) { this.setPay({ busy: false }); this.sessionLost(() => this.pay()); return; }
+      this.setPay({ busy: false, err: this.errText(e) });
+    }
+  }
+  // Подписка: заказ на months месяцев; после оплаты шаблон открывается без оплаты, публикация продолжается.
+  async subscribe() {
+    const s = this.state, P = s.pay; if (!P || P.busy) return;
+    this.setPay({ busy: true, err: '' });
+    try {
+      await this.flushSave();
+      const r = await this.A.api('/api/orders', { body: { kind: 'subscription', months: P.months } });
+      if (r && r.status === 'pending') { this.checkout(r, { inv: s.draftId, then: P.then || (P.kind === 'seats' ? s.screen : 'share'), sub: true }); return; }
+      this.setState({ pay: null }); await this.loadMe();
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) { this.setPay({ busy: false }); this.sessionLost(() => this.subscribe()); return; }
+      this.setPay({ busy: false, err: this.errText(e) });
+    }
+  }
+  // Страница оплаты. Что делать после оплаты, хранится в localStorage: сайт уходит на страницу оплаты целиком.
+  // Тестовая оплата (mock) открывается внутри приложения: её адрес требует cookie, а во внешнем браузере
+  // Telegram её нет. В Telegram настоящая оплата открывается через openLink, заказ опрашивается при возврате.
+  checkout(r, cont) {
+    const id = r.order.id, url = r.checkoutUrl || '';
+    try { localStorage.setItem('invito.order.' + id, JSON.stringify(cont || {})); } catch (e) {}
+    this.setState({ pay: null });
+    const mock = url.indexOf(this.appUrl() + '/api/payments/mock/checkout/') === 0;
+    if (!url) { location.hash = '#/orders/' + id; return; }
+    if (this.tgReal) {
+      if (mock) location.hash = '#/mock-pay/' + id;
+      else { this.openUrl(url); location.hash = '#/orders/' + id; }
+      return;
+    }
+    location.href = url;
+  }
+  // Оплачено: приглашение перечитывается, публикуется (pub, если ещё не опубликовано) и открывается экран then.
+  async afterPaid(id, then, pub = true) {
+    const t = this.t();
+    let dto = await this.call('/api/invitations/' + id, { retry: () => this.afterPaid(id, then, pub) });
+    const { guests, ...inv } = dto; dto = inv;
+    const fresh = pub && dto.status !== 'active';
+    if (fresh) dto = await this.call('/api/invitations/' + id + '/publish', { body: {}, retry: () => this.afterPaid(id, then, pub) });
+    this.upsertInv(dto);
+    if (this.state.draftId === id && !this.state.demo) this.onSaved(dto); else this.loadDraft(dto);
+    this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
+    if (fresh) this.toast(t.published);
+    this.clearHash();
+    this.go(then === 'manage' ? 'manage' : 'share', { music: false });
+  }
+  // Экран заказа (#/orders/<id>): опрос GET /api/orders/:id до оплаты, отказа или отмены.
+  openOrder(id) {
+    clearTimeout(this._orderT);
+    this.setState({ screen: 'order', order: { id, data: null, err: '', busy: false }, pay: null });
+    this.pollOrder(id);
+  }
+  async pollOrder(id) {
+    clearTimeout(this._orderT);
+    const cur = () => this.state.screen === 'order' && this.state.order && this.state.order.id === id;
+    if (!cur()) return;
+    let o = null;
+    try { o = await this.A.api('/api/orders/' + id); } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) return this.sessionLost(() => this.openOrder(id));
+      if (e.status === 404) return this.setState((x) => (cur() ? { order: { ...x.order, err: this.errText(e), missing: true } } : null));
+    }
+    if (!cur()) return;
+    if (o) this.setState((x) => ({ order: { ...x.order, data: o, err: o.status === 'pending' ? '' : x.order.err } }));
+    if (o && o.status === 'paid') return this.finishOrder(o);
+    if (o && o.status !== 'pending') { this.dropOrderCont(id); return; }
+    // В фоне (страница оплаты открыта в Telegram поверх приложения) опрос ждёт возврата: onVis.
+    if (document.visibilityState !== 'hidden') this._orderT = setTimeout(() => this.pollOrder(id), 2000);
+  }
+  orderCont(id) { try { return JSON.parse(localStorage.getItem('invito.order.' + id) || 'null') || {}; } catch (e) { return {}; } }
+  dropOrderCont(id) { try { localStorage.removeItem('invito.order.' + id); } catch (e) {} }
+  // Заказ оплачен: подписка — профиль и продолжение публикации; шаблон и места — публикация приглашения.
+  async finishOrder(o) {
+    if (this._finishing === o.id) return; this._finishing = o.id;
+    const cont = this.orderCont(o.id), t = this.t();
+    try {
+      if (o.kind === 'subscription') {
+        await this.loadMe(); this.toast(t.subDone);
+        const id = cont.inv;
+        if (!id) { this.dropOrderCont(o.id); this.clearHash(); this.goHome(); return; }
+        let dto = await this.call('/api/invitations/' + id);
+        const { guests, ...inv } = dto; dto = inv;
+        if (this.state.draftId !== id) this.loadDraft(dto); else this.onSaved(dto);
+        this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
+        // Подписка ради шаблона подороже: обратно в редактор, шаблон выбирается снова.
+        if (cont.then === 'edit') { this.dropOrderCont(o.id); this.clearHash(); this.openGuest('edit'); return; }
+        // Шаблон по подписке открывается бесплатным заказом; персональному нужны ещё места.
+        if (dto.mode === 'shared' && dto.status !== 'active') {
+          if (!dto.unlocked) await this.A.api('/api/orders', { body: { kind: 'template', invitationId: id } });
+          await this.afterPaid(id, cont.then);
+        } else if (dto.mode === 'personal' && dto.paidSeats < 1) {
+          this.clearHash(); this.go('build', { step: 0 }); this.openPay({ dto });
+        } else await this.afterPaid(id, cont.then);
+      } else if (o.invitationId) await this.afterPaid(o.invitationId, cont.then, cont.pub !== false);
+      else { this.clearHash(); this.goHome(); }
+      this.dropOrderCont(o.id);
+    } catch (e) {
+      this.logErr(e);
+      this.setState((x) => (x.order && x.order.id === o.id ? { order: { ...x.order, err: this.errText(e) } } : null));
+    } finally { this._finishing = null; }
+  }
+  // «Попробовать снова»: лист оплаты того же приглашения.
+  async retryOrder() {
+    const s = this.state, o = s.order && s.order.data, id = (o && o.invitationId) || (s.order && this.orderCont(s.order.id).inv);
+    clearTimeout(this._orderT);
+    if (!id) { this.clearHash(); this.goHome(); return; }
+    try {
+      const dto = await this.call('/api/invitations/' + id, { retry: () => this.retryOrder() });
+      const { guests, ...inv } = dto;
+      this.loadDraft(inv);
+      this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
+      this.clearHash();
+      this.go(inv.status === 'active' ? 'manage' : 'build', { step: 0 });
+      this.openPay({ dto: inv, kind: inv.status === 'active' && inv.mode === 'personal' ? 'seats' : 'publish' });
+    } catch (e) { /* тост уже показан */ }
+  }
+  // Тестовая оплата (#/mock-pay/<id>): кнопки «Оплатить» и «Отклонить», затем экран заказа.
+  async openMock(id) {
+    this.setState({ screen: 'mockpay', mock: { id, data: null, busy: false, err: '' }, pay: null });
+    try { const o = await this.A.api('/api/orders/' + id); this.setState((x) => (x.mock && x.mock.id === id ? { mock: { ...x.mock, data: o } } : null)); } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) return this.sessionLost(() => this.openMock(id));
+      this.setState((x) => (x.mock && x.mock.id === id ? { mock: { ...x.mock, err: this.errText(e) } } : null));
+    }
+  }
+  async mockResult(status) {
+    const M = this.state.mock; if (!M || M.busy || !M.data) return;
+    if (M.data && M.data.status !== 'pending') { location.hash = '#/orders/' + M.id; return; }
+    this.setState({ mock: { ...M, busy: true, err: '' } });
+    try {
+      await this.A.api('/api/payments/mock/checkout/' + M.id, { body: { status } });
+      location.hash = '#/orders/' + M.id;
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) { this.setState({ mock: { ...M, busy: false } }); this.sessionLost(() => this.mockResult(status)); return; }
+      this.setState({ mock: { ...M, busy: false, err: this.errText(e) } });
+    }
+  }
 
   // ---------- черновики на сервере ----------
   // Шаблон дизайна по ответу сервера: неизвестный (старый invite-cover) заменяется первым стилем события.
@@ -1327,7 +1629,8 @@ class Component extends DCLogic {
     const tid = this.tplOf(dto), lang = this.langOf(dto.language), inv = this.invOf(dto);
     this._lastInv = inv; this._lastTpl = tid; this._lastLang = lang;
     clearTimeout(this._retryT);
-    this.setState({ draftId: dto.id, draft: dto, event: tid.split('-')[0], tplId: tid, invLang: lang, inv, dirty: true, step: 0, savedAt: dto.updatedAt, saveErr: false, demo: false, guests: [], activity: [], toGuestId: null, share: { slug: dto.slug || '', pwOn: false, pw: '', edited: !!dto.slug } });
+    clearTimeout(this._slugT); clearTimeout(this._pwT);
+    this.setState({ draftId: dto.id, draft: dto, event: tid.split('-')[0], tplId: tid, invLang: lang, inv, dirty: true, step: 0, savedAt: dto.updatedAt, saveErr: false, demo: false, guests: [], activity: [], toGuestId: null, slugErr: '', manual: '', share: { slug: dto.slug || '', pwOn: !!dto.accessCode, pw: dto.accessCode || '', edited: !!dto.slug } });
   }
   // «Использовать шаблон»: новый черновик POST /api/invitations с тем, что сейчас в конструкторе; then(dto) после создания.
   async createDraft(then) {
@@ -1380,7 +1683,7 @@ class Component extends DCLogic {
   }
   onSaveError(id, e) {
     const s = this.state, cur = s.draftId === id;
-    console.error(e);
+    this.logErr(e);
     if (e.status === 401) return this.sessionLost(() => { if (this.state.draftId === id) this.saveNow(); });
     // Шаблон дороже оплаченного: возвращается сохранённый шаблон, данные уйдут следующим сохранением.
     if (e.status === 402) { if (cur && s.draft) this.setState({ tplId: this.tplOf(s.draft) }); return this.onPaymentRequired(e); }
@@ -1420,7 +1723,7 @@ class Component extends DCLogic {
     const guests = this.D.GUESTS.map((g) => ({ ...g, checked: false, msg: '' }));
     let wi = 0; guests.forEach((g) => { if (g.status === 'yes' && wi < 4) g.msgIdx = wi++; });
     const now = Date.now(), M = 6e4;
-    const activity = [{ kind: 'created', t: now - 3 * 864e5 }];
+    const activity = [{ kind: 'published', t: now - 3 * 864e5 }];
     guests.forEach((g, i) => { activity.push({ kind: 'opened', gid: g.id, t: now - (2 * 864e5 - i * 97 * M) }); if (g.status !== 'pending') activity.push({ kind: g.status, gid: g.id, t: now - (40 * 3600e3 - i * 211 * M) }); });
     activity.push({ kind: 'reminder', n: 3, t: now - 5 * 3600e3 });
     this.setState({ demo: true, draftId: null, draft: null, savedAt: null, saveErr: false, guests, activity });
@@ -1460,18 +1763,31 @@ class Component extends DCLogic {
     const id = s.draftId;
     (async () => { for (let i = 0; i < files.length; i++) { const url = await this.uploadMedia(files[i], { i, n: files.length }); if (!url) break; if (this.state.draftId === id) apply(url); } })();
   }
+  // Картинки превью ссылки и сторис (renderCard). У опубликованного приглашения превью уходит на сервер
+  // (PUT /og) и становится og:image страницы; одна и та же картинка повторно не загружается.
   async genImages() {
-    const s = this.state, D = this.D, t = D.I18N[s.lang];
+    const s = this.state, D = this.D, t = D.I18N[s.lang], key = this._ogKey;
     const th = this.theme(s.tplId, s.inv.font, s.inv.palette);
-    const slug = s.share.slug || D.slugify(s.inv.names);
+    const dr = !s.demo && s.draft, host = this.appUrl().replace(/^https?:\/\//, '');
+    const link = dr && dr.mode === 'personal' ? host : host + '/i/' + (dr ? dr.slug : s.share.slug || D.slugify(s.inv.names));
     const date = this.fmt(s.inv.date, s.inv.time, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' + s.inv.time;
-    const args = { th, names: s.inv.names, kick: t.youreInvited, date, link: 'invito.app/' + slug, cover: s.inv.cover, tt: th.tt };
+    const args = { th, names: s.inv.names, kick: t.youreInvited, date, link, cover: s.inv.cover, tt: th.tt };
     this.setState({ ogImg: null, storyImg: null });
     try {
       const og = await this.E.renderCard({ ...args, W: 1200, H: 630 });
       const story = await this.E.renderCard({ ...args, W: 1080, H: 1920 });
+      if (key !== this._ogKey) return;
       this.setState({ ogImg: og, storyImg: story });
+      if (og && dr && dr.status === 'active' && this._ogUp !== key) { this._ogUp = key; this.uploadOg(dr.id, og); }
     } catch (e) { console.warn(e); }
+  }
+  async uploadOg(id, dataUrl) {
+    try {
+      const blob = await this.A.dataUrlToJpeg(dataUrl, 0.88);
+      if (!blob) return;
+      const r = await this.A.api('/api/invitations/' + id + '/og', { method: 'PUT', raw: blob });
+      if (r && r.ogImageUrl) this.setState((x) => (x.draftId === id && x.draft ? { draft: { ...x.draft, ogImageUrl: r.ogImageUrl } } : null));
+    } catch (e) { this.logErr(e); this._ogUp = null; }
   }
   mainAction() { const f = this._mainFn; if (f) f(); }
   // Кнопки Telegram (MainButton, BackButton) в настоящем мини-аппе; меняются, только когда меняется их состояние.
@@ -1514,18 +1830,275 @@ class Component extends DCLogic {
       this.setState({ camOn: true });
       if ('BarcodeDetector' in window) {
         const det = new window.BarcodeDetector({ formats: ['qr_code'] });
-        this._scanT = setInterval(async () => { const v = this.camRef.current; if (!v || v.readyState < 2) return; try { const r = await det.detect(v); if (r[0]) { const m = /to=([a-z0-9-]+)/.exec(r[0].rawValue || ''); const g = m && this.state.guests.find((x) => this.D.slugify(x.lat || x.cyr) === m[1]); if (g) this.checkIn(g.id); } } catch (e) {} }, 600);
+        // QR гостя — его личная ссылка /g/<token>; один и тот же код в кадре отмечается один раз.
+        this._scanT = setInterval(async () => { const v = this.camRef.current; if (!v || v.readyState < 2) return; try { const r = await det.detect(v); const tok = r[0] && this.tokenOf(r[0].rawValue); if (tok && tok !== this._lastTok) { this._lastTok = tok; setTimeout(() => { if (this._lastTok === tok) this._lastTok = null; }, 4000); this.checkInToken(tok); } } catch (e) {} }, 600);
       }
     } catch (e) { this.toast(t.noCamera); }
   }
   stopCam() { clearInterval(this._scanT); if (this.stream) this.stream.getTracks().forEach((tr) => tr.stop()); this.stream = null; this.setState({ camOn: false }); }
+  // Токен гостя из ссылки …/g/<token> (QR, вставленная ссылка) или сам токен.
+  tokenOf(v) { v = String(v || '').trim(); const m = /\/g\/([\w-]{8,64})(?:[/?#]|$)/.exec(v); if (m) return m[1]; return /^[\w-]{8,64}$/.test(v) ? v : null; }
+  // Отметка на входе. Демо — локально; иначе POST /checkin по токену из QR.
   checkIn(gid) {
     const g = this.state.guests.find((x) => x.id === gid); if (!g || g.checked) return;
+    if (!this.state.demo) { if (g.token) this.checkInToken(g.token); return; }
     this.setState((x) => ({ guests: x.guests.map((y) => y.id === gid ? { ...y, checked: true } : y), lastScan: { gid, t: Date.now() } }));
     this.logAct({ kind: 'checkin', gid });
     clearTimeout(this._lsT); this._lsT = setTimeout(() => this.setState({ lastScan: null }), 3200);
   }
-  seat(gid, table) { this.setState((x) => ({ guests: x.guests.map((g) => g.id === gid ? { ...g, table } : g), pick: null, overTable: null })); }
+  async checkInToken(token) {
+    const id = this.state.draftId; if (!id || this.state.demo) return false;
+    try {
+      const r = await this.call('/api/invitations/' + id + '/checkin', { body: { token }, retry: () => this.checkInToken(token) });
+      const row = this.guestRow(r.guest);
+      this.setState((x) => ({ guests: x.guests.some((g) => g.id === row.id) ? x.guests.map((g) => (g.id === row.id ? row : g)) : x.guests.concat(row), lastScan: { gid: row.id, t: Date.now() } }));
+      clearTimeout(this._lsT); this._lsT = setTimeout(() => this.setState({ lastScan: null }), 3200);
+      this.loadActivity();
+      return true;
+    } catch (e) { return false; }
+  }
+  // Ручная отметка: ссылка или код гостя в поле вкладки «Чек-ин».
+  async manualCheckIn() {
+    const tok = this.tokenOf(this.state.manual);
+    if (!tok) { this.toast(this.t().manualBad); return; }
+    if (await this.checkInToken(tok)) this.setState({ manual: '' });
+  }
+  // Стол гостя: демо — локально, иначе PATCH guest { tableNo } (сразу на экране, при ошибке список перечитывается).
+  seat(gid, table) {
+    this.setState((x) => ({ guests: x.guests.map((g) => g.id === gid ? { ...g, table } : g), pick: null, overTable: null }));
+    if (!this.state.demo) this.patchGuest(gid, { tableNo: table });
+  }
+
+  // ---------- гости приглашения ----------
+  // Гость сервера в форме строки дизайна (lat/cyr — имя, user — телефон, status — ответ, table, checked).
+  guestRow(g) {
+    const p = String(g.phone || '');
+    const user = p ? '+' + p.slice(0, 3) + ' ' + p.slice(3, 5) + ' ' + p.slice(5, 8) + '-' + p.slice(8, 10) + '-' + p.slice(10) : '';
+    return { id: g.id, lat: g.name, cyr: g.name, user, phone: p, status: g.rsvp, plus: g.plus || 0, table: g.tableNo || 0, group: g.group || 'other', checked: !!g.checkedIn, msg: g.message || '', token: g.token, link: g.link, paid: g.paid !== false, sms: g.sms || null, source: g.source, tg: !!g.telegramLinked };
+  }
+  // Экран гостей и «Поделиться»: GET /api/invitations/:id (приглашение и гости), затем активность.
+  async loadManage() {
+    const id = this.state.draftId; if (!id || this.state.demo) return;
+    try {
+      const dto = await this.call('/api/invitations/' + id, { retry: () => this.loadManage() });
+      if (this.state.draftId !== id) return;
+      const { guests, ...inv } = dto;
+      this.onSaved(inv); this.upsertInv(inv);
+      this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
+    } catch (e) { return; }
+    this.loadActivity();
+  }
+  async loadActivity() {
+    const id = this.state.draftId; if (!id || this.state.demo) return;
+    try {
+      const list = await this.call('/api/invitations/' + id + '/activity?limit=50', { quiet: true });
+      if (this.state.draftId !== id) return;
+      this.setState({ activity: (list || []).map((a) => ({ id: a.id, kind: a.kind, t: Date.parse(a.createdAt) || Date.now(), gid: a.guestId, name: a.guestName || '', n: a.meta && a.meta.n, meta: a.meta || {} })) });
+    } catch (e) { this.logErr(e); }
+  }
+  // PATCH гостя (группа, стол, отметка). Ответ сервера заменяет строку; при ошибке список перечитывается.
+  async patchGuest(gid, body) {
+    const id = this.state.draftId; if (!id) return null;
+    try {
+      const g = await this.call('/api/invitations/' + id + '/guests/' + gid, { method: 'PATCH', body, retry: () => this.patchGuest(gid, body) });
+      const row = this.guestRow(g);
+      this.setState((x) => ({ guests: x.guests.map((y) => (y.id === gid ? row : y)) }));
+      return row;
+    } catch (e) { this.loadManage(); return null; }
+  }
+  delGuest(g) {
+    const t = this.t();
+    this.askConfirm({ title: t.delGuestT, text: t.delGuest.replace('{name}', g.lat), ok: t.removeG }, async () => {
+      const id = this.state.draftId; if (!id) return;
+      try { await this.call('/api/invitations/' + id + '/guests/' + g.id, { method: 'DELETE', retry: () => this.delGuest(g) }); } catch (e) { if (e.status !== 404) return; }
+      this.setState((x) => ({ guests: x.guests.filter((y) => y.id !== g.id) }));
+    });
+  }
+  // Лист «Добавить гостей» (вместо импорта из Telegram): быстрая форма и список «Имя, телефон» по строкам.
+  openAdd() { this.setState({ addSheet: { name: '', phone: '', group: 'other', text: '', busy: false, err: '' } }); }
+  setAdd(patch) { this.setState((x) => (x.addSheet ? { addSheet: { ...x.addSheet, ...patch } } : null)); }
+  // Строки списка: «Имя, телефон» (запятая, точка с запятой или табуляция). Телефон — 9 цифр или 998XXXXXXXXX.
+  parseGuests(text) {
+    const out = [], bad = [];
+    String(text || '').split(/\r?\n/).forEach((line, i) => {
+      line = line.trim(); if (!line) return;
+      const parts = line.split(/[,;\t]/).map((x) => x.trim()).filter(Boolean);
+      let phone = null;
+      if (parts.length > 1 && /\d{5,}/.test(parts[parts.length - 1].replace(/\D/g, ''))) {
+        const d = parts.pop().replace(/\D/g, ''), full = d.length === 9 ? '998' + d : d;
+        if (!/^998\d{9}$/.test(full)) { bad.push(i + 1); return; }
+        phone = '+' + full;
+      }
+      const name = parts.join(', ').slice(0, 120).trim();
+      if (name) out.push({ name, ...(phone && { phone }) });
+    });
+    return { list: out, bad };
+  }
+  async addGuests(list) {
+    const A = this.state.addSheet, id = this.state.draftId, t = this.t();
+    if (!A || A.busy || !id || !list.length) return false;
+    this.setAdd({ busy: true, err: '' });
+    try {
+      const added = await this.A.api('/api/invitations/' + id + '/guests', { body: { guests: list } });
+      const rows = (added || []).map((g) => this.guestRow(g));
+      this.setState((x) => ({ guests: x.guests.concat(rows) }));
+      this.toast(t.added + ' · ' + rows.length);
+      this.loadManage();
+      this.setAdd({ busy: false });
+      return true;
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) { this.setAdd({ busy: false }); this.sessionLost(() => this.addGuests(list)); return false; }
+      this.setAdd({ busy: false, err: this.errText(e) });
+      return false;
+    }
+  }
+  async addOne() {
+    const A = this.state.addSheet; if (!A) return;
+    const name = A.name.trim(); if (!name) return;
+    const g = { name, group: A.group };
+    if (A.phone) { if (A.phone.length !== 9) { this.setAdd({ err: this.t().addBad.replace('{n}', '1') }); return; } g.phone = '+998' + A.phone; }
+    if (await this.addGuests([g])) this.setAdd({ name: '', phone: '' });
+  }
+  async addList() {
+    const A = this.state.addSheet; if (!A) return;
+    const { list, bad } = this.parseGuests(A.text);
+    if (bad.length) { this.setAdd({ err: this.t().addBad.replace('{n}', bad.join(', ')) }); return; }
+    if (await this.addGuests(list.map((g) => ({ ...g, group: A.group })))) this.setAdd({ text: '' });
+  }
+  // Общее приглашение без оплаты и гостей можно перевести в персональное (PATCH mode).
+  async toPersonal() {
+    const A = this.state.addSheet, id = this.state.draftId; if (!A || A.busy || !id) return;
+    this.setAdd({ busy: true, err: '' });
+    try { await this.patchInvitation(id, { mode: 'personal' }, { quiet: true }); this.setAdd({ busy: false }); } catch (e) { this.logErr(e); this.setAdd({ busy: false, err: this.errText(e) }); }
+  }
+  // Итог рассылки: сколько ушло и почему пропущены остальные (текст причины на языке интерфейса).
+  skipText(skipped) {
+    const t = this.t(), by = {};
+    (skipped || []).forEach((x) => { by[x.reason] = (by[x.reason] || 0) + 1; });
+    return Object.keys(by).map((k) => (t.skip[k] || k) + (by[k] > 1 ? ' × ' + by[k] : '')).join(', ');
+  }
+  // SMS-приглашения: всем, кому можно (без guestIds), или одному гостю. Статусы SMS — в строках гостей.
+  async sendSms(gid) {
+    const id = this.state.draftId, t = this.t(); if (!id || this._smsBusy) return;
+    this._smsBusy = true; this.setState({ smsBusy: true });
+    try {
+      const r = await this.call('/api/invitations/' + id + '/sms', { body: gid ? { guestIds: [gid] } : {}, retry: () => this.sendSms(gid) });
+      const sk = r.skipped || [], why = this.skipText(sk);
+      this.toast(t.smsSent.replace('{n}', r.sent) + (sk.length ? ' · ' + t.smsSkipped.replace('{n}', sk.length) + (why ? ' (' + why + ')' : '') : ''));
+      this.loadManage();
+    } catch (e) { /* тост уже показан */ } finally { this._smsBusy = false; this.setState({ smsBusy: false }); }
+  }
+  // «Напомнить ожидающим»: POST /remind — Telegram гостя, иначе SMS.
+  async remindAll() {
+    const id = this.state.draftId, t = this.t(); if (!id || this._remBusy) return;
+    this._remBusy = true; this.setState({ remindBusy: true });
+    try {
+      const r = await this.call('/api/invitations/' + id + '/remind', { body: {}, retry: () => this.remindAll() });
+      const sk = r.skipped || [], why = this.skipText(sk);
+      this.toast(t.remindDone.replace('{tg}', r.telegram).replace('{sms}', r.sms) + (sk.length ? ' · ' + t.smsSkipped.replace('{n}', sk.length) + (why ? ' (' + why + ')' : '') : ''));
+      this.loadActivity();
+    } catch (e) { /* тост уже показан */ } finally { this._remBusy = false; this.setState({ remindBusy: false }); }
+  }
+  // Настройки приглашения (столы, уведомления бота): PATCH settings, на экране — сразу.
+  async setSettings(patch) {
+    const s = this.state, id = s.draftId, dr = s.draft; if (!id || !dr) return;
+    this.setState({ draft: { ...dr, settings: { ...dr.settings, ...patch } } });
+    try { await this.patchInvitation(id, { settings: patch }); if (patch.tables !== undefined) this.loadManage(); } catch (e) { this.loadManage(); }
+  }
+  async botTestSend() {
+    const id = this.state.draftId, t = this.t(); if (!id) return;
+    try {
+      await this.A.api('/api/invitations/' + id + '/bot/test', { body: {} });
+      this.toast(t.botT.sent); this.loadActivity();
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) return this.sessionLost(() => this.botTestSend());
+      this.toast(this.errText(e));
+    }
+  }
+  exportGuests() {
+    const q = (v) => { v = String(v == null ? '' : v); return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    const rows = [['name', 'phone', 'status', 'plus_ones', 'group', 'table', 'checked_in', 'paid', 'link']].concat(this.state.guests.map((g) => [g.lat, g.phone ? '+' + g.phone : '', g.status, g.plus, g.group, g.table || '', g.checked ? 'yes' : '', g.paid ? 'yes' : 'no', g.link || '']));
+    this.download('guests.csv', '\ufeff' + rows.map((r) => r.map(q).join(',')).join('\n'), 'text/csv');
+  }
+
+  // ---------- ссылка: адрес и пароль ----------
+  // Адрес ссылки (slug): проверка формата сразу, сохранение через 600 мс после ввода; занятый — текст сервера.
+  onSlugInput(v) {
+    v = String(v || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+    this.setState((x) => ({ share: { ...x.share, slug: v, edited: true }, slugErr: '' }));
+    clearTimeout(this._slugT);
+    if (this.state.demo) return;
+    this._slugT = setTimeout(() => this.saveSlug(v), 600);
+  }
+  async saveSlug(v) {
+    const s = this.state, id = s.draftId, dr = s.draft, t = this.t(); if (!id || !dr || v !== s.share.slug) return;
+    if (v === dr.slug) return;
+    if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(v)) { this.setState({ slugErr: t.slugBad }); return; }
+    try {
+      const dto = await this.patchInvitation(id, { slug: v }, { quiet: true });
+      if (this.state.share.slug === v) this.setState({ slugErr: '' });
+      if (dto) this.upsertInv(dto);
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) return this.sessionLost(() => this.saveSlug(v));
+      if (this.state.share.slug === v) this.setState({ slugErr: this.errText(e) });
+    }
+  }
+  // Пароль страницы (accessCode): вкл/выкл и ввод с задержкой 700 мс; выключение снимает пароль на сервере.
+  togglePw() {
+    const s = this.state, on = !s.share.pwOn;
+    this.setState((x) => ({ share: { ...x.share, pwOn: on, ...(on ? {} : { pw: '' }) } }));
+    clearTimeout(this._pwT);
+    if (!on && !s.demo && s.draft && s.draft.accessCode) this.savePw(null);
+  }
+  onPwInput(v) {
+    v = String(v || '').slice(0, 64);
+    this.setState((x) => ({ share: { ...x.share, pw: v } }));
+    clearTimeout(this._pwT);
+    if (this.state.demo || !v.trim()) return;
+    this._pwT = setTimeout(() => this.savePw(v.trim()), 700);
+  }
+  async savePw(code) {
+    const s = this.state, id = s.draftId, t = this.t(); if (!id || !s.draft) return;
+    if ((s.draft.accessCode || null) === code) return;
+    try { await this.patchInvitation(id, { accessCode: code }); this.toast(code ? t.pwSaved : t.pwRemoved); } catch (e) { /* тост уже показан */ }
+  }
+
+  // ---------- публичная страница: ответ гостя ----------
+  // Сохранённый ответ по общей ссылке: токен гостя и что он ответил, по slug приглашения.
+  savedReply(slug) { try { return JSON.parse(localStorage.getItem('invito.rsvp.' + slug) || 'null'); } catch (e) { return null; } }
+  // Представление страницы заново (после ответа): «кто придёт», гостевая книга и ответ гостя.
+  async refreshView() {
+    const P = this.state.pub; if (!P) return;
+    const path = P.kind === 'personal' ? '/api/public/g/' + encodeURIComponent(P.token) : '/api/public/i/' + encodeURIComponent(P.slug) + (P.code ? '?code=' + encodeURIComponent(P.code) : '');
+    try { const v = await this.A.api(path); if (v && v.kind) this.setState((x) => ({ pub: { ...x.pub, view: v } })); } catch (e) { this.logErr(e); }
+  }
+  // Ответ гостя: личная ссылка — POST /g/:token/rsvp, общая — POST /i/:slug/rsvp с именем (guestToken — изменить прежний).
+  async sendPublicRsvp() {
+    const s = this.state, P = s.pub, R = s.rsvp; if (!P || s.rsvpBusy) return;
+    const status = R.status, count = status === 'no' ? 1 : Math.max(1, Math.min(8, R.count)), msg = (R.msg || '').trim().slice(0, 500), diet = R.diet.slice();
+    this.setState({ rsvpBusy: true });
+    try {
+      if (P.kind === 'personal') {
+        await this.A.api('/api/public/g/' + encodeURIComponent(P.token) + '/rsvp', { body: { status, count, diet, msg } });
+      } else {
+        const name = (R.name || '').trim().slice(0, 80), saved = this.savedReply(P.slug);
+        const r = await this.A.api('/api/public/i/' + encodeURIComponent(P.slug) + '/rsvp', { body: { name, status, count, diet, msg, ...(P.code && { code: P.code }), ...(saved && saved.token && { guestToken: saved.token }) } });
+        const token = (r && r.guestToken) || (saved && saved.token) || null;
+        try { localStorage.setItem('invito.rsvp.' + P.slug, JSON.stringify({ token, name, status, count, diet, msg })); } catch (e) {}
+        this.setState((x) => ({ pub: { ...x.pub, token } }));
+      }
+      this.setState((x) => ({ rsvpBusy: false, rsvp: { ...x.rsvp, sent: true } }));
+      if (status !== 'no') this.fireBurst();
+      this.refreshView();
+    } catch (e) {
+      this.logErr(e);
+      this.setState({ rsvpBusy: false });
+      this.toast(this.errText(e));
+    }
+  }
 
   componentDidMount() {
     this.boot = this.readBoot();
@@ -1537,7 +2110,8 @@ class Component extends DCLogic {
       this.applyLang(lang);
       // Гости и активность заполняются только в демо тура (enterDemo); настоящие приходят с сервера.
       this.setState({ ready: true, lang, invLang: lang, screen: 'home', event: ev, tplId: ev + '-' + this.D.EVENTS[ev].styles[0], inv: this.defaults(ev, lang), step: 0, dirty: false, env: 0, rsvp: this.freshRsvp(), sheet: null, music: false, toast: '', toastOn: false, guests: [], mtab: 'list', mfilter: 'all', gfilter: 'all', importOpen: false, picked: {}, guestMode: 'preview', unlocked: false, pwTry: '', pwErr: false, share: { slug: '', pwOn: false, pw: '', edited: false }, draftId: null, draft: null, savedAt: null, saving: false, saveErr: false, peek: false, aiTone: 'warm', aiBusy: false, secDrag: null, pick: null, overTable: null, lastScan: null, camOn: false, activity: [], bot: { r1d: true, r3h: true, morning: true, notify: true }, ogImg: null, storyImg: null, previewTrack: null,
-        me: null, authReady: false, cfg: null, login: null, account: false, confirm: null, invs: [], invsLoaded: false, upload: null, demo: false, pubLocked: false });
+        me: null, authReady: false, cfg: null, login: null, account: false, confirm: null, invs: [], invsLoaded: false, upload: null, demo: false, pubLocked: false,
+        tplInfo: null, pay: null, order: null, mock: null, addSheet: null, slugErr: '', manual: '', pub: null, rsvpBusy: false, smsBusy: false, remindBusy: false });
       this.start();
     }).catch((e) => { console.error('Invito data failed', e); this.setState({ bootFail: true }); });
     this.onScroll = () => { if (!this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.fx(); }); };
@@ -1547,7 +2121,12 @@ class Component extends DCLogic {
     this.onHash = () => { if (this.state.ready && this.boot.mode === 'app') this.route(); };
     window.addEventListener('hashchange', this.onHash);
     // Страницу сворачивают или закрывают: несохранённая правка уходит сразу (keepalive переживает закрытие).
-    this.onVis = () => { if (document.visibilityState === 'hidden' && this.state.ready) this.flushSave({ keepalive: true }); };
+    // Возврат в приложение (страница оплаты в Telegram закрыта): заказ проверяется сразу.
+    this.onVis = () => {
+      if (!this.state.ready) return;
+      if (document.visibilityState === 'hidden') { this.flushSave({ keepalive: true }); return; }
+      const o = this.state.order; if (this.state.screen === 'order' && o) this.pollOrder(o.id);
+    };
     document.addEventListener('visibilitychange', this.onVis);
     // В Telegram внешние ссылки открываются через openLink/openTelegramLink, а не внутри мини-аппа.
     if (this.tgReal) {
@@ -1567,7 +2146,7 @@ class Component extends DCLogic {
     window.removeEventListener('scroll', this.onScroll, true); window.removeEventListener('resize', this.onResize);
     window.removeEventListener('hashchange', this.onHash); document.removeEventListener('visibilitychange', this.onVis);
     if (this.onLink) document.removeEventListener('click', this.onLink, true);
-    [this._saveT, this._retryT, this._tgT, this._tgPollT].forEach((x) => clearTimeout(x));
+    [this._saveT, this._retryT, this._tgT, this._tgPollT, this._orderT, this._slugT, this._pwT].forEach((x) => clearTimeout(x));
     clearInterval(this.tick); cancelAnimationFrame(this.loopId); this.io && this.io.disconnect(); this.stopMusic();
   }
   componentDidUpdate() {
@@ -1596,11 +2175,17 @@ class Component extends DCLogic {
     // camera
     const cv = this.camRef.current;
     if (cv && this.stream && cv.srcObject !== this.stream) { cv.srcObject = this.stream; cv.muted = true; cv.play().catch(() => {}); }
-    // OG images
+    // OG images: ссылка на картинке — сохранённый адрес приглашения.
     if (s.screen === 'share') {
-      const key = JSON.stringify([s.tplId, s.inv.names, s.inv.date, s.inv.time, s.inv.cover, s.inv.font, s.inv.palette, s.lang, s.share.slug]);
+      const dr = !s.demo && s.draft;
+      const key = JSON.stringify([s.tplId, s.inv.names, s.inv.date, s.inv.time, s.inv.cover, s.inv.font, s.inv.palette, s.lang, dr ? dr.id + '/' + dr.slug + '/' + dr.mode + '/' + dr.status : s.share.slug]);
       if (key !== this._ogKey) { this._ogKey = key; clearTimeout(this._ogT); this._ogT = setTimeout(() => this.genImages(), 250); }
     }
+    // Гости и активность с сервера при входе на экраны гостей и «Поделиться».
+    const mk = (s.screen === 'manage' || s.screen === 'share') && !s.demo && s.draftId ? s.screen + ':' + s.draftId : null;
+    if (mk !== this._mgKey) { this._mgKey = mk; if (mk) this.loadManage(); }
+    // С экрана заказа ушли: опрос останавливается.
+    if (s.screen !== 'order' && this._orderT) { clearTimeout(this._orderT); this._orderT = null; }
     this.syncTelegram();
     if (this._lastScreen !== s.screen || this._lastMode !== s.guestMode) {
       this._lastScreen = s.screen; this._lastMode = s.guestMode;
@@ -1666,6 +2251,7 @@ class Component extends DCLogic {
     this.setState({ screen: 'guest', guestMode: mode, toGuestId: g ? g.id : null, myGuestId: null, env: (mode === 'edit' || !intro) ? 4 : 0, unlocked: false, pwTry: '', pwErr: false, rsvp, sheet: null });
   }
   submitRsvp() {
+    if (this.state.pub) return this.sendPublicRsvp();
     const s = this.state, R = s.rsvp;
     const status = R.status, plus = status === 'no' ? 0 : Math.max(0, R.count - 1);
     const msg = (R.msg || '').trim();
@@ -1694,14 +2280,17 @@ class Component extends DCLogic {
     setTimeout(() => { this.setState({ env: 3 }); this.fireBurst(); }, 1650);
     setTimeout(() => this.setState({ env: 4 }), 2450);
   }
-  // «Получить ссылку»: в демо — экран как в дизайне; иначе нужен вход и черновик на сервере (публикация — раздел 4, п. 7).
+  // «Получить ссылку»: в демо — экран как в дизайне; иначе нужен вход и черновик на сервере. Опубликованное
+  // приглашение сразу открывает «Поделиться», неопубликованное — лист оплаты и публикации.
   goShare() {
     this.stopMusic();
     const show = () => { this.flushSave(); this.setState((x) => ({ screen: 'share', music: false, share: { ...x.share, slug: x.share.edited ? x.share.slug : this.D.slugify(x.inv.names) } })); };
     if (this.state.demo) return show();
-    this.requireLogin(() => this.ensureDraft(show));
+    this.requireLogin(() => this.ensureDraft((dto) => { this.setState({ music: false }); if (dto && dto.status === 'active') show(); else this.openPay({ dto }); }));
   }
   goManage(extra) { if (this.state.demo) return this.go('manage', extra); this.requireLogin(() => this.go('manage', extra)); }
+  // «Докупить места»: лист оплаты мест персонального приглашения.
+  buySeats() { if (!this.state.demo) this.openPay({ kind: 'seats' }); }
   // «Использовать шаблон»: открытый черновик продолжается, иначе после входа создаётся новый.
   useTpl() {
     this.stopMusic(); this.setState({ music: false }); this.exitDemo();
@@ -1710,7 +2299,8 @@ class Component extends DCLogic {
   }
   goHome() {
     if (this.isPublic() || this.boot.mode === 'notfound') { location.href = '/app/'; return; }
-    this.stopMusic(); this.exitDemo(); this.setState({ music: false, fromTour: false }); this.go('home');
+    if (/^#\/(orders|mock-pay)\//.test(location.hash)) this.clearHash();
+    this.stopMusic(); this.exitDemo(); this.setState({ music: false, fromTour: false, pay: null }); this.go('home');
   }
   // Свои приглашения на главной: нужен вход.
   goMyInv() {
@@ -1728,9 +2318,16 @@ class Component extends DCLogic {
     const lang = this.langOf(src.language), tid = this.tplOf(src), inv = this.invOf({ ...src, language: lang });
     if (!v) { inv.names = ''; inv.host = ''; }
     this.applyLang(lang);
-    this.setState({ lang, invLang: lang, event: tid.split('-')[0], tplId: tid, inv, dirty: true, authReady: true, pubLocked: !v });
+    let code = null; try { code = new URLSearchParams(location.search).get('code'); } catch (e) {}
+    const pub = { kind: b.mode, slug: b.slug || (v && v.slug) || '', token: b.mode === 'personal' ? b.token : null, code: code || null, view: v || null };
+    this.setState({ lang, invLang: lang, event: tid.split('-')[0], tplId: tid, inv, dirty: true, authReady: true, pubLocked: !v, pub });
     this.openGuest('live');
-    if (!v && /[?&]code=/.test(location.search)) this.setState({ pwErr: true });
+    if (!v && code) this.setState({ pwErr: true });
+    // Прежний ответ: личная ссылка — из представления, общая — сохранённый в этом браузере.
+    const R = this.freshRsvp(), g = v && v.guest, saved = v && b.mode === 'shared' ? this.savedReply(pub.slug) : null;
+    if (g && g.rsvp !== 'pending') Object.assign(R, { status: g.rsvp, count: Math.max(1, g.count || 1), diet: g.diet || [], msg: g.msg || '', sent: true });
+    else if (saved && saved.status) { Object.assign(R, { status: saved.status, count: saved.count || 1, diet: saved.diet || [], msg: saved.msg || '', name: saved.name || '', sent: true }); pub.token = saved.token || null; }
+    if (R.sent) this.setState({ rsvp: R, pub });
   }
 
   // ---------- music ----------
@@ -2009,12 +2606,27 @@ class Component extends DCLogic {
     const gateShow = isGuest && s.guestMode === 'live' && s.share.pwOn && !!s.share.pw && !s.unlocked;
     const density = this.props.particleDensity ?? 1;
 
-    // share
-    const slug = s.share.slug || D.slugify(inv.names), link = 'invito.app/' + slug;
-    const ogTitle = inv.names + ' — ' + gDateLong;
-    const ogDesc = (inv.message || '').length > 110 ? inv.message.slice(0, 108) + '…' : inv.message;
-    const esc = (x) => String(x || '').replace(/"/g, '&quot;');
-    const metaCode = [`<meta property="og:type" content="website">`, `<meta property="og:url" content="https://${link}">`, `<meta property="og:title" content="${esc(ogTitle)}">`, `<meta property="og:description" content="${esc(ogDesc)}">`, `<meta property="og:image" content="https://invito.app/og/${slug}.jpg">`, `<meta property="og:image:width" content="1200">`, `<meta property="og:image:height" content="630">`, `<meta name="twitter:card" content="summary_large_image">`].join('\n');
+    // share: ссылка — appUrl/i/<сохранённый slug>, у персонального приглашения — личные ссылки гостей.
+    // Мета-теги — как их отдаёт сервер (pageMeta): заголовок с длинной датой на языке приглашения, описание до 160 символов.
+    const dr = !s.demo && s.draft ? s.draft : null, appUrl = this.appUrl(), host = appUrl.replace(/^https?:\/\//, '');
+    const isPersonalInv = !!dr && dr.mode === 'personal';
+    const slug = dr ? dr.slug : s.share.slug || D.slugify(inv.names), link = host + '/i/' + slug, fullLink = appUrl + '/i/' + slug;
+    const metaLocale = D.LOCALE[s.invLang] || D.LOCALE[lang];
+    const longDate = (() => { const d = new Date(inv.date + 'T12:00:00+05:00'); if (isNaN(d)) return ''; try { return new Intl.DateTimeFormat(metaLocale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Tashkent' }).format(d); } catch (e) { return gDateLong; } })();
+    const msgChars = Array.from((inv.message || '').replace(/\s+/g, ' ').trim());
+    const locked = !!(dr && dr.accessCode), evName = E.label[s.invLang] || evLabel;
+    const metaTitle = locked ? evName : (inv.names.trim() || evName) + (longDate ? ' — ' + longDate : '');
+    const metaDesc = locked ? '' : msgChars.length > 160 ? msgChars.slice(0, 159).join('').trimEnd() + '…' : msgChars.join('');
+    const absUrl = (u) => (u && u.startsWith('/') ? appUrl + u : u || '');
+    const metaImg = locked ? '' : absUrl((dr && dr.ogImageUrl) || inv.cover);
+    const firstLink = (s.guests.find((g) => g.link) || {}).link || appUrl + '/g/…';
+    const shareUrl = isPersonalInv ? firstLink : fullLink;
+    const ogTitle = dr ? metaTitle : inv.names + ' — ' + gDateLong;
+    const ogDesc = dr ? metaDesc : (inv.message || '').length > 110 ? inv.message.slice(0, 108) + '…' : inv.message;
+    const esc = (x) => String(x || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const metaCode = [`<meta property="og:type" content="website">`, `<meta property="og:url" content="${esc(shareUrl)}">`, `<meta property="og:title" content="${esc(ogTitle)}">`, ogDesc && `<meta property="og:description" content="${esc(ogDesc)}">`, metaImg && `<meta property="og:image" content="${esc(metaImg)}">`, `<meta name="twitter:card" content="summary_large_image">`].filter(Boolean).join('\n');
+    // QR ссылки рисуется здесь же (qrcode-generator), одна картинка на ссылку.
+    const qrOf = (text, size, ink, paper) => { const k = [text, size, ink, paper].join('|'); this._qrc = this._qrc || {}; if (!(k in this._qrc)) { if (Object.keys(this._qrc).length > 40) this._qrc = {}; try { this._qrc[k] = this.A.qrDataUrl(text, { size, ink, paper, margin: size > 500 ? 4 : 1 }); } catch (e) { console.error(e); this._qrc[k] = ''; } } return this._qrc[k]; };
 
     // manage
     const G = s.guests;
@@ -2022,47 +2634,62 @@ class Component extends DCLogic {
     const seatsTaken = G.filter((g) => g.status === 'yes' || g.status === 'maybe').reduce((a, g) => a + 1 + g.plus, 0);
     const ST = { yes: [t.attending, U.ink, U.paper, U.ink, U.ink], maybe: [t.maybeS, 'transparent', '#93723f', '#93723f', '#93723f'], no: [t.declined, 'transparent', '#8a8378', 'rgba(' + U.inkRgb + ',.2)', '#b9b2a6'], pending: [t.pending, 'transparent', '#d4452a', '#d4452a', '#d4452a'] };
     const gFiltered = G.filter((g) => s.mfilter === 'all' || g.status === s.mfilter);
-    const tableOpts = [{ v: 0, l: t.unseated }].concat([1, 2, 3, 4].map((k) => ({ v: k, l: t.table + ' ' + k })));
-    const gRows = gFiltered.map((g) => { const nm = this.pname(g), stv = ST[g.status]; return { name: nm, ini: this.ini(nm), user: g.user, plus: g.plus ? '+' + g.plus : '', status: stv[0], stBg: stv[1], stColor: stv[2], stBorder: stv[3], avBg: stv[4], table: g.table, onTable: (e) => { const v = +e.target.value; this.setState((x) => ({ guests: x.guests.map((y) => y.id === g.id ? { ...y, table: v } : y) })); } }; });
+    // Столы: в демо четыре, иначе settings.tables приглашения (1–30).
+    const tablesN = dr ? Math.max(1, Math.min(30, (dr.settings && dr.settings.tables) || 4)) : 4;
+    const tableNums = Array.from({ length: tablesN }, (_, i) => i + 1);
+    const tableOpts = [{ v: 0, l: t.unseated }].concat(tableNums.map((k) => ({ v: k, l: t.table + ' ' + k })));
+    const gRows = gFiltered.map((g) => { const nm = this.pname(g), stv = ST[g.status]; return { name: nm, ini: this.ini(nm), user: g.user, plus: g.plus ? '+' + g.plus : '', status: stv[0], stBg: stv[1], stColor: stv[2], stBorder: stv[3], avBg: stv[4], table: g.table, onTable: (e) => this.seat(g.id, +e.target.value) }; });
     const filters = [['all', t.all, G.length], ['yes', t.attending, cnt('yes')], ['maybe', t.maybeS, cnt('maybe')], ['pending', t.pending, cnt('pending')], ['no', t.declined, cnt('no')]].map(([k, label, nn]) => { const a = s.mfilter === k; return { label, n: nn, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ mfilter: k }) }; });
     const CAP = 8;
-    const tablesV = [1, 2, 3, 4].map((k) => {
+    const tablesV = tableNums.map((k) => {
       const at = G.filter((g) => g.table === k && g.status !== 'no'); const seatsL = [];
       at.forEach((g) => { const nm = this.pname(g); seatsL.push({ label: this.ini(nm), main: true }); for (let i = 0; i < g.plus; i++) seatsL.push({ label: '+1', main: false }); });
       const seats = Array.from({ length: CAP }, (_, i) => { const a = (-90 + i * 360 / CAP) * Math.PI / 180; const o = seatsL[i]; return { x: (50 + 45 * Math.cos(a)).toFixed(1) + '%', y: (50 + 45 * Math.sin(a)).toFixed(1) + '%', label: o ? o.label : '', bg: o ? (o.main ? U.ink : '#93723f') : 'transparent', border: o ? 'transparent' : 'rgba(' + U.inkRgb + ',.3)' }; });
-      const over = s.overTable === k, pk = !!s.pick; return { people: at.map((g) => ({ name: this.pname(g).split(' ')[0] + (g.plus ? ' +' + g.plus : ''), onDrag: (e) => { e.stopPropagation(); this.dragId = g.id; try { e.dataTransfer.setData('text/plain', String(g.id)); } catch (x) {} }, onRemove: (e) => { e.stopPropagation(); this.seat(g.id, 0); } })), border: over ? '#d4452a' : pk ? 'rgba(212,69,42,.5)' : 'rgba(' + U.inkRgb + ',.14)', shadow: over ? '0 0 0 3px rgba(212,69,42,.2)' : 'none', cursor: pk ? 'pointer' : 'default', onEnter: () => { if (s.overTable !== k) this.setState({ overTable: k }); }, onDrop: (e) => { e.preventDefault(); const id = this.dragId || +((e.dataTransfer && e.dataTransfer.getData('text/plain')) || 0); if (id) this.seat(id, k); this.dragId = null; }, onTap: () => { if (s.pick) this.seat(s.pick, k); }, name: t.table + ' ' + k, count: Math.min(seatsL.length, CAP) + ' / ' + CAP, seats, names: at.map((g) => this.pname(g).split(' ')[0] + (g.plus ? ' +' + g.plus : '')).join(', ') };
+      const over = s.overTable === k, pk = !!s.pick; return { people: at.map((g) => ({ name: this.pname(g).split(' ')[0] + (g.plus ? ' +' + g.plus : ''), onDrag: (e) => { e.stopPropagation(); this.dragId = g.id; try { e.dataTransfer.setData('text/plain', String(g.id)); } catch (x) {} }, onRemove: (e) => { e.stopPropagation(); this.seat(g.id, 0); } })), border: over ? '#d4452a' : pk ? 'rgba(212,69,42,.5)' : 'rgba(' + U.inkRgb + ',.14)', shadow: over ? '0 0 0 3px rgba(212,69,42,.2)' : 'none', cursor: pk ? 'pointer' : 'default', onEnter: () => { if (s.overTable !== k) this.setState({ overTable: k }); }, onDrop: (e) => { e.preventDefault(); const raw = this.dragId || ((e.dataTransfer && e.dataTransfer.getData('text/plain')) || ''); const id = s.demo ? +raw : raw; if (id) this.seat(id, k); this.dragId = null; }, onTap: () => { if (s.pick) this.seat(s.pick, k); }, name: t.table + ' ' + k, count: seatsL.length + ' / ' + CAP, seats, names: at.map((g) => this.pname(g).split(' ')[0] + (g.plus ? ' +' + g.plus : '')).join(', ') };
     });
     const unseated = G.filter((g) => !g.table && g.status !== 'no').map((g) => { const a = s.pick === g.id; return { name: this.pname(g) + (g.plus ? ' +' + g.plus : ''), bg: a ? '#d4452a' : 'transparent', color: a ? '#fff' : U.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.35)', onDrag: (e) => { this.dragId = g.id; try { e.dataTransfer.setData('text/plain', String(g.id)); } catch (x) {} }, onPick: () => this.setState({ pick: a ? null : g.id }) }; });
     const contacts = (s.demo ? D.CONTACTS : []).map((c) => { const nm = this.pname(c), a = !!s.picked[c.id], added = G.some((g) => g.id === c.id); return { name: nm, ini: this.ini(nm), user: c.user, mark: a || added ? '✓' : '', bg: added ? '#b9b2a6' : a ? '#d4452a' : 'transparent', border: added ? '#b9b2a6' : a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', onClick: () => { if (!added) this.setState((x) => ({ picked: { ...x.picked, [c.id]: !x.picked[c.id] } })); } }; });
     const pickedN = Object.values(s.picked).filter(Boolean).length;
-    // personal
-    const toG = s.toGuestId ? G.find((g) => g.id === s.toGuestId) : null;
-    const toName = toG ? this.pname(toG) : '';
-    const kick = toG ? t.personal.replace('{name}', toName.split(' ')[0]) : t.youreInvited;
+    // personal: на публичной странице гость и «кто придёт» — из представления сервера (PublicView).
+    const PV = s.pub && s.pub.view, pg = PV && PV.guest;
+    const toG = !PV && s.toGuestId ? G.find((g) => g.id === s.toGuestId) : null;
+    const toName = pg ? pg.name : toG ? this.pname(toG) : '';
+    const kick = toName ? t.personal.replace('{name}', toName.split(' ')[0]) : t.youreInvited;
     const lum = (hex) => { const v = parseInt(hex.slice(1), 16); return (0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255; };
     const envInk = lum(th.envFront) > 0.55 ? U.ink : U.paper;
     const pslug = (g) => D.slugify(g.lat || g.cyr);
     const AVC = { yes: U.ink, maybe: '#93723f', no: '#b9b2a6', pending: '#d4452a' };
-    const invitees = G.filter((g) => g.status !== 'no' && g.user);
-    const personal = invitees.slice(0, 5).map((g) => { const nm = this.pname(g); const pl = link + '?to=' + pslug(g); return { name: nm, ini: this.ini(nm), av: AVC[g.status], link: pl, onCopy: () => { try { navigator.clipboard.writeText('https://' + pl).catch(() => {}); } catch (e) {} this.toast(t.copied2); }, onOpen: () => this.openGuest('live', g.id) }; });
-    gRows.forEach((row, i) => { const g = gFiltered[i]; row.onOpen = () => this.openGuest('live', g.id); });
+    const copyText = (text, msg) => { try { navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {} this.toast(msg); };
+    // Личные ссылки: в демо — как в дизайне, иначе link каждого гостя; неоплаченные места отмечены.
+    const invitees = dr ? G : G.filter((g) => g.status !== 'no' && g.user);
+    const P_MAX = dr ? 100 : 5;
+    const personal = invitees.slice(0, P_MAX).map((g) => { const nm = this.pname(g); const pl = dr ? String(g.link || '').replace(/^https?:\/\//, '') : link + '?to=' + pslug(g); return { name: nm, ini: this.ini(nm), av: AVC[g.status], link: pl, unpaid: !!dr && !g.paid, onCopy: () => copyText(dr ? g.link : fullLink + '?to=' + pslug(g), t.copied2), onOpen: () => (dr ? this.openUrl(g.link) : this.openGuest('live', g.id)) }; });
+    gRows.forEach((row, i) => { const g = gFiltered[i]; row.onOpen = () => (dr ? this.openUrl(g.link) : this.openGuest('live', g.id)); });
     const yesG = G.filter((g) => g.status === 'yes');
     const meId = s.toGuestId || s.myGuestId;
     const yesSorted = yesG.slice().sort((a, b) => (b.id === meId) - (a.id === meId));
-    const whoList = yesSorted.slice(0, 14).map((g, i) => { const nm = this.pname(g), parts = nm.split(' '), me = g.id === meId; return { name: parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '') + (me ? ' (' + t.you + ')' : ''), ini: this.ini(nm), plus: g.plus ? '+' + g.plus : '', bg: me ? th.accent : th.surface, color: me ? th.onAccent : th.ink, av: me ? th.ink : th.accent, avc: me ? th.bg : th.onAccent, delay: i * 60 + 'ms' }; });
-    const comingCount = yesG.reduce((a, g) => a + 1 + g.plus, 0);
+    let whoList = yesSorted.slice(0, 14).map((g, i) => { const nm = this.pname(g), parts = nm.split(' '), me = g.id === meId; return { name: parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '') + (me ? ' (' + t.you + ')' : ''), ini: this.ini(nm), plus: g.plus ? '+' + g.plus : '', bg: me ? th.accent : th.surface, color: me ? th.onAccent : th.ink, av: me ? th.ink : th.accent, avc: me ? th.bg : th.onAccent, delay: i * 60 + 'ms' }; });
+    let comingCount = yesG.reduce((a, g) => a + 1 + g.plus, 0), whoMoreN = yesG.length - 14;
+    if (PV) {
+      // Сервер ставит гостя личной ссылки первым; на общей — свой ответ узнаём по имени.
+      const W = PV.who || { count: 0, list: [], more: 0 }, short = (n) => { const p = String(n || '').trim().split(/\s+/); return p[0] + (p[1] ? ' ' + Array.from(p[1])[0] + '.' : ''); };
+      const mine = s.rsvp.sent && s.rsvp.status === 'yes' ? short(pg ? pg.name : s.rsvp.name) : null;
+      let marked = false;
+      whoList = W.list.map((w, i) => { const me = !marked && !!mine && w.name === mine; if (me) marked = true; return { name: w.name + (me ? ' (' + t.you + ')' : ''), ini: this.ini(w.name.replace('.', '')), plus: w.plus ? '+' + w.plus : '', bg: me ? th.accent : th.surface, color: me ? th.onAccent : th.ink, av: me ? th.ink : th.accent, avc: me ? th.bg : th.onAccent, delay: i * 60 + 'ms' }; });
+      comingCount = W.count; whoMoreN = W.more;
+    }
     const parts0 = inv.names.split(/\s+(?:&|и|va|and|ва)\s+/i).filter(Boolean);
     const monogram = parts0.length > 1 ? parts0.slice(0, 2).map((p) => p.trim()[0]).join(' · ') : (inv.names.trim()[0] || '✦');
     const PX = {
-      kick, hasTo: !!toG, noTo: !toG, toName, toIni: toName ? this.ini(toName) : '', envInk,
+      kick, hasTo: !!toName, noTo: !toName, toName, toIni: toName ? this.ini(toName) : '', envInk,
       heroCols: wide ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)', stubW: wide ? '110px' : '76px', ticketNo: '№ ' + String((slug.length * 37) % 1000).padStart(4, '0'), monogram,
       gMonthNum: isNaN(d0) ? '' : String(d0.getMonth() + 1).padStart(2, '0'),
-      showWho: inv.showGuests !== false && whoList.length > 0, comingCount, whoList, whoMore: yesG.length > 14, whoMoreTxt: t.andMore.replace('{n}', yesG.length - 14),
-      personal, personalMore: invitees.length > 5, personalMoreTxt: t.andMore.replace('{n}', invitees.length - 5),
+      showWho: inv.showGuests !== false && whoList.length > 0, comingCount, whoList, whoMore: whoMoreN > 0, whoMoreTxt: t.andMore.replace('{n}', whoMoreN),
+      personal, personalMore: invitees.length > P_MAX, personalMoreTxt: t.andMore.replace('{n}', invitees.length - P_MAX), personalEmpty: !!dr && invitees.length === 0,
       toggleWho: () => this.setInv({ showGuests: inv.showGuests === false }), whoTrack: inv.showGuests !== false ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', whoKnob: inv.showGuests !== false ? '23px' : '3px',
       onRsvpName: (e) => { const v = e.target.value; this.setState((x) => ({ rsvp: { ...x.rsvp, name: v } })); },
     };
-    const rsvpReady = !!R.status && (!!toG || !!(R.name || '').trim());
+    const rsvpReady = !!R.status && (!!toName || !!(R.name || '').trim()) && !s.rsvpBusy;
     // ---- extended features ----
     const segO = (list, cur, set) => list.map(([k, label]) => { const a = cur === k; return { label, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)', onClick: () => set(k) }; });
     const secs = (inv.sections && inv.sections.length ? inv.sections : D.SECTIONS.map((k) => ({ k, on: true })));
@@ -2078,33 +2705,50 @@ class Component extends DCLogic {
     const gbList = G.filter((g) => (g.status === 'yes' || g.status === 'maybe') && (g.msg || g.msgIdx != null)).map((g) => ({ g, text: g.msg || wishes[g.msgIdx] })).filter((x) => x.text);
     const meIdGB = s.toGuestId || s.myGuestId;
     gbList.sort((a, b) => (b.g.id === meIdGB) - (a.g.id === meIdGB));
-    const guestbook = gbList.map(({ g, text }, i) => { const nm = this.pname(g), p = nm.split(' '); const alt = i % 3; return { text, name: p[0] + (p[1] ? ' ' + p[1][0] + '.' : ''), ini: this.ini(nm), rot: (i % 2 ? 1.2 : -1.2) + 'deg', delay: (i % 4) * 80 + 'ms', bg: alt === 1 ? th.accent : th.surface, color: alt === 1 ? th.onAccent : th.ink, q: alt === 1 ? th.onAccent : th.accent, av: alt === 1 ? th.onAccent : th.accent, avc: alt === 1 ? th.accent : th.onAccent }; });
+    // На публичной странице гостевая книга — из представления сервера.
+    const gbSrc = PV ? (PV.guestbook || []).map((b, i) => ({ g: { id: 'pv' + i, lat: b.name, cyr: b.name }, text: b.text })) : gbList;
+    const guestbook = gbSrc.map(({ g, text }, i) => { const nm = this.pname(g), p = nm.split(' '); const alt = i % 3; return { text, name: p[0] + (p[1] ? ' ' + p[1][0] + '.' : ''), ini: this.ini(nm), rot: (i % 2 ? 1.2 : -1.2) + 'deg', delay: (i % 4) * 80 + 'ms', bg: alt === 1 ? th.accent : th.surface, color: alt === 1 ? th.onAccent : th.ink, q: alt === 1 ? th.onAccent : th.accent, av: alt === 1 ? th.onAccent : th.accent, avc: alt === 1 ? th.accent : th.onAccent }; });
     const TR = D.TRACKS.concat(inv.musicSrc ? ['custom'] : []);
     const tracks = TR.map((k) => { const a = inv.music === k, pl = s.previewTrack === k; return { label: t.tracks[k], bg: a ? 'rgba(212,69,42,.07)' : 'transparent', dot: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', fill: a ? '#d4452a' : 'transparent', icon: k === 'none' ? '–' : pl ? '■' : '▶', playBg: pl ? U.ink : 'transparent', playColor: pl ? U.paper : U.ink,
       onPick: () => this.setInv({ music: k }), onPlay: () => { if (k === 'none') return; if (pl) { this.music.stop(); this.setState({ previewTrack: null }); } else { this.music.play(k, inv.musicSrc); this.setState({ previewTrack: k, music: false }); } } }; });
     const ago = (ts) => { const d = (Date.now() - ts) / 6e4; if (d < 1) return t.ago.now; if (d < 60) return t.ago.m.replace('{n}', Math.round(d)); if (d < 1440) return t.ago.h.replace('{n}', Math.round(d / 60)); return t.ago.d.replace('{n}', Math.round(d / 1440)); };
-    const ACT_ICON = { created: ['✦', '#1a1714'], opened: ['◉', '#8a8378'], yes: ['✓', '#2e7d4f'], no: ['×', '#b9b2a6'], maybe: ['?', '#93723f'], reminder: ['↻', '#d4452a'], checkin: ['➜', '#2e7d4f'], test: ['✉', '#d4452a'] };
-    const actText = (a) => { const g = a.gid ? G.find((x) => x.id === a.gid) : null; return (t.act[a.kind] || '').replace('{name}', g ? this.pname(g) : '—').replace('{n}', a.n || 0); };
+    // События сервера (GET /activity): имя гостя приходит с событием; оплата — сумма заказа.
+    const ACT_ICON = { created: ['✦', '#1a1714'], published: ['↗', '#d4452a'], paid: ['◈', '#2e7d4f'], opened: ['◉', '#8a8378'], yes: ['✓', '#2e7d4f'], no: ['×', '#b9b2a6'], maybe: ['?', '#93723f'], reminder: ['↻', '#d4452a'], sms: ['✉', '#2f6fe0'], checkin: ['➜', '#2e7d4f'], test: ['✉', '#d4452a'] };
+    const actText = (a) => { const g = a.gid ? G.find((x) => x.id === a.gid) : null; const nm = a.name || (g ? this.pname(g) : '—'); const n = a.kind === 'paid' ? (a.meta && a.meta.amount ? this.money(a.meta.amount) : t.free) : a.n || 0; return (t.act[a.kind] || a.kind).replace('{name}', nm).replace('{n}', n); };
     const actSorted = s.activity.slice().sort((a, b) => b.t - a.t);
-    const activity = actSorted.slice(0, 30).map((a, i) => ({ text: actText(a), ago: ago(a.t), icon: ACT_ICON[a.kind][0], bg: ACT_ICON[a.kind][1], delay: Math.min(i, 10) * 40 + 'ms' }));
-    const botFeed = actSorted.filter((a) => ['yes', 'no', 'maybe', 'reminder', 'checkin', 'test', 'created'].includes(a.kind)).slice(0, 14).reverse().map((a) => ({ title: a.kind === 'test' ? t.botT.title : a.kind === 'reminder' ? '↻ ' + t.remind : '● ' + (a.kind === 'checkin' ? t.checkin : a.kind === 'created' ? inv.names : 'RSVP'), color: a.kind === 'no' ? '#8a8378' : '#d4452a', text: a.kind === 'test' ? t.botT.testMsg : actText(a), ago: ago(a.t) }));
-    const yesAll = G.filter((g) => g.status === 'yes');
+    const activity = actSorted.slice(0, 30).map((a, i) => { const ic = ACT_ICON[a.kind] || ['•', '#8a8378']; return { text: actText(a), ago: ago(a.t), icon: ic[0], bg: ic[1], delay: Math.min(i, 10) * 40 + 'ms' }; });
+    const botFeed = actSorted.filter((a) => ['yes', 'no', 'maybe', 'reminder', 'checkin', 'test', 'published'].includes(a.kind)).slice(0, 14).reverse().map((a) => ({ title: a.kind === 'test' ? t.botT.title : a.kind === 'reminder' ? '↻ ' + t.remind : '● ' + (a.kind === 'checkin' ? t.checkin : a.kind === 'published' ? inv.names : 'RSVP'), color: a.kind === 'no' ? '#8a8378' : '#d4452a', text: a.kind === 'test' ? t.botT.testMsg : actText(a), ago: ago(a.t) }));
+    // Чек-ин: ответившие «да» и уже отмеченные (на входе отмечают и тех, кто не ответил).
+    const yesAll = G.filter((g) => g.status === 'yes' || (dr && g.checked));
     const checkedN = yesAll.filter((g) => g.checked).length;
-    const checkRows = yesAll.map((g) => { const nm = this.pname(g); return { name: nm, ini: this.ini(nm), plus: g.plus ? '+' + g.plus : '', table: g.table ? t.table + ' ' + g.table : t.unseated, av: g.checked ? '#2e7d4f' : '#8a8378', label: g.checked ? '✓ ' + t.checkedIn : t.checkIn, bg: g.checked ? '#2e7d4f' : 'transparent', color: g.checked ? '#fff' : U.ink, border: g.checked ? '#2e7d4f' : 'rgba(' + U.inkRgb + ',.3)', onClick: () => g.checked ? this.setState((x) => ({ guests: x.guests.map((y) => y.id === g.id ? { ...y, checked: false } : y) })) : this.checkIn(g.id) }; });
+    const checkRows = yesAll.map((g) => { const nm = this.pname(g); return { name: nm, ini: this.ini(nm), plus: g.plus ? '+' + g.plus : '', table: g.table ? t.table + ' ' + g.table : t.unseated, av: g.checked ? '#2e7d4f' : '#8a8378', label: g.checked ? '✓ ' + t.checkedIn : t.checkIn, bg: g.checked ? '#2e7d4f' : 'transparent', color: g.checked ? '#fff' : U.ink, border: g.checked ? '#2e7d4f' : 'rgba(' + U.inkRgb + ',.3)', onClick: () => (g.checked ? (dr ? this.patchGuest(g.id, { checkedIn: false }) : this.setState((x) => ({ guests: x.guests.map((y) => y.id === g.id ? { ...y, checked: false } : y) }))) : this.checkIn(g.id)) }; });
     const ls = s.lastScan && G.find((g) => g.id === s.lastScan.gid);
     const GRP = ['family', 'friends', 'work', 'other'];
     const gFilters = [['all', t.all, G.length]].concat(GRP.map((k) => [k, t.groups[k], G.filter((g) => g.group === k).length])).map(([k, label, nn]) => { const a = s.gfilter === k; return { label, n: nn, bg: a ? 'rgba(212,69,42,.1)' : 'transparent', color: a ? '#d4452a' : U.muted, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ gfilter: k }) }; });
-    gRows.forEach((row, i) => { const g = gFiltered[i]; row.group = g.group || 'other'; row.checked = !!g.checked; row.onGroup = (e) => { const v = e.target.value; this.setState((x) => ({ guests: x.guests.map((y) => y.id === g.id ? { ...y, group: v } : y) })); }; });
+    // SMS: персональное опубликованное приглашение и шаблон с рассылкой (smsEnabled в /api/templates).
+    const tplSms = !!(dr && s.tplInfo && s.tplInfo[dr.template] && s.tplInfo[dr.template].smsEnabled);
+    const smsOn = isPersonalInv && dr.status === 'active' && tplSms;
+    gRows.forEach((row, i) => {
+      const g = gFiltered[i]; row.group = g.group || 'other'; row.checked = !!g.checked;
+      row.onGroup = (e) => { const v = e.target.value; this.setState((x) => ({ guests: x.guests.map((y) => y.id === g.id ? { ...y, group: v } : y) })); if (dr) this.patchGuest(g.id, { group: v }); };
+      row.unpaid = !!dr && !g.paid;
+      row.smsKey = g.sms ? g.sms.status : ''; row.smsSt = g.sms ? (t.smsSt[g.sms.status] || g.sms.status) : '';
+      row.smsColor = g.sms && g.sms.status === 'failed' ? '#d4452a' : g.sms && g.sms.status === 'delivered' ? '#2e7d4f' : U.muted;
+      row.canSms = smsOn && !!g.phone && !!g.paid; row.onSms = () => this.sendSms(g.id);
+      row.canDel = !!dr; row.onDel = () => this.delGuest(g);
+    });
     const gRowsF = gRows.filter((r) => s.gfilter === 'all' || r.group === s.gfilter);
-    const botOpts = ['r1d', 'r3h', 'morning', 'notify'].map((k) => ({ label: t.botT[k], track: s.bot[k] ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', knob: s.bot[k] ? '23px' : '3px', onClick: () => this.setState((x) => ({ bot: { ...x.bot, [k]: !x.bot[k] } })) }));
+    // Уведомления бота — settings приглашения (PATCH settings), в демо — локально.
+    const BS = dr ? { ...s.bot, ...(dr.settings || {}) } : s.bot;
+    const botOpts = ['r1d', 'r3h', 'morning', 'notify'].map((k) => ({ label: t.botT[k], track: BS[k] ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', knob: BS[k] ? '23px' : '3px', onClick: () => (dr ? this.setSettings({ [k]: !BS[k] }) : this.setState((x) => ({ bot: { ...x.bot, [k]: !x.bot[k] } }))) }));
     // telegram main/back
     const scr = s.screen, gm = s.guestMode;
     // Открытый лист закрывается кнопкой «Назад» раньше, чем меняется экран.
-    const closeTop = s.confirm ? () => this.setState({ confirm: null }) : L ? () => this.closeLogin() : s.account ? () => this.setState({ account: false }) : s.importOpen ? () => this.setState({ importOpen: false }) : isEdit && s.sheet ? () => this.setState({ sheet: null }) : null;
+    const closeTop = s.confirm ? () => this.setState({ confirm: null }) : L ? () => this.closeLogin() : s.account ? () => this.setState({ account: false }) : s.pay ? () => this.closePay() : s.addSheet ? () => this.setState({ addSheet: null }) : s.importOpen ? () => this.setState({ importOpen: false }) : isEdit && s.sheet ? () => this.setState({ sheet: null }) : null;
     const backFn = closeTop || (scr === 'home' ? (() => { try { window.Telegram.WebApp.close(); } catch (e) {} }) : scr === 'events' || scr === 'tour' ? () => this.goHome() : scr === 'templates' ? () => this.go('events') : scr === 'build' ? () => (s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates')) : scr === 'guest' ? () => { this.stopMusic(); this.setState({ music: false }); if (s.fromTour && gm === 'live') this.go('tour'); else if (gm === 'preview') this.go(s.fromTour ? 'tour' : 'templates'); else if (gm === 'edit') this.go('build', { step: STEPS.length - 1 }); else this.go('share'); } : scr === 'share' ? () => this.openGuest('edit') : () => this.goHome());
     this._backFn = backFn; this._backShow = !pub && scr !== 'notfound' && (scr !== 'home' || !!closeTop);
     const anySheet = !!closeTop || !!s.upload;
-    const MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toEditor, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit')] : scr === 'share' ? [t.copy, () => { try { navigator.clipboard.writeText('https://' + link).catch(() => {}); } catch (e) {} this.toast(t.copied); }] : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : null;
+    const MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toEditor, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit')] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.copy, () => copyText(fullLink, t.copied)]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : null;
     this._mainFn = MB ? MB[1] : null; this._main = { show: !!MB, label: MB ? MB[0] : '' };
     // ---- tour ----
     const live = (patch, gid, scrollId, extra) => { this.setState((x) => ({ inv: { ...x.inv, ...(patch || {}) }, share: { ...x.share, pwOn: false }, unlocked: false, ...(extra || {}) })); setTimeout(() => { this.openGuest('live', gid); if (scrollId) setTimeout(() => { this.setState({ env: 4 }); setTimeout(() => { const el = document.getElementById(scrollId); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' }); }, 350); }, 60); }, 0); };
@@ -2143,6 +2787,69 @@ class Component extends DCLogic {
     const styleChips = [['all', t.allStyles, 'conic-gradient(#d4452a,#93723f,#3df5c8,#ff4fbf,#d4452a)']].concat(STY.map((k) => [k, D.STYLES[k].label, D.STYLES[k].accent])).map(([k, label, sw]) => { const a = (s.tStyle || 'all') === k; return { label, sw, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.2)', onClick: () => this.setState({ tStyle: k }) }; });
     const eventChips = [['all', t.allEvents]].concat(D.EVENT_ORDER.map((k) => [k, D.EVENTS[k].label[lang]])).map(([k, label]) => { const a = (s.tEvent || 'all') === k; return { label, bg: a ? 'rgba(212,69,42,.1)' : 'transparent', color: a ? '#d4452a' : U.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ tEvent: k }) }; });
     const allTpls = s.screen === 'tour' ? D.TEMPLATES.filter((x) => ((s.tStyle || 'all') === 'all' || x.style === s.tStyle) && ((s.tEvent || 'all') === 'all' || x.event === s.tEvent)).map((x) => { const EE = D.EVENTS[x.event], L = EE.text[lang]; return { th: this.theme(x.id), names: L.names, date: shortOf(isoIn(EE.days)), cover: EE.img[0], kicker: t.youreInvited, name: x.name, style: D.STYLES[x.style].label, event: EE.label[lang], onClick: () => { loadEv(x.event, x.id); setTimeout(() => this.openGuest('preview'), 0); } }; }) : [];
+    // Лист оплаты: цены только из ответов сервера; тип нельзя сменить у оплаченного или с гостями.
+    const PY = s.pay, Q = this.quotes(), pd = s.draft;
+    let py = {};
+    if (PY && pd) {
+      const up = PY.kind === 'upgrade';
+      const lockM = PY.kind === 'publish' && this.modeLocked(pd);
+      const minSeats = PY.kind === 'seats' || (pd.paidSeats || 0) < 1 ? 1 : 0;
+      const priceTxt = (n) => (Q ? (n ? this.money(n) : t.free) : '…');
+      const tplTxt = pd.unlocked ? t.paidMark : priceTxt(Q && Q.template);
+      const seatTxt = Q ? (Q.seat ? t.perGuest.replace('{price}', this.money(Q.seat)) : t.free) : '…';
+      const modes = (up ? [] : PY.kind === 'seats' ? ['personal'] : ['shared', 'personal']).map((k) => {
+        const a = PY.mode === k, dis = lockM && pd.mode !== k, freeK = k === 'shared' ? pd.unlocked || (!!Q && !Q.template) : !!Q && !Q.seat;
+        return { key: k, title: k === 'shared' ? t.payShared : t.payPersonal, desc: k === 'shared' ? t.paySharedDesc : t.payPersonalDesc, price: k === 'shared' ? tplTxt : seatTxt, priceColor: freeK ? '#2e7d4f' : U.muted,
+          border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.18)', bg: a ? 'rgba(212,69,42,.06)' : 'transparent', dot: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.35)', fill: a ? '#d4452a' : 'transparent', op: dis ? 0.45 : 1, cursor: dis ? 'default' : 'pointer',
+          onClick: () => { if (!dis && !PY.busy && !a) this.setPay({ mode: k, err: '' }); } };
+      });
+      const personalSel = PY.mode === 'personal';
+      const amount = !Q ? null : personalSel ? Q.seats(PY.seats) : pd.unlocked ? 0 : Q.template;
+      const valid = !!Q && !PY.busy && !(personalSel && PY.seats < minSeats);
+      const setSeats = (n) => this.setPay({ seats: Math.max(minSeats, Math.min(1000, n | 0)), err: '' });
+      const SUBM = [1, 3, 12];
+      py = {
+        title: PY.kind === 'seats' ? t.seatsTitle : up ? t.payUpTitle : t.payTitle, note: PY.note || '', hint: PY.kind === 'seats' ? '' : up ? t.payUpHint : t.payHint,
+        modes, lock: lockM, isPersonal: !up && personalSel, showMain: !up, seats: String(PY.seats), seatNote: t.paySeatsPaid.replace('{n}', pd.paidSeats || 0),
+        dec: () => setSeats(PY.seats - 1), inc: () => setSeats(PY.seats + 1), onSeats: (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 4); this.setPay({ seats: d ? Math.min(1000, +d) : 0, err: '' }); },
+        total: amount == null ? '…' : amount ? this.money(amount) : t.free,
+        goLabel: PY.busy ? t.loading : amount ? t.payBtn.replace('{price}', this.money(amount)) : PY.kind === 'seats' ? t.buySeats : t.publishBtn,
+        goOp: valid ? 1 : 0.45, go: () => { if (valid) this.pay(); }, err: PY.err || '',
+        showSub: !!Q && !Q.free && !Q.subscribed && (PY.kind === 'publish' || up),
+        subPer: Q ? this.money(Q.P.subscriptionMonth) + ' / ' + t.subMonths[0] : '',
+        subOpts: SUBM.map((m, i) => ({ label: t.subMonths[i] + ' · ' + (Q ? this.money(Q.sub(m)) : '…'), ...chipO(PY.months === m), onClick: () => this.setPay({ months: m }) })),
+        subLabel: t.subBtn.replace('{price}', Q ? this.money(Q.sub(PY.months)) : '…'), subGo: () => { if (Q && !PY.busy) this.subscribe(); },
+      };
+    }
+    // Экран заказа и тестовой оплаты.
+    const O = s.order, oD = O && O.data;
+    const od = O ? (() => {
+      const st = oD ? oD.status : 'pending', fin = st === 'failed' || st === 'cancelled';
+      return { num: oD ? '№ ' + oD.number : '№ …', kind: oD ? (t.orderKinds[oD.kind] || oD.kind) + (oD.kind === 'seats' ? ' · ' + oD.quantity : oD.kind === 'subscription' ? ' · ' + (t.subMonths[[1, 3, 12].indexOf(oD.quantity)] || oD.quantity) : '') : '', status: st,
+        title: st === 'paid' ? t.orderPaid : st === 'failed' ? t.orderFailed : st === 'cancelled' ? t.orderCancelled : t.orderWait,
+        text: st === 'paid' ? t.orderPaidHint : fin ? t.orderFailHint : t.orderWaitHint, amount: oD ? this.money(oD.amount) : '',
+        color: st === 'paid' ? '#2e7d4f' : fin ? '#d4452a' : '#93723f', pulse: st === 'pending' && !O.missing ? 'invPulse 1.4s ease-in-out infinite' : 'none',
+        err: O.err || '', canOpen: st === 'pending' && !!oD && !!oD.checkoutUrl && this.tgReal && !String(oD.checkoutUrl).includes('/api/payments/mock/'), open: () => this.openUrl(oD.checkoutUrl),
+        canRetry: fin || (st === 'paid' && !!O.err), retry: () => (st === 'paid' ? this.finishOrder(oD) : this.retryOrder()) };
+    })() : {};
+    const M = s.mock, mD = M && M.data;
+    const mk = M ? { num: mD ? '№ ' + mD.number : '№ …', kind: mD ? t.orderKinds[mD.kind] || mD.kind : '', amount: mD ? this.money(mD.amount) : '…', err: M.err || '', op: M.busy || !mD ? 0.5 : 1, pay: () => this.mockResult('paid'), fail: () => this.mockResult('failed') } : {};
+    // Лист «Добавить гостей».
+    const AS = s.addSheet, addLines = AS ? this.parseGuests(AS.text).list.length : 0;
+    const ad = AS ? { shared: !!dr && !isPersonalInv, personal: isPersonalInv, canSwitch: !!dr && !this.modeLocked(dr), toPersonal: () => this.toPersonal(), op: AS.busy ? 0.5 : 1,
+      name: AS.name, phone: fmtPhone(AS.phone), onName: (e) => this.setAdd({ name: e.target.value, err: '' }),
+      onPhone: (e) => { let d = e.target.value.replace(/\D/g, ''); if (d.length > 9 && d.startsWith('998')) d = d.slice(3); this.setAdd({ phone: d.slice(0, 9), err: '' }); },
+      onKey: (e) => { if (e.key === 'Enter') this.addOne(); }, groups: GRP.map((k) => ({ label: t.groups[k], ...chipO(AS.group === k), onClick: () => this.setAdd({ group: k }) })),
+      addOne: () => this.addOne(), oneOp: AS.name.trim() && !AS.busy ? 1 : 0.45,
+      text: AS.text, onText: (e) => this.setAdd({ text: e.target.value, err: '' }), ph: t.addName + ', +998 90 123-45-67\n' + t.addName, lines: addLines, addList: () => this.addList(), listOp: addLines && !AS.busy ? 1 : 0.45, err: AS.err || '' } : {};
+    const paidN = dr ? dr.paidSeats || 0 : 0, unpaidN = G.filter((g) => g.paid === false).length;
+    const seatsInfo = { show: isPersonalInv, text: t.seatsLine.replace('{paid}', paidN).replace('{n}', G.length), short: paidN + ' / ' + G.length, color: unpaidN ? '#d4452a' : U.muted };
+    // Ответ гостя на публичной странице: ссылка на бота и QR для входа (личная ссылка гостя) после «да».
+    const myToken = s.pub ? s.pub.token : null;
+    const hasBot = s.pub ? !!(PV && PV.botUsername && myToken) : true;
+    const entryOn = !!PV && !!myToken && R.sent && R.status === 'yes';
+    const entry = entryOn ? { show: true, src: qrOf((PV.appUrl || appUrl) + '/g/' + myToken, 400, '#1a1714', '#ffffff'), hint: pg && pg.checkedIn ? '✓ ' + t.youCheckedIn : t.entryHint, color: pg && pg.checkedIn ? '#2e7d4f' : '#6e665b' } : { show: false };
+    const isShareScr = s.screen === 'share' && !isPersonalInv;
     const X = {
       isTour: s.screen === 'tour', goTour: () => { this.stopMusic(); this.setState({ music: false, fromTour: true }); this.go('tour'); }, fromTourLive: isGuest && !!s.fromTour && s.guestMode !== 'preview' && s.guestMode !== 'edit', backTour: () => { this.stopMusic(); this.setState((x) => ({ music: false, share: { ...x.share, pwOn: false }, unlocked: false })); this.go('tour'); }, tourColor: s.screen === 'tour' ? '#d4452a' : U.ink, demos, demoCount: String(demos.length).padStart(2, '0'), styleChips, eventChips, allTpls, galleryCount: allTpls.length + ' / ' + D.TEMPLATES.length,
       galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill(kick + ' ✦ ' + inv.names + ' ✦ ' + gDateShort).join('   ✦   '),
@@ -2172,10 +2879,20 @@ class Component extends DCLogic {
       simulateScan: () => { const g = yesAll.find((x) => !x.checked); if (g) this.checkIn(g.id); else this.toast(t.allChecked); },
       lastScan: { show: !!ls, name: ls ? this.pname(ls) : '', info: ls ? (ls.plus ? '+' + ls.plus + ' · ' : '') + (ls.table ? t.table + ' ' + ls.table : t.unseated) : '' },
       checkedN, checkTotal: yesAll.length, checkPct: (yesAll.length ? Math.round(checkedN / yesAll.length * 100) : 0) + '%', checkRows,
-      activity, botFeed, botOpts, botTest: () => { this.logAct({ kind: 'test' }); this.toast(t.botT.sent); },
-      remind: () => { const n = cnt('pending'); this.logAct({ kind: 'reminder', n }); this.toast(t.reminded + ' · ' + n); },
+      activity, botFeed, botOpts, botTest: () => { if (dr) return this.botTestSend(); this.logAct({ kind: 'test' }); this.toast(t.botT.sent); },
+      remind: () => { if (dr) return this.remindAll(); const n = cnt('pending'); this.logAct({ kind: 'reminder', n }); this.toast(t.reminded + ' · ' + n); },
       allowDrop: (e) => e.preventDefault(), dropUnseat: (e) => { e.preventDefault(); if (this.dragId) this.seat(this.dragId, 0); this.dragId = null; },
       ogImg: s.ogImg || '', storyImg: s.storyImg || '', ogReady: !!s.ogImg, ogBusy: !s.ogImg, storyReady: !!s.storyImg,
+      // гости: добавление, SMS, места, столы, ручной чек-ин, бот
+      demoMode: !!s.demo, manualOn: !!dr, manualVal: s.manual || '', onManual: (e) => this.setState({ manual: e.target.value }), onManualKey: (e) => { if (e.key === 'Enter') this.manualCheckIn(); }, manualGo: () => this.manualCheckIn(),
+      tablesCtl: !!dr, tablesN, tablesDec: () => { if (tablesN > 1) this.setSettings({ tables: tablesN - 1 }); }, tablesInc: () => { if (tablesN < 30) this.setSettings({ tables: tablesN + 1 }); }, tablesDecOp: tablesN > 1 ? 1 : 0.35, tablesIncOp: tablesN < 30 ? 1 : 0.35,
+      importLabel: s.demo ? t.importTg : t.addGuests, smsAvail: smsOn, smsAll: () => this.sendSms(null), smsOp: s.smsBusy ? 0.5 : 1, remindOp: s.remindBusy ? 0.5 : 1,
+      seatsAvail: isPersonalInv, buySeats: () => this.buySeats(), seatsInfo,
+      botNeedTg: !!dr && !!mu && !mu.telegramId, botCanTg: !!cfg.telegram && !this.tgReal,
+      openAdd: () => this.openAdd(), addOpen: !!s.addSheet, closeAdd: () => { if (!(s.addSheet && s.addSheet.busy)) this.setState({ addSheet: null }); }, ad,
+      payOpen: !!s.pay && !!pd, closePay: () => this.closePay(), py,
+      isOrder: s.screen === 'order', od, isMock: s.screen === 'mockpay', mk,
+      hasBot, entry,
     };
 
     return {
@@ -2243,31 +2960,34 @@ class Component extends DCLogic {
       ...PX,
       sendOp: rsvpReady ? 1 : 0.4,
       sendRsvp: () => { if (rsvpReady) this.submitRsvp(); },
-      rsvpSummary, addCal: ics, viaBot: () => this.openUrl('https://t.me/share/url?url=' + encodeURIComponent('https://' + link) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary)),
+      rsvpSummary, addCal: ics, viaBot: () => (s.pub ? this.openUrl('https://t.me/' + PV.botUsername + '?start=g_' + myToken) : this.openUrl('https://t.me/share/url?url=' + encodeURIComponent(fullLink) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary))),
       changeRsvp: () => this.setState((x) => ({ rsvp: { ...x.rsvp, sent: false } })),
       footPad: isEdit || (isGuest && s.guestMode === 'preview') ? '150px' : '60px',
       sheetOpen: isEdit && !!s.sheet, sheetTitle: s.sheet ? SL[s.sheet] : '', closeSheet: () => this.setState({ sheet: null }),
-      share: s.share, link, ogTitle, ogDesc, metaCode,
-      onSlug: (e) => { const v = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'); this.setState((x) => ({ share: { ...x.share, slug: v, edited: true } })); },
-      copyLink: () => { try { navigator.clipboard.writeText('https://' + link).catch(() => {}); } catch (e) {} this.toast(t.copied); },
-      sendTg: () => this.openUrl('https://t.me/share/url?url=' + encodeURIComponent('https://' + link) + '&text=' + encodeURIComponent(ogTitle)),
-      qrSrc: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&color=1a1714&bgcolor=f3efe6&data=' + encodeURIComponent('https://' + link),
-      qrBig: 'https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&margin=20&data=' + encodeURIComponent('https://' + link),
-      togglePw: () => this.setState((x) => ({ share: { ...x.share, pwOn: !x.share.pwOn } })), pwTrack: s.share.pwOn ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', pwKnob: s.share.pwOn ? '23px' : '3px',
-      onPw: (e) => { const v = e.target.value; this.setState((x) => ({ share: { ...x.share, pw: v } })); },
-      openLive: () => this.openGuest('live'), goManage: () => this.goManage(), backToRefine: () => this.openGuest('edit'),
+      share: s.share, link, shareUrl, ogTitle, ogDesc, metaCode,
+      slugPrefix: host + '/i/', slugErr: s.slugErr || '', slugLine: s.slugErr ? '#d4452a' : 'rgba(' + U.inkRgb + ',.22)',
+      shareShared: !isPersonalInv, sharePersonal: !dr || isPersonalInv, personalActs: isPersonalInv,
+      onSlug: (e) => this.onSlugInput(e.target.value),
+      copyLink: () => copyText(isPersonalInv ? firstLink : fullLink, t.copied),
+      sendTg: () => this.openUrl('https://t.me/share/url?url=' + encodeURIComponent(fullLink) + '&text=' + encodeURIComponent(ogTitle)),
+      // QR рисуется в браузере (qrcode-generator): внешние сервисы QR запрещены CSP.
+      qrSrc: isShareScr ? qrOf(fullLink, 300, '#1a1714', '#f3efe6') : '',
+      qrBig: isShareScr ? qrOf(fullLink, 1000, '#1a1714', '#ffffff') : '',
+      togglePw: () => this.togglePw(), pwTrack: s.share.pwOn ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', pwKnob: s.share.pwOn ? '23px' : '3px',
+      onPw: (e) => this.onPwInput(e.target.value),
+      openLive: () => (dr && dr.status === 'active' && !isPersonalInv ? this.openUrl(fullLink) : this.openGuest('live')), goManage: () => this.goManage(), backToRefine: () => this.openGuest('edit'),
       statCols: wide ? 'repeat(4,minmax(0,1fr))' : 'repeat(2,minmax(0,1fr))',
       stats: [[cnt('yes'), t.attending, U.ink], [cnt('pending') + cnt('maybe'), t.pending, '#d4452a'], [cnt('no'), t.declined, '#8a8378'], [seatsTaken, t.seats, U.ink]].map(([nn, label, color]) => ({ n: nn, label, color })),
-      openImport: () => this.setState({ importOpen: true, picked: {} }), closeImport: () => this.setState({ importOpen: false }),
+      openImport: () => (s.demo ? this.setState({ importOpen: true, picked: {} }) : this.openAdd()), closeImport: () => this.setState({ importOpen: false }),
       remind: () => this.toast(t.reminded + ' · ' + cnt('pending')), pendingN: cnt('pending'),
-      exportCsv: () => this.download('guests.csv', '\ufeffname,username,status,plus_ones,table\n' + G.map((g) => [this.pname(g), g.user, g.status, g.plus, g.table || ''].join(',')).join('\n'), 'text/csv'),
+      exportCsv: () => dr ? this.exportGuests() : this.download('guests.csv', '\ufeffname,username,status,plus_ones,table\n' + G.map((g) => [this.pname(g), g.user, g.status, g.plus, g.table || ''].join(',')).join('\n'), 'text/csv'),
       mtabs: [['list', t.guestList + ' · ' + G.length], ['seat', t.seating], ['checkin', t.checkin], ['activity', t.activity], ['bot', t.bot]].map(([k, label]) => ({ label, border: s.mtab === k ? U.ink : 'transparent', color: s.mtab === k ? U.ink : U.muted, onClick: () => this.setState({ mtab: k }) })),
       mList: s.mtab === 'list', mSeat: s.mtab === 'seat', mCheck: s.mtab === 'checkin', mAct: s.mtab === 'activity', mBot: s.mtab === 'bot', filters, gRows, tableOpts, tablesV, unseated, unseatedN: unseated.length,
       importOpen: s.importOpen, contacts, pickedN, addOp: pickedN ? 1 : 0.4,
       addPicked: () => { if (!pickedN) return; const add = D.CONTACTS.filter((c) => s.picked[c.id] && !G.some((g) => g.id === c.id)).map((c) => ({ ...c, status: 'pending', plus: 0, table: 0 })); this.setState({ guests: G.concat(add), importOpen: false, picked: {} }); this.toast(t.added + ' · ' + add.length); },
       toastMsg: s.toast, toastOp: s.toastOn ? 1 : 0, toastY: s.toastOn ? '0px' : '16px',
       // Над открытым листом тост уходит наверх, чтобы не закрывать его текст и кнопки.
-      toastBottom: L || s.account || s.confirm ? 'calc(100% - ' + (topOff + 128) + 'px)' : tgSim ? '150px' : '96px',
+      toastBottom: L || s.account || s.confirm || s.pay || s.addSheet ? 'calc(100% - ' + (topOff + 128) + 'px)' : tgSim ? '150px' : '96px',
       ...X,
     };
   }
