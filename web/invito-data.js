@@ -2,19 +2,20 @@
 const M2 = { sh:'ш', ch:'ч', yo:'ё', yu:'ю', ya:'я', ye:'е', "o‘":'ў', "g‘":'ғ', "o'":'ў', "g'":'ғ', "oʻ":'ў', "gʻ":'ғ' };
 const M1 = { a:'а', b:'б', d:'д', e:'е', f:'ф', g:'г', h:'ҳ', i:'и', j:'ж', k:'к', l:'л', m:'м', n:'н', o:'о', p:'п', q:'қ', r:'р', s:'с', t:'т', u:'у', v:'в', x:'х', y:'й', z:'з', c:'с', w:'в', '‘':'ъ', "'":'ъ', 'ʼ':'ъ' };
 // Подстановки вида {name} не транслитерируются: их заменяет код ({наме} уже не нашлось бы).
-const KEEP = /(Invito|Telegram|CSV|QR|OG|DJ|RSVP|Loft 7|Basement 21|Rooftop 360|Nova|invito\.app\S*|@\S+|\{\w+\})/;
+const KEEP = /(Invito|Telegram|CSV|QR|OG|DJ|RSVP|Smart casual|Loft 7|Basement 21|Rooftop 360|Nova|invito\.app\S*|@\S+|\{\w+\})/;
 function cyrPart(s){
   let out = '';
   for (let i = 0; i < s.length; i++) {
     const two = s.substr(i, 2), tl = two.toLowerCase(), prev = s[i-1];
-    const ws = !prev || /[^A-Za-z‘'ʻ]/.test(prev);
+    // Тутуқ белгиси пишут по-разному: ' ‘ ’ (в словаре и примерах uz чаще ’), все три дают «ъ».
+    const ws = !prev || /[^A-Za-z‘'ʻ’]/.test(prev);
     // "yo‘" is "й" + "ў" (yo‘nalish → йўналиш), not "ё" + "ъ".
     if (tl[0] === 'y' && M2[s.substr(i + 1, 2).toLowerCase()] === 'ў') { out += (s[i] === 'y' ? 'й' : 'Й') + (s[i + 1] === 'o' ? 'ў' : 'Ў'); i += 2; continue; }
     if (M2[tl]) { let r = M2[tl]; if (two[0] !== two[0].toLowerCase()) r = r.toUpperCase(); out += r; i++; continue; }
     const c = s[i], cl = c.toLowerCase();
     if (cl === 'e' && ws) { out += c === cl ? 'э' : 'Э'; continue; }
-    if (M1[cl] && !(cl==="'"||cl==='‘') ) { let r = M1[cl]; if (c !== cl) r = r.toUpperCase(); out += r; }
-    else if (cl==="'"||cl==='‘') { out += ws ? c : 'ъ'; }
+    if (M1[cl] && !(cl==="'"||cl==='‘'||cl==='’') ) { let r = M1[cl]; if (c !== cl) r = r.toUpperCase(); out += r; }
+    else if (cl==="'"||cl==='‘'||cl==='’') { out += ws ? c : 'ъ'; }
     else out += c;
   }
   return out;
@@ -46,7 +47,7 @@ const en = {
   ogTitle:'How the link looks in chats', ogTags:'OG tags', openGuest:'Open as guest', chatQ:'Can you send me the link?',
   youGotMail:'You have an invitation', tapOpen:'Tap the envelope to open', youreInvited:'You are invited', scroll:'Scroll',
   invitationWord:'Invitation', program:'Program', route:'Route', untilEvent:'Until the day',
-  days:'days', hours:'hours', min:'min', secs:'sec',
+  days:'days', hours:'hours', min:'min', secs:'sec', cdN:{ d:{ one:'day', other:'days' }, h:{ one:'hour', other:'hours' }, m:'min' },
   gallery:'Moments', venue:'Where', openMap:'Open map', directions:'Directions',
   dress:'Dress code', gifts:'Gifts', notes:'Good to know', contact:'Questions?', writeHost:'Message the host',
   rsvp:'Will you come?', replyBy:'Please reply by', yes:'Yes, I will be there', no:'Sorry, I can’t make it', maybe:'Maybe',
@@ -59,7 +60,7 @@ const en = {
   importTg:'Import from Telegram', importHint:'Choose contacts to invite. They get the link from the bot.', addSel:'Add selected',
   remind:'Remind waiting', reminded:'Reminders sent via bot', csv:'Export CSV', added:'Guests added',
   table:'Table', unseated:'No table', unassignedHint:'Pick a table in the guest list.',
-  to:'To', personal:'{name}, you are invited', whoComing:'Who is coming', comingN:'guests said yes', showGuests:'Show who is coming on the invitation', personalLinks:'Personal links', personalHint:'Each guest gets a link with their name on the envelope. Their reply goes straight to your list.', openAs:'Open as guest', yourName:'Your name', you:'you', copied2:'Personal link copied', linkBtn:'Link', andMore:'and {n} more', replying:'Replying as',
+  to:'To', personal:'{name}, you are invited', whoComing:'Who is coming', comingN:{ one:'guest said yes', other:'guests said yes' }, showGuests:'Show who is coming on the invitation', personalLinks:'Personal links', personalHint:'Each guest gets a link with their name on the envelope. Their reply goes straight to your list.', openAs:'Open as guest', yourName:'Your name', you:'you', copied2:'Personal link copied', linkBtn:'Link', andMore:'and {n} more', replying:'Replying as',
 
   stepsX:{ style:'Style & colour', music:'Music', sections:'Sections' },
   hintsX:{ style:'Palette and headline font for this template.', music:'Background music guests can turn on.', sections:'Turn sections on or off, change their order and the opening.' },
@@ -73,7 +74,7 @@ const en = {
   guestbook:'Guestbook', guestbookHint:'Wishes from guests appear here after they reply.', scratchHint:'Scratch to reveal', curtainHint:'Tap to open', moveUp:'Up', moveDown:'Down',
   checkin:'Check-in', activity:'Activity', bot:'Bot', groups:{ family:'Family', friends:'Friends', work:'Work', other:'Other' }, group:'Group',
   scanTitle:'Scan guest QR', simulate:'Simulate scan', useCamera:'Use camera', checkedIn:'Checked in', checkIn:'Check in', arrived:'arrived', noCamera:'Camera unavailable here — use simulate', dragHint:'Drag guests onto a table, or tap a guest and then a table.', allChecked:'Everyone is here',
-  act:{ opened:'{name} opened the invitation', yes:'{name} is coming', no:'{name} declined', maybe:'{name} replied maybe', reminder:'Reminder sent to {n} guests', checkin:'{name} checked in', created:'Invitation created', published:'Invitation published', paid:'Payment received · {n}', sms:'SMS sent to {n} guests', test:'Test message sent' },
+  act:{ opened:'{name} opened the invitation', yes:'{name} is coming', no:'{name} declined', maybe:'{name} replied maybe', reminder:{ one:'Reminder sent to {n} guest', other:'Reminder sent to {n} guests' }, checkin:'{name} checked in', created:'Invitation created', published:'Invitation published', paid:'Payment received · {n}', sms:{ one:'SMS sent to {n} guest', other:'SMS sent to {n} guests' }, test:'Test message sent' },
   ago:{ now:'just now', m:'{n} min ago', h:'{n} h ago', d:'{n} d ago' },
   botT:{ title:'Invito bot', subtitle:'What the bot sends you and your guests', r1d:'Remind guests 1 day before', r3h:'Remind 3 hours before', morning:'Morning of the event: route and weather', notify:'Notify me about every reply', test:'Send test message', sent:'Test message sent to your Telegram', testMsg:'Test: your invitation is live and replies will arrive here.' },
   images:'Preview images', ogImg:'Link preview · 1200×630', storyImg:'Story · 1080×1920', download:'Download', generating:'Generating…',
@@ -84,7 +85,7 @@ const en = {
   tour:'Features', tourKick:'Everything Invito can do', tourTitle:'Features & templates', tourSub:'Every template and every feature in one place. Tap a demo to jump straight into it.', allStyles:'All styles', allEvents:'All events', templatesAll:'All templates', featuresAll:'Feature demos', tryIt:'Try it', seeAll:'See all features',
   demos:{ envelope:['Envelope opening','A sealed envelope with the guest’s name opens into the invitation.'], curtain:['Curtain opening','Two curtain halves slide apart with a confetti burst.'], scratchIntro:['Scratch-card opening','Guests scratch the cover to open the invitation.'], personal:['Personal invitation','“To: Dilnoza” on the envelope, her name in the hero, her reply goes to the list.'], password:['Password protection','Guests enter a password before opening. Demo password: 2026.'], reveal:['Scratch surprise','A hidden line under a scratch layer — e.g. a gender reveal.'], guestbook:['Guestbook & who’s coming','Wishes from replies and a live list of guests who said yes.'], map:['Real map & route','Embedded map, route stops on the illustrated map, directions links.'], motion:['Living cover','Slow zoom or your own video behind the hero.'], editor:['Tap-to-edit editor','Tap any part of the invitation to change it in place.'], ai:['AI writer','Five tones, written in the current language.'], music:['Music','Six generated tracks plus your own upload.'], sections:['Sections & order','Turn sections on/off, drag to reorder, pick the opening.'], palette:['Palettes & fonts','Three palettes and five fonts per template.'], share:['Share link','Custom address, QR, Telegram, OG and story images.'], guests:['Guest list','Groups, filters, Telegram import, CSV export, personal links.'], seating:['Seating','Drag guests onto round tables, plus-ones included.'], checkin:['QR check-in','Scan guests at the door or check them in by hand.'], activity:['Activity','Timeline of opens, replies, reminders and arrivals.'], bot:['Telegram bot','Reminders, morning route and reply notifications.'], languages:['4 languages','Russian, English, Uzbek Latin and Uzbek Cyrillic.'], telegram:['Telegram mini app','Native-style main and back buttons.'], dark:['Dark theme','The builder in dark mode — or follow Telegram.'] },
   demoPw:'Password: 2026', on:'On', off:'Off',
-  draft:'Draft', live:'Live', replies:'replies', sheetEdit:'Edit',
+  draft:'Draft', live:'Live', replies:{ one:'reply', other:'replies' }, sheetEdit:'Edit',
   sd:{ minimal:'Swiss grid, huge numerals, clean sans.', classic:'Ivory paper, serif names, double frame.', botanical:'Sage tones, soft arch, falling petals.', retro:'Chrome pink, heavy type, star glitter.', neon:'Night background, glowing ticket.', pastel:'Soft colors, round shapes, bubbles.', editorial:'Magazine cover, huge type, red accent.', luxe:'Black and gold, art-deco sunburst, monogram.', boho:'Terracotta and sand, rising sun, soft arches.', riso:'Two-ink print, offset layers, halftone dots.', polaroid:'Taped instant photos, handwriting, kraft paper.', cinema:'Letterbox, film strip, premiere credits.', watercolor:'Soft paint washes, feathered photo, script.', brutal:'Thick borders, giant type, hard shadows.' },
   login:'Log in', loginTitle:'Log in', loginHint:'Log in with your phone number to save invitations and share them.', loginExpired:'The login link has expired or was already used. Log in again.', loginAgain:'Your session has ended — log in again.', phoneNeeded:'Add a phone number to your account to continue.',
   phoneLabel:'Phone number', getCode:'Get code', codeLabel:'Code from SMS', codeSent:'We sent a code to {phone}', verify:'Log in', resend:'Send the code again', resendIn:'New code in {n} s', changePhone:'Change number', orWord:'or',
@@ -119,6 +120,12 @@ const en = {
   smsAllT:'Send SMS invitations?', smsAllQ:'The invitation goes by SMS to guests who haven’t received it yet: {n}. Sent messages can’t be recalled.',
   remindT:'Send reminders?', remindQ:'Guests who haven’t replied get a reminder in Telegram or by SMS: {n}. Sent messages can’t be recalled.',
   noReplies:'No replies yet. Guests appear here once they answer via the link.',
+  tgAuthHint:'Log in with your Telegram account.', tgAuthFail:'Could not log in with Telegram. Try again; if it doesn’t help, close and reopen the mini app.',
+  phoneDeclined:'The number was not shared. Tap “Share phone number” to continue.', tgPhoneSlow:'The number has not arrived yet. Check the bot’s reply in the Telegram chat.',
+  tgOtherAccount:'This Telegram belongs to another account: {who}. You are now logged in to it.', tgConflict:'This Telegram is already linked to another account.',
+  loginNotKept:'The login was not kept: the browser blocks cookies for this site. Allow them and try again.',
+  noScanner:'This browser can’t read QR codes with the camera. Check the guest in with “{btn}” or paste their personal link into the field below.',
+  tplOff:'This template is not available right now. Choose another one.', addPartial:'Added {n} of {total}. The rest were not added: {err}', showMore:'Show more · {n}',
 };
 const ru = {
   close:'Закрыть', miniApp:'мини-приложение', myInv:'Мои приглашения', issueTag:'Конструктор приглашений',
@@ -144,7 +151,7 @@ const ru = {
   ogTitle:'Как ссылка выглядит в чатах', ogTags:'OG-теги', openGuest:'Открыть как гость', chatQ:'Скинешь ссылку на приглашение?',
   youGotMail:'Вам приглашение', tapOpen:'Нажмите на конверт, чтобы открыть', youreInvited:'Вы приглашены', scroll:'Листайте',
   invitationWord:'Приглашение', program:'Программа', route:'Маршрут', untilEvent:'До события',
-  days:'дней', hours:'часов', min:'минут', secs:'секунд',
+  days:'дней', hours:'часов', min:'минут', secs:'секунд', cdN:{ d:{ one:'день', few:'дня', many:'дней', other:'дня' }, h:{ one:'час', few:'часа', many:'часов', other:'часа' }, m:{ one:'минута', few:'минуты', many:'минут', other:'минуты' } },
   gallery:'Моменты', venue:'Где', openMap:'Открыть карту', directions:'Маршрут',
   dress:'Дресс-код', gifts:'Подарки', notes:'Полезно знать', contact:'Есть вопросы?', writeHost:'Написать организатору',
   rsvp:'Вы придёте?', replyBy:'Ответьте, пожалуйста, до', yes:'Да, приду', no:'К сожалению, не смогу', maybe:'Возможно',
@@ -157,7 +164,7 @@ const ru = {
   importTg:'Импорт из Telegram', importHint:'Выберите контакты. Бот отправит им ссылку.', addSel:'Добавить выбранных',
   remind:'Напомнить ожидающим', reminded:'Напоминания отправлены ботом', csv:'Экспорт CSV', added:'Гости добавлены',
   table:'Стол', unseated:'Без стола', unassignedHint:'Назначьте стол в списке гостей.',
-  to:'Кому', personal:'{name}, вы приглашены', whoComing:'Кто придёт', comingN:'гостей ответили «да»', showGuests:'Показывать на приглашении, кто придёт', personalLinks:'Персональные ссылки', personalHint:'У каждого гостя своя ссылка — его имя на конверте, а ответ сразу попадает в ваш список.', openAs:'Открыть как гость', yourName:'Ваше имя', you:'вы', copied2:'Персональная ссылка скопирована', linkBtn:'Ссылка', andMore:'и ещё {n}', replying:'Отвечает',
+  to:'Кому', personal:'{name}, вы приглашены', whoComing:'Кто придёт', comingN:{ one:'гость ответил «да»', few:'гостя ответили «да»', many:'гостей ответили «да»', other:'гостя ответили «да»' }, showGuests:'Показывать на приглашении, кто придёт', personalLinks:'Персональные ссылки', personalHint:'У каждого гостя своя ссылка — его имя на конверте, а ответ сразу попадает в ваш список.', openAs:'Открыть как гость', yourName:'Ваше имя', you:'вы', copied2:'Персональная ссылка скопирована', linkBtn:'Ссылка', andMore:'и ещё {n}', replying:'Отвечает',
 
   stepsX:{ style:'Стиль и цвет', music:'Музыка', sections:'Разделы' },
   hintsX:{ style:'Палитра и шрифт заголовков для этого шаблона.', music:'Фоновая музыка, которую гости могут включить.', sections:'Включайте и выключайте разделы, меняйте порядок и открытие.' },
@@ -171,7 +178,7 @@ const ru = {
   guestbook:'Гостевая книга', guestbookHint:'Пожелания гостей появятся здесь после ответа.', scratchHint:'Сотрите, чтобы узнать', curtainHint:'Нажмите, чтобы открыть', moveUp:'Выше', moveDown:'Ниже',
   checkin:'Чек-ин', activity:'Активность', bot:'Бот', groups:{ family:'Семья', friends:'Друзья', work:'Работа', other:'Другие' }, group:'Группа',
   scanTitle:'Сканируйте QR гостя', simulate:'Симулировать скан', useCamera:'Включить камеру', checkedIn:'Пришёл', checkIn:'Отметить', arrived:'пришли', noCamera:'Камера здесь недоступна — используйте симуляцию', dragHint:'Перетащите гостя на стол или нажмите на гостя, а затем на стол.', allChecked:'Все на месте',
-  act:{ opened:'{name} открыл(а) приглашение', yes:'{name} придёт', no:'{name} не сможет', maybe:'{name} ответил(а) «возможно»', reminder:'Напоминание отправлено {n} гостям', checkin:'{name} пришёл(ла)', created:'Приглашение создано', published:'Приглашение опубликовано', paid:'Оплата получена · {n}', sms:'SMS отправлено {n} гостям', test:'Отправлено тестовое сообщение' },
+  act:{ opened:'{name} открыл(а) приглашение', yes:'{name} придёт', no:'{name} не сможет', maybe:'{name} ответил(а) «возможно»', reminder:{ one:'Напоминание отправлено {n} гостю', other:'Напоминание отправлено {n} гостям' }, checkin:'{name} пришёл(ла)', created:'Приглашение создано', published:'Приглашение опубликовано', paid:'Оплата получена · {n}', sms:{ one:'SMS отправлено {n} гостю', other:'SMS отправлено {n} гостям' }, test:'Отправлено тестовое сообщение' },
   ago:{ now:'только что', m:'{n} мин назад', h:'{n} ч назад', d:'{n} дн назад' },
   botT:{ title:'Invito бот', subtitle:'Что бот присылает вам и гостям', r1d:'Напомнить гостям за день', r3h:'Напомнить за 3 часа', morning:'Утром в день события: маршрут и погода', notify:'Сообщать мне о каждом ответе', test:'Отправить тестовое сообщение', sent:'Тест отправлен в ваш Telegram', testMsg:'Тест: приглашение опубликовано, ответы будут приходить сюда.' },
   images:'Картинки для превью', ogImg:'Превью ссылки · 1200×630', storyImg:'Сторис · 1080×1920', download:'Скачать', generating:'Генерирую…',
@@ -182,7 +189,7 @@ const ru = {
   tour:'Возможности', tourKick:'Всё, что умеет Invito', tourTitle:'Возможности и шаблоны', tourSub:'Все шаблоны и все функции в одном месте. Нажмите на демо, чтобы сразу попасть в нужный экран.', allStyles:'Все стили', allEvents:'Все события', templatesAll:'Все шаблоны', featuresAll:'Демо функций', tryIt:'Попробовать', seeAll:'Все возможности',
   demos:{ envelope:['Открытие конвертом','Запечатанный конверт с именем гостя раскрывается в приглашение.'], curtain:['Открытие занавесом','Половины занавеса разъезжаются, вылетает конфетти.'], scratchIntro:['Открытие скретч-картой','Гость стирает обложку, чтобы открыть приглашение.'], personal:['Персональное приглашение','«Кому: Дилноза» на конверте, её имя на обложке, ответ попадает в список.'], password:['Защита паролем','Гость вводит пароль перед открытием. Пароль демо: 2026.'], reveal:['Скретч-сюрприз','Скрытая строка под стираемым слоем — например, пол малыша.'], guestbook:['Гостевая книга и кто придёт','Пожелания из ответов и живой список гостей, ответивших «да».'], map:['Настоящая карта и маршрут','Встроенная карта, остановки маршрута, ссылки на навигацию.'], motion:['Живая обложка','Медленный зум или ваше видео на обложке.'], editor:['Редактор «нажми и измени»','Нажмите на любую часть приглашения, чтобы изменить её.'], ai:['ИИ-автор текста','Пять тонов, текст на текущем языке.'], music:['Музыка','Шесть генеративных треков и загрузка своего.'], sections:['Разделы и порядок','Включайте, выключайте и перетаскивайте разделы, выбирайте открытие.'], palette:['Палитры и шрифты','Три палитры и пять шрифтов для каждого шаблона.'], share:['Ссылка','Свой адрес, QR, Telegram, OG-картинка и сторис.'], guests:['Список гостей','Группы, фильтры, импорт из Telegram, CSV, персональные ссылки.'], seating:['Рассадка','Перетаскивайте гостей за круглые столы, с учётом +1.'], checkin:['QR чек-ин','Сканируйте гостей на входе или отмечайте вручную.'], activity:['Активность','Лента открытий, ответов, напоминаний и прибытий.'], bot:['Telegram-бот','Напоминания, утренний маршрут и уведомления об ответах.'], languages:['4 языка','Русский, английский, узбекский (латиница и кириллица).'], telegram:['Мини-приложение Telegram','Главная кнопка и кнопка «Назад» как в Telegram.'], dark:['Тёмная тема','Конструктор в тёмной теме — или как в Telegram.'] },
   demoPw:'Пароль: 2026', on:'Вкл', off:'Выкл',
-  draft:'Черновик', live:'Опубликовано', replies:'ответов', sheetEdit:'Изменить',
+  draft:'Черновик', live:'Опубликовано', replies:{ one:'ответ', few:'ответа', many:'ответов', other:'ответа' }, sheetEdit:'Изменить',
   sd:{ minimal:'Тихая сетка, воздух, чистый гротеск.', classic:'Бумага цвета слоновой кости, антиква, двойная рамка.', botanical:'Шалфей, мягкая арка, лепестки.', retro:'Хромово-розовый, тяжёлый шрифт, звёзды.', neon:'Ночной фон, светящийся текст.', pastel:'Мягкие цвета, круглые формы, пузырьки.', editorial:'Обложка журнала, огромный шрифт, красный акцент.', luxe:'Чёрное с золотом, ар-деко, монограмма.', boho:'Терракота и песок, восходящее солнце, мягкие арки.', riso:'Двухцветная ризография, сдвиг слоёв, растровые точки.', polaroid:'Полароиды на скотче, почерк, крафт-бумага.', cinema:'Кинокадр, плёнка, титры премьеры.', watercolor:'Акварельные разводы, мягкое фото, каллиграфия.', brutal:'Толстые рамки, гигантский шрифт, жёсткие тени.' },
   login:'Войти', loginTitle:'Вход', loginHint:'Войдите по номеру телефона, чтобы сохранять приглашения и делиться ими.', loginExpired:'Ссылка для входа устарела или уже использована. Войдите снова.', loginAgain:'Сессия закончилась — войдите снова.', phoneNeeded:'Чтобы продолжить, привяжите к аккаунту номер телефона.',
   phoneLabel:'Номер телефона', getCode:'Получить код', codeLabel:'Код из SMS', codeSent:'Мы отправили код на {phone}', verify:'Войти', resend:'Отправить код ещё раз', resendIn:'Новый код через {n} с', changePhone:'Изменить номер', orWord:'или',
@@ -217,6 +224,12 @@ const ru = {
   smsAllT:'Разослать приглашения по SMS?', smsAllQ:'Приглашение уйдёт по SMS гостям, которым его ещё не отправляли: {n}. Отправленные сообщения не отозвать.',
   remindT:'Отправить напоминания?', remindQ:'Напоминание в Telegram или по SMS получат гости, которые ещё не ответили: {n}. Отправленные сообщения не отозвать.',
   noReplies:'Ответов пока нет. Гости появятся здесь, когда ответят по ссылке.',
+  tgAuthHint:'Вход через ваш аккаунт Telegram.', tgAuthFail:'Не удалось войти через Telegram. Попробуйте ещё раз, а если не выйдет — закройте и снова откройте мини-приложение.',
+  phoneDeclined:'Номер не отправлен. Нажмите «Поделиться номером», чтобы продолжить.', tgPhoneSlow:'Номер пока не пришёл. Посмотрите ответ бота в чате Telegram.',
+  tgOtherAccount:'Этот Telegram привязан к другому аккаунту: {who}. Вы вошли в него.', tgConflict:'Этот Telegram уже привязан к другому аккаунту.',
+  loginNotKept:'Вход не сохранился: браузер не принимает cookie этого сайта. Разрешите их и попробуйте снова.',
+  noScanner:'Этот браузер не умеет читать QR-коды камерой. Отметьте гостя кнопкой «{btn}» или вставьте его личную ссылку в поле ниже.',
+  tplOff:'Этот шаблон сейчас недоступен. Выберите другой.', addPartial:'Добавлено {n} из {total}. Остальные не добавлены: {err}', showMore:'Показать ещё · {n}',
 };
 const uz = {
   close:'Yopish', miniApp:'mini ilova', myInv:'Mening taklifnomalarim', issueTag:'Taklifnoma konstruktori',
@@ -242,7 +255,7 @@ const uz = {
   ogTitle:'Havola chatda qanday ko‘rinadi', ogTags:'OG teglar', openGuest:'Mehmon sifatida ochish', chatQ:'Taklifnoma havolasini yuborasanmi?',
   youGotMail:'Sizga taklifnoma', tapOpen:'Ochish uchun konvertga bosing', youreInvited:'Siz taklif qilingansiz', scroll:'Pastga suring',
   invitationWord:'Taklifnoma', program:'Dastur', route:'Yo‘nalish', untilEvent:'Tadbirgacha',
-  days:'kun', hours:'soat', min:'daqiqa', secs:'soniya',
+  days:'kun', hours:'soat', min:'daqiqa', secs:'soniya', cdN:{ d:'kun', h:'soat', m:'daqiqa' },
   gallery:'Lahzalar', venue:'Qayerda', openMap:'Xaritani ochish', directions:'Yo‘nalish',
   dress:'Kiyinish qoidasi', gifts:'Sovg‘alar', notes:'Bilish foydali', contact:'Savollar bormi?', writeHost:'Tashkilotchiga yozish',
   rsvp:'Kelasizmi?', replyBy:'Iltimos, javob bering:', yes:'Ha, kelaman', no:'Afsuski, kela olmayman', maybe:'Balki',
@@ -315,10 +328,25 @@ const uz = {
   smsAllT:'Taklifnomalar SMS orqali yuborilsinmi?', smsAllQ:'Taklifnoma hali yuborilmagan mehmonlarga SMS orqali boradi: {n}. Yuborilgan xabarlarni qaytarib bo‘lmaydi.',
   remindT:'Eslatmalar yuborilsinmi?', remindQ:'Hali javob bermagan mehmonlarga Telegram yoki SMS orqali eslatma boradi: {n}. Yuborilgan xabarlarni qaytarib bo‘lmaydi.',
   noReplies:'Hozircha javoblar yo‘q. Mehmonlar havola orqali javob berganda shu yerda paydo bo‘ladi.',
+  tgAuthHint:'Telegram akkauntingiz orqali kirish.', tgAuthFail:'Telegram orqali kirib bo‘lmadi. Qaytadan urinib ko‘ring, bo‘lmasa mini ilovani yopib, qayta oching.',
+  phoneDeclined:'Raqam yuborilmadi. Davom etish uchun “Raqamni ulashish” tugmasini bosing.', tgPhoneSlow:'Raqam hali kelmadi. Telegram chatida botning javobini ko‘ring.',
+  tgOtherAccount:'Bu Telegram boshqa akkauntga ulangan: {who}. Siz unga kirdingiz.', tgConflict:'Bu Telegram allaqachon boshqa akkauntga ulangan.',
+  loginNotKept:'Kirish saqlanmadi: brauzer bu saytning cookie fayllarini qabul qilmayapti. Ularga ruxsat bering va qaytadan urinib ko‘ring.',
+  noScanner:'Bu brauzer kamera orqali QR kodni o‘qiy olmaydi. Mehmonni “{btn}” tugmasi bilan belgilang yoki uning shaxsiy havolasini quyidagi maydonga qo‘ying.',
+  tplOff:'Bu shablon hozir mavjud emas. Boshqasini tanlang.', addPartial:'{total} tadan {n} tasi qo‘shildi. Qolganlari qo‘shilmadi: {err}', showMore:'Yana ko‘rsatish · {n}',
 };
 export const I18N = { en, ru, uz, uzc: deep(uz) };
 export const LANGS = [ { code:'ru', label:'RU' }, { code:'en', label:'EN' }, { code:'uz', label:'UZ' }, { code:'uzc', label:'ЎЗ' } ];
 export const LOCALE = { ru:'ru-RU', en:'en-GB', uz:'uz-Latn-UZ', uzc:'uz-Cyrl-UZ' };
+// Слово при числе: v — строка (узбекские существительные после числа не меняются) или формы
+// { one, few, many, other } по Intl.PluralRules языка: «1 ответ», «2 ответа», «5 ответов».
+const PR = {};
+export function plural(lang, n, v){
+  if (v == null || typeof v !== 'object') return v;
+  let k = 'other';
+  try { k = (PR[lang] || (PR[lang] = new Intl.PluralRules(LOCALE[lang] || 'en'))).select(Number(n) || 0); } catch {}
+  return v[k] ?? v.other ?? '';
+}
 // Месяцы и дни недели для uz и uzc: ICU многих браузеров (Chromium) узбекских названий не знает и пишет «2026 M12 26».
 // Даты собираются в том же виде, что у Intl в Node на сервере (og:title, SMS): «26-dekabr, 2026», «26 декабр, 2026».
 export const UZ_DATES = {
@@ -492,5 +520,5 @@ export const CONTACTS = [
 const RU2LAT = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya',ў:'o',қ:'q',ғ:'g',ҳ:'h'};
 export function slugify(s){ return (s||'').toLowerCase().replace(/&/g,' and ').split('').map(c=>RU2LAT[c]??c).join('').replace(/[‘'ʻ’]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'invite'; }
 
-export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LANG_NAMES, LOCALE, UZ_DATES, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr };
+export const INVITO = { derive, VARIANTS, SECTIONS, TRACKS, EVENT_MUSIC, I18N, LANGS, LANG_NAMES, LOCALE, UZ_DATES, EVENTS, EVENT_ORDER, STYLES, TEMPLATES, SCRIPT, HEAVY, FS, GUESTS, CONTACTS, slugify, toCyr, plural };
 if (typeof window !== 'undefined') window.INVITO = INVITO;

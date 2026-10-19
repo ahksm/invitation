@@ -353,6 +353,12 @@ describe("публикация и оплата: подписка и профил
         expect(overlap, `${lang} ${key}: ${JSON.stringify(boxes)}`).toBe(false);
         expect(boxes.price.r).toBeLessThanOrEqual(boxes.row.r + 0.5);
       }
+      // Суммы с пробелами в разрядах, как в боте и SMS (не «5,000 so‘m»); «Уже оплачено: N» не отрывает число.
+      const P = await pricesFor(user.id);
+      expect(await pay.locator('[data-price="personal"]').innerText()).toBe(t.perGuest.replace("{price}", await money(page, P.seat, "ru-RU", t.sum)));
+      expect(await pay.innerText()).not.toMatch(/\d,\d{3}/);
+      await pay.locator('[data-mode="personal"]').click();
+      await expect.poll(async () => (await pay.textContent()) || "").toContain(t.paySeatsPaid.replace(" {n}", "\u00a00"));
       await e.shot(page, `pay-sheet-${lang}-390x844.png`);
       await e.expectClean(page, problems);
       await close();
@@ -802,7 +808,8 @@ describe("экран гостей", () => {
       await toManage(page);
       const row = (name: string) => page.locator(`[data-guest="${name}"]`);
       await row("Азиза Саидова").waitFor();
-      expect(await row("Азиза Саидова").innerText()).toContain("+998 90 100-00-01");
+      // Номер переносится только между группами: неразрывный пробел после +998 и неразрывные дефисы.
+      expect(await row("Азиза Саидова").textContent()).toContain("+998\u00a090 100\u201100\u201101");
       expect(await page.locator("[data-guest]").count()).toBe(3);
       // SMS одному гостю, затем всем: у гостя без телефона — причина пропуска.
       const sent0 = e.sms.length;
