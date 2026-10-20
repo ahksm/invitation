@@ -188,6 +188,28 @@ describe("общая ссылка", () => {
       { name: "Анна К.", text: "Поздравляем!" },
     ]);
   });
+
+  it("остановки маршрута: адрес или ссылка пункта программы сохраняются и приходят гостю, старые пункты — с пустым адресом", async () => {
+    const program = [
+      { time: "15:00", title: "Никах", place: "Мечеть Минор", address: "https://yandex.uz/maps/-/CDabc" },
+      { time: "18:00", title: "Той", place: "Oqsaroy", address: "ул. Навои, 1" },
+      { time: "21:00", title: "Танцы", place: "" },
+    ];
+    const { cookie, inv } = await sharedPublished({ program });
+    const saved = [...program.slice(0, 2), { ...program[2], address: "" }];
+    expect((await req(cookie, "GET", `/api/invitations/${inv.id}`)).json().data.program).toEqual(saved);
+    expect((await get(`/api/public/i/${inv.slug}`)).json().data.program).toEqual(saved);
+
+    // Адрес длиннее 300 символов — 400, сохранённое не меняется.
+    const long = await req(cookie, "PATCH", `/api/invitations/${inv.id}`, { data: { program: [{ time: "", title: "x", address: "x".repeat(301) }] } });
+    expect(long.statusCode).toBe(400);
+    expect((await req(cookie, "GET", `/api/invitations/${inv.id}`)).json().data.program).toEqual(saved);
+
+    // Пункты, сохранённые до появления адреса, читаются с address: "".
+    await db.update(invitations).set({ data: { names: "Азиз & Мадина", program: [{ time: "16:00", title: "Сбор", place: "ЗАГС" }] } }).where(eq(invitations.id, inv.id));
+    await redis.flushdb();
+    expect((await get(`/api/public/i/${inv.slug}`)).json().data.program).toEqual([{ time: "16:00", title: "Сбор", place: "ЗАГС", address: "" }]);
+  });
 });
 
 describe("пароль общей ссылки", () => {

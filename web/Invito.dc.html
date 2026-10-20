@@ -167,7 +167,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </sc-if>
 
 <sc-if value="{{ isBuild }}">
-<main style="max-width:1200px;margin:0 auto;padding:22px clamp(18px,4vw,40px) 40px;display:grid;grid-template-columns:{{ buildCols }};gap:56px;align-items:start;color:{{ ui.ink }}">
+<main style="max-width:1200px;margin:0 auto;padding:22px clamp(18px,4vw,40px) {{ buildPadB }};display:grid;grid-template-columns:{{ buildCols }};gap:56px;align-items:start;color:{{ ui.ink }}">
 <div style="min-width:0">
 <div style="display:flex;gap:4px"><sc-for list="{{ steps }}" as="s" hint-placeholder-count="7"><button onClick="{{ s.onClick }}" title="{{ s.label }}" style="flex:1;height:22px;border:0;background:none;padding:0;cursor:pointer;display:flex;align-items:center"><span style="display:block;width:100%;height:3px;border-radius:2px;background:{{ s.bar }};transition:background .4s"></span></button></sc-for></div>
 <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-top:20px">
@@ -194,17 +194,24 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fVenue }}</span><input value="{{ inv.venue }}" maxLength="200" onChange="{{ on.venue }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fAddress }}</span><input value="{{ inv.address }}" maxLength="300" onChange="{{ on.address }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fMap }}</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><sc-for list="{{ mapOpts }}" as="o"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div></div>
-<div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fStops }}</div><p style="margin:8px 0 4px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.fStopsHint }}</p>
-<sc-for list="{{ prog }}" as="p"><div style="display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><span style="font:500 12px 'JetBrains Mono',monospace;color:#d4452a">{{ p.time }}</span><input value="{{ p.place }}" onChange="{{ p.onPlace }}" placeholder="{{ p.placePh }}" style="width:100%;background:transparent;border:0;padding:12px 0;font:400 16px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none"></div></sc-for>
+<div data-route-editor="1"><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fStops }}</div><p style="margin:8px 0 4px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.fStopsHint }}</p>
+<sc-if value="{{ progNone }}"><p data-prog-empty="1" style="margin:12px 0 0;padding:14px 16px;border-radius:12px;border:1px dashed rgba({{ ui.inkRgb }},.25);font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.progEmpty }}</p></sc-if>
+<sc-for list="{{ prog }}" as="p"><div data-stop="{{ $index }}" style="display:grid;grid-template-columns:28px minmax(0,1fr) 32px;gap:10px;align-items:start;padding:12px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
+<span data-badge="{{ p.badge }}" style="width:26px;height:26px;margin-top:9px;box-sizing:border-box;border-radius:50%;border:1.5px solid {{ p.badgeBorder }};background:{{ p.badgeBg }};color:{{ p.badgeColor }};font:500 12px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">{{ p.n }}</span>
+<div style="min-width:0;display:flex;flex-direction:column">
+<div style="display:flex;gap:10px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.1)"><input type="time" data-f="time" aria-label="{{ t.fTime }}" value="{{ p.time }}" onChange="{{ p.onTime }}" style="flex:none;width:auto;min-width:76px;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:500 15px 'JetBrains Mono',monospace;color:#d4452a"><input data-f="title" aria-label="{{ t.itemTitle }}" value="{{ p.title }}" maxLength="120" placeholder="{{ t.phTitle }}" onChange="{{ p.onTitle }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:400 17px/1.4 'Onest',sans-serif"></div>
+<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ p.placeIcon }};font-size:15px">⌖</span><input data-f="place" aria-label="{{ t.fPlace }}" value="{{ p.place }}" maxLength="200" placeholder="{{ t.phPlace }}" onChange="{{ p.onPlace }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 15px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
+<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ ui.muted }};font-size:13px">↗</span><input data-f="address" aria-label="{{ t.phAddr }}" value="{{ p.address }}" maxLength="300" placeholder="{{ t.phAddr }}" onChange="{{ p.onAddr }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 14px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
+<sc-if value="{{ p.noteOn }}"><span data-linknote="{{ p.noteKind }}" style="margin:0 0 4px 24px;font-size:12px;line-height:1.4;color:{{ p.noteColor }}">{{ p.note }}</span></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-top:4px"><button onClick="{{ p.onUp }}" title="{{ t.moveUp }}" aria-label="{{ t.moveUp }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.upOp }}">↑</button><button onClick="{{ p.onDown }}" title="{{ t.moveDown }}" aria-label="{{ t.moveDown }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.downOp }}">↓</button><button onClick="{{ p.onRemove }}" title="{{ t.deleteD }}" aria-label="{{ t.deleteD }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;color:{{ ui.muted }};font-size:18px" style-hover="background:rgba({{ ui.inkRgb }},.08)">×</button></div>
+</div></sc-for>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button data-add-prog="1" onClick="{{ addProg }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px dashed rgba({{ ui.inkRgb }},.35);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer;opacity:{{ progAddOp }}">{{ addProgLabel }}</button><sc-if value="{{ progUnsorted }}"><button data-sort-prog="1" onClick="{{ sortProg }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer">↕ {{ t.sortTime }}</button></sc-if></div>
 </div>
 </div></sc-if>
 <sc-if value="{{ ws.words }}"><div style="display:flex;flex-direction:column;gap:26px">
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fMessage }}</span><textarea value="{{ inv.message }}" maxLength="3000" onChange="{{ on.message }}" rows="4" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 22px/1.4 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea><sc-if value="{{ msgCount.show }}"><span data-count="message" style="align-self:flex-end;font:500 11px 'JetBrains Mono',monospace;color:{{ msgCount.color }}">{{ msgCount.text }}</span></sc-if></label>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:-12px"><sc-for list="{{ aiTones }}" as="a"><button onClick="{{ a.onClick }}" style="height:34px;padding:0 12px;border-radius:999px;border:1px solid {{ a.border }};background:{{ a.bg }};color:{{ a.color }};font-size:13px;cursor:pointer">{{ a.label }}</button></sc-for><button onClick="{{ aiGo }}" style="height:34px;padding:0 14px;border-radius:999px;border:0;background:#d4452a;color:#fff;font-size:13px;font-weight:500;cursor:pointer;opacity:{{ aiOp }}">✦ {{ aiLabel }}</button></div>
-<div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fProgram }}</div>
-<sc-for list="{{ prog }}" as="p"><div style="display:grid;grid-template-columns:96px minmax(0,1fr) 32px;gap:10px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><input type="time" value="{{ p.time }}" onChange="{{ p.onTime }}" style="width:100%;background:transparent;border:0;padding:12px 0;font:500 14px 'JetBrains Mono',monospace;color:#d4452a;outline:none"><input value="{{ p.title }}" onChange="{{ p.onTitle }}" style="width:100%;background:transparent;border:0;padding:12px 0;font:400 17px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none"><button onClick="{{ p.onRemove }}" style="width:32px;height:32px;border-radius:50%;border:0;background:transparent;color:{{ ui.muted }};font-size:18px;cursor:pointer" style-hover="background:rgba({{ ui.inkRgb }},.08)">×</button></div></sc-for>
-<button onClick="{{ addProg }}" style="margin-top:12px;height:40px;padding:0 16px;border-radius:999px;border:1px dashed rgba({{ ui.inkRgb }},.35);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer">+ {{ t.addItem }}</button>
-</div>
 </div></sc-if>
 <sc-if value="{{ ws.details }}"><div style="display:flex;flex-direction:column;gap:26px">
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fDress }}</span><textarea value="{{ inv.dress }}" maxLength="500" onChange="{{ on.dress }}" rows="2" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
@@ -562,7 +569,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div onClick="{{ ed.program }}" style="width:100%;max-width:1100px;margin:0 auto;display:grid;grid-template-columns:{{ pinCols }};gap:16px 56px;align-items:center;cursor:{{ ec }};outline:{{ eo }};outline-offset:10px">
 <div><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.program }}</div><div data-num="1" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(110px,28vw,300px) * {{ th.fs }});line-height:.85;color:{{ th.accent }};margin-top:12px;text-shadow:{{ th.glowCss }};font-variant-numeric:tabular-nums lining-nums">01</div><div style="font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.muted }};margin-top:8px">/ {{ progTotal }}</div></div>
 <div style="position:relative;height:clamp(220px,36vh,340px)">
-<sc-for list="{{ prog }}" as="p"><div data-chap="{{ $index }}" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;opacity:0">
+<sc-for list="{{ gProg }}" as="p"><div data-chap="{{ $index }}" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;opacity:0">
 <div style="font-size:15px;letter-spacing:.3em;color:{{ th.accent }}">{{ p.time }}</div>
 <div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(38px,8.5vw,88px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance">{{ p.title }}</div>
 <sc-if value="{{ p.hasPlace }}"><div style="display:flex;align-items:center;gap:10px;font-size:15px;color:{{ th.muted }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ th.accent }}"></span>{{ p.place }}</div></sc-if>
@@ -600,14 +607,15 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:absolute;left:-20%;right:-20%;top:36%;height:12px;background:{{ th.bg }};transform:rotate(11deg)"></div>
 <div style="position:absolute;top:-20%;bottom:-20%;left:60%;width:14px;background:{{ th.bg }};transform:rotate(17deg)"></div>
 <div style="position:absolute;top:-20%;bottom:-20%;left:24%;width:9px;background:{{ th.bg }};transform:rotate(-7deg)"></div>
-<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><polyline data-routeline="1" points="{{ routePts }}" fill="none" stroke="{{ th.accent }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="1000"></polyline></svg>
-<sc-for list="{{ pins }}" as="p"><div data-pinmark="1" style="position:absolute;left:{{ p.x }};top:{{ p.y }};transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0">
-<div style="background:{{ p.bg }};color:{{ p.color }};padding:7px 11px;border-radius:{{ th.radius }};font-size:12px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.2);display:flex;gap:6px;align-items:center"><span style="font-weight:700">{{ p.n }}</span><span>{{ p.name }}</span></div>
-<div style="width:16px;height:16px;border-radius:50%;background:{{ th.accent }};box-shadow:0 0 0 7px {{ th.accentSoft }}"></div>
+<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><polyline data-routeline="1" points="{{ routePts }}" fill="none" stroke="{{ th.accent }}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" stroke-dasharray="100000" stroke-dashoffset="100000"></polyline></svg>
+<sc-for list="{{ pins }}" as="p"><div data-pinmark="1" data-main="{{ p.main }}" style="position:absolute;left:{{ p.x }};top:{{ p.y }};max-width:{{ p.mw }};transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:0">
+<div data-pinlabel="1" style="max-width:100%;box-sizing:border-box;background:{{ p.bg }};color:{{ p.color }};padding:7px 11px;border-radius:{{ th.radius }};font-size:12px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.2);display:flex;gap:6px;align-items:center"><span style="font-weight:700;flex:none">{{ p.n }}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span></div>
+<div style="width:{{ p.dot }};height:{{ p.dot }};flex:none;border-radius:50%;background:{{ p.dotBg }};box-shadow:0 0 0 7px {{ th.accentSoft }}"></div>
 </div></sc-for></sc-if>
 </div>
-<sc-if value="{{ hasRoute }}"><div style="margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:0 28px">
-<sc-for list="{{ routeList }}" as="r"><div style="display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid {{ th.line }}"><span style="width:28px;height:28px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ r.n }}</span><div><div style="font-size:12px;letter-spacing:.2em;color:{{ th.accent }}">{{ r.time }}</div><div style="font-size:17px;margin-top:4px">{{ r.place }}</div><div style="font-size:14px;color:{{ th.muted }};margin-top:2px">{{ r.title }}</div></div></div></sc-for>
+<sc-if value="{{ mapNote }}"><div style="margin-top:10px;font-size:12px;letter-spacing:.06em;color:{{ th.muted }}">{{ gt.mapSchematic }}</div></sc-if>
+<sc-if value="{{ hasRoute }}"><div data-route="1" style="margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:0 28px">
+<sc-for list="{{ routeList }}" as="r"><div data-stopn="{{ r.n }}" style="display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid {{ th.line }}"><span style="width:28px;height:28px;border-radius:50%;background:{{ r.badgeBg }};color:{{ r.badgeColor }};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ r.n }}</span><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2em;color:{{ th.accent }}">{{ r.time }}</div><div style="font-size:17px;margin-top:4px;overflow-wrap:anywhere">{{ r.place }}</div><sc-if value="{{ r.hasTitle }}"><div style="font-size:14px;color:{{ th.muted }};margin-top:2px">{{ r.title }}</div></sc-if><sc-if value="{{ r.hasAddr }}"><div data-addr="1" style="font-size:13px;line-height:1.4;color:{{ th.muted }};margin-top:4px;overflow-wrap:anywhere">{{ r.addr }}</div></sc-if><a data-stoplink="1" href="{{ r.href }}" target="_blank" rel="noopener" style="display:inline-block;padding:7px 0;margin-top:2px;color:{{ th.ink }};font-size:14px;text-decoration:underline;text-decoration-color:{{ th.accent }};text-underline-offset:3px">{{ gt.howToGet }} ↗</a></div></div></sc-for>
 </div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:22px">
 <a href="{{ mapUrl }}" target="_blank" rel="noopener" style="height:48px;padding:0 20px;display:inline-flex;align-items:center;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};color:{{ th.ink }};text-decoration:none;font-size:15px">{{ gt.openMap }} ↗</a>
@@ -716,17 +724,24 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fVenue }}</span><input value="{{ inv.venue }}" maxLength="200" onChange="{{ on.venue }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fAddress }}</span><input value="{{ inv.address }}" maxLength="300" onChange="{{ on.address }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fMap }}</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><sc-for list="{{ mapOpts }}" as="o"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div></div>
-<div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fStops }}</div><p style="margin:8px 0 4px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.fStopsHint }}</p>
-<sc-for list="{{ prog }}" as="p"><div style="display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><span style="font:500 12px 'JetBrains Mono',monospace;color:#d4452a">{{ p.time }}</span><input value="{{ p.place }}" onChange="{{ p.onPlace }}" placeholder="{{ p.placePh }}" style="width:100%;background:transparent;border:0;padding:12px 0;font:400 16px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none"></div></sc-for>
+<div data-route-editor="1"><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fStops }}</div><p style="margin:8px 0 4px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.fStopsHint }}</p>
+<sc-if value="{{ progNone }}"><p data-prog-empty="1" style="margin:12px 0 0;padding:14px 16px;border-radius:12px;border:1px dashed rgba({{ ui.inkRgb }},.25);font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.progEmpty }}</p></sc-if>
+<sc-for list="{{ prog }}" as="p"><div data-stop="{{ $index }}" style="display:grid;grid-template-columns:28px minmax(0,1fr) 32px;gap:10px;align-items:start;padding:12px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
+<span data-badge="{{ p.badge }}" style="width:26px;height:26px;margin-top:9px;box-sizing:border-box;border-radius:50%;border:1.5px solid {{ p.badgeBorder }};background:{{ p.badgeBg }};color:{{ p.badgeColor }};font:500 12px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">{{ p.n }}</span>
+<div style="min-width:0;display:flex;flex-direction:column">
+<div style="display:flex;gap:10px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.1)"><input type="time" data-f="time" aria-label="{{ t.fTime }}" value="{{ p.time }}" onChange="{{ p.onTime }}" style="flex:none;width:auto;min-width:76px;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:500 15px 'JetBrains Mono',monospace;color:#d4452a"><input data-f="title" aria-label="{{ t.itemTitle }}" value="{{ p.title }}" maxLength="120" placeholder="{{ t.phTitle }}" onChange="{{ p.onTitle }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:400 17px/1.4 'Onest',sans-serif"></div>
+<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ p.placeIcon }};font-size:15px">⌖</span><input data-f="place" aria-label="{{ t.fPlace }}" value="{{ p.place }}" maxLength="200" placeholder="{{ t.phPlace }}" onChange="{{ p.onPlace }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 15px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
+<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ ui.muted }};font-size:13px">↗</span><input data-f="address" aria-label="{{ t.phAddr }}" value="{{ p.address }}" maxLength="300" placeholder="{{ t.phAddr }}" onChange="{{ p.onAddr }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 14px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
+<sc-if value="{{ p.noteOn }}"><span data-linknote="{{ p.noteKind }}" style="margin:0 0 4px 24px;font-size:12px;line-height:1.4;color:{{ p.noteColor }}">{{ p.note }}</span></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-top:4px"><button onClick="{{ p.onUp }}" title="{{ t.moveUp }}" aria-label="{{ t.moveUp }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.upOp }}">↑</button><button onClick="{{ p.onDown }}" title="{{ t.moveDown }}" aria-label="{{ t.moveDown }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.downOp }}">↓</button><button onClick="{{ p.onRemove }}" title="{{ t.deleteD }}" aria-label="{{ t.deleteD }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;color:{{ ui.muted }};font-size:18px" style-hover="background:rgba({{ ui.inkRgb }},.08)">×</button></div>
+</div></sc-for>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px"><button data-add-prog="1" onClick="{{ addProg }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px dashed rgba({{ ui.inkRgb }},.35);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer;opacity:{{ progAddOp }}">{{ addProgLabel }}</button><sc-if value="{{ progUnsorted }}"><button data-sort-prog="1" onClick="{{ sortProg }}" style="height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer">↕ {{ t.sortTime }}</button></sc-if></div>
 </div>
 </div></sc-if>
 <sc-if value="{{ qs.words }}"><div style="display:flex;flex-direction:column;gap:26px">
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fMessage }}</span><textarea value="{{ inv.message }}" maxLength="3000" onChange="{{ on.message }}" rows="4" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 22px/1.4 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea><sc-if value="{{ msgCount.show }}"><span data-count="message" style="align-self:flex-end;font:500 11px 'JetBrains Mono',monospace;color:{{ msgCount.color }}">{{ msgCount.text }}</span></sc-if></label>
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:-12px"><sc-for list="{{ aiTones }}" as="a"><button onClick="{{ a.onClick }}" style="height:34px;padding:0 12px;border-radius:999px;border:1px solid {{ a.border }};background:{{ a.bg }};color:{{ a.color }};font-size:13px;cursor:pointer">{{ a.label }}</button></sc-for><button onClick="{{ aiGo }}" style="height:34px;padding:0 14px;border-radius:999px;border:0;background:#d4452a;color:#fff;font-size:13px;font-weight:500;cursor:pointer;opacity:{{ aiOp }}">✦ {{ aiLabel }}</button></div>
-<div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fProgram }}</div>
-<sc-for list="{{ prog }}" as="p"><div style="display:grid;grid-template-columns:96px minmax(0,1fr) 32px;gap:10px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><input type="time" value="{{ p.time }}" onChange="{{ p.onTime }}" style="width:100%;background:transparent;border:0;padding:12px 0;font:500 14px 'JetBrains Mono',monospace;color:#d4452a;outline:none"><input value="{{ p.title }}" onChange="{{ p.onTitle }}" style="width:100%;background:transparent;border:0;padding:12px 0;font:400 17px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none"><button onClick="{{ p.onRemove }}" style="width:32px;height:32px;border-radius:50%;border:0;background:transparent;color:{{ ui.muted }};font-size:18px;cursor:pointer" style-hover="background:rgba({{ ui.inkRgb }},.08)">×</button></div></sc-for>
-<button onClick="{{ addProg }}" style="margin-top:12px;height:40px;padding:0 16px;border-radius:999px;border:1px dashed rgba({{ ui.inkRgb }},.35);background:transparent;color:{{ ui.ink }};font-size:14px;cursor:pointer">+ {{ t.addItem }}</button>
-</div>
 </div></sc-if>
 <sc-if value="{{ qs.details }}"><div style="display:flex;flex-direction:column;gap:26px">
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fDress }}</span><textarea value="{{ inv.dress }}" maxLength="500" onChange="{{ on.dress }}" rows="2" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
@@ -1775,7 +1790,8 @@ class Component extends DCLogic {
     const oneOf = (v, list) => (list.includes(v) ? v : undefined);
     const out = { names: str(inv.names, 200), host: str(inv.host, 200), message: str(inv.message, 3000), venue: str(inv.venue, 200), address: str(inv.address, 300), contact: str(inv.contact, 300), dress: str(inv.dress, 500), secret: str(inv.secret, 500), gifts: str(inv.gifts, 1000), notes: str(inv.notes, 1000),
       dressColors: (inv.dressColors || []).filter((c) => /^#[0-9a-fA-F]{6}$/.test(c)).slice(0, 6),
-      program: (inv.program || []).slice(0, 8).map((p) => ({ time: hhmm(p.time) ? p.time : '', title: str(p.title, 120), place: str(p.place, 200) })),
+      // Пункты без названия и места (добавлены, но не заполнены) не сохраняются.
+      program: (inv.program || []).filter((p) => p && (String(p.title || '').trim() || String(p.place || '').trim())).slice(0, 8).map((p) => ({ time: hhmm(p.time) ? p.time : '', title: str(p.title, 120), place: str(p.place, 200), address: str(p.address, 300) })),
       countdown: inv.countdown !== false, showGuests: inv.showGuests === true,
       cover: media(inv.cover), musicSrc: media(inv.musicSrc), video: media(inv.video), gallery: (inv.gallery || []).map(media).filter(Boolean).slice(0, 12),
       font: str(inv.font, 60), palette: Math.max(0, Math.min(2, inv.palette | 0)),
@@ -2508,7 +2524,7 @@ class Component extends DCLogic {
   defaults(ev, lang) {
     const E = this.D.EVENTS[ev], L = E.text[lang] || E.text.en, iso = this.todayIso(E.days);
     // showGuests выключен, пока владелец сам не включит «Кто придёт»: имена гостей видны всем, у кого есть ссылка.
-    return { names: L.names, host: L.host, message: L.message, venue: L.venue, address: L.address, dress: L.dress, gifts: L.gifts, notes: L.notes, contact: L.contact, dressColors: E.dressColors.slice(), program: E.program.map((p) => ({ time: p.t, title: p[lang] || p.en, place: p.place || '' })), date: iso, time: E.time, countdown: true, showGuests: false, cover: E.img[0], gallery: E.img.slice(1), font: this.D.STYLES[E.styles[0]].fonts[0],
+    return { names: L.names, host: L.host, message: L.message, venue: L.venue, address: L.address, dress: L.dress, gifts: L.gifts, notes: L.notes, contact: L.contact, dressColors: E.dressColors.slice(), program: E.program.map((p) => ({ time: p.t, title: p[lang] || p.en, place: p.place || '', address: '' })), date: iso, time: E.time, countdown: true, showGuests: false, cover: E.img[0], gallery: E.img.slice(1), font: this.D.STYLES[E.styles[0]].fonts[0],
       palette: 0, music: this.D.EVENT_MUSIC[ev] || 'lullaby', musicSrc: '', intro: 'envelope', mapMode: 'drawn', motion: 'zoom', video: '',
       secret: ev === 'baby' ? this.D.I18N[lang].secretBaby : this.D.I18N[lang].secretDef,
       sections: this.D.SECTIONS.map((k) => ({ k, on: k !== 'reveal' || ev === 'baby' })) };
@@ -2555,6 +2571,23 @@ class Component extends DCLogic {
   tplIndex() { const s = this.state; return this.activeStyles(s.event, s.tplId).findIndex((x) => x.id === s.tplId); }
   setInv(patch) { this.setState((s) => ({ inv: { ...s.inv, ...patch }, dirty: true })); }
   setProg(i, patch) { this.setState((s) => ({ inv: { ...s.inv, program: s.inv.program.map((p, j) => j === i ? { ...p, ...patch } : p) }, dirty: true })); }
+  // Редактор программы и маршрута: ↑ ↓ меняют пункт с соседним.
+  moveProg(i, d) { const list = this.state.inv.program.slice(), j = i + d; if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; this.setInv({ program: list }); }
+  // «По времени»: устойчивая сортировка, пункты без времени — в конце.
+  sortProg() { const k = (p) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(p.time || '') ? p.time : '~'); this.setInv({ program: this.state.inv.program.map((p, i) => [p, i]).sort((a, b) => (k(a[0]) < k(b[0]) ? -1 : k(a[0]) > k(b[0]) ? 1 : a[1] - b[1])).map((x) => x[0]) }); }
+  // «Добавить пункт»: не больше 8, как на сервере. Время — через час после последнего указанного (или пустое),
+  // название пустое; фокус сразу в названии нового пункта, если за это время не начали печатать в другом поле.
+  addProg() {
+    const list = this.state.inv.program;
+    if (list.length >= 8) return this.toast(this.t().progFull);
+    const last = list.map((p) => p.time).filter((x) => /^([01]\d|2[0-3]):[0-5]\d$/.test(x || '')).pop();
+    const time = last ? String((+last.slice(0, 2) + 1) % 24).padStart(2, '0') + last.slice(2) : '';
+    this.setInv({ program: list.concat({ time, title: '', place: '', address: '' }) });
+    setTimeout(() => {
+      const el = document.querySelector('[data-stop="' + list.length + '"] [data-f="title"]'), a = document.activeElement;
+      if (el && !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) el.focus();
+    }, 60);
+  }
   toast(msg) { msg = String(msg || ''); this.setState({ toast: msg, toastOn: true }); clearTimeout(this.tT); this.tT = setTimeout(() => this.setState({ toastOn: false }), Math.min(6000, 2200 + msg.length * 35)); }
   download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
   readFiles(files, cb) { Array.from(files || []).forEach((f) => { const r = new FileReader(); r.onload = () => cb(r.result); r.readAsDataURL(f); }); }
@@ -2766,8 +2799,16 @@ class Component extends DCLogic {
     r.querySelectorAll('[data-map]').forEach((el) => {
       const b = el.getBoundingClientRect(); const p = C((vh - b.top) / (vh * 0.8));
       el.style.clipPath = `circle(${(8 + p * 85).toFixed(1)}% at 50% 55%)`;
-      el.querySelectorAll('[data-pinmark]').forEach((pm, i) => { const pp = C(p * 1.7 - 0.5 - i * 0.12); pm.style.opacity = String(pp); pm.style.transform = `translate(-50%, calc(-100% - ${((1 - pp) * 40).toFixed(1)}px))`; });
-      const rl = el.querySelector('[data-routeline]'); if (rl) rl.style.strokeDashoffset = String(Math.round((1 - C(p * 1.5 - 0.4)) * 1000));
+      const pms = el.querySelectorAll('[data-pinmark]'), lag = 0.6 / Math.max(1, pms.length - 1);
+      pms.forEach((pm, i) => { const pp = C(p * 2.2 - 0.6 - i * lag); pm.style.opacity = String(pp); pm.style.transform = `translate(-50%, calc(-100% - ${((1 - pp) * 40).toFixed(1)}px))`; });
+      // Линия рисуется по мере прокрутки. Штрих — по её длине на экране: точки в процентах карты, а pathLength
+      // вместе с vector-effect Chromium считает неверно, и линия выходила пунктиром.
+      const rl = el.querySelector('[data-routeline]');
+      if (rl) {
+        const P = (rl.getAttribute('points') || '').trim().split(/\s+/).filter(Boolean).map((xy) => xy.split(',').map(Number));
+        let len = 0; for (let i = 1; i < P.length; i++) len += Math.hypot((P[i][0] - P[i - 1][0]) * b.width / 100, (P[i][1] - P[i - 1][1]) * b.height / 100);
+        len = Math.ceil(len) + 1; rl.style.strokeDasharray = len + ' ' + len; rl.style.strokeDashoffset = String(Math.round((1 - C(p * 1.5 - 0.4)) * len));
+      }
     });
     const car = r.querySelector('[data-carousel]');
     if (car) {
@@ -2963,7 +3004,20 @@ class Component extends DCLogic {
     const ws = {}, qs = {}; STEPS.forEach((k) => { ws[k] = s.screen === 'build' && stepKey === k; qs[k] = isGuest && s.sheet === k; });
     const steps = STEPS.map((k, i) => ({ label: SL[k], bar: i === s.step ? '#d4452a' : i < s.step ? U.ink : 'rgba(' + U.inkRgb + ',.15)', onClick: () => this.setState({ step: i }) }));
     const on = {}; ['names', 'host', 'date', 'time', 'venue', 'address', 'message', 'dress', 'gifts', 'notes', 'contact', 'secret'].forEach((k) => { on[k] = (e) => this.setInv({ [k]: e.target.value }); });
-    const prog = inv.program.map((p, i) => ({ time: p.time, title: p.title, place: p.place, hasPlace: !!p.place, placePh: p.title + ' — ' + t.fPlace, onTime: (e) => this.setProg(i, { time: e.target.value }), onTitle: (e) => this.setProg(i, { title: e.target.value }), onPlace: (e) => this.setProg(i, { place: e.target.value }), onRemove: () => this.setState((x) => ({ inv: { ...x.inv, program: x.inv.program.length > 1 ? x.inv.program.filter((_, j) => j !== i) : x.inv.program }, dirty: true })) }));
+    // Программа и маршрут (шаг и лист «Место»): время, название, место и адрес или ссылка на карту. Пункт с местом —
+    // остановка на карте гостя (номер закрашен). Под адресом — подсказка, откроется ли вставленная ссылка у гостей.
+    const progLen = inv.program.length, progFull = progLen >= 8;
+    const prog = inv.program.map((p, i) => {
+      const addr = p.address || '', link = this.E.mapLink(addr), bad = !link && this.E.hasUrl(addr), on = !!(p.place || '').trim();
+      return { n: String(i + 1), time: p.time, title: p.title, place: p.place, address: addr, badge: on ? 'stop' : 'item',
+        badgeBg: on ? '#d4452a' : 'transparent', badgeBorder: on ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', badgeColor: on ? '#fff' : U.muted, placeIcon: on ? '#d4452a' : U.muted,
+        noteOn: !!link || bad, noteKind: link ? 'ok' : 'bad', note: link ? t.linkOk : t.linkBad, noteColor: link ? (U.dark ? '#86c79c' : '#2e7d4f') : (U.dark ? '#ef8a72' : '#b5361e'), upOp: i ? 1 : 0.3, downOp: i < progLen - 1 ? 1 : 0.3,
+        onTime: (e) => this.setProg(i, { time: e.target.value }), onTitle: (e) => this.setProg(i, { title: e.target.value }), onPlace: (e) => this.setProg(i, { place: e.target.value }), onAddr: (e) => this.setProg(i, { address: e.target.value }),
+        onUp: () => this.moveProg(i, -1), onDown: () => this.moveProg(i, 1), onRemove: () => this.setState((x) => ({ inv: { ...x.inv, program: x.inv.program.filter((_, j) => j !== i) }, dirty: true })) };
+    });
+    // «По времени» видна, только когда указанные времена идут не по порядку.
+    const progTimes = inv.program.map((p) => p.time).filter((x) => /^([01]\d|2[0-3]):[0-5]\d$/.test(x || ''));
+    const progUnsorted = progTimes.some((x, i) => i > 0 && x < progTimes[i - 1]);
     const SW = Array.from(new Set(E.dressColors.concat(inv.dressColors, ['#1a1714', '#efe5cf', '#93723f', '#a8b59a', '#c9415f', '#bcdcf2', '#ff4fbf', '#3df5c8', '#1f2a3a', '#ffffff']))).slice(0, 14);
     const swatches = SW.map((c) => { const onSel = inv.dressColors.includes(c); return { c, ring: onSel ? '0 0 0 3px ' + U.paper + ', 0 0 0 5px #d4452a' : 'none', onClick: () => this.setInv({ dressColors: onSel ? inv.dressColors.filter((x) => x !== c) : inv.dressColors.concat(c).slice(0, 6) }) }; });
     const gal = inv.gallery.map((src, i) => ({ src, bg: th.imgBg, filter: th.imgFilter, onRemove: () => this.setInv({ gallery: inv.gallery.filter((_, j) => j !== i) }) }));
@@ -2978,14 +3032,40 @@ class Component extends DCLogic {
     const gWeekday = this.fmt(inv.date, inv.time, { weekday: 'long' }, gl);
     const gWhen = [gDateLong, inv.time].filter(Boolean).join(' · '), gWdDate = [gWeekday, gDateLong].filter(Boolean).join(', '), gTimeVenue = [inv.time, inv.venue].filter(Boolean).join(' · ');
     const gFull = [gWdDate, inv.time].filter(Boolean).join(' · '), gMyTime = [gMonthYear, inv.time].filter(Boolean).join(' · ');
-    const n = inv.program.length;
-    const POS = [[30, 36], [68, 64], [78, 30], [22, 72], [58, 20]];
-    const stops = inv.program.filter((p) => p.place);
-    const pins = [{ x: '50%', y: '50%', n: '●', name: inv.venue, bg: th.ink, color: th.bg }].concat(stops.map((p, i) => ({ x: POS[i % 5][0] + '%', y: POS[i % 5][1] + '%', n: String(i + 1), name: p.place, bg: th.surface, color: th.ink })));
-    const routePts = ['50,50'].concat(stops.map((_, i) => POS[i % 5].join(','))).join(' ');
-    const routeList = stops.map((p, i) => ({ n: String(i + 1), time: p.time, place: p.place, title: p.title }));
+    // Программа гостя: пункты без названия и места (только что добавленные в конструкторе) не показываются.
+    const gProg = inv.program.filter((p) => (p.title || '').trim() || (p.place || '').trim()).map((p) => ({ time: p.time, title: p.title, place: (p.place || '').trim(), address: (p.address || '').trim(), hasPlace: !!(p.place || '').trim() }));
+    const n = gProg.length;
+    // Маршрут: остановки — пункты программы с местом, в порядке списка. Главное место — отметка «●»: остановка с тем же
+    // названием становится ею, иначе место встаёт в маршрут по времени начала (inv.time), без времени — в конец.
+    const pkey = (x) => (x || '').trim().toLowerCase(), venueK = pkey(inv.venue);
+    const visits = gProg.filter((p) => p.hasPlace).map((p) => ({ time: p.time, title: p.title, place: p.place, addr: p.address }));
+    const stopsN = visits.length;
+    if (venueK && stopsN && !visits.some((v) => pkey(v.place) === venueK)) { const vi = inv.time ? visits.findIndex((v) => v.time && v.time > inv.time) : -1; visits.splice(vi < 0 ? visits.length : vi, 0, { time: inv.time, title: '', place: inv.venue.trim(), addr: '' }); }
+    // Отметки рисованной карты — по одной на место, по их числу: на телефоне сверху вниз в две колонки, на широком
+    // экране слева направо в два ряда. Соседние по маршруту подписи — в разных колонках (рядах), подпись не шире
+    // места до края карты и до следующей отметки своего ряда, длинное название обрезается многоточием.
+    const places = [];
+    visits.forEach((v) => { const k = pkey(v.place); if (!places.some((x) => x.k === k)) places.push({ k, name: v.place, main: !!venueK && k === venueK }); });
+    if (!places.length && venueK) places.push({ k: venueK, name: inv.venue.trim(), main: true });
+    let pinNo = 0; places.forEach((x) => { x.n = x.main ? '●' : String(++pinNo); });
+    const NP = places.length, pStep = NP > 1 ? 76 / (NP - 1) : 0;
+    const pinAt = (i) => (NP === 1 ? [50, 58] : wide ? [12 + pStep * i, i % 2 ? 82 : 38] : [i % 2 ? 74 : 26, 20 + (68 / (NP - 1)) * i]);
+    const pins = places.map((x, i) => {
+      const [px, py] = pinAt(i), edge = 2 * Math.min(px, 100 - px) - 2, mw = wide ? Math.min(40, edge, NP > 2 ? 2 * pStep - 3 : 40) : Math.min(90, edge);
+      return { x: px.toFixed(2) + '%', y: py.toFixed(2) + '%', mw: mw.toFixed(1) + '%', n: x.n, name: x.name, main: x.main ? '1' : '', bg: x.main ? th.ink : th.surface, color: x.main ? th.bg : th.ink, dot: x.main ? '20px' : '14px', dotBg: x.main ? th.ink : th.accent };
+    });
+    const routePts = visits.map((v) => { const [px, py] = pinAt(places.findIndex((x) => x.k === pkey(v.place))); return px.toFixed(2) + ',' + (py - 2).toFixed(2); }).join(' ');
+    // У каждой остановки своя ссылка: вставленная ссылка на карту, если её адрес из списка (this.E.mapLink), иначе
+    // поиск места и адреса на Яндекс Картах. Прочие ссылки (javascript:, http:, чужие сайты) не показываются и в поиск
+    // не идут (this.E.mapText).
+    const routeList = visits.map((v) => {
+      const pl = places.find((x) => x.k === pkey(v.place)), raw = v.addr || (pl.main ? inv.address || '' : ''), link = this.E.mapLink(raw), addr = this.E.mapText(raw);
+      return { n: pl.n, time: v.time, place: v.place, title: v.title, hasTitle: !!(v.title || '').trim(), addr, hasAddr: !!addr, href: link || this.E.mapSearch([v.place, addr].filter(Boolean).join(', ')), badgeBg: pl.main ? th.ink : th.accent, badgeColor: pl.main ? th.bg : th.onAccent };
+    });
+    // Главные кнопки места: вставленная в адрес ссылка на карту открывается как есть, иначе поиск по названию и адресу.
+    const venueLink = this.E.mapLink(inv.address || ''), venueQ = [inv.venue, this.E.mapText(inv.address || '')].map((x) => (x || '').trim()).filter(Boolean).join(', ');
     const ed = {};
-    if (isEdit) { const m = { names: 'basics', when: 'when', venue: 'where', message: 'words', program: 'words', details: 'details', cover: 'photos', font: 'font', music: 'music', sections: 'sections' }; Object.keys(m).forEach((k) => { ed[k] = (e) => { if (e) e.stopPropagation(); this.setState({ sheet: m[k] }); }; }); }
+    if (isEdit) { const m = { names: 'basics', when: 'when', venue: 'where', message: 'words', program: 'where', details: 'details', cover: 'photos', font: 'font', music: 'music', sections: 'sections' }; Object.keys(m).forEach((k) => { ed[k] = (e) => { if (e) e.stopPropagation(); this.setState({ sheet: m[k] }); }; }); }
     else { ed.font = () => {}; ed.music = () => {}; ed.sections = () => {}; }
     const cLink = (c) => { c = (c || '').trim(); if (c.startsWith('@')) return 'https://t.me/' + c.slice(1); if (/^\+?[\d\s()-]{7,}$/.test(c)) return 'tel:' + c.replace(/[^\d+]/g, ''); if (c.includes('@')) return 'mailto:' + c; return ''; };
     const infoCards = [
@@ -3095,7 +3175,7 @@ class Component extends DCLogic {
     // ---- extended features ----
     const segO = (list, cur, set) => list.map(([k, label]) => { const a = cur === k; return { label, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)', onClick: () => set(k) }; });
     const secs = (inv.sections && inv.sections.length ? inv.sections : D.SECTIONS.map((k) => ({ k, on: true })));
-    const avail = { message: !!inv.message, program: inv.program.length > 0, countdown: inv.countdown !== false && !!d0, gallery: inv.gallery.length > 0, venue: !!(inv.venue || inv.address), dress: !!inv.dress || inv.dressColors.length > 0, info: infoCards.length > 0, reveal: !!inv.secret, who: PX.showWho, guestbook: true, rsvp: true };
+    const avail = { message: !!inv.message, program: gProg.length > 0, countdown: inv.countdown !== false && !!d0, gallery: inv.gallery.length > 0, venue: !!(inv.venue || inv.address), dress: !!inv.dress || inv.dressColors.length > 0, info: infoCards.length > 0, reveal: !!inv.secret, who: PX.showWho, guestbook: true, rsvp: true };
     const sec = {}, ord = {}; secs.forEach((x, i) => { sec[x.k] = x.on && avail[x.k]; ord[x.k] = i; });
     const moveSec = (i, d) => { const a = secs.slice(); const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; this.setInv({ sections: a }); };
     const secRows = secs.map((x, i) => ({ label: t.sec[x.k], track: x.on ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', knob: x.on ? '23px' : '3px', op: x.on ? 1 : 0.55, bg: s.secDrag === i ? 'rgba(212,69,42,.08)' : 'transparent',
@@ -3270,7 +3350,7 @@ class Component extends DCLogic {
       tracks, audioLabel: inv.musicSrc ? t.replace + ' · ' + t.tracks.custom : t.uploadAudio,
       onAudio: (e) => this.pickMedia(e, (url) => this.setInv({ musicSrc: url, music: 'custom' })),
       secRows, sec, ord, rsvpDisp: sec.rsvp ? 'block' : 'none', guestbook, gbCount: String(guestbook.length).padStart(2, '0'), gbEmpty: guestbook.length === 0,
-      mapReal: inv.mapMode === 'real', mapDrawn: inv.mapMode !== 'real', mapEmbed: 'https://maps.google.com/maps?q=' + encodeURIComponent(inv.venue + ', ' + inv.address) + '&z=15&output=embed', mapFilter: th.dark ? 'invert(.9) hue-rotate(180deg) saturate(.5)' : 'saturate(.75) contrast(1.03)',
+      mapReal: inv.mapMode === 'real', mapDrawn: inv.mapMode !== 'real', mapEmbed: 'https://maps.google.com/maps?q=' + encodeURIComponent(venueQ) + '&z=15&output=embed', mapFilter: th.dark ? 'invert(.9) hue-rotate(180deg) saturate(.5)' : 'saturate(.75) contrast(1.03)',
       // Индикатор сохранения: время из updatedAt ответа сервера.
       saveDot: s.demo ? '#d4452a' : s.draftId ? (s.saving ? '#93723f' : s.saveErr ? '#d4452a' : s.savedAt ? '#2e7d4f' : 'transparent') : s.saveErr ? '#d4452a' : 'transparent',
       saveLabel: s.demo ? t.demo : s.draftId ? (s.saving ? t.saving : s.saveErr ? t.notSaved : s.savedAt ? t.saved + ' · ' + hhmmOf(s.savedAt) : '') : s.saveErr ? t.notSaved : '',
@@ -3333,10 +3413,12 @@ class Component extends DCLogic {
       // загрузка файла, демо
       upOn: !!s.upload, upLabel: t.uploading + (s.upload && s.upload.n > 1 ? ' · ' + (s.upload.i + 1) + ' / ' + s.upload.n : ''), upPct: Math.round((s.upload ? s.upload.p : 0) * 100) + '%',
       demoBadge: s.demo && s.screen !== 'tour', demoTop: (isGuest ? topOff + 18 : topOff + 70) + 'px', importAvail: s.demo,
-      buildCols: wide ? 'minmax(0,1fr) 380px' : 'minmax(0,1fr)', steps, stepKicker: t.stepWord + ' ' + (s.step + 1) + ' / ' + STEPS.length, stepLabel: SL[stepKey], stepHint: SH[stepKey],
+      // На телефоне полоска предпросмотра (64 px) закреплена над нижней панелью: отступ снизу не даёт ей закрыть
+      // последнюю кнопку шага (например, «+ Добавить пункт»).
+      buildPadB: wide ? '40px' : '108px', buildCols: wide ? 'minmax(0,1fr) 380px' : 'minmax(0,1fr)', steps, stepKicker: t.stepWord + ' ' + (s.step + 1) + ' / ' + STEPS.length, stepLabel: SL[stepKey], stepHint: SH[stepKey],
       ws, qs, on, prog, swatches, gal, fonts, gDateShort,
       toggleCd: () => this.setInv({ countdown: !inv.countdown }), cdTrack: inv.countdown ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', cdKnob: inv.countdown ? '23px' : '3px',
-      addProg: () => { if (inv.program.length < 6) this.setInv({ program: inv.program.concat({ time: '20:00', title: '…', place: '' }) }); },
+      addProg: () => this.addProg(), sortProg: () => this.sortProg(), progUnsorted, progNone: progLen === 0, addProgLabel: progFull ? t.progFull : '+ ' + t.addItem, progAddOp: progFull ? 0.45 : 1,
       onCover: (e) => this.pickMedia(e, (src) => this.setInv({ cover: src })),
       onGallery: (e) => this.pickMedia(e, (src) => this.setState((x) => ({ inv: { ...x.inv, gallery: x.inv.gallery.concat(src).slice(0, 12) }, dirty: true }))),
       previewNow: () => this.openGuest('edit'),
@@ -3365,9 +3447,9 @@ class Component extends DCLogic {
       cdUnits: [['d', gt.days], ['h', gt.hours], ['m', gt.min], ['s', gt.secs]].map(([k, label], i) => ({ k, label, delay: i * 90 + 'ms' })),
       hasGallery: inv.gallery.length > 0, hpinH: (100 + inv.gallery.length * 55) + 'vh', galCount: String(inv.gallery.length).padStart(2, '0'), galW: wide ? '380px' : '66vw',
       gGallery: inv.gallery.map((src, i) => ({ src, n: String(i + 1).padStart(2, '0'), rot: (i % 2 ? 2 : -2) + 'deg', y: (i % 2 ? 24 : -10) + 'px' })),
-      mapAR: wide ? '16/7' : '4/5', pins, routePts, routeList, hasRoute: stops.length > 0,
-      mapUrl: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(inv.venue + ', ' + inv.address),
-      routeUrl: 'https://yandex.com/maps/?rtext=~' + encodeURIComponent(inv.address) + '&rtt=auto',
+      mapAR: wide ? '16/7' : '4/5', pins, routePts, routeList, hasRoute: stopsN > 0, gProg, mapNote: stopsN > 0 && inv.mapMode !== 'real',
+      mapUrl: venueLink || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(venueQ),
+      routeUrl: venueLink || 'https://yandex.uz/maps/?rtext=~' + encodeURIComponent(venueQ) + '&rtt=auto',
       hasDress: !!inv.dress || inv.dressColors.length > 0, dressSw: inv.dressColors.map((c, i) => ({ c, delay: i * 90 + 'ms' })), infoCards,
       rsvp: R, rsvpForm: !R.sent, showCount: R.status === 'yes' || R.status === 'maybe', rsvpOpts, dietOpts, rsvpBy: this.fmt(byIso, '12:00', { day: 'numeric', month: 'long' }, gl),
       decCount: () => this.setState((x) => ({ rsvp: { ...x.rsvp, count: Math.max(1, x.rsvp.count - 1) } })), incCount: () => this.setState((x) => ({ rsvp: { ...x.rsvp, count: Math.min(8, x.rsvp.count + 1) } })),

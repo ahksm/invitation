@@ -153,3 +153,51 @@ export function attachScratch(canvas, { color, color2, label, font, onDone }) {
   canvas.addEventListener('pointerdown', pd); canvas.addEventListener('pointermove', pm); window.addEventListener('pointerup', pu);
   return () => { canvas.removeEventListener('pointerdown', pd); canvas.removeEventListener('pointermove', pm); window.removeEventListener('pointerup', pu); };
 }
+
+// ---------- ссылки на карты (маршрут гостя) ----------
+// В href страницы попадает только https-адрес картографического сайта из этого списка: без логина и пароля
+// в адресе и без порта. javascript:, data:, http: и другие сайты ссылкой не становятся.
+const MAP_TLD = '(?:uz|ru|com|kz|kg|by|ua|az|tj|tm|com\\.tr)';
+const GOOGLE_TLD = '(?:com|co\\.uz|ru|kz|kg|by|com\\.ua|az|tj|tm|com\\.tr)';
+const MAP_HOSTS = [
+  [new RegExp('^(?:[a-z0-9-]+\\.)*yandex\\.' + MAP_TLD + '$'), null],
+  [/^maps\.app\.goo\.gl$/, null],
+  [/^goo\.gl$/, /^\/maps(?:\/|$)/],
+  [new RegExp('^(?:www\\.)?google\\.' + GOOGLE_TLD + '$'), /^\/maps(?:\/|$)/],
+  [new RegExp('^maps\\.google\\.' + GOOGLE_TLD + '$'), null],
+  [new RegExp('^(?:[a-z0-9-]+\\.)*2gis\\.(?:uz|ru|com|kz|kg|ae)$'), null],
+];
+// Похожее на адрес сайта: «схема://…», javascript:/data:/… и www.… — в поиск по карте и в текст не идёт.
+const URLISH = /[a-z][a-z0-9+.-]*:\/\/\S*|\b(?:javascript|data|vbscript|file|blob)\s*:\S*|(?:^|\s)www\.\S+/gi;
+
+function allowedMap(raw) {
+  let u; try { u = new URL(raw); } catch (e) { return ''; }
+  if (u.protocol !== 'https:' || u.username || u.password || u.port) return '';
+  const host = u.hostname.toLowerCase();
+  return MAP_HOSTS.some(([h, path]) => h.test(host) && (!path || path.test(u.pathname))) ? u.href : '';
+}
+
+/**
+ * Ссылка на карту из того, что вставил владелец («ул. Навои, 1 https://yandex.uz/maps/-/…» тоже подходит): первая
+ * https-ссылка с адресом из MAP_HOSTS, как её записывает URL, или ''.
+ */
+export function mapLink(s) {
+  s = typeof s === 'string' ? s : '';
+  if (s.length > 300) return '';
+  for (const m of s.match(/https:\/\/[^\s"'<>«»“”]+/gi) || []) { const href = allowedMap(m.replace(/[.,;:!?)\]»”’]+$/, '')); if (href) return href; }
+  return '';
+}
+
+/** Есть ли в строке что-то похожее на ссылку (для подсказки в конструкторе, что ссылка не откроется). */
+export function hasUrl(s) { return typeof s === 'string' && new RegExp(URLISH.source, 'i').test(s); }
+
+/** Текст адреса без ссылок: его видят гости и по нему ищется место на карте. */
+export function mapText(s) {
+  return (typeof s === 'string' ? s : '').replace(URLISH, ' ').replace(/\s+/g, ' ').replace(/^[\s,;:—–).\]»”-]+|[\s,;:—–(\[«“-]+$/g, '');
+}
+
+/** Поиск места на Яндекс Картах (в Узбекистане ими пользуются чаще всего); пустой запрос — ''. */
+export function mapSearch(q) {
+  q = typeof q === 'string' ? q.trim() : '';
+  return q ? 'https://yandex.uz/maps/?text=' + encodeURIComponent(q) : '';
+}
