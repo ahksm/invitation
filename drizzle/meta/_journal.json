@@ -50,6 +50,13 @@
       "when": 1792515799659,
       "tag": "0006_user_name_edited",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792515859659,
+      "tag": "0007_order_card_data",
+      "breakpoints": true
     }
   ]
 }

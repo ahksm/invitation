@@ -1,4 +1,5 @@
-import { and, eq } from "drizzle-orm";
+import { readFileSync } from "node:fs";
+import { and, count, eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { logUrl } from "../src/app.js";
 import { loadConfig } from "../src/config.js";
@@ -123,6 +124,36 @@ describe("заказы", () => {
       receipt_url: "https://receipt.test/1",
     });
     expect(JSON.stringify(row!.meta)).not.toMatch(/860002|\*{6}|tok-secret|998901234567/);
+  });
+
+  it("миграция 0007 убирает из сохранённых уведомлений номер карты и прочие лишние поля, остальное не трогает", async () => {
+    const { user: u } = await user();
+    const kept = { uuid: "u-1", invoice_id: "1001", billing_id: "b-1", payment_time: "2026-10-01 12:00:00", ps: "humo", receipt_url: "https://receipt.test/1", amount: 5_000_000 };
+    const metas: Record<string, unknown>[] = [
+      // Заказ, оплаченный до fdba585: список полей уже был, но с card_pan.
+      { templateId: "t-1", notification: { ...kept, card_pan: "986001******4321" } },
+      // Самые старые заказы: уведомление целиком, с токеном карты, подписью и телефоном плательщика.
+      { duplicate: true, notification: { ...kept, card_pan: "860002******1234", card_token: "tok-old", sign: "abc", phone: "998901234567", store_id: 6 } },
+      { templateId: "t-2", notification: kept },
+      { templateId: "t-3" },
+      {},
+    ];
+    const ids: string[] = [];
+    for (const meta of metas) {
+      const [o] = await db.insert(orders).values({ userId: u.id, kind: "template", amount: 5_000_000, currency: "UZS", status: "paid", provider: "multicard", meta }).returning();
+      ids.push(o!.id);
+    }
+    const migration = readFileSync(new URL("../drizzle/0007_order_card_data.sql", import.meta.url), "utf8");
+    const expected = [{ templateId: "t-1", notification: kept }, { duplicate: true, notification: kept }, metas[2], metas[3], {}];
+    for (let run = 0; run < 2; run++) {
+      await db.execute(sql.raw(migration));
+      for (const [i, id] of ids.entries()) {
+        const [row] = await db.select({ meta: orders.meta }).from(orders).where(eq(orders.id, id));
+        expect(row!.meta, `запуск ${run + 1}, заказ ${i}`).toEqual(expected[i]);
+      }
+    }
+    const left = await db.select({ n: count() }).from(orders).where(sql`${orders.meta}->'notification' ? 'card_pan'`);
+    expect(left[0]!.n).toBe(0);
   });
 });
 
