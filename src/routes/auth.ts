@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { SESSION_COOKIE } from "../app.js";
-import { redeemLoginCode } from "../auth/codes.js";
+import { issueLoginCode, redeemLoginCode } from "../auth/codes.js";
 import { claimTelegramLogin, describeDevice, getContactRejection, isNonce, startTelegramLogin, verifyWebAppInitData } from "../auth/telegram.js";
 import { botUsername } from "../config.js";
 import { HttpError } from "../errors.js";
@@ -9,7 +9,7 @@ import { bt, locales, pickLocale, requestLocale } from "../i18n.js";
 import { normalizePhone, requestOtp, upsertPhoneUser, verifyOtp } from "../services/phone.js";
 import { getPrices } from "../services/settings.js";
 import { track } from "../services/usage.js";
-import { getAccess, getUser, setUserLocale, upsertTelegramUser } from "../services/users.js";
+import { getAccess, getUser, setUserLocale, setUserName, upsertTelegramUser } from "../services/users.js";
 
 const TG_COOKIE = "tglogin";
 export const phoneSchema = z.string().max(32).transform((s, c) => {
@@ -24,6 +24,18 @@ export const phoneSchema = z.string().max(32).transform((s, c) => {
  * в ответе не нужен и не отдаётся, поэтому скрипты страницы его не видят.
  */
 const bearerFlag = z.boolean().optional();
+
+/** Имя и фамилия в профиле: до 64 символов, без переносов строк и управляющих символов (ключи перевода в src/i18n.ts). */
+const NAME_RULE = "Имя и фамилия: до 64 символов, без переносов строк";
+const nameText = z.string().trim().max(64, NAME_RULE).regex(/^[^\p{Cc}]*$/u, NAME_RULE);
+const mePatchSchema = z
+  .object({
+    locale: z.enum(locales).optional(),
+    firstName: nameText.pipe(z.string().min(1, "Введите имя")).optional(),
+    // Пустая фамилия или null стирают её.
+    lastName: nameText.nullable().transform((v) => v || null).optional(),
+  })
+  .refine((o) => o.locale !== undefined || o.firstName !== undefined || o.lastName !== undefined, "Неверные данные");
 
 export const authRoutes: FastifyPluginAsync = async (app) => {
   const { ctx } = app;
@@ -62,7 +74,9 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   // Шаг 1 входа через Telegram: ссылка на бота и секрет этого браузера в cookie.
   // С действующей сессией это «Подключить Telegram»: запрос помнит пользователя, и бот подключает к нему
   // Telegram, подтвердивший номер этого аккаунта (src/auth/telegram.ts), а не входит в аккаунт этого Telegram.
-  app.post("/telegram/start", strict, async (req, reply) => {
+  // Лимит выше strict: лист входа берёт ссылку на бота заранее, при открытии (кнопка — настоящая ссылка,
+  // на телефоне она открывает Telegram в той же вкладке), а за одним IP мобильного оператора много людей.
+  app.post("/telegram/start", { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } }, async (req, reply) => {
     const bot = botUsername(ctx.config);
     if (!bot) throw new HttpError(503, "Вход через Telegram не настроен");
     const linkUser = await sessionUser(req);
@@ -170,9 +184,30 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // Язык интерфейса и имя в профиле. В ответе — сохранённые поля. Изменённое здесь имя вход через Telegram
+  // и бот больше не перезаписывают (users.name_edited).
   app.patch("/me", { onRequest: app.authenticate }, async (req) => {
-    const { locale } = z.object({ locale: z.enum(locales) }).parse(req.body);
-    await setUserLocale(ctx, req.user.id, locale);
-    return { ok: true, locale };
+    const { locale, firstName, lastName } = mePatchSchema.parse(req.body);
+    const out: { ok: true; locale?: string; firstName?: string | null; lastName?: string | null } = { ok: true };
+    if (locale !== undefined) {
+      await setUserLocale(ctx, req.user.id, locale);
+      out.locale = locale;
+    }
+    if (firstName !== undefined || lastName !== undefined) {
+      // Фамилия без имени: имя остаётся прежним, но у аккаунта без имени (вход по SMS) его нужно ввести.
+      const first = firstName ?? req.user.firstName;
+      if (!first) throw new HttpError(400, "Введите имя");
+      const u = await setUserName(ctx, req.user.id, { firstName: first, lastName });
+      out.firstName = u.firstName;
+      out.lastName = u.lastName;
+    }
+    return out;
+  });
+
+  // Одноразовая ссылка входа для этой сессии (5 минут, как /login в боте): мини-апп открывает по ней
+  // админку во внешнем браузере, куда его сессия иначе не попадает. /link ведёт админа в /admin/, остальных — в /app/.
+  app.post("/handoff", { onRequest: app.authenticate, ...strict }, async (req) => {
+    const code = await issueLoginCode(ctx.cache, req.user.id);
+    return { url: `${ctx.config.APP_URL.replace(/\/+$/, "")}/api/auth/link?code=${code}` };
   });
 };

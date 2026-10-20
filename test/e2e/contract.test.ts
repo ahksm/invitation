@@ -139,8 +139,8 @@ describe("возврат после оплаты из мини-аппа (#/paid/
     const { page, problems, close } = await e.open(`/app/#/paid/${order.id}`, { waitText: ru.paidTitle });
     const verify = bodiesOf(page, "/api/auth/phone/verify");
     const verified = page.waitForResponse((r) => r.url() === e.base + "/api/auth/phone/verify");
+    // «Войти» в шапке сразу открывает лист входа.
     await page.locator("[data-account]").first().click();
-    await sheet(page, "account").getByRole("button", { name: new RegExp("^" + ru.login) }).click();
     await page.locator("input[name=phone]").fill(phone.slice(3));
     await sheet(page, "login").getByRole("button", { name: ru.getCode }).click();
     await page.locator("input[name=code]").waitFor();
@@ -318,7 +318,8 @@ describe("мини-апп: шаг номера", () => {
     await telegramStub(context, { id: tgId, first_name: "Shahzod", language_code: "ru" });
     const { page, problems, close } = await e.open("/app/", { context, waitText: ru.hero1 });
     const login = sheet(page, "login");
-    // Номера ещё нет: шаг номера и запрос контакта.
+    // Номера ещё нет: шаг номера с объяснением, запрос контакта — по нажатию.
+    await login.getByRole("button", { name: new RegExp(ru.sharePhone) }).click();
     await login.locator('[data-wait="phone"]').waitFor();
     await expect.poll(async () => (await tgState(page)).contact).toBe(1);
     // Telegram присылает контакт боту, бот его отклоняет; мини-апп узнаёт причину из /api/auth/webapp.
@@ -516,7 +517,7 @@ describe("«Подключить Telegram»", () => {
 });
 
 describe("мини-апп во фрейме чужого сайта (Telegram Web)", () => {
-  it("cookie не сохраняется: вход по initData с токеном, выход, вход снова, перезагрузка фрейма; bearer у SMS-входа", async () => {
+  it("cookie не сохраняется: вход по initData с токеном, без «Выйти», перезагрузка фрейма; bearer у SMS-входа", async () => {
     const tgId = tgIdOf(7_930_000_000);
     const phone = uniquePhone();
     await e.db.insert(users).values({ telegramId: tgId, phone, firstName: "Камола", locale: "ru" });
@@ -554,18 +555,9 @@ describe("мини-апп во фрейме чужого сайта (Telegram We
     expect(me.every((r) => r.bearer)).toBe(true);
     await e.shot(page, "tg-web-frame-ru-390x844.png");
 
-    // «Выйти», затем «Войти»: в мини-аппе — снова через Telegram (initData), без SMS.
-    await accountSheet.getByRole("button", { name: ru.logout }).click();
-    await waitContent(frame(), ru.loggedOut);
-    await app.locator("[data-account]").first().click();
-    await accountSheet.getByRole("button", { name: new RegExp("^" + ru.login) }).click();
-    const login = app.locator('[data-sheet="login"]');
-    await login.waitFor();
-    expect(await login.locator("input[name=phone]").count()).toBe(0);
-    await login.getByRole("button", { name: new RegExp(ru.tgLogin) }).click();
-    await waitContent(frame(), ru.welcome);
-    await login.waitFor({ state: "detached" });
-    await loggedIn();
+    // В мини-аппе вход — аккаунт Telegram: «Выйти» нет (он вернул бы тот же аккаунт), вместо него пояснение.
+    expect(await accountSheet.getByRole("button", { name: ru.logout }).count()).toBe(0);
+    await accountSheet.getByText(ru.tgSessionNote).waitFor();
 
     // Перезагрузка фрейма: токен был только в памяти, вход по initData снова, без cookie.
     await frame().evaluate(() => location.reload());

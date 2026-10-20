@@ -113,7 +113,7 @@ describe("мини-апп: вход", () => {
     await close();
   });
 
-  it("сбой /webapp (503) повторяется, а после «Выйти» вход снова через Telegram, без SMS", async () => {
+  it("сбой /webapp (503) повторяется; в профиле мини-аппа нет «Выйти» — вход и есть аккаунт Telegram", async () => {
     const tgId = 7_300_000_000 + Math.floor(Math.random() * 1e6);
     const phone = uniquePhone();
     await e.db.insert(users).values({ telegramId: tgId, phone, firstName: "Dilnoza", locale: "ru" });
@@ -128,19 +128,11 @@ describe("мини-апп: вход", () => {
     await sheet(page, "account").waitFor();
     await e.waitText(page, "Dilnoza");
     expect(await sheet(page, "login").count()).toBe(0);
-    // «Выйти» → «Войти»: в мини-аппе — кнопка «Войти через Telegram», а не номер и SMS.
-    await sheet(page, "account").getByRole("button", { name: ru.logout }).click();
-    await e.waitText(page, ru.loggedOut);
-    await page.locator("[data-account]").first().click();
-    await sheet(page, "account").getByRole("button", { name: new RegExp("^" + ru.login) }).click();
-    const login = sheet(page, "login");
-    await login.waitFor();
-    expect(await login.locator("input[name=phone]").count()).toBe(0);
-    expect(await login.innerText()).toContain(ru.tgAuthHint);
-    await login.getByRole("button", { name: new RegExp(ru.tgLogin) }).click();
-    await e.waitText(page, ru.welcome);
-    await login.waitFor({ state: "detached" });
-    expect(webapp).toBe(3);
+    // «Выйти» в мини-аппе тут же вернуло бы тот же аккаунт Telegram: кнопки нет, вместо неё пояснение.
+    expect(await sheet(page, "account").getByRole("button", { name: ru.logout }).count()).toBe(0);
+    expect(await sheet(page, "account").innerText()).toContain(ru.tgSessionNote);
+    expect(problems.requests.filter((u) => u === "/api/auth/logout").length).toBeLessThanOrEqual(1);
+    expect(webapp).toBe(2);
     expect(problems.console.filter((m) => m !== failed(503, "Service Unavailable") && !/HTTP 503|Сервис недоступен/.test(m))).toEqual([]);
     problems.console = [];
     await e.expectClean(page, problems);
@@ -153,7 +145,8 @@ describe("мини-апп: вход", () => {
     await telegramStub(context, { id: tgId, first_name: "Jasur", language_code: "ru" }, { contactOk: false });
     const { page, problems, close } = await e.open("/app/", { context, waitText: ru.hero1 });
     const login = sheet(page, "login");
-    await login.getByRole("button", { name: new RegExp(ru.sharePhone) }).waitFor();
+    // Запрос контакта — только по нажатию, после объяснения в листе.
+    await login.getByRole("button", { name: new RegExp(ru.sharePhone) }).click();
     await expect.poll(async () => (await login.textContent()) || "").toContain(ru.phoneDeclined);
     expect(await login.textContent()).not.toContain(ru.tgWaitPhone);
     await e.shot(page, "tg-phone-declined-ru-390x844.png");
@@ -171,7 +164,7 @@ describe("мини-апп: вход", () => {
     await close();
   });
 
-  it("аккаунт: номер не из Узбекистана как в боте, конец подписки по Ташкенту, админка — во внешнем браузере", async () => {
+  it("аккаунт: номер не из Узбекистана как в боте, конец подписки по Ташкенту, админка — во внешнем браузере с входом", async () => {
     const tgId = 7_500_000_000 + Math.floor(Math.random() * 1e6);
     const phone = "7916" + String(Date.now() % 1e7).padStart(7, "0");
     const [u] = await e.db.insert(users).values({ telegramId: tgId, phone, firstName: "Иван", locale: "ru" }).returning();
@@ -192,7 +185,13 @@ describe("мини-апп: вход", () => {
       await e.waitText(page, ru.hero1);
       await page.locator("[data-account]").first().click();
       await acc.getByRole("button", { name: new RegExp(ru.adminPanel) }).click();
-      await expect.poll(async () => (await tgState(page)).links).toEqual([["link", e.base + "/admin/"]]);
+      // Во внешнем браузере сессии нет: ссылка — одноразовый вход (POST /api/auth/handoff), он ведёт в админку.
+      await expect.poll(async () => (await tgState(page)).links.length).toBe(1);
+      const [[kind, url]] = (await tgState(page)).links;
+      expect(kind).toBe("link");
+      expect(url).toMatch(new RegExp("^" + e.base.replace(/[.]/g, "\\.") + "/api/auth/link\\?code="));
+      const open = await e.app.inject({ url: url!.slice(e.base.length) });
+      expect(open.headers.location).toBe("/admin/");
       expect(page.url()).toBe(e.base + "/app/");
     } finally {
       e.config.ADMIN_TELEGRAM_IDS.splice(e.config.ADMIN_TELEGRAM_IDS.indexOf(String(tgId)), 1);
@@ -450,16 +449,20 @@ describe("конструктор", () => {
 });
 
 describe("тема", () => {
-  it("тёмная тема из «Возможностей» переживает перезагрузку (и возврат со страницы оплаты)", async () => {
+  // Переключатель темы переехал из тура в подвал главной (в туре — только то, что увидит клиент).
+  it("тёмная тема из подвала главной переживает перезагрузку (и возврат со страницы оплаты)", async () => {
     const { page, problems, close } = await e.open("/app/", { waitText: ru.hero1 });
-    await page.getByRole("button", { name: ru.tour }).first().click();
-    await e.waitText(page, ru.tourTitle);
-    await page.getByRole("button", { name: new RegExp(ru.demos.dark[0]) }).click();
+    const btn = page.locator("[data-theme-btn]");
+    expect(await btn.innerText()).toContain(ru.home.dark);
+    expect(await btn.getAttribute("aria-pressed")).toBe("false");
+    await btn.click();
     await expect.poll(() => page.evaluate(() => localStorage.getItem("invito.theme"))).toBe("dark");
+    expect(await btn.innerText()).toContain(ru.home.light);
     await page.reload();
     await e.waitText(page, ru.hero1);
     const bg = () => page.evaluate(() => getComputedStyle(document.querySelector('[style*="min-height: 100vh"]')!).backgroundColor);
     await expect.poll(bg).toBe("rgb(21, 19, 17)");
+    expect(await page.locator("[data-theme-btn]").getAttribute("aria-pressed")).toBe("true");
     await e.expectClean(page, problems);
     await close();
   });

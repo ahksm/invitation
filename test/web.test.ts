@@ -20,7 +20,7 @@ import { createPaymentProvider } from "../src/payments/index.js";
 import { longDate } from "../src/services/public.js";
 import { createSmsProvider } from "../src/sms/index.js";
 import { assetUrl, buildDesign, createDesignStore, parseDcFile, webDir } from "../src/web/design.js";
-import { pickEncoding, publicShell, renderShell, webRoutes, type PublicPage, type PublicPageRequest } from "../src/web/pages.js";
+import { DEFAULT_META, pickEncoding, publicShell, renderShell, webRoutes, type PublicPage, type PublicPageRequest } from "../src/web/pages.js";
 import { applyPatches, supportPatches } from "../src/web/support-patches.js";
 
 const config = loadConfig({
@@ -239,6 +239,21 @@ describe("оболочка", () => {
       expect(metaOf(renderShell(design, { boot }), "robots"), boot.mode).toBe("noindex, nofollow");
     }
     expect(metaOf(renderShell(design, { boot: { mode: "app" } }), "robots")).toBeUndefined();
+  });
+
+  it("главная: заголовок и описание говорят, что такое Invito; значки сайта", () => {
+    const html = renderShell(design, { boot: { mode: "app" } });
+    expect(html).toContain(`<title>${DEFAULT_META.title}</title>`);
+    expect(metaOf(html, "description")).toBe(DEFAULT_META.description);
+    expect(metaOf(html, "og:title")).toBe(DEFAULT_META.title);
+    // Как первый экран: приглашение онлайн, ссылка в Telegram и WhatsApp, ответы гостей, личные приглашения.
+    expect(DEFAULT_META.title).toMatch(/приглашения/);
+    for (const word of ["Telegram", "WhatsApp", "ответы гостей", "личные приглашения", "бесплатно"]) expect(DEFAULT_META.description).toContain(word);
+    for (const tag of ['<link rel="icon" href="/favicon.ico" sizes="48x48">', '<link rel="icon" href="/favicon.svg" type="image/svg+xml">', '<link rel="apple-touch-icon" href="/apple-touch-icon.png">']) {
+      expect(html).toContain(tag);
+    }
+    // Значки и на страницах приглашений.
+    expect(renderShell(design, { boot: { mode: "shared", slug: "a" } })).toContain('<link rel="icon" href="/favicon.ico" sizes="48x48">');
   });
 
   it("порядок скриптов: Telegram, React, ReactDOM, qrcode, бандл, рантайм", () => {
@@ -491,6 +506,18 @@ describe("маршруты фронтенда", () => {
     for (const url of ["/app/nope.js", "/app/vendor/nope.js", "/app/Invito.dc.html", "/index.html"]) {
       expect((await app.inject({ url })).statusCode, url).toBe(404);
     }
+  });
+
+  it("значки сайта: /favicon.ico, /favicon.svg и /apple-touch-icon.png без 404", async () => {
+    for (const [url, type] of [["/favicon.ico", /^image\/(x-icon|vnd\.microsoft\.icon)/], ["/favicon.svg", /^image\/svg\+xml/], ["/apple-touch-icon.png", /^image\/png/]] as const) {
+      const res = await app.inject({ url });
+      expect(res.statusCode, url).toBe(200);
+      expect(String(res.headers["content-type"]), url).toMatch(type);
+      expect(res.rawPayload.length, url).toBeGreaterThan(100);
+    }
+    // ICO с картинками PNG внутри: заголовок ICO (0, 1, число картинок).
+    const ico = (await app.inject({ url: "/favicon.ico" })).rawPayload;
+    expect([ico.readUInt16LE(0), ico.readUInt16LE(2), ico.readUInt16LE(4)]).toEqual([0, 1, 3]);
   });
 
   it("CSP: без eval и CDN, Telegram Web может встроить приложение, админку — никто", async () => {

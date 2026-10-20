@@ -72,6 +72,9 @@ async function pricesFor(userId: string, template = "wedding-classic") {
   return { ...(me.prices as { sharedTemplate: number; seat: number; subscriptionMonth: number }), template: tpl!.price ?? me.prices.sharedTemplate };
 }
 
+/** Срок подписки словами, как в приложении: «3 месяца», «12 oy». */
+const plan = (m: number, t: Dict = ru, lang = "ru") => m + " " + D.plural(lang, m, t.monthsN);
+
 /** Сумма так, как её пишет приложение: Intl браузера, тийины в сумы. */
 const money = (page: Page, amount: number, locale = "ru-RU", sum: string = ru.sum) =>
   page.evaluate(([a, l, c]) => new Intl.NumberFormat(l as string, { maximumFractionDigits: 2 }).format((a as number) / 100) + " " + c, [amount, locale, sum]);
@@ -129,13 +132,18 @@ describe("публикация и оплата", () => {
     const pay = sheet(page, "pay");
     await pay.waitFor();
     const tplPrice = await money(page, P.template);
-    // Цены — из ответов сервера: шаблон, место, подписка на 1, 3 и 12 месяцев.
+    // Цены — из ответов сервера: шаблон, место, подписка на 1, 3, 6 и 12 месяцев.
     await expect.poll(() => pay.locator('[data-price="shared"]').innerText()).toBe(tplPrice);
     expect(await pay.locator('[data-price="personal"]').innerText()).toBe(ru.perGuest.replace("{price}", await money(page, P.seat)));
     expect(await pay.locator("[data-pay-total]").innerText()).toBe(tplPrice);
     expect(await pay.locator('[data-pay="go"]').innerText()).toContain(ru.payBtn.replace("{price}", tplPrice));
     const sub = pay.locator("[data-sub]");
-    for (const [i, m] of [1, 3, 12].entries()) expect(await sub.innerText()).toContain(ru.subMonths[i] + " · " + (await money(page, m * P.subscriptionMonth)));
+    // Сроки подписки — плитки «срок / сумма» (раньше — строка чипов «1 месяц · …», на телефоне в три строки).
+    for (const m of [1, 3, 6, 12]) {
+      const tile = sub.locator(`[data-sub-m="${m}"]`);
+      expect(await tile.innerText()).toContain(plan(m));
+      expect(await tile.innerText()).toContain(await money(page, m * P.subscriptionMonth));
+    }
     await e.shot(page, "pay-sheet-ru-390x844.png");
     // Персональные: 10 мест по цене места; назад к общей ссылке.
     await pay.locator('[data-mode="personal"]').click();
@@ -288,8 +296,8 @@ describe("публикация и оплата", () => {
       // Оплаченный шаблон не продаётся второй раз: только подписка.
       expect(await pay.locator('[data-pay="go"]').count()).toBe(0);
       expect(await pay.locator("[data-mode]").count()).toBe(0);
-      await pay.getByRole("button", { name: new RegExp("^" + ru.subMonths[1]) }).click();
-      await expect.poll(() => pay.locator('[data-pay="sub"]').innerText()).toBe(ru.subBtn.replace("{price}", await money(page, 3 * P.subscriptionMonth)));
+      await pay.locator('[data-sub-m="3"]').click();
+      await expect.poll(() => pay.locator('[data-pay="sub"]').innerText()).toBe(ru.subBuyFor.replace("{plan}", plan(3)).replace("{price}", await money(page, 3 * P.subscriptionMonth)));
       await page.waitForTimeout(400);
       await e.shot(page, "pay-402-ru-390x844.png");
       expect((await invOf(inv.id)).templateId).not.toBe(botanical!.id);
@@ -313,7 +321,9 @@ describe("публикация и оплата", () => {
 });
 
 describe("публикация и оплата: подписка и профиль", () => {
-  it("подписка при выбранных «Личных приглашениях»: тип уходит до оплаты, после неё — лист мест", async () => {
+  // Раньше подписку предлагали и при «Персональных приглашениях», где она ничего не даёт (места платные, шаблон
+  // и так бесплатный): теперь блок подписки есть только у общей ссылки (намеренное изменение поведения).
+  it("подписка — только для общей ссылки: у персональных её нет; 6 месяцев из листа, затем публикация", async () => {
     const context = await e.newContext();
     const user = await e.signIn(context);
     const inv = await createInvitation(user.id, { data: { names: "Подписка тест", intro: "none" } });
@@ -321,27 +331,27 @@ describe("публикация и оплата: подписка и профил
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Подписка тест" });
     await toShare(page);
     const pay = sheet(page, "pay");
+    await pay.locator("[data-sub]").waitFor();
     await pay.locator('[data-mode="personal"]').click();
-    await pay.locator("input[name=seats]").fill("3");
+    expect(await pay.locator("[data-sub]").count()).toBe(0);
+    expect(await pay.locator('[data-mode="personal"]').innerText()).toContain(ru.payPersonalFree);
+    await page.waitForTimeout(300);
+    await e.shot(page, "pay-personal-nosub-ru-390x844.png");
+    await pay.locator('[data-mode="shared"]').click();
+    await pay.locator('[data-sub-m="6"]').click();
+    expect(await pay.locator('[data-sub-m="6"]').getAttribute("aria-pressed")).toBe("true");
+    expect(await pay.locator('[data-pay="sub"]').innerText()).toBe(ru.subBuyFor.replace("{plan}", plan(6)).replace("{price}", await money(page, 6 * P.subscriptionMonth)));
     await pay.locator('[data-pay="sub"]').click();
     await page.locator('[data-screen="mock-pay"]').waitFor();
-    // Тип приглашения сохранён до заказа подписки.
-    expect((await invOf(inv.id)).mode).toBe("personal");
+    // Тестовая оплата называет срок подписки.
+    await expect.poll(() => page.locator('[data-screen="mock-pay"]').innerText()).toContain(plan(6).toUpperCase());
+    const [order] = await e.db.select().from(orders).where(eq(orders.userId, user.id));
+    expect(order).toMatchObject({ kind: "subscription", quantity: 6, amount: 6 * P.subscriptionMonth, invitationId: null });
     await page.locator('[data-mock="paid"]').click();
-    await e.waitText(page, ru.subDone);
-    // Подписка не публикует общую ссылку: открыт лист мест персонального приглашения с выбранным числом.
-    await pay.waitFor();
-    await expect.poll(() => pay.locator("input[name=seats]").inputValue()).toBe("3");
-    expect(await invOf(inv.id)).toMatchObject({ mode: "personal", status: "draft", unlocked: false });
-    expect((await ordersOf(inv.id)).map((o) => o.kind)).toEqual([]);
-    await page.waitForTimeout(400);
-    await e.shot(page, "pay-seats-after-sub-ru-390x844.png");
-    await pay.locator('[data-pay="go"]').click();
-    await page.locator('[data-screen="mock-pay"]').waitFor();
-    expect((await ordersOf(inv.id))[0]).toMatchObject({ kind: "seats", quantity: 3, amount: 3 * P.seat });
-    await page.locator('[data-mock="paid"]').click();
+    // После подписки шаблон открывается без оплаты и приглашение публикуется.
     await e.waitText(page, ru.linkReady);
-    expect(await invOf(inv.id)).toMatchObject({ mode: "personal", status: "active", paidSeats: 3 });
+    expect(await invOf(inv.id)).toMatchObject({ mode: "shared", status: "active", unlocked: true });
+    expect((await ordersOf(inv.id)).map((o) => o.kind)).toEqual([]);
     await e.expectClean(page, problems);
     await close();
   });
@@ -1046,7 +1056,12 @@ describe("мини-апп Telegram", () => {
     const sent: Dict[] = [];
     page.on("request", (r) => { if (r.method() === "POST" && r.url() === e.base + "/api/orders") sent.push(r.postDataJSON() as Dict); });
     await toShare(page, ru, true);
-    await sheet(page, "pay").locator('[data-pay="go"]').click();
+    // В мини-аппе оплата из листа — нативная MainButton Telegram, своей кнопки в листе нет (раньше была кнопка в листе).
+    const pay = sheet(page, "pay");
+    await pay.waitFor();
+    await expect.poll(() => pay.locator("[data-pay-total]").innerText()).not.toBe("…");
+    expect(await pay.locator('[data-pay="go"]').count()).toBe(0);
+    await page.evaluate(() => (window as any).__main());
     await page.locator('[data-screen="mock-pay"]').waitFor();
     // Мини-апп просит вернуть внешний браузер после оплаты на #/paid/<id> (контракт 3.9).
     expect(sent).toEqual([{ kind: "template", invitationId: inv.id, returnTo: "telegram" }]);

@@ -195,7 +195,8 @@ describe("вход и черновики", () => {
     await toTemplates(page);
     await page.getByRole("button", { name: ru.useTpl }).first().click();
     await sheet(page, "login").waitFor();
-    expect(await sheet(page, "login").innerText()).toContain(ru.loginHint);
+    // Лист говорит, зачем вход и что будет после него.
+    expect(await sheet(page, "login").innerText()).toContain(ru.loginWhy.tpl);
     await e.shot(page, "login-phone-ru-390x844.png");
     const phone = uniquePhone();
     await page.locator("input[name=phone]").fill(phone.slice(3));
@@ -443,10 +444,11 @@ describe("вход и черновики", () => {
 describe("языки", () => {
   it("язык интерфейса: без входа — в браузере, при входе — в профиле; язык профиля важнее", async () => {
     const { page, problems, close } = await e.open("/app/", { waitText: ru.hero1 });
-    await page.locator("[data-account]").first().click();
-    await sheet(page, "account").waitFor();
-    await e.shot(page, "account-out-ru-390x844.png");
-    await sheet(page, "account").getByRole("button", { name: D.LANG_NAMES.uz }).click();
+    // Язык интерфейса — меню в шапке.
+    await page.locator("[data-lang-btn]").click();
+    await page.locator('[data-menu="lang"]').waitFor();
+    await e.shot(page, "lang-menu-ru-390x844.png");
+    await page.locator('[data-menu="lang"]').getByRole("button", { name: D.LANG_NAMES.uz }).click();
     await e.waitText(page, uz.hero1);
     expect(await page.evaluate(() => localStorage.getItem("invito.lang"))).toBe("uz");
     expect(await page.evaluate(() => document.documentElement.lang)).toBe("uz-Latn");
@@ -455,9 +457,8 @@ describe("языки", () => {
     await page.reload();
     await e.waitText(page, uz.hero1);
     await e.shot(page, "home-uz-390x844.png");
-    // Вход в узбекском интерфейсе: новый аккаунт получает язык интерфейса.
+    // Вход в узбекском интерфейсе: «Kirish» сразу открывает вход, новый аккаунт получает язык интерфейса.
     await page.locator("[data-account]").first().click();
-    await sheet(page, "account").getByRole("button", { name: uz.login }).click();
     await sheet(page, "login").waitFor();
     await e.shot(page, "login-phone-uz-390x844.png");
     const phone = uniquePhone();
@@ -470,8 +471,9 @@ describe("языки", () => {
     expect(await sheet(page, "account").innerText()).toContain(`+998 ${phone.slice(3, 5)} ${phone.slice(5, 8)}-${phone.slice(8, 10)}-${phone.slice(10)}`);
     expect(await sheet(page, "account").innerText()).toContain(uz.subNone);
     await e.shot(page, "account-uz-390x844.png");
-    // Смена языка после входа сохраняется в профиле (PATCH /api/auth/me).
-    await sheet(page, "account").getByRole("button", { name: D.LANG_NAMES.en }).click();
+    // Смена языка после входа сохраняется в профиле (PATCH /api/auth/me): из профиля — то же меню языка.
+    await sheet(page, "account").locator('[data-acc-row="lang"]').click();
+    await page.locator('[data-menu="lang"]').getByRole("button", { name: D.LANG_NAMES.en }).click();
     await expect.poll(async () => (await e.user(user.id)).locale).toBe("en");
     await e.expectClean(page, problems);
     await close();
@@ -512,10 +514,16 @@ describe("языки", () => {
       const { page, problems, close } = await e.open("/app/", { locale, waitText: t.hero1 });
       expect(await page.evaluate(() => localStorage.getItem("invito.lang"))).toBeNull();
       const text = await page.evaluate(() => document.body.textContent || "");
-      // Месяц «№ 01 — …» на главной — из таблиц узбекских дат (Chromium их не знает), а не «2026 M10».
+      // Даты на главной (витрина шаблонов) — из таблиц узбекских дат (Chromium их не знает), а не «2026 M10».
       expect(text).not.toMatch(/\bM\d{1,2}\b/);
-      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].months.some((m: string) => text.includes(m + ", 20"))).toBe(true);
+      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].monthsShort.some((m: string) => text.includes(D.UZ_DATES[lang].daySep + m + ", 20"))).toBe(true);
       await e.shot(page, `home-${lang}-390x844.png`);
+      // Месяц в шапке раздела (на главной его больше нет, он на экране цен) — словами.
+      await page.evaluate(() => { location.hash = "#/pricing"; });
+      await page.locator('[data-screen="pricing"]').waitFor();
+      const prices = await page.evaluate(() => document.body.textContent || "");
+      expect(prices).not.toMatch(/\bM\d{1,2}\b/);
+      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].months.some((m: string) => prices.includes(m + ", 20"))).toBe(true);
       await e.expectClean(page, problems);
       await close();
     }
@@ -531,8 +539,10 @@ describe("мини-апп Telegram", () => {
     await telegramStub(context, { id: tgId, first_name: "Ali", last_name: "Valiyev", language_code: "uz" });
     const { page, problems, close } = await e.open("/app/", { context, waitText: uz.hero1 });
     const calls = recordApi(page);
-    // Номера нет: лист «Поделиться номером», Telegram спрашивает контакт.
+    // Номера нет: лист с объяснением и «Поделиться номером»; по нажатию Telegram спрашивает контакт.
     await sheet(page, "login").getByRole("button", { name: new RegExp(uz.sharePhone) }).waitFor();
+    expect((await tgState(page)).contact).toBe(0);
+    await sheet(page, "login").getByRole("button", { name: new RegExp(uz.sharePhone) }).click();
     await expect.poll(async () => (await tgState(page)).contact).toBeGreaterThan(0);
     await e.shot(page, "tg-share-phone-uz-390x844.png");
     // Поддельной шапки и кнопки Telegram на странице нет: работают настоящие MainButton и BackButton.
