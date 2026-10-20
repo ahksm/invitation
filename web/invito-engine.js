@@ -37,6 +37,9 @@ export function createMusic() {
   };
   const this_ = {};
   const schedule = () => { if (!track) return; while (nextT < ac.currentTime + 0.25) { track.play(nextT, step++); nextT += track.spb; } };
+  // Заблокированный браузером resume() может не завершиться никогда: ждём его не дольше 400 мс.
+  const running = () => Promise.race([Promise.resolve(ac.resume()).then(() => true, () => false), new Promise((r) => setTimeout(r, 400, false))]).then((ok) => ok || ac.state === 'running');
+  let paused = false;
   const api = {
     get playing() { return playing; },
     // Promise<boolean>: false, если браузер не дал включить звук (нет касания страницы).
@@ -44,12 +47,29 @@ export function createMusic() {
       api.stop();
       if (name === 'custom' && src) { audioEl = new Audio(src); audioEl.loop = true; audioEl.volume = 0.6; playing = name; return audioEl.play().then(() => true, () => false); }
       if (!TRACKS[name]) return Promise.resolve(false);
-      ensure(); const resumed = Promise.resolve(ac.resume()); track = TRACKS[name]; step = 0; nextT = ac.currentTime + 0.05;
+      ensure(); const ok = running(); track = TRACKS[name]; step = 0; nextT = ac.currentTime + 0.05;
       master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0.0001, ac.currentTime); master.gain.linearRampToValueAtTime(0.9, ac.currentTime + 1.2);
       timer = setInterval(schedule, 40); schedule(); playing = name;
-      return resumed.then(() => ac.state === 'running', () => false);
+      return ok;
+    },
+    // Вкладку свернули: трек замирает на месте (своя песня — на той же секунде), resume() продолжает.
+    pause() {
+      if (!playing || paused) return;
+      paused = true;
+      if (audioEl) { audioEl.pause(); return; }
+      if (timer) { clearInterval(timer); timer = null; }
+      if (ac) ac.suspend();
+    },
+    // Promise<boolean>: false, если браузер не дал продолжить.
+    resume() {
+      if (!playing || !paused) return Promise.resolve(!!playing);
+      paused = false;
+      if (audioEl) return audioEl.play().then(() => true, () => false);
+      const ok = running(); nextT = ac.currentTime + 0.05; timer = setInterval(schedule, 40);
+      return ok;
     },
     stop() {
+      paused = false;
       if (audioEl) { audioEl.pause(); audioEl = null; }
       if (timer) { clearInterval(timer); timer = null; }
       if (ac && master) { master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(master.gain.value, ac.currentTime); master.gain.linearRampToValueAtTime(0.0001, ac.currentTime + 0.4); }

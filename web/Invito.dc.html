@@ -2415,7 +2415,7 @@ class Component extends DCLogic {
     this.onVis = () => {
       if (!this.state.ready) return;
       if (document.visibilityState === 'hidden') { if (this.stream) this.stopCam(); this.pauseMusic(); this.flushSave({ keepalive: true }); return; }
-      if (this._musPaused) { this._musPaused = false; this.autoMusic(null, true); }
+      if (this._musPaused) this.resumeMusic();
       const o = this.state.order; if (this.state.screen === 'order' && o) this.pollOrder(o.id);
     };
     document.addEventListener('visibilitychange', this.onVis);
@@ -2448,6 +2448,9 @@ class Component extends DCLogic {
   componentDidUpdate() {
     const s = this.state;
     if (!s.ready) return;
+    // Музыка играет только на странице приглашения: «Использовать шаблон», вход и оплата уводят без неё.
+    if (this._scr === 'guest' && s.screen !== 'guest' && s.music) { this.stopMusic(); this.setState({ music: false }); }
+    this._scr = s.screen;
     // Автосохранение черновика на сервере: PATCH через 700 мс после последней правки содержимого, шаблона или языка.
     if (s.draftId && !s.demo && (this._lastInv !== s.inv || this._lastTpl !== s.tplId || this._lastLang !== s.invLang)) {
       this._lastInv = s.inv; this._lastTpl = s.tplId; this._lastLang = s.invLang; clearTimeout(this._saveT);
@@ -2676,18 +2679,18 @@ class Component extends DCLogic {
   }
   // Музыка на странице гостя включена по умолчанию. Звук браузер разрешает только после касания страницы,
   // поэтому она стартует от первого касания гостя: конверт, занавес, скретч-карта или любая кнопка.
-  // Не играет в редакторе, за паролем, без трека и после того, как гость выключил её сам.
-  // resume: возврат на вкладку, где музыка играла; касание для этого уже было.
-  autoMusic(e, resume) {
+  // Не играет в редакторе, за паролем, под листами входа и оплаты, без трека и после того, как гость выключил её сам.
+  autoMusic(e) {
     const s = this.state, inv = s.inv;
     if (this._autoMus || !this.music || !s.ready || s.screen !== 'guest' || s.guestMode === 'edit' || s.music || s.musicOff) return;
     if (!inv || !inv.music || inv.music === 'none' || (inv.music === 'custom' && !inv.musicSrc)) return;
     if (s.pubLocked || (s.guestMode === 'live' && s.share.pwOn && !!s.share.pw && !s.unlocked)) return;
+    if (s.login || s.pay || s.account || s.confirm || s.addSheet || s.upload) return;
     // Кнопка музыки переключает её сама: иначе первое нажатие на неё включило бы и сразу выключило музыку.
     // Поля ввода не в счёт: имя в ответе начинают печатать без музыки.
     if (e && e.target && e.target.closest && e.target.closest('[data-music],input,textarea,select')) return;
     // Касание, которое не даёт права на звук (палец прокручивал страницу), ждёт следующего.
-    if (!resume && navigator.userActivation && !navigator.userActivation.isActive) return;
+    if (navigator.userActivation && !navigator.userActivation.isActive) return;
     const name = inv.music;
     this._autoMus = true;
     this.music.play(name, inv.musicSrc).then((ok) => {
@@ -2697,10 +2700,16 @@ class Component extends DCLogic {
     });
     this.setState({ music: true, previewTrack: null });
   }
-  // Вкладку свернули: музыка гостя молчит, пока его нет, и продолжается при возвращении.
+  // Вкладку свернули: музыка замирает на месте и продолжается при возвращении (и в редакторе тоже).
   pauseMusic() {
-    if (!this.state.music || this.state.screen !== 'guest') return;
-    this.stopMusic(); this._musPaused = true; this.setState({ music: false });
+    if (!this.state.music || !this.music || !this.music.playing) return;
+    this.music.pause(); this._musPaused = true;
+  }
+  resumeMusic() {
+    this._musPaused = false;
+    if (!this.state.music || !this.music) return;
+    // Браузер не дал продолжить без касания: кнопка «выключено», следующее касание включит снова.
+    this.music.resume().then((ok) => { if (!ok && this.state.music) { this.stopMusic(); this.setState({ music: false }); } });
   }
   stopMusic() { if (this.music) this.music.stop(); clearInterval(this.mus); this.mus = null; if (this.mg) { try { this.mg.disconnect(); } catch (e) {} this.mg = null; } }
 
