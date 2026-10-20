@@ -301,7 +301,7 @@ const ru: LegalTexts = {
           id: "storage",
           title: "Хранение и защита",
           blocks: [
-            "Персональные данные граждан Республики Узбекистан хранятся в базах данных на территории Республики Узбекистан, как требует Закон «О персональных данных».",
+            "Данные хранятся на защищённых серверах Сервиса. Доступ к серверам и базам данных есть только у администраторов Сервиса.",
             "Сайт работает только по защищённому протоколу HTTPS. Доступ к данным есть только у тех, кому он нужен для работы Сервиса.",
             "Личные ссылки гостей содержат случайный ключ, страницы приглашений закрыты от поисковых систем, а организатор может защитить приглашение паролем.",
             "Загруженные фотографии, видео и музыка открываются по прямой ссылке без входа: так их видят гости на странице приглашения.",
@@ -655,7 +655,7 @@ const uz: LegalTexts = {
           id: "storage",
           title: "Saqlash va himoya",
           blocks: [
-            "O‘zbekiston Respublikasi fuqarolarining shaxsga doir ma’lumotlari «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonun talabiga ko‘ra O‘zbekiston Respublikasi hududidagi ma’lumotlar bazalarida saqlanadi.",
+            "Ma’lumotlar Servisning himoyalangan serverlarida saqlanadi. Serverlar va ma’lumotlar bazalariga faqat Servis administratorlari kira oladi.",
             "Sayt faqat himoyalangan HTTPS protokoli orqali ishlaydi. Ma’lumotlardan faqat Servis ishlashi uchun zarur bo‘lgan shaxslar foydalana oladi.",
             "Mehmonlarning shaxsiy havolalarida tasodifiy kalit bor, taklifnoma sahifalari qidiruv tizimlaridan yopilgan, tashkilotchi esa taklifnomani parol bilan himoya qilishi mumkin.",
             "Yuklangan fotosuratlar, video va musiqa kirishsiz to‘g‘ridan-to‘g‘ri havola orqali ochiladi: mehmonlar ularni taklifnoma sahifasida shunday ko‘radi.",
@@ -1010,7 +1010,7 @@ const en: LegalTexts = {
           id: "storage",
           title: "Storage and protection",
           blocks: [
-            "Personal data of citizens of the Republic of Uzbekistan is stored in databases located in the Republic of Uzbekistan, as required by the Law “On Personal Data”.",
+            "Data is stored on the Service’s protected servers. Only the Service’s administrators have access to the servers and databases.",
             "The Website works only over secure HTTPS. Only people who need it to run the Service have access to the data.",
             "Guests’ personal links contain a random key, invitation pages are hidden from search engines, and the organiser can protect an invitation with a password.",
             "Uploaded photos, videos and music open by direct link without signing in: this is how guests see them on the invitation page.",
