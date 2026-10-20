@@ -379,6 +379,21 @@ describe("удаление, копия и публикация", () => {
     expect((await t.app.inject({ url: `/api/public/i/${paid.slug}` })).statusCode).toBe(404);
   });
 
+  it("в архиве не остаётся данных гостей: строки гостей удаляются, оплаченные места сохраняются", async () => {
+    const { cookie } = await user();
+    const { inv, added } = await personalWithGuests(cookie, ["Аня", "Боря"], 2);
+    await req(cookie, "PATCH", `/api/invitations/${inv.id}/guests/${added[0].id}`, { phone: "+998 90 123 45 67" });
+    await req(cookie, "POST", `/api/invitations/${inv.id}/publish`);
+    const guestUrl = `/api/public/g/${added[0].token}`;
+    expect((await t.app.inject({ url: guestUrl })).statusCode).toBe(200);
+    expect((await req(cookie, "DELETE", `/api/invitations/${inv.id}`)).statusCode).toBe(204);
+    expect(await db.select().from(guests).where(eq(guests.invitationId, inv.id))).toEqual([]);
+    const [row] = await db.select().from(invitations).where(eq(invitations.id, inv.id));
+    expect(row).toMatchObject({ status: "archived", paidSeats: 2 });
+    // Страница гостя, только что попавшая в кэш, тоже закрыта.
+    expect((await t.app.inject({ url: guestUrl })).statusCode).toBe(404);
+  });
+
   it("черновик с начатой оплатой не удаляется насовсем", async () => {
     const { cookie } = await user();
     const inv = await create(cookie);

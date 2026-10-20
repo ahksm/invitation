@@ -445,7 +445,10 @@ export async function updateInvitation(
 
 /**
  * Удаляет приглашение. Черновик без оплат (и без начатых оплат) удаляется насовсем, остальное
- * уходит в архив: публичные страницы отдают 404, оплаченное не теряется.
+ * уходит в архив: публичные страницы отдают 404, оплаченное (заказы, paid_seats) не теряется.
+ * Гости архивного приглашения удаляются сразу: из архива приглашение не возвращается, владелец
+ * его больше не видит, а политика конфиденциальности обещает хранить данные гостей, только пока
+ * организатор не удалит гостя или приглашение.
  */
 export async function deleteInvitation(ctx: Pick<Ctx, "db" | "cache" | "config" | "log">, userId: string, id: string) {
   const inv = await getOwnInvitation(ctx, userId, id);
@@ -459,8 +462,12 @@ export async function deleteInvitation(ctx: Pick<Ctx, "db" | "cache" | "config" 
     await deleteOwnMedia(ctx, userId, inv.ogImageUrl);
     return;
   }
-  await ctx.db.update(invitations).set({ status: "archived" }).where(eq(invitations.id, inv.id));
-  await invalidateInvitation(ctx, inv);
+  const removed = await ctx.db.transaction(async (tx) => {
+    await tx.update(invitations).set({ status: "archived" }).where(eq(invitations.id, inv.id));
+    return tx.delete(guests).where(eq(guests.invitationId, inv.id)).returning({ token: guests.token });
+  });
+  // Гостей в базе уже нет: их страницы в кэше сбрасываются по ключам удалённых строк.
+  await ctx.cache.invalidate(cacheKeys.publicShared(inv.slug), ...removed.map((g) => cacheKeys.publicGuest(g.token)));
 }
 
 /** Копия как новый черновик: содержимое, шаблон, язык и режим, без ссылки, оплат, гостей и пароля. */
