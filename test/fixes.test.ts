@@ -313,7 +313,7 @@ describe("заказы", () => {
     await redis.flushdb();
     const free = await req(cookie, "POST", "/api/orders", { kind: "template", invitationId: shared.id }, { "x-lang": "uz" });
     expect(free.statusCode).toBe(200);
-    expect(free.json()).toEqual({ status: "fulfilled", order: null, message: "Shablon to'lovsiz ochildi" });
+    expect(free.json()).toEqual({ status: "fulfilled", order: null, message: "Shablon to‘lovsiz ochildi" });
     expect((await db.select().from(orders).where(eq(orders.id, pending.order.id)))[0]!.status).toBe("cancelled");
 
     // Старый счёт всё же оплатили: оплата отклоняется, Multicard её отменит.
@@ -360,6 +360,25 @@ describe("заказы", () => {
     expect(subs).toHaveLength(3);
     expect(subs[1]!.startsAt.getTime()).toBe(subs[0]!.endsAt.getTime());
     expect(subs[2]!.startsAt.getTime()).toBe(subs[1]!.endsAt.getTime());
+  });
+
+  it("подписку не продают тем, у кого бесплатный доступ", async () => {
+    const free = await user({ freeAccess: true });
+    const sub = (cookie: string, lang: string) => req(cookie, "POST", "/api/orders", { kind: "subscription", months: 3 }, { "x-lang": lang });
+    const ru = await sub(free.cookie, "ru");
+    expect(ru.statusCode).toBe(400);
+    expect(ru.json().error).toBe("У вас бесплатный доступ: подписка не нужна");
+    expect((await sub(free.cookie, "uz")).json().error).toBe("Sizda bepul foydalanish huquqi bor: obuna kerak emas");
+    expect((await sub(free.cookie, "uzc")).json().error).toBe("Сизда бепул фойдаланиш ҳуқуқи бор: обуна керак эмас");
+    expect((await sub(free.cookie, "en")).json().error).toBe("You have free access: no subscription needed");
+    // Администратору тоже всё бесплатно.
+    expect((await sub((await admin()).cookie, "ru")).statusCode).toBe(400);
+    expect(await db.select().from(orders).where(eq(orders.userId, free.user.id))).toHaveLength(0);
+    // Обычный пользователь подписку оформляет.
+    const paying = await user();
+    const ok = await sub(paying.cookie, "ru");
+    expect(ok.statusCode).toBe(201);
+    expect(ok.json().order).toMatchObject({ kind: "subscription", quantity: 3, status: "pending" });
   });
 });
 

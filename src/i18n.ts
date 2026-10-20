@@ -61,15 +61,15 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Шаблон не найден": { uz: "Shablon topilmadi", en: "Template not found" },
   "Гость не найден": { uz: "Mehmon topilmadi", en: "Guest not found" },
   "Заказ не найден": { uz: "Buyurtma topilmadi", en: "Order not found" },
-  "Шаблон оплачивается только у общего приглашения": { uz: "Shablon faqat umumiy taklifnoma uchun to'lanadi", en: "Templates are paid only for shared invitations" },
-  "Шаблон уже оплачен": { uz: "Shablon allaqachon to'langan", en: "Template is already paid" },
+  "Шаблон оплачивается только у общего приглашения": { uz: "Shablon faqat umumiy taklifnoma uchun to‘lanadi", en: "Templates are paid only for shared invitations" },
+  "Шаблон уже оплачен": { uz: "Shablon allaqachon to‘langan", en: "Template is already paid" },
   "Места покупаются только для персональных приглашений": { uz: "Joylar faqat shaxsiy taklifnomalar uchun sotib olinadi", en: "Seats are bought only for personal invitations" },
-  "Платёжная система недоступна, попробуйте позже": { uz: "To'lov tizimi ishlamayapti, keyinroq urinib ko'ring", en: "Payment system is unavailable, please try later" },
-  "Сначала оплатите шаблон или оформите подписку": { uz: "Avval shablon uchun to'lang yoki obuna bo'ling", en: "Pay for the template or subscribe first" },
-  "Сначала оплатите места для гостей": { uz: "Avval mehmonlar uchun joylarni to'lang", en: "Pay for guest seats first" },
+  "Платёжная система недоступна, попробуйте позже": { uz: "To‘lov tizimi ishlamayapti, keyinroq urinib ko‘ring", en: "Payment system is unavailable, please try later" },
+  "Сначала оплатите шаблон или оформите подписку": { uz: "Avval shablon uchun to‘lang yoki obuna bo‘ling", en: "Pay for the template or subscribe first" },
+  "Сначала оплатите места для гостей": { uz: "Avval mehmonlar uchun joylarni to‘lang", en: "Pay for guest seats first" },
   "Гости добавляются только в персональное приглашение": { uz: "Mehmonlar faqat shaxsiy taklifnomaga qo'shiladi", en: "Guests can be added only to personal invitations" },
   "SMS отправляются гостям персонального приглашения": { uz: "SMS faqat shaxsiy taklifnoma mehmonlariga yuboriladi", en: "SMS are sent to guests of personal invitations" },
-  "Сначала опубликуйте приглашение": { uz: "Avval taklifnomani e'lon qiling", en: "Publish the invitation first" },
+  "Сначала опубликуйте приглашение": { uz: "Avval taklifnomani e’lon qiling", en: "Publish the invitation first" },
   "Для этого шаблона рассылка SMS недоступна": { uz: "Bu shablon uchun SMS yuborish mavjud emas", en: "SMS sending is not available for this template" },
   "Слишком много SMS за час, попробуйте позже": { uz: "Bir soatda juda ko'p SMS, keyinroq urinib ko'ring", en: "Too many SMS this hour, please try later" },
   "Код уже отправлен, повторить можно через минуту": { uz: "Kod yuborildi, bir daqiqadan keyin qayta so'rash mumkin", en: "Code already sent, you can retry in a minute" },
@@ -92,15 +92,16 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   },
   "Эта ссылка уже занята": { uz: "Bu havola band", en: "This link is already taken" },
   "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo'lmaydi", en: "This link cannot be used" },
-  "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to'lanmagan qoralamada o'zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
-  "Этот шаблон дороже оплаченного": { uz: "Bu shablon to'langanidan qimmatroq", en: "This template costs more than the one you paid for" },
+  "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to‘lanmagan qoralamada o‘zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
+  "Этот шаблон дороже оплаченного": { uz: "Bu shablon to‘langanidan qimmatroq", en: "This template costs more than the one you paid for" },
   "Режим можно сменить, только пока в приглашении нет гостей": {
     uz: "Rejimni faqat taklifnomada mehmonlar yo'qligida o'zgartirish mumkin",
     en: "The mode can be changed only while the invitation has no guests",
   },
   "Приглашение в архиве": { uz: "Taklifnoma arxivda", en: "The invitation is archived" },
   "Шаблон больше недоступен, выберите другой": { uz: "Shablon endi mavjud emas, boshqasini tanlang", en: "This template is no longer available, choose another one" },
-  "Заказ отменён, оформите оплату заново": { uz: "Buyurtma bekor qilindi, qaytadan to'lov qiling", en: "The order was cancelled, please pay again" },
+  "Заказ отменён, оформите оплату заново": { uz: "Buyurtma bekor qilindi, qaytadan to‘lov qiling", en: "The order was cancelled, please pay again" },
+  "У вас бесплатный доступ: подписка не нужна": { uz: "Sizda bepul foydalanish huquqi bor: obuna kerak emas", en: "You have free access: no subscription needed" },
   "Такого стола нет": { uz: "Bunday stol yo'q", en: "There is no such table" },
   "За один раз можно добавить не больше 500 гостей": { uz: "Bir martada ko'pi bilan 500 ta mehmon qo'shish mumkin", en: "You can add at most 500 guests at a time" },
   "Приглашение защищено паролем": { uz: "Taklifnoma parol bilan himoyalangan", en: "This invitation is protected by a password" },
@@ -151,8 +152,8 @@ export const isKnownMessage = (message: string) => Object.hasOwn(errors, message
 
 /** Сообщения API об успехе (например, о бесплатном заказе): клиент получает готовый текст на языке запроса. */
 const apiTexts = {
-  templateUnlocked: { ru: "Шаблон открыт без оплаты", uz: "Shablon to'lovsiz ochildi", en: "The template is unlocked free of charge" },
-  seatsAdded: { ru: "Добавлено мест: {n}", uz: "Qo'shilgan joylar: {n}", en: "Seats added: {n}" },
+  templateUnlocked: { ru: "Шаблон открыт без оплаты", uz: "Shablon to‘lovsiz ochildi", en: "The template is unlocked free of charge" },
+  seatsAdded: { ru: "Добавлено мест: {n}", uz: "Qo‘shilgan joylar: {n}", en: "Seats added: {n}" },
 } satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
 
 export type ApiTextKey = keyof typeof apiTexts;

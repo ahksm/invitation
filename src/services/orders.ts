@@ -71,6 +71,8 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest, r
   let meta: Record<string, unknown> = {};
 
   if (req.kind === "subscription") {
+    // Бесплатному доступу (и администратору) все шаблоны уже открыты: подписка ничего бы не дала.
+    if (access.free) throw new HttpError(400, "У вас бесплатный доступ: подписка не нужна");
     quantity = req.months;
     amount = quoteSubscription(req.months, prices);
     items = [{ title: "Подписка на шаблоны (1 месяц)", quantity, unitPrice: prices.subscriptionMonth }];

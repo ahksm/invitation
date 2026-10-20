@@ -147,11 +147,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ tpls }}" as="c" hint-placeholder-count="0"><div data-ci="{{ $index }}" onClick="{{ c.onClick }}" style="flex:none;width:{{ cardW }};scroll-snap-align:center;cursor:pointer;transform-origin:50% 70%;will-change:transform">
 <div style="border-radius:14px;overflow:hidden;box-shadow:0 34px 60px -30px rgba({{ ui.inkRgb }},.55);outline:{{ c.outline }};outline-offset:6px;transition:outline-color .3s"><dc-import name="InviteCover" th="{{ c.th }}" names="{{ c.names }}" date="{{ c.date }}" cover="{{ c.cover }}" kicker="{{ c.kicker }}" hint-size="100%,350px"></dc-import></div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;color:{{ ui.ink }}"><span style="font:500 30px/1 'Cormorant Garamond',serif">{{ c.name }}</span><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.style }}</span></div>
+<div data-tpl-price="{{ c.id }}" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 10px;min-height:40px;margin-top:10px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ c.priceColor }}">{{ c.price }}</span><sc-if value="{{ c.buyOn }}"><button data-buy="tpl" onClick="{{ c.buy }}" style="height:40px;padding:0 16px;border-radius:999px;border:0;background:{{ c.buyBg }};color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;opacity:{{ c.buyOp }};transition:background .2s,opacity .2s" style-hover="background:{{ ui.ink }}">{{ c.buyLabel }}</button></sc-if></div>
 </div></sc-for>
 </div>
 <main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px) 40px">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:28px;border-top:1px solid {{ ui.ink }};padding-top:22px;color:{{ ui.ink }}">
-<div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.template }}</div><div style="font:500 54px/1 'Cormorant Garamond',serif;margin-top:8px">{{ cur.name }}</div><p style="margin:10px 0 0;color:{{ ui.body }};line-height:1.5;max-width:36ch">{{ cur.desc }}</p></div>
+<div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.template }}</div><div style="font:500 54px/1 'Cormorant Garamond',serif;margin-top:8px">{{ cur.name }}</div><p style="margin:10px 0 0;color:{{ ui.body }};line-height:1.5;max-width:36ch">{{ cur.desc }}</p>
+<sc-if value="{{ cur.price }}"><div data-cur-price="1" style="margin-top:22px"><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.priceLabel }}</div><div style="margin-top:8px;font:500 34px/1 'Cormorant Garamond',serif;color:{{ cur.priceColor }}">{{ cur.price }}</div><p style="margin:10px 0 0;color:{{ ui.body }};font-size:14px;line-height:1.5;max-width:40ch">{{ cur.priceNote }}</p><button data-tpl-more="1" onClick="{{ cur.more }}" style="margin-top:8px;padding:4px 0;border:0;background:none;color:{{ ui.muted }};font:500 13px 'Onest',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#d4452a">{{ cur.moreLabel }} →</button></div></sc-if></div>
 <div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fontsLabel }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><sc-for list="{{ cur.fonts }}" as="f"><span style="border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:999px;padding:8px 14px;font-family:{{ f.css }};font-size:18px;line-height:1.2">{{ f.name }}</span></sc-for></div>
 <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};margin-top:22px">{{ t.palette }}</div>
@@ -291,7 +293,10 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 <sc-if value="{{ fromTourLive }}"><button onClick="{{ backTour }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:90;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.tour }}</button></sc-if>
 <sc-if value="{{ isPreview }}"><button onClick="{{ backFromPreview }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:50;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
-<button onClick="{{ useTpl }}" style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;height:54px;padding:0 26px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap">{{ t.useTpl }} →</button></sc-if>
+<div style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:max-content;max-width:calc(100vw - 24px)">
+<sc-if value="{{ tb.on }}"><button data-buy="tpl" onClick="{{ tb.buy }}" style="height:54px;padding:0 22px;border-radius:999px;border:0;background:{{ tb.bg }};color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap;opacity:{{ tb.op }}">{{ tb.label }}</button></sc-if>
+<button onClick="{{ useTpl }}" style="height:54px;padding:0 26px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap">{{ t.useTpl }} →</button>
+</div></sc-if>
 <sc-if value="{{ isRefine }}"><button onClick="{{ backToBuild }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:50;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
 <div style="position:fixed;left:12px;right:12px;bottom:14px;z-index:50;max-width:620px;margin:0 auto;background:rgba({{ ui.inkRgb }},.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:{{ ui.paper }};border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 40px rgba(0,0,0,.35);font-family:'Onest',sans-serif">
 <div style="font:400 11px/1.3 'JetBrains Mono',monospace;opacity:.7;text-align:center">✎ {{ t.tapHint }}</div>
@@ -970,11 +975,14 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="margin-top:30px;display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ od.color }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ od.color }};animation:{{ od.pulse }}"></span>{{ t.orderKick }}</div>
 <h2 data-order-status="{{ od.status }}" style="margin:12px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ od.title }}</h2>
 <div style="margin-top:20px;font:500 clamp(28px,6vw,40px)/1 'Cormorant Garamond',serif;color:{{ ui.muted }}">{{ od.amount }}</div>
+<sc-if value="{{ od.what }}"><div data-order-what="1" style="margin-top:12px;font:500 12px/1.5 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:{{ ui.body }}">{{ od.what }}</div></sc-if>
 <p style="margin:18px 0 0;max-width:46ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ od.text }}</p>
 <sc-if value="{{ od.err }}"><div role="alert" style="margin-top:16px;max-width:46ch;padding:12px 14px;border-radius:12px;background:rgba(212,69,42,.08);color:#d4452a;font-size:14px;line-height:1.45">{{ od.err }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:32px">
 <sc-if value="{{ od.canOpen }}"><button onClick="{{ od.open }}" style="height:54px;padding:0 24px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.orderOpen }} ↗</button></sc-if>
 <sc-if value="{{ od.canRetry }}"><button onClick="{{ od.retry }}" style="height:54px;padding:0 24px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.orderRetry }} →</button></sc-if>
+<sc-if value="{{ od.canCheck }}"><button data-order-check="1" onClick="{{ od.check }}" style="height:54px;padding:0 24px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.orderCheck }}</button></sc-if>
+<sc-if value="{{ od.canChange }}"><button data-order-change="1" onClick="{{ od.change }}" style="height:54px;padding:0 22px;border-radius:999px;border:1px solid {{ ui.ink }};background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.orderChange }}</button></sc-if>
 <button onClick="{{ goMyInv }}" style="height:54px;padding:0 22px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.myInv }}</button>
 </div></main></sc-if>
 
@@ -982,6 +990,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span>{{ mk.num }}</span><span style="color:{{ ui.muted }}">{{ mk.kind }}</span></div>
 <div style="margin-top:30px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.mockKick }}</div>
 <h2 style="margin:12px 0 0;font:500 clamp(46px,12vw,96px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ mk.amount }}</h2>
+<sc-if value="{{ mk.what }}"><div data-mock-what="1" style="margin-top:14px;font:500 12px/1.5 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:{{ ui.body }}">{{ mk.what }}</div></sc-if>
 <div style="margin-top:24px;padding:16px 18px;border-radius:14px;border:1px dashed rgba(212,69,42,.5);background:rgba(212,69,42,.06);font-size:15px;line-height:1.5;color:{{ ui.body }}">{{ t.mockHint }}</div>
 <sc-if value="{{ mk.err }}"><div role="alert" style="margin-top:14px;color:#d4452a;font-size:14px;line-height:1.45">{{ mk.err }}</div></sc-if>
 <div style="display:flex;flex-direction:column;gap:10px;margin-top:26px">
@@ -997,15 +1006,62 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ paidBot }}"><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:32px"><a data-paid-bot="1" href="{{ paidBot }}" target="_blank" rel="noopener" style="height:56px;padding:0 26px;border-radius:999px;background:#2f6fe0;color:#fff;font:500 16px 'Onest',sans-serif;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none" style-hover="background:#1f5bc4">✈ {{ t.paidBack }} ↗</a></div></sc-if>
 </main></sc-if>
 
-<sc-if value="{{ isPricing }}"><main data-screen="pricing" style="max-width:1200px;margin:0 auto;padding:26px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
-<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span>{{ t.navPrices }}</span><span style="color:{{ ui.muted }}">{{ monthYear }}</span></div>
-<h2 style="margin:30px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ t.pricingTitle }}</h2>
+<sc-if value="{{ isPricing }}"><main data-screen="pricing" style="max-width:1200px;margin:0 auto;padding:24px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
+<button data-pricing-back="1" onClick="{{ pr.back }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<div style="margin-top:24px;display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span style="color:#d4452a">{{ t.navPrices }}</span><span style="color:{{ ui.muted }}">{{ monthYear }}</span></div>
+<h2 style="margin:26px 0 0;max-width:15ch;font:500 clamp(44px,9vw,96px)/.92 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ t.pricingTitle }}</h2>
 <p style="margin:18px 0 0;max-width:52ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.pricingSub }}</p>
-<div data-prices="1" style="margin-top:30px;max-width:720px;border-top:1px solid rgba({{ ui.inkRgb }},.14)">
+<sc-if value="{{ pr.done }}"><div data-sub-done="1" role="status" style="margin-top:26px;max-width:720px;padding:18px 20px;border-radius:16px;background:rgba(46,125,79,.1);border:1px solid rgba(46,125,79,.35)">
+<div style="display:flex;align-items:center;gap:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2e7d4f"><span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#2e7d4f;color:#fff;font:600 12px 'Onest',sans-serif;letter-spacing:0">✓</span>{{ t.subDone }}</div>
+<div style="margin-top:10px;font-size:15px;line-height:1.5;color:{{ ui.body }}">{{ pr.doneText }}</div>
+<button data-sub-next="1" onClick="{{ pr.next }}" style="margin-top:14px;height:48px;padding:0 22px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;transition:background .2s" style-hover="background:#d4452a">{{ pr.nextLabel }} →</button>
+</div></sc-if>
+<sc-if value="{{ pr.st }}"><div data-sub-state="{{ pr.stKey }}" style="margin-top:22px;max-width:720px;padding:14px 16px;border-radius:14px;border:1px solid rgba({{ ui.inkRgb }},.14);background:{{ ui.card }}">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px"><span style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500"><span style="width:8px;height:8px;flex:none;border-radius:50%;background:{{ pr.stColor }}"></span>{{ pr.stTitle }}</span><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:{{ ui.muted }}">{{ pr.stNote }}</span></div>
+<sc-if value="{{ pr.stText }}"><div style="margin-top:6px;font-size:14px;line-height:1.5;color:{{ ui.body }}">{{ pr.stText }}</div></sc-if>
+</div></sc-if>
+<div style="margin-top:44px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.onceTitle }}</div>
+<div data-prices="1" style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px">
 <sc-if value="{{ pr.loading }}"><div style="padding:18px 0;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};animation:invPulse 1.4s ease-in-out infinite">{{ t.loading }}</div></sc-if>
-<sc-for list="{{ pr.rows }}" as="r" hint-placeholder-count="3"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px;padding:18px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><span style="font:500 26px/1.15 'Cormorant Garamond',serif">{{ r.label }}</span><span style="font:500 14px 'JetBrains Mono',monospace;color:{{ ui.body }};white-space:nowrap">{{ r.price }}</span></div></sc-for>
+<sc-for list="{{ pr.cards }}" as="c" hint-placeholder-count="2"><div data-price-card="{{ c.key }}" style="display:flex;flex-direction:column;gap:8px;padding:20px;border-radius:18px;border:1px solid rgba({{ ui.inkRgb }},.14);background:{{ ui.card }}">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px"><span style="font:500 26px/1.1 'Cormorant Garamond',serif">{{ c.title }}</span><sc-if value="{{ c.tag }}"><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#2e7d4f">{{ c.tag }}</span></sc-if></div>
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:2px"><span data-price="{{ c.key }}" style="font:500 40px/1.05 'Cormorant Garamond',serif;letter-spacing:-.01em;text-decoration:{{ c.strike }};text-decoration-thickness:1px">{{ c.price }}</span><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.unit }}</span></div>
+<div style="font-size:14px;line-height:1.5;color:{{ ui.body }};text-wrap:pretty">{{ c.desc }}</div>
+<sc-if value="{{ c.note }}"><div style="font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ c.note }}</div></sc-if>
+</div></sc-for>
 </div>
-<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:32px"><button onClick="{{ goEvents }}" style="height:56px;padding:0 26px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 16px 'Onest',sans-serif;cursor:pointer;transition:background .2s" style-hover="background:#d4452a">{{ t.create }} →</button></div>
+<section data-plans="1" style="margin-top:52px;padding-top:22px;border-top:1px solid {{ ui.ink }}">
+<div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.subTitle }}</div>
+<h3 style="margin:10px 0 0;max-width:18ch;font:500 clamp(34px,6.5vw,64px)/.96 'Cormorant Garamond',serif;letter-spacing:-.01em;text-wrap:balance">{{ t.subHead }}</h3>
+<ul data-sub-incl="1" style="list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:10px;max-width:62ch">
+<sc-for list="{{ pr.incl }}" as="x"><li data-incl="{{ x.kind }}" style="display:flex;gap:12px;font-size:15px;line-height:1.45;color:{{ x.color }}"><span aria-hidden="true" style="flex:none;width:16px;font-weight:600;color:{{ x.mark }}">{{ x.sign }}</span><span>{{ x.text }}</span></li></sc-for>
+</ul>
+<sc-if value="{{ pr.worth }}"><div style="display:inline-flex;margin-top:16px;padding:8px 14px;border-radius:12px;line-height:1.5;background:rgba(212,69,42,.08);color:#d4452a;font:500 12px 'JetBrains Mono',monospace;letter-spacing:.04em">{{ pr.worth }}</div></sc-if>
+<sc-if value="{{ pr.showPlans }}"><div>
+<div style="margin-top:30px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.subPlans }}</div>
+<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+<sc-for list="{{ pr.plans }}" as="p" hint-placeholder-count="4"><div data-plan="{{ p.m }}" onClick="{{ p.pick }}" aria-pressed="{{ p.pressed }}" style="display:flex;flex-direction:column;gap:6px;min-width:0;padding:16px;border-radius:16px;border:1.5px solid {{ p.border }};background:{{ p.bg }};cursor:pointer;transition:border-color .2s,background .2s">
+<div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ p.kick }}">{{ p.label }}</div>
+<div data-plan-price="{{ p.m }}" style="margin-top:4px;font:500 clamp(22px,2.4vw,30px)/1.1 'Cormorant Garamond',serif;white-space:nowrap">{{ p.price }}</div>
+<div style="font-size:13px;line-height:1.4;color:{{ ui.muted }}">{{ p.per }}</div>
+<sc-if value="{{ p.until }}"><div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#2e7d4f">{{ p.until }}</div></sc-if>
+<button data-buy-sub="{{ p.m }}" onClick="{{ p.buy }}" style="margin-top:auto;height:44px;padding:0 14px;border-radius:999px;border:1px solid {{ p.btnBorder }};background:{{ p.btnBg }};color:{{ p.btnColor }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ pr.op }};transition:background .2s,opacity .2s" style-hover="background:#d4452a;color:#fff;border-color:#d4452a">{{ p.btn }}</button>
+</div></sc-for>
+</div>
+<sc-if value="{{ pr.err }}"><div role="alert" style="margin-top:14px;max-width:720px;padding:12px 14px;border-radius:12px;background:rgba(212,69,42,.08);color:#d4452a;font-size:14px;line-height:1.45">{{ pr.err }}</div></sc-if>
+<sc-if value="{{ pr.plansNote }}"><div style="margin-top:12px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ pr.plansNote }}</div></sc-if>
+</div></sc-if>
+</section>
+<section data-faq="1" style="margin-top:56px;padding-top:22px;border-top:1px solid {{ ui.ink }}">
+<div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.faqTitle }}</div>
+<div style="margin-top:6px;max-width:820px">
+<sc-for list="{{ pr.faq }}" as="f"><div style="border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
+<button data-faq-q="{{ $index }}" onClick="{{ f.toggle }}" aria-expanded="{{ f.exp }}" style="display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;padding:18px 0;border:0;background:transparent;color:{{ ui.ink }};text-align:left;cursor:pointer;font:500 22px/1.2 'Cormorant Garamond',serif"><span>{{ f.q }}</span><span aria-hidden="true" style="flex:none;font:400 22px/1 'Onest',sans-serif;color:{{ ui.muted }};transform:rotate({{ f.rot }});transition:transform .2s">+</span></button>
+<sc-if value="{{ f.open }}"><p data-faq-a="{{ $index }}" style="margin:0 0 18px;max-width:64ch;font-size:15px;line-height:1.6;color:{{ ui.body }};text-wrap:pretty">{{ f.a }}</p></sc-if>
+</div></sc-for>
+</div>
+</section>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:40px"><button onClick="{{ goEvents }}" style="height:56px;padding:0 26px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 16px 'Onest',sans-serif;cursor:pointer;transition:background .2s" style-hover="background:#d4452a">{{ t.create }} →</button></div>
 </main></sc-if>
 
 <sc-if value="{{ payOpen }}"><div onClick="{{ closePay }}" style="position:fixed;inset:0;z-index:91;background:rgba(10,9,8,.45)"></div>
@@ -1022,19 +1078,20 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 <sc-if value="{{ py.lock }}"><div style="margin-top:10px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.payLock }}</div></sc-if>
 <sc-if value="{{ py.isPersonal }}"><div>
-<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:12px 0;border-top:1px solid rgba({{ ui.inkRgb }},.12);border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><span style="min-width:0"><span style="display:block;font-size:15px">{{ t.payGuests }}</span><span style="display:block;margin-top:4px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.04em;color:{{ ui.muted }}">{{ py.seatNote }}</span></span><div style="display:flex;align-items:center;gap:10px;flex:none"><button onClick="{{ py.dec }}" aria-label="−" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer">−</button><input name="seats" type="text" inputMode="numeric" value="{{ py.seats }}" onChange="{{ py.onSeats }}" style="width:64px;height:40px;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;background:transparent;text-align:center;font:500 26px 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none"><button onClick="{{ py.inc }}" aria-label="+" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer">+</button></div></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:12px 0;border-top:1px solid rgba({{ ui.inkRgb }},.12);border-bottom:1px solid rgba({{ ui.inkRgb }},.12)"><span style="min-width:0"><span style="display:block;font-size:15px">{{ py.seatsLabel }}</span><span style="display:block;margin-top:4px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.04em;color:{{ ui.muted }}">{{ py.seatNote }}</span></span><div style="display:flex;align-items:center;gap:10px;flex:none"><button onClick="{{ py.dec }}" aria-label="−" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer">−</button><input name="seats" type="text" inputMode="numeric" value="{{ py.seats }}" onChange="{{ py.onSeats }}" style="width:64px;height:40px;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;background:transparent;text-align:center;font:500 26px 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none"><button onClick="{{ py.inc }}" aria-label="+" style="width:40px;height:40px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font-size:20px;cursor:pointer">+</button></div></div>
 <div style="margin-top:10px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.seatsHint }}</div>
 </div></sc-if>
 <sc-if value="{{ py.showMain }}"><div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:18px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.payTotal }}</span><span data-pay-total="1" style="font:500 30px/1 'Cormorant Garamond',serif">{{ py.total }}</span></div>
-<button data-pay="go" onClick="{{ py.go }}" style="margin-top:16px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }};transition:opacity .2s" style-hover="background:#d4452a">{{ py.goLabel }} →</button>
+<sc-if value="{{ py.goBtn }}"><button data-pay="go" onClick="{{ py.go }}" style="margin-top:16px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }};transition:opacity .2s" style-hover="background:#d4452a">{{ py.goLabel }}{{ py.goArrow }}</button></sc-if>
 </div></sc-if>
 <sc-if value="{{ py.err }}"><div role="alert" style="margin-top:14px;color:#d4452a;font-size:14px;line-height:1.45">{{ py.err }}</div></sc-if>
 <sc-if value="{{ py.showSub }}"><div data-sub="1" style="margin-top:24px;padding:18px;border-radius:16px;background:{{ ui.card }};border:1px solid rgba({{ ui.inkRgb }},.14)">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 12px"><span style="font:500 24px/1.1 'Cormorant Garamond',serif">{{ t.subTitle }}</span><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a;white-space:nowrap">{{ py.subPer }}</span></div>
 <div style="margin-top:6px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.subDesc }}</div>
-<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px"><sc-for list="{{ py.subOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.onClick }}" style="height:40px;padding:0 14px;border-radius:999px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:13px;cursor:pointer;transition:background .2s">{{ o.label }}</button></sc-for></div>
-<button data-pay="sub" onClick="{{ py.subGo }}" style="margin-top:12px;width:100%;height:48px;border-radius:999px;border:1px solid {{ ui.ink }};background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }}">{{ py.subLabel }}</button>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px"><sc-for list="{{ py.subOpts }}" as="o" hint-placeholder-count="4"><button data-sub-m="{{ o.m }}" onClick="{{ o.onClick }}" aria-pressed="{{ o.pressed }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};text-align:left;cursor:pointer;transition:background .2s,border-color .2s"><span style="font-size:13px;font-weight:500">{{ o.label }}</span><span style="font:500 11px 'JetBrains Mono',monospace;opacity:.8;white-space:nowrap">{{ o.price }}</span></button></sc-for></div>
+<button data-pay="sub" onClick="{{ py.subGo }}" style="margin-top:12px;width:100%;min-height:48px;padding:0 16px;border-radius:999px;border:1px solid {{ ui.ink }};background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }}">{{ py.subLabel }}</button>
+<button data-sub-more="1" onClick="{{ py.subMore }}" style="display:block;margin:12px auto 0;padding:4px 0;border:0;background:none;color:{{ ui.muted }};font:500 13px 'Onest',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#d4452a">{{ t.subMore }} →</button>
 </div></sc-if>
 </div></sc-if>
 
@@ -1189,7 +1246,7 @@ class Component extends DCLogic {
     orders: (id) => { if (this.isUuid(id)) this.requireLogin(() => this.openOrder(id), 'buy'); else this.clearHash(); },
     'mock-pay': (id) => { if (this.isUuid(id)) this.requireLogin(() => this.openMock(id), 'buy'); else this.clearHash(); },
     // Цены (#/pricing): адрес остаётся, перезагрузка и ссылка открывают этот экран.
-    pricing: () => this.go('pricing'),
+    pricing: () => { if (this.state.screen !== 'pricing') this.openPricing(); },
     // Возврат после оплаты из мини-аппа (returnTo: telegram): внешний браузер, куда Telegram открыл оплату, обычно
     // без сессии. Вход не требуется и заказ не запрашивается: карточка «вернитесь в Telegram». С сессией — экран заказа.
     paid: (id) => {
@@ -1381,6 +1438,9 @@ class Component extends DCLogic {
     if (!act) return null;
     if (act.k === 'tpl' && this.D.EVENTS[act.ev]) return () => { this.pickEvent(act.ev, act.tpl); this.useTpl(); };
     if (act.k === 'inv') return () => this.goMyInv();
+    // Покупка продолжается, когда выбранный шаблон (экран цен) уже в state.
+    if (act.k === 'buy' && this.D.EVENTS[act.ev]) return () => { this.pickEvent(act.ev, act.tpl); setTimeout(() => this.buyTplNow(), 0); };
+    if (act.k === 'sub') return () => { if (this.state.screen !== 'pricing') this.goPricing(); setTimeout(() => this.buySub(act.m), 0); };
     return null;
   }
   // Сессия закончилась (401): в мини-аппе снова вход по initData, на сайте — лист входа; retry выполнится после входа.
@@ -1587,9 +1647,13 @@ class Component extends DCLogic {
     this.setState({ account: false, menu: { kind, top: Math.round(r ? r.bottom + 8 : 68) + 'px', right: Math.round(r ? Math.max(12, window.innerWidth - r.right) : 16) + 'px' } });
   }
   // «Цены» (#/pricing): экран открывается сразу, адрес добавляется в историю — «Назад» браузера возвращает (route).
-  goPricing() {
-    this.setState({ menu: null, account: false });
-    this.go('pricing');
+  // Запоминается, откуда пришли (экран, шаг конструктора, режим страницы приглашения, открытое приглашение,
+  // с fromPay — открытый лист оплаты): «Назад» и «Вернуться к приглашению» ведут туда.
+  goPricing(o) {
+    const s = this.state, P = s.pay;
+    const from = s.screen === 'pricing' ? undefined : { screen: s.screen, step: s.step, guestMode: s.guestMode, inv: s.demo ? null : s.draftId,
+      pay: o && o.fromPay && P ? { kind: P.kind, mode: P.mode, seats: P.seats, note: P.note, then: P.then } : null };
+    this.openPricing({ from });
     if (location.hash !== '#/pricing') { try { history.pushState(null, '', location.pathname + location.search + '#/pricing'); } catch (e) {} }
   }
   // Кнопка аккаунта в шапке: без входа — сразу лист входа, с входом — профиль (история платежей грузится заново).
@@ -1680,8 +1744,8 @@ class Component extends DCLogic {
     const parts = (location.hash || '').replace(/^#\/?/, '').split('/').filter(Boolean);
     const fn = parts.length && Object.prototype.hasOwnProperty.call(this.routes, parts[0]) ? this.routes[parts[0]] : null;
     if (fn) fn(...parts.slice(1).map((p) => { try { return decodeURIComponent(p); } catch (e) { return p; } }));
-    // «Назад» браузера с экрана цен: #/pricing ушёл из адреса — на главную.
-    else if (this.state.screen === 'pricing') this.goHome();
+    // «Назад» браузера с экрана цен: #/pricing ушёл из адреса — туда, откуда пришли (без них — на главную).
+    else if (this.state.screen === 'pricing') this.leavePricing();
   }
   clearHash() { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }
   isUuid(v) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || ''); }
@@ -1722,20 +1786,23 @@ class Component extends DCLogic {
     if (!P) return null;
     const acc = (me && me.access) || {}, dr = s.draft, ti = dr && s.tplInfo && s.tplInfo[dr.template];
     const tplPrice = ti && ti.price != null ? ti.price : P.sharedTemplate;
-    return { P, free: !!acc.free, subscribed: !!acc.subscribed, template: acc.free || acc.subscribed ? 0 : tplPrice, seat: acc.free ? 0 : P.seat, seats: (n) => (acc.free ? 0 : n * P.seat), sub: (m) => m * P.subscriptionMonth };
+    // list(slug) — цена шаблона без учёта подписки и бесплатного доступа (своя цена шаблона или общая).
+    const list = (slug) => { const x = s.tplInfo && s.tplInfo[slug]; return x && x.price != null ? x.price : P.sharedTemplate; };
+    return { P, free: !!acc.free, subscribed: !!acc.subscribed, template: acc.free || acc.subscribed ? 0 : tplPrice, list, seat: acc.free ? 0 : P.seat, seats: (n) => (acc.free ? 0 : n * P.seat), sub: (m) => m * P.subscriptionMonth };
   }
   // Тип приглашения меняется только у неоплаченного черновика без гостей (так проверяет сервер).
   modeLocked(dr) { return !dr || dr.status !== 'draft' || dr.unlocked || dr.paidSeats > 0 || ((dr.stats && dr.stats.guests) || 0) > 0; }
   // Лист оплаты. opts.kind: publish — «Получить ссылку» (тип, шаблон или места), seats — докупить места,
   // upgrade — шаблон дороже оплаченного (только подписка, затем снова редактор); opts.note — текст 402;
-  // opts.dto — приглашение, если оно только что загружено и ещё не попало в state.
+  // opts.dto — приглашение, если оно только что загружено и ещё не попало в state; opts.mode — выбранный раньше
+  // тип (лист снова открывается после экрана цен).
   openPay(opts) {
     opts = opts || {};
     const s = this.state, dr = opts.dto || s.draft; if (!dr) return;
     const kind = opts.kind || 'publish', G = s.guests || [];
     const unpaid = G.filter((g) => !g.paid).length;
     const seats = opts.seats > 0 ? opts.seats : kind === 'seats' ? Math.max(1, unpaid) : dr.mode === 'personal' && dr.paidSeats > 0 ? 0 : Math.max(10, unpaid);
-    this.setState({ pay: { kind, mode: kind === 'seats' ? 'personal' : dr.mode, seats, months: 1, busy: false, err: '', note: opts.note || '', then: opts.then || (kind === 'upgrade' ? 'edit' : null) } });
+    this.setState({ pay: { kind, mode: kind === 'seats' ? 'personal' : opts.mode && kind === 'publish' && !this.modeLocked(dr) ? opts.mode : dr.mode, seats, months: 1, busy: false, err: '', note: opts.note || '', then: opts.then || (kind === 'upgrade' ? 'edit' : null) } });
     // Цены и доступ могли измениться (подписка, бесплатный доступ, цены в админке).
     this.refreshMe(); this.loadTemplates();
   }
@@ -1751,7 +1818,7 @@ class Component extends DCLogic {
     const s = this.state, P = s.pay, id = s.draftId;
     if (!P || P.busy || P.kind === 'upgrade' || !id || !s.draft || !this.quotes()) return;
     const then = P.then || (P.kind === 'seats' ? s.screen : 'share'), pub = P.kind === 'publish';
-    this.setPay({ busy: true, err: '' });
+    this.setPay({ busy: true, err: '', via: 'go' });
     try {
       await this.flushSave();
       let inv = this.state.draft;
@@ -1772,7 +1839,7 @@ class Component extends DCLogic {
   // Подписка: заказ на months месяцев; после оплаты шаблон открывается без оплаты, публикация продолжается.
   async subscribe() {
     const s = this.state, P = s.pay, id = s.draftId; if (!P || P.busy) return;
-    this.setPay({ busy: true, err: '' });
+    this.setPay({ busy: true, err: '', via: 'sub' });
     try {
       await this.flushSave();
       // Выбранный тип уходит до оплаты, как в pay(): после подписки публикация идёт по нему, а не по прежнему.
@@ -1790,20 +1857,35 @@ class Component extends DCLogic {
   // Страница оплаты. Что делать после оплаты, хранится в localStorage: сайт уходит на страницу оплаты целиком.
   // Тестовая оплата (mock) открывается внутри приложения: её адрес требует cookie, а во внешнем браузере
   // Telegram её нет. В Telegram настоящая оплата открывается через openLink, заказ опрашивается при возврате.
+  // На сайте до ухода на страницу оплаты лист и кнопки покупки остаются занятыми («Переходим к оплате…»):
+  // повторное нажатие на медленной сети не создаёт второй заказ. Назад кнопкой браузера (bfcache) — pageshow;
+  // переход так и не случился (страница осталась) — через 20 с кнопки снова доступны, лист можно закрыть.
   checkout(r, cont) {
     const id = r.order.id, url = r.checkoutUrl || '';
     try { localStorage.setItem('invito.order.' + id, JSON.stringify(cont || {})); } catch (e) {}
-    this.setState({ pay: null });
     const mock = url.indexOf(this.appUrl() + '/api/payments/mock/checkout/') === 0;
-    if (!url) { location.hash = '#/orders/' + id; return; }
-    if (this.tgReal) {
-      if (mock) location.hash = '#/mock-pay/' + id;
-      else { this.openUrl(url); location.hash = '#/orders/' + id; }
+    if (url && !this.tgReal) {
+      this._toCheckout = true;
+      this.setState((x) => ({ pay: x.pay ? { ...x.pay, busy: true, redirect: true } : null, tplBuy: x.tplBuy ? 'go' : x.tplBuy, ...(x.pricing && x.pricing.busy ? { pricing: { ...x.pricing, redirect: true } } : {}) }));
+      clearTimeout(this._checkoutT); this._checkoutT = setTimeout(() => this.releaseCheckout(), 20000);
+      location.href = url;
       return;
     }
-    location.href = url;
+    this.setState((x) => ({ pay: null, tplBuy: false, ...(x.pricing ? { pricing: { ...x.pricing, busy: false } } : {}) }));
+    if (!url) { location.hash = '#/orders/' + id; return; }
+    if (mock) location.hash = '#/mock-pay/' + id;
+    else { this.openUrl(url); location.hash = '#/orders/' + id; }
   }
-  // Оплачено: приглашение перечитывается, публикуется (pub, если ещё не опубликовано) и открывается экран then.
+  // Кнопки покупки и лист оплаты снова доступны («Переходим к оплате…» снимается).
+  releaseCheckout() {
+    clearTimeout(this._checkoutT);
+    if (!this._toCheckout) return;
+    this._toCheckout = false;
+    this.setState((x) => ({ tplBuy: false, pay: x.pay ? { ...x.pay, busy: false, redirect: false } : null, ...(x.pricing ? { pricing: { ...x.pricing, busy: false, redirect: false } } : {}) }));
+  }
+  // Оплачено: приглашение перечитывается, публикуется (pub, если ещё не опубликовано) и открывается экран then:
+  // manage — гости, edit — редактор на странице приглашения, build — конструктор (купили шаблон, ссылка — потом).
+  // «Поделиться» — только у опубликованного: у черновика ссылка ещё не открывается (404), её не показываем.
   async afterPaid(id, then, pub = true) {
     const t = this.t();
     let dto = await this.call('/api/invitations/' + id, { retry: () => this.afterPaid(id, then, pub) });
@@ -1815,12 +1897,18 @@ class Component extends DCLogic {
     this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
     if (fresh) this.toast(t.published);
     this.clearHash();
-    this.go(then === 'manage' ? 'manage' : 'share', { music: false });
+    if (then === 'manage') this.go('manage', { music: false });
+    else if (then === 'edit') this.openGuest('edit');
+    else if (then === 'build' || dto.status !== 'active') this.go('build', { step: 0, music: false });
+    else this.go('share', { music: false });
   }
   // Экран заказа (#/orders/<id>): опрос GET /api/orders/:id до оплаты, отказа или отмены.
+  // since — когда открыли экран (через 20 с ожидания — «Изменить заказ»), pollFrom — с какого момента считается
+  // пауза опроса, cont — что будет после оплаты (подписи экрана).
   openOrder(id, opts = {}) {
     clearTimeout(this._orderT);
-    this.setState({ screen: 'order', order: { id, data: null, err: '', busy: false, fromPaid: !!opts.fromPaid }, pay: null });
+    const now = Date.now();
+    this.setState({ screen: 'order', order: { id, data: null, err: '', busy: false, fromPaid: !!opts.fromPaid, since: now, pollFrom: now, stopped: false, cont: this.orderCont(id) }, pay: null });
     this.pollOrder(id);
   }
   // Карточка «Оплата завершена, вернитесь в Telegram» без данных заказа.
@@ -1846,8 +1934,18 @@ class Component extends DCLogic {
     // Отказ или отмена: контекст заказа (приглашение, что дальше) нужен «Попробовать снова» и удаляется,
     // когда уходят с экрана заказа (componentDidUpdate).
     if (o && o.status !== 'pending') { this._orderEnded = id; return; }
-    // В фоне (страница оплаты открыта в Telegram поверх приложения) опрос ждёт возврата: onVis.
-    if (document.visibilityState !== 'hidden') this._orderT = setTimeout(() => this.pollOrder(id), 2000);
+    // Ожидание: опрос раз в 2 с, после минуты — раз в 5 с, после 5 минут — раз в 15 с; через 30 минут опрос
+    // останавливается («Проверить снова»). В фоне (страница оплаты открыта в Telegram поверх приложения) опрос
+    // ждёт возврата: onVis.
+    const age = Date.now() - (this.state.order.pollFrom || Date.now());
+    if (age > 30 * 60000) { this.setState((x) => (cur() ? { order: { ...x.order, stopped: true } } : null)); return; }
+    if (document.visibilityState !== 'hidden') this._orderT = setTimeout(() => this.pollOrder(id), age < 60000 ? 2000 : age < 300000 ? 5000 : 15000);
+  }
+  // «Проверить снова»: опрос заново с частыми запросами.
+  checkOrder() {
+    const O = this.state.order; if (!O) return;
+    this.setState({ order: { ...O, stopped: false, pollFrom: Date.now() } });
+    this.pollOrder(O.id);
   }
   orderCont(id) { try { return JSON.parse(localStorage.getItem('invito.order.' + id) || 'null') || {}; } catch (e) { return {}; } }
   dropOrderCont(id) { try { localStorage.removeItem('invito.order.' + id); } catch (e) {} }
@@ -1857,9 +1955,16 @@ class Component extends DCLogic {
     const cont = this.orderCont(o.id), t = this.t();
     try {
       if (o.kind === 'subscription') {
-        await this.refreshMe(); this.toast(t.subDone);
+        await this.refreshMe();
+        // С экрана цен (или без приглашения): снова экран цен с плашкой «Подписка оформлена» и сроком, а не главная.
+        if (cont.then === 'pricing' || !cont.inv) {
+          this.dropOrderCont(o.id);
+          try { history.replaceState(null, '', location.pathname + location.search + '#/pricing'); } catch (e) {}
+          this.openPricing({ done: { months: o.quantity }, months: o.quantity, from: cont.from || null });
+          return;
+        }
+        this.toast(t.subDone);
         const id = cont.inv;
-        if (!id) { this.dropOrderCont(o.id); this.clearHash(); this.goHome(); return; }
         let dto = await this.call('/api/invitations/' + id);
         const { guests, ...inv } = dto; dto = inv;
         if (this.state.draftId !== id) this.loadDraft(dto); else this.onSaved(dto);
@@ -1873,8 +1978,11 @@ class Component extends DCLogic {
         } else if (dto.mode === 'personal' && dto.paidSeats < 1) {
           this.clearHash(); this.go('build', { step: 0 }); this.openPay({ dto, seats: cont.seats });
         } else await this.afterPaid(id, cont.then);
-      } else if (o.invitationId) await this.afterPaid(o.invitationId, cont.then, cont.pub !== false);
-      else { this.clearHash(); this.goHome(); }
+      } else if (o.invitationId) {
+        await this.afterPaid(o.invitationId, cont.then, cont.pub !== false);
+        // «Купить шаблон»: снова конструктор, ссылку получат, когда закончат (уже без оплаты).
+        if (cont.buy) this.toast(t.tplBought);
+      } else { this.clearHash(); this.goHome(); }
       this.dropOrderCont(o.id);
     } catch (e) {
       this.logErr(e);
@@ -1886,6 +1994,12 @@ class Component extends DCLogic {
   async retryOrder() {
     const s = this.state, o = s.order && s.order.data, cont = s.order ? this.orderCont(s.order.id) : {}, id = (o && o.invitationId) || cont.inv;
     clearTimeout(this._orderT);
+    // Подписка с экрана цен (или без приглашения): снова экран цен с тем же сроком.
+    if (cont.then === 'pricing' || (!id && o && o.kind === 'subscription')) {
+      try { history.replaceState(null, '', location.pathname + location.search + '#/pricing'); } catch (e) {}
+      this.openPricing({ months: cont.months || (o && o.quantity) || 1, from: cont.from || null });
+      return;
+    }
     if (!id) { this.clearHash(); this.goHome(); return; }
     try {
       const dto = await this.call('/api/invitations/' + id, { retry: () => this.retryOrder() });
@@ -1893,11 +2007,114 @@ class Component extends DCLogic {
       this.loadDraft(inv);
       this.setState({ guests: (guests || []).map((g) => this.guestRow(g)) });
       this.clearHash();
+      // «Купить шаблон» не прошёл: экран шаблонов и снова оплата того же шаблона этого черновика.
+      if (cont.buy && inv.status !== 'active' && !inv.unlocked) { this.go('templates'); this.buyTplNow(inv); return; }
       // Подписка или шаблон ради другого шаблона (then: 'edit') — снова лист «Другой шаблон» в редакторе.
       const kind = cont.then === 'edit' ? 'upgrade' : inv.status === 'active' && inv.mode === 'personal' ? 'seats' : 'publish';
       if (kind === 'upgrade') this.openGuest('edit'); else this.go(inv.status === 'active' ? 'manage' : 'build', { step: 0 });
       this.openPay({ dto: inv, kind, ...(cont.seats > 0 ? { seats: cont.seats } : {}) });
     } catch (e) { /* тост уже показан */ }
+  }
+  // Подпись приглашения для экранов заказа и тестовой оплаты: имена и шаблон («Лола и Тимур · Шаблон «Ivory»»).
+  invLabel(id) {
+    const s = this.state, d = (s.draft && s.draft.id === id && s.draft) || (s.invs || []).find((x) => x.id === id);
+    if (!d) return '';
+    const [ev, st] = this.tplOf(d).split('-'), E = this.D.EVENTS[ev], names = String((d.data && d.data.names) || '').trim();
+    return [names, this.t().template + ' «' + E.names[E.styles.indexOf(st)] + '»'].filter(Boolean).join(' · ');
+  }
+
+  // ---------- экран цен и подписка ----------
+  // Экран цен. opts.from — откуда пришли (см. goPricing; без него — прежнее), opts.done — подписка только что
+  // оплачена (плашка со сроком), opts.months — выбранный срок (снова после неудачной оплаты).
+  openPricing(opts = {}) {
+    const s = this.state, P = s.pricing || {};
+    this.flushSave(); this.stopMusic();
+    this.setState({ screen: 'pricing', menu: null, account: false, pay: null, music: false,
+      pricing: { months: opts.months || P.months || 1, faq: P.faq != null ? P.faq : -1, busy: false, err: '', done: opts.done || null, from: opts.from !== undefined ? opts.from : P.from || null } });
+    // Доступ, общие цены и цены шаблонов могли измениться (подписка в другой вкладке, цены в админке).
+    if (s.me) this.refreshMe();
+    this.loadTemplates();
+  }
+  setPricing(patch) { this.setState((x) => ({ pricing: { ...(x.pricing || {}), ...patch } })); }
+  // «Назад» с экрана цен и «Вернуться к приглашению» после подписки: туда, откуда пришли, с тем же приглашением
+  // (после оплаты страница открылась заново — оно загружается) и, если пришли из листа оплаты, снова с ним.
+  async leavePricing() {
+    const F = (this.state.pricing && this.state.pricing.from) || null;
+    this.setPricing({ from: null, done: null, err: '' });
+    const scr = F && F.screen;
+    if (!F || !['events', 'templates', 'build', 'guest', 'share', 'manage', 'tour'].includes(scr)) { this.goHome(); return; }
+    if (F.inv && this.state.draftId !== F.inv) {
+      await this.openInv({ id: F.inv });
+      if (this.state.draftId !== F.inv) { this.goHome(); return; }
+    }
+    if (scr === 'guest') this.openGuest(F.guestMode || 'preview');
+    else this.go(scr, scr === 'build' ? { step: F.step || 0 } : undefined);
+    if (F.pay && this.state.draft) this.openPay({ dto: this.state.draft, ...F.pay });
+  }
+  // Подписка на months месяцев с экрана цен (или после входа ради неё): заказ и страница оплаты; после оплаты —
+  // снова экран цен с плашкой и сроком (finishOrder). Бесплатному доступу подписка не нужна: сервер ответит 400.
+  async buySub(months) {
+    const s = this.state, P = s.pricing || {};
+    months = months || P.months || 1;
+    if (P.busy) return;
+    if (!s.me) { this.requireLogin(() => this.buySub(months), 'buy', { k: 'sub', m: months }); return; }
+    const Q = this.quotes();
+    if (Q && Q.free) { this.toast(this.t().freeTitle); return; }
+    this._toCheckout = false;
+    this.setPricing({ months, busy: true, redirect: false, err: '' });
+    try {
+      const r = await this.createOrder({ kind: 'subscription', months });
+      if (r && r.status === 'pending') { this.checkout(r, { then: 'pricing', months, from: P.from || null }); return; }
+      this.setPricing({ busy: false }); await this.refreshMe();
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) { this.setPricing({ busy: false }); this.sessionLost(() => this.buySub(months)); return; }
+      this.setPricing({ busy: false, err: this.errText(e) });
+      // Например, бесплатный доступ выдали, пока экран был открыт: доступ перечитывается, сроки скрываются.
+      if (e.status === 400) this.refreshMe();
+    }
+  }
+
+  // ---------- «Купить шаблон» ----------
+  // Карусель шаблонов и предпросмотр: черновик с выбранным шаблоном, заказ шаблона и оплата; после оплаты — снова
+  // конструктор (приглашение не публикуется: ссылку получат, когда закончат, уже без оплаты). С бесплатным
+  // доступом и подпиской платить не за что: сразу конструктор, как «Выбрать шаблон».
+  buyTpl() {
+    const s = this.state;
+    if (s.tplBuy) return;
+    this.stopMusic(); this.setState({ music: false }); this.exitDemo();
+    if (!this.tplOk(s.tplId)) { this.toast(this.t().tplOff); return; }
+    this.requireLogin(() => this.buyTplNow(), 'buy', { k: 'buy', ev: s.event, tpl: s.tplId });
+  }
+  // dto0 — черновик, если он только что загружен и ещё не попал в state (повтор после неудачной оплаты).
+  async buyTplNow(dto0) {
+    const t = this.t();
+    if (this.state.tplBuy) return;
+    const Q = this.quotes();
+    if (Q && (Q.free || Q.subscribed)) { this.toast(Q.free ? t.tplFreeYou : t.tplInSub); this.useTpl(); return; }
+    this._toCheckout = false;
+    this.setState({ tplBuy: true });
+    try {
+      let dr = dto0 || (this.state.draftId && !this.state.demo ? this.state.draft : null);
+      if (!dr) { await this.createDraft((d) => { dr = d; }); if (!dr) return; }
+      else { await this.flushSave(); const x = this.state.draft; if (x && x.id === dr.id) dr = x; }
+      const id = dr.id;
+      // Уже оплачено (или открыто бесплатно) — платить не за что, дальше конструктор.
+      if (dr.unlocked) { this.toast(t.tplPaid); this.go('build', { step: 0, music: false }); return; }
+      // Шаблон оплачивается у общей ссылки: неоплаченный черновик без гостей переключается на неё.
+      if (dr.mode !== 'shared') {
+        if (this.modeLocked(dr)) { this.toast(t.payPersonalFree); this.go('build', { step: 0, music: false }); return; }
+        dr = await this.patchInvitation(id, { mode: 'shared' }, { quiet: true });
+      }
+      const r = await this.createOrder({ kind: 'template', invitationId: id });
+      if (r && r.status === 'pending') { this.checkout(r, { inv: id, then: 'build', pub: false, buy: true }); return; }
+      if (r && r.message) this.toast(r.message);
+      await this.afterPaid(id, 'build', false);
+    } catch (e) {
+      this.logErr(e);
+      if (e.status === 401) { this.setState({ tplBuy: false }); this.sessionLost(() => this.buyTplNow()); return; }
+      this.toast(this.errText(e));
+    } finally { if (!this._toCheckout) this.setState({ tplBuy: false }); }
   }
   // Тестовая оплата (#/mock-pay/<id>): кнопки «Оплатить» и «Отклонить», затем экран заказа.
   async openMock(id) {
@@ -2606,6 +2823,9 @@ class Component extends DCLogic {
       if (L && L.step === 'tgphone') this.pollWebapp(0);
     };
     document.addEventListener('visibilitychange', this.onVis);
+    // Вернулись со страницы оплаты кнопкой «Назад» браузера (страница из bfcache): кнопки покупки снова доступны.
+    this.onPageShow = (e) => { if (e.persisted && this.state.ready) this.releaseCheckout(); };
+    window.addEventListener('pageshow', this.onPageShow);
     // Escape закрывает верхний лист или меню (как «Назад» в Telegram).
     this.onKey = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && this._closeTop) this._closeTop(); };
     document.addEventListener('keydown', this.onKey);
@@ -2635,6 +2855,7 @@ class Component extends DCLogic {
   componentWillUnmount() {
     window.removeEventListener('scroll', this.onScroll, true); window.removeEventListener('resize', this.onResize);
     window.removeEventListener('hashchange', this.onHash); document.removeEventListener('visibilitychange', this.onVis); document.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('pageshow', this.onPageShow); clearTimeout(this._checkoutT);
     if (this.onLink) document.removeEventListener('click', this.onLink, true);
     this.gestures.forEach((t) => document.removeEventListener(t, this.onGesture, true));
     [this._saveT, this._retryT, this._tgT, this._tgPollT, this._orderT, this._slugT, this._pwT].forEach((x) => clearTimeout(x));
@@ -3133,6 +3354,7 @@ class Component extends DCLogic {
     const accName = myName || (mu && mu.username ? '@' + mu.username : '') || myPhone || t.account;
     // Профиль: имя (правка), приглашения, подписка, Telegram, история платежей, язык, админка, выход.
     const N = s.nameEd, MO = s.myOrders, PP = (me && me.prices) || cfg.prices, oList = MO && MO.list ? MO.list : null;
+    const planOf = (m) => m + ' ' + D.plural(lang, m, t.monthsN);
     const OST = { paid: '#2e7d4f', pending: '#93723f', failed: '#d4452a', cancelled: '#d4452a' };
     const acc = me ? {
       name: accName, phone: accName === myPhone ? '' : myPhone,
@@ -3153,7 +3375,7 @@ class Component extends DCLogic {
       ordersCount: oList && oList.length ? String(oList.length).padStart(2, '0') : '',
       ordersLoading: !!MO && MO.loading && !oList, ordersEmpty: !!oList && !oList.length, ordersErr: MO && !oList && !MO.loading ? MO.err : '',
       orders: (oList || []).map((o) => ({ st: o.status, status: t.orderSt[o.status] || o.status, color: OST[o.status] || U.muted, amount: this.money(o.amount),
-        kind: (t.orderKinds[o.kind] || o.kind) + (o.kind === 'seats' ? ' · ' + o.quantity : o.kind === 'subscription' ? ' · ' + (t.subMonths[[1, 3, 12].indexOf(o.quantity)] || o.quantity) : ''),
+        kind: (t.orderKinds[o.kind] || o.kind) + (o.kind === 'seats' ? ' · ' + o.quantity : o.kind === 'subscription' ? ' · ' + planOf(o.quantity) : ''),
         date: o.createdAt ? this.fmt(this.tashDate(o.createdAt), '12:00', { day: 'numeric', month: 'short', year: 'numeric' }) : '' })),
       openLang: () => { this.setState({ account: false, nameEd: null }); this.openMenu('lang', this.rootRef.current && this.rootRef.current.querySelector('[data-lang-btn]')); },
       // В мини-аппе вход — аккаунт Telegram: «Выйти» вернуло бы его же, вместо кнопки — пояснение.
@@ -3183,8 +3405,49 @@ class Component extends DCLogic {
     const dlg = s.w >= 720
       ? { handle: false, box: 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,calc(100vw - 32px));border-radius:22px;padding:6px 26px 26px;max-height:calc(100vh - 48px)' }
       : { handle: true, box: 'position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:90vh' };
-    // Экран цен (пока кратко): цены — из ответов сервера.
-    const pr = { rows: PP ? [[t.payShared, t.fromPrice.replace('{price}', this.money(PP.sharedTemplate))], [t.payPersonal, t.perGuest.replace('{price}', this.money(PP.seat))], [t.subTitle, t.perMonth.replace('{price}', this.money(PP.subscriptionMonth))]].map(([label, price]) => ({ label, price })) : [], loading: !PP };
+    // Экран цен: цены и доступ — только из ответов сервера (/api/auth/config, /api/auth/me, /api/templates).
+    // Общая ссылка — «от» самой низкой цены активных шаблонов, если цены шаблонов разные.
+    const PRS = s.pricing || {}, QQ = this.quotes(), acc0 = (me && me.access) || {}, subOn = !!acc0.subscribed && !acc0.free;
+    const endDate = (iso) => this.fmt(this.tashDate(iso), '12:00', { day: 'numeric', month: 'long', year: 'numeric' });
+    const withDate = (text, date) => text.replace(/\{date\}(\.?)/, (_, dot) => date + (dot && !date.endsWith('.') ? dot : ''));
+    const tplPrices = PP ? (s.tplInfo ? Object.values(s.tplInfo).map((x) => (x.price != null ? x.price : PP.sharedTemplate)) : [PP.sharedTemplate]) : [];
+    const minTpl = tplPrices.length ? Math.min(...tplPrices) : 0, maxTpl = tplPrices.length ? Math.max(...tplPrices) : 0;
+    const subEnd = subOn && acc0.subscriptionEndsAt ? Date.parse(acc0.subscriptionEndsAt) : NaN;
+    // Новый срок, как его считает сервер (extendSubscription): от конца действующей подписки или от сегодня.
+    const endAfter = (m) => { const d = new Date(subEnd > Date.now() ? subEnd : Date.now()); d.setUTCMonth(d.getUTCMonth() + m); return d.toISOString(); };
+    const selM = PRS.months || 1, prBusy = !!PRS.busy;
+    const buyLabel = (m) => (subOn ? t.subRenewFor : t.subBuyFor).replace('{plan}', planOf(m)).replace('{price}', QQ ? this.money(QQ.sub(m)) : '…');
+    const hasInvBack = !!(PRS.from && PRS.from.inv);
+    const prNext = () => (hasInvBack ? this.leavePricing() : (this.flushSave(), this.exitDemo(), this.setState({ screen: 'events', fromTour: false })));
+    const pr = {
+      loading: !PP, back: () => this.leavePricing(), op: prBusy ? 0.5 : 1, err: PRS.err || '',
+      done: !!PRS.done, doneText: withDate(t.subDoneText, isNaN(subEnd) ? '…' : endDate(acc0.subscriptionEndsAt)), nextLabel: hasInvBack ? t.backToInv : t.create, next: prNext,
+      st: !!me, stKey: acc0.free ? 'free' : subOn ? 'sub' : 'none', stColor: acc0.free || subOn ? '#2e7d4f' : U.muted,
+      stTitle: acc0.free ? t.freeTitle : subOn ? t.subUntil.replace('{date}', isNaN(subEnd) ? '∞' : endDate(acc0.subscriptionEndsAt)) : t.subNone,
+      stNote: subOn && !isNaN(subEnd) ? (() => { const n = Math.max(1, Math.ceil((subEnd - Date.now()) / 864e5)); return D.plural(lang, n, t.daysLeft).replace('{n}', n); })() : '',
+      stText: acc0.free ? t.freeText : '',
+      cards: PP ? [
+        { key: 'shared', title: t.payShared, price: minTpl !== maxTpl ? t.fromPrice.replace('{price}', this.money(minTpl)) : this.money(minTpl), unit: t.perInv, desc: t.paySharedDesc, note: minTpl !== maxTpl ? t.tplDiff : '',
+          tag: acc0.free ? t.tplFreeYou : subOn ? t.tplInSub : '', strike: acc0.free || subOn ? 'line-through' : 'none' },
+        { key: 'personal', title: t.payPersonal, price: this.money(PP.seat), unit: t.perGuestU, desc: t.payPersonalDesc + ' ' + t.payPersonalFree, note: t.priceEx.replace('{price}', this.money(100 * PP.seat)),
+          tag: acc0.free ? t.tplFreeYou : '', strike: acc0.free ? 'line-through' : 'none' },
+      ] : [],
+      incl: t.subIncl.map((text) => ({ kind: 'in', sign: '✓', mark: '#2e7d4f', color: U.body, text })).concat(PP ? [{ kind: 'out', sign: '—', mark: U.muted, color: U.muted, text: t.subExcl.replace('{price}', this.money(PP.seat)) }] : []),
+      worth: PP && minTpl > 0 && !acc0.free ? (() => { const n = Math.max(1, Math.ceil(PP.subscriptionMonth / minTpl)); return D.plural(lang, n, t.subWorth).replace('{n}', n); })() : '',
+      showPlans: !acc0.free, plansNote: subOn ? t.subExtendNote : '',
+      plans: [1, 3, 6, 12].map((m) => {
+        const a = selM === m;
+        return { m, label: planOf(m), price: QQ ? this.money(QQ.sub(m)) : '…', per: QQ ? t.perMonth.replace('{price}', this.money(Math.round(QQ.sub(m) / m))) : '',
+          until: QQ ? t.untilShort.replace('{date}', this.fmt(this.tashDate(endAfter(m)), '12:00', { day: 'numeric', month: 'short', year: 'numeric' })) : '',
+          pressed: a ? 'true' : 'false', border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.16)', bg: a ? 'rgba(212,69,42,.06)' : U.card, kick: a ? '#d4452a' : U.muted,
+          btn: prBusy && a ? (PRS.redirect ? t.toCheckout : t.loading) : subOn ? t.subRenew : t.subBuy,
+          btnBg: a ? U.ink : 'transparent', btnColor: a ? U.paper : U.ink, btnBorder: a ? U.ink : 'rgba(' + U.inkRgb + ',.3)',
+          pick: () => { if (!prBusy) this.setPricing({ months: m, err: '' }); }, buy: (e) => { if (e) e.stopPropagation(); this.buySub(m); } };
+      }),
+      faq: t.pricingFaq.map(([q, a], i) => { const o = PRS.faq === i; return { q, a, open: o, exp: o ? 'true' : 'false', rot: o ? '45deg' : '0deg', toggle: () => this.setPricing({ faq: o ? -1 : i }) }; }),
+      // MainButton мини-аппа: после оплаты — дальше; с бесплатным доступом — «Создать приглашение»; иначе — выбранный срок.
+      mb: PRS.done ? [hasInvBack ? t.backToInv : t.create, prNext] : acc0.free || !QQ ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : [prBusy ? (PRS.redirect ? t.toCheckout : t.loading) : buyLabel(selM), () => this.buySub(selM)],
+    };
 
     // приглашения пользователя (GET /api/invitations)
     this._invView = this._invView || new WeakMap();
@@ -3210,11 +3473,22 @@ class Component extends DCLogic {
 
     // templates
     const cardWpx = wide ? 320 : 250;
-    const tpls = this.activeStyles(s.event, s.tplId).map(({ st, i, id }, j) => { return { th: id === s.tplId ? th : this.theme(id), names: inv.names, date: gDateShort, cover: inv.cover, kicker: t.youreInvited, name: E.names[i], style: D.STYLES[st].label, outline: id === s.tplId ? '1.5px solid ' + U.ink : '1.5px solid transparent', onClick: () => { this.pickTpl(id); this.centerCard(j); } }; });
+    // Цена шаблона на карточке: сумма, «Входит в подписку», «Бесплатно для вас» или «Оплачено» (шаблон открытого
+    // черновика уже оплачен); у выбранной карточки — «Купить шаблон» (с подпиской и бесплатно — сразу конструктор).
+    const drT = !s.demo && s.draftId && s.draft ? s.draft : null, paidTpl = drT && drT.unlocked ? this.tplOf(drT) : null;
+    const tplPrice = (id) => (!QQ ? ['', U.muted] : paidTpl === id ? [t.paidMark, '#2e7d4f'] : QQ.free ? [t.tplFreeYou, '#2e7d4f'] : QQ.subscribed ? [t.tplInSub, '#2e7d4f'] : [this.money(QQ.list(id)), U.ink]);
+    const tbBusy = s.tplBuy === 'go' ? t.toCheckout : s.tplBuy ? t.loading : '';
+    const tpls = this.activeStyles(s.event, s.tplId).map(({ st, i, id }, j) => { const [price, priceColor] = tplPrice(id), a = id === s.tplId; return { id, th: a ? th : this.theme(id), names: inv.names, date: gDateShort, cover: inv.cover, kicker: t.youreInvited, name: E.names[i], style: D.STYLES[st].label, outline: a ? '1.5px solid ' + U.ink : '1.5px solid transparent', onClick: () => { this.pickTpl(id); this.centerCard(j); },
+      price, priceColor, buyOn: a && !!QQ && paidTpl !== id, buyLabel: tbBusy || (QQ && QQ.free ? t.tplStartFree : QQ && QQ.subscribed ? t.tplStartSub : t.buyTpl), buyBg: QQ && (QQ.free || QQ.subscribed) ? '#2e7d4f' : '#d4452a', buyOp: s.tplBuy ? 0.6 : 1,
+      buy: (e) => { if (e) e.stopPropagation(); this.buyTpl(); } }; });
     const stl = D.STYLES[tplStyle]; const stl0 = () => D.STYLES[tplStyle];
     const VV = D.VARIANTS[tplStyle] || [];
     const palettes = VV.map((v, i) => { const p = i ? { ...stl0(), ...Object.fromEntries(Object.entries(v).filter(([, x]) => x !== undefined)) } : stl0(); const a = (inv.palette || 0) === i; return { name: v.name, c1: p.bg, c2: p.accent, c3: p.accent2, c4: p.ink, ink: p.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', bg: a ? 'rgba(212,69,42,.08)' : 'transparent', ring: a ? '0 0 0 2px #d4452a' : 'none', onClick: () => this.setInv({ palette: i }) }; });
-    const cur = { name: tplName, desc: t.sd[tplStyle], fonts: stl.fonts.map((f) => ({ name: f, css: `'${f}', serif` })), palette: [stl.bg, stl.surface, stl.ink, stl.accent, stl.accent2] };
+    const [curPrice, curPriceColor] = tplPrice(s.tplId);
+    const cur = { name: tplName, desc: t.sd[tplStyle], fonts: stl.fonts.map((f) => ({ name: f, css: `'${f}', serif` })), palette: [stl.bg, stl.surface, stl.ink, stl.accent, stl.accent2],
+      price: curPrice, priceColor: curPriceColor, priceNote: QQ && QQ.free ? t.freeText : QQ && QQ.subscribed ? t.subDesc : t.tplPriceNote, more: () => this.goPricing(), moreLabel: QQ && QQ.free ? t.navPrices : t.subMore };
+    // Предпросмотр шаблона: «Купить · цена» рядом с «Выбрать шаблон» (с подпиской и бесплатно платить не за что).
+    const tb = { on: !!QQ && !QQ.free && !QQ.subscribed && paidTpl !== s.tplId, label: tbBusy || t.buyFor.replace('{price}', QQ ? this.money(QQ.list(s.tplId)) : '…'), bg: '#d4452a', op: s.tplBuy ? 0.6 : 1, buy: () => this.buyTpl() };
 
     // build
     const STEPS = ['basics', 'when', 'where', 'words', 'details', 'photos', 'font', 'music', 'sections'];
@@ -3409,11 +3683,12 @@ class Component extends DCLogic {
     const scr = s.screen, gm = s.guestMode;
     // Открытый лист закрывается кнопкой «Назад» раньше, чем меняется экран.
     const closeTop = s.menu ? () => this.setState({ menu: null }) : s.confirm ? () => this.setState({ confirm: null }) : L ? () => this.closeLogin() : s.account ? () => this.closeAccount() : s.pay ? () => this.closePay() : s.addSheet ? () => this.setState({ addSheet: null }) : s.importOpen ? () => this.setState({ importOpen: false }) : isEdit && s.sheet ? () => this.setState({ sheet: null }) : null;
-    const backFn = closeTop || (scr === 'home' ? (() => { try { window.Telegram.WebApp.close(); } catch (e) {} }) : scr === 'events' || scr === 'tour' ? () => this.goHome() : scr === 'templates' ? () => this.go('events') : scr === 'build' ? () => (s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates')) : scr === 'guest' ? () => { this.stopMusic(); this.setState({ music: false }); if (s.fromTour && gm === 'live') this.go('tour'); else if (gm === 'preview') this.go(s.fromTour ? 'tour' : 'templates'); else if (gm === 'edit') this.go('build', { step: STEPS.length - 1 }); else if (s.guestFrom === 'manage') this.go('manage'); else if (s.guestFrom !== 'home' && (s.demo || (s.draft && s.draft.status === 'active'))) this.go('share'); else this.goHome(); } : scr === 'share' ? () => this.openGuest('edit') : () => this.goHome());
+    const backFn = closeTop || (scr === 'home' ? (() => { try { window.Telegram.WebApp.close(); } catch (e) {} }) : scr === 'events' || scr === 'tour' ? () => this.goHome() : scr === 'templates' ? () => this.go('events') : scr === 'build' ? () => (s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates')) : scr === 'guest' ? () => { this.stopMusic(); this.setState({ music: false }); if (s.fromTour && gm === 'live') this.go('tour'); else if (gm === 'preview') this.go(s.fromTour ? 'tour' : 'templates'); else if (gm === 'edit') this.go('build', { step: STEPS.length - 1 }); else if (s.guestFrom === 'manage') this.go('manage'); else if (s.guestFrom !== 'home' && (s.demo || (s.draft && s.draft.status === 'active'))) this.go('share'); else this.goHome(); } : scr === 'share' ? () => this.openGuest('edit') : scr === 'pricing' ? () => this.leavePricing() : () => this.goHome());
     this._backFn = backFn; this._closeTop = closeTop; this._backShow = !pub && scr !== 'notfound' && (scr !== 'home' || !!closeTop);
     const anySheet = !!closeTop || !!s.upload;
-    const MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toShare, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare()] : isEdit ? [t.toShare, () => this.goShare()] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.copy, () => copyText(fullLink, t.copied)]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : scr === 'pricing' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : null;
-    this._mainFn = MB ? MB[1] : null; this._main = { show: !!MB, label: MB ? MB[0] : '' };
+    // Лист оплаты сверху (не под меню, входом или профилем): MainButton мини-аппа — оплата из листа (см. py).
+    const payTop = !!s.pay && !!s.draft && !s.menu && !s.confirm && !L && !s.account && !s.addSheet && !s.importOpen && !s.upload;
+    let MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toShare, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare()] : isEdit ? [t.toShare, () => this.goShare()] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.copy, () => copyText(fullLink, t.copied)]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : scr === 'pricing' ? pr.mb : null;
     // ---- tour ----
     const live = (patch, gid, scrollId, extra) => { this.setState((x) => ({ inv: { ...x.inv, ...(patch || {}) }, share: { ...x.share, pwOn: false }, unlocked: false, ...(extra || {}) })); setTimeout(() => { this.openGuest('live', gid); if (scrollId) setTimeout(() => { this.setState({ env: 4 }); setTimeout(() => { const el = document.getElementById(scrollId); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' }); }, 350); }, 60); }, 0); };
     // Шаблон или демо из тура: открытый черновик отвязывается, чтобы его не перезаписать.
@@ -3462,9 +3737,10 @@ class Component extends DCLogic {
       const priceTxt = (n) => (Q ? (n ? this.money(n) : t.free) : '…');
       const tplTxt = pd.unlocked ? t.paidMark : priceTxt(Q && Q.template);
       const seatTxt = Q ? (Q.seat ? t.perGuest.replace('{price}', this.money(Q.seat)) : t.free) : '…';
-      const modes = (up ? [] : PY.kind === 'seats' ? ['personal'] : ['shared', 'personal']).map((k) => {
+      // «Докупить места»: тип уже выбран, карточки типа не нужны.
+      const modes = (up || PY.kind === 'seats' ? [] : ['shared', 'personal']).map((k) => {
         const a = PY.mode === k, dis = lockM && pd.mode !== k, freeK = k === 'shared' ? pd.unlocked || (!!Q && !Q.template) : !!Q && !Q.seat;
-        return { key: k, title: k === 'shared' ? t.payShared : t.payPersonal, desc: k === 'shared' ? t.paySharedDesc : t.payPersonalDesc, price: k === 'shared' ? tplTxt : seatTxt, priceColor: freeK ? '#2e7d4f' : U.muted,
+        return { key: k, title: k === 'shared' ? t.payShared : t.payPersonal, desc: k === 'shared' ? t.paySharedDesc : t.payPersonalDesc + ' ' + t.payPersonalFree, price: k === 'shared' ? tplTxt : seatTxt, priceColor: freeK ? '#2e7d4f' : U.muted,
           border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.18)', bg: a ? 'rgba(212,69,42,.06)' : 'transparent', dot: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.35)', fill: a ? '#d4452a' : 'transparent', op: dis ? 0.45 : 1, cursor: dis ? 'default' : 'pointer',
           onClick: () => { if (!dis && !PY.busy && !a) this.setPay({ mode: k, err: '' }); } };
       });
@@ -3472,33 +3748,48 @@ class Component extends DCLogic {
       const amount = !Q ? null : personalSel ? Q.seats(PY.seats) : pd.unlocked ? 0 : Q.template;
       const valid = !!Q && !PY.busy && !(personalSel && PY.seats < minSeats);
       const setSeats = (n) => this.setPay({ seats: Math.max(minSeats, Math.min(1000, n | 0)), err: '' });
-      const SUBM = [1, 3, 12];
+      const SUBM = [1, 3, 6, 12], viaSub = PY.redirect && PY.via === 'sub', unpaidG = (s.guests || []).filter((g) => g.paid === false).length;
       py = {
         title: PY.kind === 'seats' ? t.seatsTitle : up ? t.payUpTitle : t.payTitle, note: PY.note || '', hint: PY.kind === 'seats' ? '' : up ? t.payUpHint : t.payHint,
-        modes, lock: lockM, isPersonal: !up && personalSel, showMain: !up, seats: String(PY.seats), seatNote: t.paySeatsPaid.replace(/ \{n\}/, '\u00a0{n}').replace('{n}', pd.paidSeats || 0),
+        modes, lock: lockM, isPersonal: !up && personalSel, showMain: !up, seats: String(PY.seats),
+        seatsLabel: PY.kind === 'seats' ? t.seatsMore : t.payGuests,
+        seatNote: PY.kind === 'seats' ? t.seatsNote.replace('{paid}', pd.paidSeats || 0).replace('{unpaid}', unpaidG) : t.paySeatsPaid.replace(/ \{n\}/, '\u00a0{n}').replace('{n}', pd.paidSeats || 0),
         dec: () => setSeats(PY.seats - 1), inc: () => setSeats(PY.seats + 1), onSeats: (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 4); this.setPay({ seats: d ? Math.min(1000, +d) : 0, err: '' }); },
         total: amount == null ? '…' : amount ? this.money(amount) : t.free,
-        goLabel: PY.busy ? t.loading : amount ? t.payBtn.replace('{price}', this.money(amount)) : PY.kind === 'seats' ? t.buySeats : t.publishBtn,
-        goOp: valid ? 1 : 0.45, go: () => { if (valid) this.pay(); }, err: PY.err || '',
-        showSub: !!Q && !Q.free && !Q.subscribed && (PY.kind === 'publish' || up),
-        subPer: Q ? this.money(Q.P.subscriptionMonth) + ' / ' + t.subMonths[0] : '',
-        subOpts: SUBM.map((m, i) => ({ label: t.subMonths[i] + ' · ' + (Q ? this.money(Q.sub(m)) : '…'), ...chipO(PY.months === m), onClick: () => this.setPay({ months: m }) })),
-        subLabel: t.subBtn.replace('{price}', Q ? this.money(Q.sub(PY.months)) : '…'), subGo: () => { if (Q && !PY.busy) this.subscribe(); },
+        goLabel: PY.redirect && !viaSub ? t.toCheckout : PY.busy ? t.loading : amount ? t.payBtn.replace('{price}', this.money(amount)) : PY.kind === 'seats' ? t.buySeats : t.publishBtn,
+        goArrow: PY.busy ? '' : ' →', goOp: valid ? 1 : 0.45, go: () => { if (valid) this.pay(); }, err: PY.err || '',
+        // В мини-аппе оплата — нативная MainButton Telegram, кнопка в листе не нужна.
+        goBtn: !this.tgReal,
+        // Подписка открывает шаблоны общих ссылок: персональным приглашениям она ничего не даёт (места платные), оплаченному шаблону — тоже.
+        showSub: !!Q && !Q.free && !Q.subscribed && (up || (PY.kind === 'publish' && PY.mode === 'shared' && !pd.unlocked)),
+        subPer: Q ? t.perMonth.replace('{price}', this.money(Q.P.subscriptionMonth)) : '',
+        subOpts: SUBM.map((m) => { const a = PY.months === m; return { m, label: planOf(m), price: Q ? this.money(Q.sub(m)) : '…', pressed: a ? 'true' : 'false', border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', bg: a ? 'rgba(212,69,42,.07)' : 'transparent', color: U.ink, onClick: () => { if (!PY.busy) this.setPay({ months: m }); } }; }),
+        subLabel: viaSub ? t.toCheckout : PY.busy && PY.via === 'sub' ? t.loading : t.subBuyFor.replace('{plan}', planOf(PY.months)).replace('{price}', Q ? this.money(Q.sub(PY.months)) : '…'), subGo: () => { if (Q && !PY.busy) this.subscribe(); },
+        subMore: () => { if (!PY.busy) this.goPricing({ fromPay: true }); },
       };
     }
+    if (payTop && py.showMain) MB = [py.goLabel, () => py.go()];
+    this._mainFn = MB ? MB[1] : null; this._main = { show: !!MB, label: MB ? MB[0] : '' };
     // Экран заказа и тестовой оплаты.
     const O = s.order, oD = O && O.data;
     const od = O ? (() => {
-      const st = oD ? oD.status : 'pending', fin = st === 'failed' || st === 'cancelled';
-      return { num: oD ? '№ ' + oD.number : '№ …', kind: oD ? (t.orderKinds[oD.kind] || oD.kind) + (oD.kind === 'seats' ? ' · ' + oD.quantity : oD.kind === 'subscription' ? ' · ' + (t.subMonths[[1, 3, 12].indexOf(oD.quantity)] || oD.quantity) : '') : '', status: st,
+      const st = oD ? oD.status : 'pending', fin = st === 'failed' || st === 'cancelled', oc = O.cont || {}, wait = st === 'pending' && !!oD;
+      // Ждём долго (страницу оплаты закрыли или бросили): как вернуться к оплате или изменить заказ; опрос остановлен — «Проверить снова».
+      const stuck = wait && now - (O.since || now) > 20000;
+      const paidText = !oD ? t.orderPaidHint : oD.kind === 'subscription' ? t.orderSubHint : oc.pub === false ? (oD.kind === 'seats' ? t.orderSeatsHint : t.orderTplHint) : t.orderPaidHint;
+      const mockUrl = !!oD && String(oD.checkoutUrl || '').includes('/api/payments/mock/');
+      return { num: oD ? '№ ' + oD.number : '№ …', kind: oD ? (t.orderKinds[oD.kind] || oD.kind) + (oD.kind === 'seats' ? ' · ' + oD.quantity : oD.kind === 'subscription' ? ' · ' + planOf(oD.quantity) : '') : '', status: st,
         title: st === 'paid' ? t.orderPaid : st === 'failed' ? t.orderFailed : st === 'cancelled' ? t.orderCancelled : t.orderWait,
-        text: st === 'paid' ? t.orderPaidHint : fin ? t.orderFailHint : t.orderWaitHint, amount: oD ? this.money(oD.amount) : '',
-        color: st === 'paid' ? '#2e7d4f' : fin ? '#d4452a' : '#93723f', pulse: st === 'pending' && !O.missing ? 'invPulse 1.4s ease-in-out infinite' : 'none',
-        err: O.err || '', canOpen: st === 'pending' && !!oD && !!oD.checkoutUrl && this.tgReal && !String(oD.checkoutUrl).includes('/api/payments/mock/'), open: () => this.openUrl(oD.checkoutUrl),
+        text: st === 'paid' ? paidText : fin ? t.orderFailHint : O.stopped ? t.orderStopped : stuck ? t.orderStuck : t.orderWaitHint, amount: oD ? this.money(oD.amount) : '',
+        what: oD && oD.invitationId ? this.invLabel(oD.invitationId) : '',
+        color: st === 'paid' ? '#2e7d4f' : fin ? '#d4452a' : '#93723f', pulse: st === 'pending' && !O.missing && !O.stopped ? 'invPulse 1.4s ease-in-out infinite' : 'none',
+        // Страница оплаты: на сайте — переход, в Telegram — openLink; тестовая оплата в мини-аппе — внутри (#/mock-pay).
+        err: O.err || '', canOpen: wait && !!oD.checkoutUrl, open: () => { if (this.tgReal && mockUrl) location.hash = '#/mock-pay/' + oD.id; else if (this.tgReal) this.openUrl(oD.checkoutUrl); else location.href = oD.checkoutUrl; },
+        canChange: stuck, change: () => this.retryOrder(), canCheck: wait && !!O.stopped, check: () => this.checkOrder(),
         canRetry: fin || (st === 'paid' && !!O.err), retry: () => (st === 'paid' ? this.finishOrder(oD) : this.retryOrder()) };
     })() : {};
     const M = s.mock, mD = M && M.data;
-    const mk = M ? { num: mD ? '№ ' + mD.number : '№ …', kind: mD ? t.orderKinds[mD.kind] || mD.kind : '', amount: mD ? this.money(mD.amount) : '…', err: M.err || '', op: M.busy || !mD ? 0.5 : 1, pay: () => this.mockResult('paid'), fail: () => this.mockResult('failed') } : {};
+    const mk = M ? { num: mD ? '№ ' + mD.number : '№ …', kind: mD ? (t.orderKinds[mD.kind] || mD.kind) + (mD.kind === 'seats' ? ' · ' + mD.quantity : mD.kind === 'subscription' ? ' · ' + planOf(mD.quantity) : '') : '', what: mD && mD.invitationId ? this.invLabel(mD.invitationId) : '', amount: mD ? this.money(mD.amount) : '…', err: M.err || '', op: M.busy || !mD ? 0.5 : 1, pay: () => this.mockResult('paid'), fail: () => this.mockResult('failed') } : {};
     // Лист «Добавить гостей».
     const AS = s.addSheet, addLines = AS ? this.parseGuests(AS.text).list.length : 0;
     const ad = AS ? { shared: !!dr && !isPersonalInv, personal: isPersonalInv, canSwitch: !!dr && !this.modeLocked(dr), toPersonal: () => this.toPersonal(), op: AS.busy ? 0.5 : 1,
@@ -3584,7 +3875,7 @@ class Component extends DCLogic {
       hd, mn, openAccount: () => this.openAccount(), isPricing: s.screen === 'pricing', pr,
       events,
       tpls, cardW: cardWpx + 'px', cardHalf: cardWpx / 2 + 'px',
-      previewTpl: () => this.openGuest('preview'), useTpl: () => this.useTpl(), invLangOpts,
+      previewTpl: () => this.openGuest('preview'), useTpl: () => this.useTpl(), invLangOpts, tb,
       // лист входа, аккаунт, подтверждение
       loginOpen: !!L, lg, closeLogin: () => this.closeLogin(), phoneRef: this.phoneRef, codeRef: this.codeRef,
       accOpen: !!s.account && !!me && !L, acc, accIni: myIni, closeAccount: () => this.closeAccount(), dlg,
