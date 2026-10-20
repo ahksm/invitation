@@ -186,6 +186,47 @@ const routes = {
     return form;
   },
 
+  // Реквизиты и контакты для страниц /oferta, /privacy и /contacts. Пустые поля на страницах не выводятся.
+  async "/legal"() {
+    const l = await api("/api/admin/legal");
+    const groups = [
+      ["Компания", [
+        ["companyName", "Название: ООО «…» или ИП …", 200],
+        ["inn", "ИНН (СТИР)", 20],
+        ["address", "Юридический адрес", 300],
+        ["director", "Руководитель", 200],
+        ["bankName", "Банк", 200],
+        ["bankAccount", "Расчётный счёт", 40],
+        ["mfo", "МФО банка", 20],
+      ]],
+      ["Контакты для клиентов", [
+        ["phone", "Телефон", 40, "+998 90 123-45-67"],
+        ["email", "Электронная почта", 120, "support@example.uz"],
+        ["telegram", "Telegram поддержки", 64, "@username"],
+      ]],
+    ];
+    const keys = groups.flatMap(([, fields]) => fields.map(([k]) => k));
+    const field = ([key, label, max, placeholder]) =>
+      h("label", {}, h("span", {}, label), h("input", { name: key, value: l[key] ?? "", maxlength: String(max), placeholder, autocomplete: "off" }));
+    const page = (path, title) => h("a", { href: path, target: "_blank", rel: "noopener" }, title);
+    const form = h("form", { class: "card", onsubmit: async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const body = Object.fromEntries(keys.map((k) => [k, String(fd.get(k) ?? "").trim()]));
+      try {
+        const saved = await api("/api/admin/legal", { method: "PUT", body });
+        // Сервер приводит значения к виду для страниц (например, Telegram без @ и ссылки).
+        for (const k of keys) form.elements.namedItem(k).value = saved[k];
+        toast("Реквизиты сохранены");
+      } catch (err) { toast(err.message, "bad"); }
+    } },
+      h("p", { class: "muted", style: "margin-top:0" }, "Эти данные выводятся на страницах ", page("/oferta", "Оферта"), ", ", page("/privacy", "Политика конфиденциальности"), " и ", page("/contacts", "Контакты"),
+        ". Multicard проверяет их при подключении боевого режима. Пустые поля на страницах не показываются; без названия исполнителем в оферте указана администрация сайта."),
+      groups.flatMap(([title, fields]) => [h("h3", {}, title), h("div", { style: "display:grid;gap:0 16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))" }, fields.map(field))]),
+      h("button", { class: "primary" }, "Сохранить"));
+    return form;
+  },
+
   async "/templates"() {
     const list = await api("/api/admin/templates");
     // Таблица не перерисовывается после сохранения: прокрутка и цены, набранные в других строках, остаются.

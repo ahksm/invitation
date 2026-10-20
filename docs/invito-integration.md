@@ -56,9 +56,16 @@
    - `img-src 'self' data: blob: https://images.unsplash.com`; `media-src 'self' blob: data:`;
    - `frame-src https://maps.google.com https://www.google.com https://oauth.telegram.org`;
    - `connect-src 'self'`;
-   - `frame-ancestors 'self' https://web.telegram.org https://*.telegram.org` для `/`, `/app*`, `/i/*`, `/g/*` и HTML-страницы «не найдено» на любом другом адресе; без `X-Frame-Options` на этих путях (иначе мини-апп не открывается в Telegram Web). Админка, API и JSON-ответы 404 остаются `frame-ancestors 'none'` и `X-Frame-Options: DENY`.
+   - `frame-ancestors 'self' https://web.telegram.org https://*.telegram.org` для `/`, `/app*`, `/i/*`, `/g/*`, `/oferta`, `/privacy`, `/contacts` и HTML-страницы «не найдено» на любом другом адресе; без `X-Frame-Options` на этих путях (иначе мини-апп не открывается в Telegram Web). Админка, API и JSON-ответы 404 остаются `frame-ancestors 'none'` и `X-Frame-Options: DENY`.
 5. Старые страницы `public/app/` и `public/invite/` удалить. `public/admin/` и `public/shared/` (их использует админка) остаются.
 6. Dockerfile копирует `web/`. CI собирает и проверяет как раньше.
+7. Юридические страницы (их требует Multicard для боевого режима): `GET /oferta` (публичная оферта), `GET /privacy` (политика конфиденциальности), `GET /contacts` (контакты и реквизиты). Код в `src/web/legal.ts`, тексты в `src/web/legal-texts.ts`.
+   - HTML собирает сервер, без скриптов и без оболочки приложения; стиль Invito (Cormorant Garamond, Onest, JetBrains Mono, акцент `#d4452a`, светлая и тёмная тема по настройке системы), шрифты из Google Fonts. На телефоне оглавление свёрнуто (`<details>`), на широком экране — сбоку.
+   - Язык: `?lang=ru|uz|uzc|en` (разбор как `pickLocale`: `uz-Cyrl` → `uzc`); без параметра, с неизвестным или повторённым — русский. Тексты `uzc` получаются из `uz` через `toCyr`; названия сервисов (Multicard, Eskiz, Telegram, Google…), подстановки и адреса ссылок не транслитерируются. Переключатель языка и ссылки между документами сохраняют язык; в `<head>` — `<title>` «<документ> — APP_NAME», `description`, canonical и `<link rel="alternate" hreflang>` на все четыре языка.
+   - Реквизиты берутся из настройки `legal` (раздел 3.10). Выводятся только заполненные поля, плейсхолдеров нет. Без `companyName` исполнителем названа «администрация сайта <host из APP_URL>». В реквизитах и контактах всегда есть сайт, а Telegram-бот — если он запущен (`botUsername`).
+   - Заголовки как у страниц приложения (`appHelmet`: CSP раздела 2.4, frame-ancestors с Telegram, без X-Frame-Options), `Cache-Control: private, no-cache` (сохранённые в админке реквизиты видны сразу), страницы индексируются.
+   - Ссылки из приложения (подвал главной, строка согласия в листе оплаты): `/oferta`, `/privacy`, `/contacts`, для языка интерфейса кроме русского — с `?lang=<код>`.
+   - Дата редакции на страницах — `LEGAL_REVISION`: при изменении текстов оферты или политики её нужно обновить.
 
 ## 3. Контракт API
 
@@ -203,6 +210,13 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 - Возврат после оплаты: `POST /api/orders` принимает необязательное `returnTo: "app" | "telegram"`. `app` — `/app/#/orders/<id>` (экран заказа, нужна сессия). `telegram` — `/app/#/paid/<id>`: оплату из мини-аппа Telegram открывает во внешнем браузере без сессии, поэтому этот экран не требует входа и без сессии не запрашивает заказ. С сессией он сразу переходит на `#/orders/<id>`, без неё показывает короткую карточку в стиле Invito «Оплата завершена — вернитесь в Telegram» с кнопкой `https://t.me/<botUsername>` (из `/api/auth/config`; без бота кнопки нет) и без данных заказа. Заказ мини-аппа отмечается оплаченным по колбэку Multicard, мини-апп узнаёт об этом сам, опрашивая `GET /api/orders/:id`. Без `returnTo` сервер выбирает `telegram`, когда запрос пришёл с `Authorization: Bearer` (так входит мини-апп), иначе `app`. Мини-апп шлёт `returnTo: "telegram"` при `tgReal`.
 - Бесплатный заказ → 200 `{ status: "fulfilled", order: null, message }`, `message` на языке запроса (`X-Lang`). Начатые оплаты шаблона при этом отменяются.
 - Повторно оплаченный счёт за уже открытый шаблон отклоняется в колбэке («Шаблон уже оплачен»), заказ получает `cancelled`: Multicard отменяет такую оплату.
+
+### 3.10 Реквизиты для юридических страниц (админка)
+
+`Legal`: `{ companyName, inn, address, phone, email, telegram, bankName, bankAccount, mfo, director }`, все поля — строки, пустая строка значит «не задано». Хранится в таблице `settings` под ключом `legal` (`getLegal`/`setLegal` в `src/services/settings.ts`, кэш 5 минут сбрасывается при сохранении, как у цен); запись, которая не проходит схему, считается пустой.
+- `GET /api/admin/legal` (админ) → `Legal`.
+- `PUT /api/admin/legal` (админ) `Legal` → сохранённый `Legal`. Заменяет все поля: не присланные становятся пустыми, лишние поля и не строки — 400 «Неверные данные». Пробелы и переводы строк схлопываются, края обрезаются. Длина: `companyName`, `bankName`, `director` ≤ 200, `address` ≤ 300, `phone` ≤ 40, `email` ≤ 120, `telegram` ≤ 64, `inn` и `mfo` ≤ 20, `bankAccount` ≤ 40. `email` — адрес или пусто, иначе 400 «Email: адрес вида name@example.com». `telegram` принимает `@name`, `name` или `https://t.me/name` и хранится как `name` (5–32 символа: латиница, цифры, `_`, первая — буква), иначе 400 «Telegram: имя пользователя, например @invito_support».
+- В админке — вкладка «Реквизиты» (`#/legal`) со ссылками на три страницы.
 
 ## 4. Фронтенд: что меняется в логике Invito
 

@@ -25,6 +25,7 @@ import { smsRoutes } from "./routes/sms.js";
 import { getPublicPage } from "./services/public.js";
 import { getUser } from "./services/users.js";
 import { siteHelmet } from "./web/csp.js";
+import { legalRoutes } from "./web/legal.js";
 import { webRoutes } from "./web/pages.js";
 
 declare module "fastify" {
@@ -171,6 +172,8 @@ export async function buildApp(deps: Deps, opts: { logger?: boolean } = {}) {
   await app.register(aiRoutes, { prefix: "/api/ai" });
   await app.register(mediaRoutes);
 
+  // Оферта, политика конфиденциальности и контакты: /oferta, /privacy, /contacts.
+  await app.register(legalRoutes);
   // Фронтенд из дизайна (web/): /, /app, /i/:slug, /g/:token и файлы под /app/.
   await app.register(webRoutes, { publicPage: (req) => getPublicPage(ctx, req) });
   // Админка и её общие файлы.
