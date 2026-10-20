@@ -4415,8 +4415,9 @@ class Component extends DCLogic {
     const freeN = Math.max(0, paidN - G.length);
     const seatsInfo = { show: isPersonalInv, text: freeN ? t.seatsLeft.replace('{paid}', paidN).replace('{left}', freeN) : t.seatsLine.replace('{paid}', paidN).replace('{n}', G.length), short: Math.min(paidN, G.length) + ' / ' + G.length, color: unpaidN ? '#d4452a' : U.muted };
     // Ответ гостя на публичной странице: ссылка на бота и QR для входа (личная ссылка гостя) после «да».
+    // «Напомнить мне в Telegram» — только там: в превью, туре и демо напоминать некому и не о чем.
     const myToken = s.pub ? s.pub.token : null;
-    const hasBot = s.pub ? !!(PV && PV.botUsername && myToken) : true;
+    const hasBot = !!s.pub && !!(PV && PV.botUsername && myToken);
     const entryOn = !!PV && !!myToken && R.sent && R.status === 'yes';
     // Подсказка мягкая (проверяют ли приглашения на входе, решает организатор); QR можно сохранить картинкой — кроме
     // мини-аппа Telegram, где атрибут download не работает.
@@ -4589,7 +4590,7 @@ class Component extends DCLogic {
         const noName = !toName && !(R.name || '').trim();
         setTimeout(() => { const el = document.querySelector(noName ? '#rsvp input[name="rsvp-name"]' : '#rsvp [data-rsvp-opt]'); if (!el) return; try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 0); },
       rsvpNeed: R.tried && !rsvpReady && !s.rsvpBusy ? (!R.status && !toName && !(R.name || '').trim() ? gt.needBoth : !R.status ? gt.needStatus : gt.needName) : '',
-      rsvpSummary, addCal: ics, viaBot: () => (s.pub ? this.openUrl('https://t.me/' + PV.botUsername + '?start=g_' + myToken) : this.openUrl('https://t.me/share/url?url=' + encodeURIComponent(fullLink) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary))),
+      rsvpSummary, addCal: ics, viaBot: () => { if (hasBot) this.openUrl('https://t.me/' + PV.botUsername + '?start=g_' + myToken); },
       changeRsvp: () => this.setState((x) => ({ rsvp: { ...x.rsvp, sent: false } })),
       footPad: isEdit ? '210px' : isGuest && s.guestMode === 'preview' ? '150px' : '60px',
       sheetOpen: isEdit && !!s.sheet, sheetTitle: s.sheet ? SL[s.sheet] : '', closeSheet: () => this.setState({ sheet: null }),

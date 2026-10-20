@@ -596,6 +596,33 @@ describe("мини-апп во фрейме чужого сайта (Telegram We
 });
 
 describe("страница гостя с ботом", () => {
+  it("в превью шаблона после ответа «Напомнить мне в Telegram» нет: напоминать некому и не о чем", async () => {
+    setBot(true);
+    const context = await e.newContext();
+    await context.addInitScript(() => { const w = window as any; w.__opened = []; w.open = (u: string) => { w.__opened.push(u); return null; }; });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: ru.hero1 });
+    await page.getByRole("button", { name: ru.create }).first().click();
+    await e.waitText(page, ru.chooseEvent);
+    await page.locator("[data-rv]").filter({ hasText: "Свадьба" }).first().click();
+    await page.getByRole("button", { name: ru.preview, exact: true }).first().click();
+    // Конверт превью открывается касанием печати.
+    const seal = page.locator("[data-seal]");
+    await seal.click();
+    await seal.waitFor({ state: "detached" });
+    const rsvp = page.locator("#rsvp");
+    await rsvp.waitFor();
+    await rsvp.scrollIntoViewIfNeeded();
+    await rsvp.getByRole("button", { name: ru.yes }).click();
+    await rsvp.locator(`input[placeholder="${ru.yourName}"]`).fill("Дилноза");
+    await rsvp.getByRole("button", { name: ru.send }).click();
+    await e.waitText(page, ru.sumYes);
+    expect(await page.locator("[data-remind-tg]").count()).toBe(0);
+    expect(await page.getByRole("button", { name: ru.remindTg }).count()).toBe(0);
+    expect(await page.evaluate(() => (window as any).__opened)).toEqual([]);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
   it("после ответа по личной ссылке — «Напомнить мне в Telegram»: бот с параметром g_<token>", async () => {
     setBot(true);
     const owner = await e.signIn(await e.newContext());
