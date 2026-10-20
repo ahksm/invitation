@@ -500,6 +500,32 @@ describe("узкий экран (320 px)", () => {
   });
 });
 
+describe("узкий экран (320 px): карточка «Мои приглашения»", () => {
+  it("длинный статус «Оплачено · не опубликовано» переносится и не выходит за колонку карточки ни на одном языке", async () => {
+    for (const lang of ["ru", "uz", "uzc", "en"]) {
+      const context = await e.newContext({ viewport: { width: 320, height: 760 } });
+      // Язык интерфейса после входа — из профиля.
+      const user = await e.signIn(context, { locale: lang });
+      const inv = await createInvitation(user.id, { data: { names: "Лола и Тимур", intro: "none" } });
+      await e.db.update(invitations).set({ unlocked: true }).where(eq(invitations.id, inv.id));
+      const { page, problems, close } = await e.open("/app/", { context, waitText: "Лола и Тимур" });
+      const pill = page.locator("#my-inv [data-inv-status]").first();
+      await expect.poll(() => pill.innerText()).toBe((I18N as Dict)[lang].draftPaid);
+      await pill.scrollIntoViewIfNeeded();
+      const m = await pill.evaluate((x) => {
+        const col = x.parentElement!.parentElement!, p = x.getBoundingClientRect(), c = col.getBoundingClientRect();
+        return { pill: p.right, col: c.right, left: p.left - c.left, docW: document.documentElement.scrollWidth };
+      });
+      expect(m.pill, lang).toBeLessThanOrEqual(m.col + 0.5);
+      expect(m.left, lang).toBeGreaterThanOrEqual(0);
+      expect(m.docW, lang).toBeLessThanOrEqual(320);
+      if (lang === "ru") await e.shot(page, "home-card-paid-draft-ru-320.png");
+      await e.expectClean(page, problems);
+      await close();
+    }
+  });
+});
+
 describe("оплата", () => {
   it("отказ в оплате подписки: «Попробовать снова» снова открывает лист оплаты того же приглашения", async () => {
     const context = await e.newContext();
