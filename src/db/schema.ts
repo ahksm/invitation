@@ -46,6 +46,8 @@ export const users = pgTable(
     username: text("username"),
     firstName: text("first_name"),
     lastName: text("last_name"),
+    // Имя изменено в профиле (PATCH /api/auth/me): вход через Telegram и бот его больше не перезаписывают.
+    nameEdited: boolean("name_edited").notNull().default(false),
     // Язык интерфейса: ru, uz, uzc или en.
     locale: text("locale").notNull().default("ru"),
     isAdmin: boolean("is_admin").notNull().default(false),

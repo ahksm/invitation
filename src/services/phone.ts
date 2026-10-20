@@ -126,8 +126,9 @@ export async function attachPhoneToTelegramUser(ctx: Pick<Ctx, "db" | "cache" | 
       .set({
         telegramId: tgUser.telegramId,
         username: tgUser.username,
-        firstName: owner.firstName ?? tgUser.firstName,
-        lastName: owner.lastName ?? tgUser.lastName,
+        // Имя, изменённое в профиле аккаунта, остаётся как есть (и фамилия, которую стёрли).
+        firstName: owner.nameEdited ? owner.firstName : (owner.firstName ?? tgUser.firstName),
+        lastName: owner.nameEdited ? owner.lastName : (owner.lastName ?? tgUser.lastName),
         isAdmin: isConfiguredAdmin(ctx.config, { phone, telegramId: tgUser.telegramId }),
         freeAccess: owner.freeAccess || tgUser.freeAccess,
         freeAccessNote: owner.freeAccessNote ?? tgUser.freeAccessNote,

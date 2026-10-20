@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "name_edited" boolean DEFAULT false NOT NULL;

@@ -1,4 +1,4 @@
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { cacheKeys } from "../cache.js";
 import type { Config } from "../config.js";
 import type { Ctx } from "../context.js";
@@ -33,7 +33,10 @@ export async function syncAdmin(ctx: Pick<Ctx, "db" | "config">, user: User): Pr
   return updated ?? { ...user, isAdmin };
 }
 
-/** Создаёт или обновляет пользователя по данным Telegram. Права админа пересчитываются по обоим спискам. */
+/**
+ * Создаёт или обновляет пользователя по данным Telegram. Права админа пересчитываются по обоим спискам.
+ * Имя, которое человек сам изменил в профиле (name_edited), данные Telegram не перезаписывают.
+ */
 export async function upsertTelegramUser(ctx: Pick<Ctx, "db" | "cache" | "config">, tg: TelegramProfile): Promise<User> {
   const profile = {
     username: tg.username ?? null,
@@ -44,7 +47,14 @@ export async function upsertTelegramUser(ctx: Pick<Ctx, "db" | "cache" | "config
   const [row] = await ctx.db
     .insert(users)
     .values({ telegramId: tg.id, locale: pickLocale(tg.language_code), ...profile })
-    .onConflictDoUpdate({ target: users.telegramId, set: profile })
+    .onConflictDoUpdate({
+      target: users.telegramId,
+      set: {
+        ...profile,
+        firstName: sql`case when ${users.nameEdited} then ${users.firstName} else excluded.first_name end`,
+        lastName: sql`case when ${users.nameEdited} then ${users.lastName} else excluded.last_name end`,
+      },
+    })
     .returning();
   const user = await syncAdmin(ctx, row!);
   await ctx.cache.del(cacheKeys.user(user.id));
@@ -67,6 +77,17 @@ export async function getUser(ctx: Pick<Ctx, "db" | "cache" | "config">, id: str
 export async function setUserLocale(ctx: Pick<Ctx, "db" | "cache">, id: string, locale: Locale) {
   await ctx.db.update(users).set({ locale }).where(eq(users.id, id));
   await invalidateUser(ctx, id);
+}
+
+/** Имя из профиля (PATCH /api/auth/me). lastName: null — фамилию стёрли; undefined — не меняется. */
+export async function setUserName(ctx: Pick<Ctx, "db" | "cache">, id: string, name: { firstName: string; lastName?: string | null | undefined }): Promise<User> {
+  const [row] = await ctx.db
+    .update(users)
+    .set({ firstName: name.firstName, ...(name.lastName !== undefined && { lastName: name.lastName }), nameEdited: true })
+    .where(eq(users.id, id))
+    .returning();
+  await invalidateUser(ctx, id);
+  return row!;
 }
 
 export async function invalidateUser(ctx: Pick<Ctx, "cache">, id: string) {

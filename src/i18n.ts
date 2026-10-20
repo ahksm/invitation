@@ -78,6 +78,8 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Не удалось отправить SMS, попробуйте позже": { uz: "SMS yuborib bo'lmadi, keyinroq urinib ko'ring", en: "Could not send SMS, please try later" },
   "Неверный или устаревший код": { uz: "Kod noto'g'ri yoki eskirgan", en: "Wrong or expired code" },
   "Код состоит из 6 цифр": { uz: "Kod 6 ta raqamdan iborat", en: "The code has 6 digits" },
+  "Введите имя": { uz: "Ismingizni kiriting", en: "Enter your first name" },
+  "Имя и фамилия: до 64 символов, без переносов строк": { uz: "Ism va familiya: 64 belgigacha, qator ko'chirishsiz", en: "First and last name: up to 64 characters, no line breaks" },
   "Введите узбекский номер: +998 XX XXX-XX-XX": { uz: "O'zbekiston raqamini kiriting: +998 XX XXX-XX-XX", en: "Enter an Uzbek number: +998 XX XXX-XX-XX" },
   "Укажите номер телефона или Telegram ID": { uz: "Telefon raqami yoki Telegram ID ni kiriting", en: "Enter a phone number or Telegram ID" },
   "Вход через Telegram не настроен": { uz: "Telegram orqali kirish sozlanmagan", en: "Telegram sign-in is not configured" },
