@@ -594,3 +594,28 @@ describe("мини-апп во фрейме чужого сайта (Telegram We
     await context.close();
   });
 });
+
+describe("страница гостя с ботом", () => {
+  it("после ответа по личной ссылке — «Напомнить мне в Telegram»: бот с параметром g_<token>", async () => {
+    setBot(true);
+    const owner = await e.signIn(await e.newContext());
+    const inv = await createInvitation(owner.id, { mode: "personal", data: { names: "Напоминание тест", intro: "none" } });
+    await e.db.update(invitations).set({ status: "active", publishedAt: new Date(), paidSeats: 1 }).where(eq(invitations.id, inv.id));
+    const [guest] = (await apiAs(owner.id, "POST", `/api/invitations/${inv.id}/guests`, { guests: [{ name: "Дилноза" }] })) as unknown as Dict[];
+    const token = String(guest!.link).split("/g/")[1]!;
+    const context = await e.newContext();
+    await context.addInitScript(() => { const w = window as any; w.__opened = []; w.open = (u: string) => { w.__opened.push(u); return null; }; });
+    const { page, problems, close } = await e.open(`/g/${token}`, { context, waitText: "Напоминание тест" });
+    // До ответа кнопки нет: она для тех, кто уже ответил.
+    expect(await page.locator("[data-remind-tg]").count()).toBe(0);
+    await page.locator("#rsvp").getByRole("button", { name: ru.yes }).click();
+    await page.locator("#rsvp").getByRole("button", { name: ru.send }).click();
+    const remind = page.locator("[data-remind-tg]");
+    await remind.waitFor();
+    expect(await remind.innerText()).toBe(ru.remindTg);
+    await remind.click();
+    await expect.poll(() => page.evaluate(() => (window as any).__opened)).toEqual([`https://t.me/${BOT}?start=g_${token}`]);
+    await e.expectClean(page, problems);
+    await close();
+  });
+});

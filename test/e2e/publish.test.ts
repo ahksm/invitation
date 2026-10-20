@@ -287,8 +287,11 @@ describe("публикация и оплата", () => {
     try {
       const { page, problems, close } = await e.open("/app/", { context, waitText: "Дороже тест" });
       await toRefine(page);
-      // Шаблон Sage (wedding-botanical) дороже оплаченного: автосохранение получает 402.
-      await page.getByRole("button", { name: D.EVENTS.wedding.names[1], exact: true }).click();
+      // Шаблон «Ботаника» (wedding-botanical) дороже оплаченного: автосохранение получает 402. Шаблоны в
+      // редакторе названы так же, как в карусели, а не кодом палитры (Sage).
+      const botanicalName = ru.stName[D.EVENTS.wedding.styles[1]];
+      expect(await page.getByRole("button", { name: D.EVENTS.wedding.names[1], exact: true }).count()).toBe(0);
+      await page.getByRole("button", { name: botanicalName, exact: true }).click();
       const pay = sheet(page, "pay");
       await pay.waitFor({ timeout: 10_000 });
       expect(await pay.innerText()).toContain("Этот шаблон дороже оплаченного");
@@ -308,7 +311,7 @@ describe("публикация и оплата", () => {
       await page.locator('[data-mock="paid"]').click();
       // После подписки — снова редактор; шаблон подороже теперь сохраняется.
       await e.waitText(page, ru.subDone);
-      await page.getByRole("button", { name: D.EVENTS.wedding.names[1], exact: true }).click();
+      await page.getByRole("button", { name: botanicalName, exact: true }).click();
       await expect.poll(async () => (await invOf(inv.id)).templateId, { timeout: 10_000 }).toBe(botanical!.id);
       expect(problems.console).toEqual([failed(402, "Payment Required")]);
       problems.console = [];
@@ -518,8 +521,9 @@ describe("страница гостя", () => {
     expect(guest).toMatchObject({ rsvp: "yes", plus: 1 });
     // QR для входа нарисован на странице: ссылка гостя /g/<token>.
     expect(await page.locator("[data-entry-qr] img").getAttribute("src")).toMatch(/^data:image\/png;base64,/);
-    // Бота нет (TELEGRAM_MODE=off): кнопки «Ответить через бота» нет.
-    expect(await page.getByRole("button", { name: ru.viaBot }).count()).toBe(0);
+    // Бота нет (TELEGRAM_MODE=off): кнопки «Напомнить мне в Telegram» нет.
+    expect(await page.locator("[data-remind-tg]").count()).toBe(0);
+    expect(await page.getByRole("button", { name: ru.remindTg }).count()).toBe(0);
     await page.locator("[data-entry-qr]").scrollIntoViewIfNeeded();
     await page.waitForTimeout(800);
     await e.shot(page, "guest-personal-ru-390x844.png");

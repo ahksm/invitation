@@ -289,7 +289,9 @@ describe("страница гостя: маршрут", () => {
       for (const hidden of ["javascript:", "alert(1)", "data:text", "http://", "evil.example", "https://"]) expect(text).not.toContain(hidden);
       expect(text).toContain("Чиланзар, 9-й квартал");
       expect(text).toContain("Карта");
-      // Главные кнопки: Google и Яндекс по названию и адресу места.
+      // Главные кнопки: Google и Яндекс по названию и адресу места; под списком остановок подпись над ними
+      // называет главное место, чтобы «Маршрут» не читался как маршрут по всем остановкам.
+      expect(await page.locator("[data-map-for]").innerText()).toBe(ru.mapFor.replace("{place}", "Ресторан «Oqsaroy»").toUpperCase());
       expect(await page.getByRole("link", { name: ru.directions + " ↗" }).getAttribute("href")).toBe("https://yandex.uz/maps/?rtext=~" + encodeURIComponent("Ресторан «Oqsaroy», ул. Навои, 1") + "&rtt=auto");
       expect(await page.getByRole("link", { name: ru.openMap + " ↗" }).getAttribute("href")).toBe("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Ресторан «Oqsaroy», ул. Навои, 1"));
       await e.expectClean(page, problems);
@@ -318,6 +320,21 @@ describe("страница гостя: маршрут", () => {
       expect(layout.outside).toBe(0);
       expect(layout.overlaps).toBe(0);
       expect(await page.locator("[data-stopn]").evaluateAll((els) => els.map((x) => x.getAttribute("data-stopn")))).toEqual(list);
+      // Подпись «● Главное место» над кнопками карты — только когда есть список остановок.
+      expect(await page.locator("[data-map-for]").count()).toBe(list.length ? 1 : 0);
+      await e.expectClean(page, problems);
+      await close();
+    }
+
+    // Пункт без места, но со ссылкой на карту: остановка с его названием и этой ссылкой (конструктор её принял).
+    const linked = await createInvitation(user.id, { data: { ...base, names: "Ссылка без места", program: [{ time: "16:00", title: "Церемония", place: "", address: "https://2gis.uz/tashkent/firm/123" }, { time: "18:00", title: "Той", place: "" }] } });
+    await publish(linked.id);
+    {
+      const { page, problems, close } = await e.open(`/i/${linked.slug}`, { waitText: "Ссылка без места" });
+      const layout = await pinLayout(page);
+      expect(layout.numbers).toEqual(["1", "●"]);
+      expect(await stopLinks(page)).toEqual(["https://2gis.uz/tashkent/firm/123", yandexSearch("Oqsaroy, ул. Навои, 1")]);
+      expect(await page.locator("[data-route]").innerText()).toContain("Церемония");
       await e.expectClean(page, problems);
       await close();
     }

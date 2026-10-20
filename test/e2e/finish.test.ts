@@ -151,7 +151,7 @@ describe("конец конструктора", () => {
     const cf = sheet(page, "confirm");
     await cf.waitFor();
     expect(await cf.innerText()).toContain(ru.smpTitle);
-    expect(await cf.locator("[data-cf-items] li").allTextContents()).toEqual([ru.fNames, ru.fDate, ru.fVenue, ru.fAddress, ru.smpPhotos]);
+    expect(await cf.locator("[data-cf-items] li").allTextContents()).toEqual([ru.fNames, ru.fDate, ru.fVenue, ru.fAddress, ru.fStops, ru.fDress, ru.smpPhotos]);
     await e.shot(page, "finish-samples-ru-390x844.png");
     expect(await sheet(page, "pay").count()).toBe(0);
     // «Изменить» — к первому полю из примера (имена), лист оплаты не открывается.
@@ -163,14 +163,14 @@ describe("конец конструктора", () => {
     await page.getByTitle(ru.stepsX.sections).click();
     await page.locator('[data-next="share"]').click();
     await cf.waitFor();
-    expect(await cf.locator("[data-cf-items] li").allTextContents()).toEqual([ru.fDate, ru.fVenue, ru.fAddress, ru.smpPhotos]);
+    expect(await cf.locator("[data-cf-items] li").allTextContents()).toEqual([ru.fDate, ru.fVenue, ru.fAddress, ru.fStops, ru.fDress, ru.smpPhotos]);
     await cf.getByRole("button", { name: ru.smpAnyway }).click();
     const pay = sheet(page, "pay");
     await pay.waitFor();
     // Лист: «Оплата и публикация», что покупается (имена, шаблон, тип ссылки) и что будет после оплаты.
     expect(await pay.innerText()).toContain(ru.payTitlePub);
     await expect.poll(() => pay.locator("[data-pay-what]").innerText()).toContain("Мадина и Азиз");
-    expect(await pay.locator("[data-pay-what]").textContent()).toContain(ru.payWhat.replace("{tpl}", W.names[0]).replace("{mode}", ru.payShared));
+    expect(await pay.locator("[data-pay-what]").textContent()).toContain(ru.payWhat.replace("{tpl}", ru.stName[W.styles[0]]).replace("{mode}", ru.payShared));
     expect(await pay.locator("[data-pay-after]").textContent()).toBe(ru.payAfter);
     await e.shot(page, "finish-pay-ru-390x844.png");
     // Согласие запомнено: тот же набор полей больше не спрашивается.

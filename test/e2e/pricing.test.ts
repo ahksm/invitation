@@ -330,7 +330,9 @@ describe("«Купить шаблон»", () => {
     const [order] = await ordersOfUser(user!.id);
     expect(order).toMatchObject({ kind: "template", invitationId: inv!.id, amount: price, status: "pending" });
     // Что оплачивается: имена и шаблон.
-    await expect.poll(() => page.locator("[data-mock-what]").innerText()).toContain("IVORY");
+    // Шаблон назван так же, как в карусели («Классика»), а не кодом палитры (Ivory).
+    await expect.poll(() => page.locator("[data-mock-what]").innerText()).toContain(("«" + ru.stName.classic + "»").toUpperCase());
+    expect(await page.locator("[data-mock-what]").innerText()).not.toContain("IVORY");
     await page.locator('[data-mock="paid"]').click();
     // После оплаты — конструктор, а не «Ссылка готова»: черновик оплачен, но не опубликован.
     await builder(page);
@@ -447,7 +449,7 @@ describe("оплата: ожидание и места", () => {
     await page.evaluate((id) => { location.hash = "#/orders/" + id; }, r.order.id);
     const scr = page.locator('[data-screen="order"]');
     await page.locator('[data-order-status="pending"]').waitFor();
-    expect(await scr.locator("[data-order-what]").innerText()).toBe(("Ожидание тест · " + ru.template + " «Ivory»").toUpperCase());
+    expect(await scr.locator("[data-order-what]").innerText()).toBe(("Ожидание тест · " + ru.template + " «" + ru.stName.classic + "»").toUpperCase());
     // Страница оплаты доступна и на сайте (раньше — только в Telegram).
     await scr.getByRole("button", { name: ru.orderOpen + " ↗" }).waitFor();
     expect(await scr.locator("[data-order-change]").count()).toBe(0);

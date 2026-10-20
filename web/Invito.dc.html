@@ -291,9 +291,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ prog }}" as="p"><div data-stop="{{ $index }}" style="display:grid;grid-template-columns:28px minmax(0,1fr) 32px;gap:10px;align-items:start;padding:12px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
 <span data-badge="{{ p.badge }}" style="width:26px;height:26px;margin-top:9px;box-sizing:border-box;border-radius:50%;border:1.5px solid {{ p.badgeBorder }};background:{{ p.badgeBg }};color:{{ p.badgeColor }};font:500 12px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">{{ p.n }}</span>
 <div style="min-width:0;display:flex;flex-direction:column">
-<div style="display:flex;gap:10px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.1)"><input type="time" data-f="time" aria-label="{{ t.fTime }}" value="{{ p.time }}" onChange="{{ p.onTime }}" style="flex:none;width:auto;min-width:76px;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:500 15px 'JetBrains Mono',monospace;color:#d4452a"><input data-f="title" aria-label="{{ t.itemTitle }}" value="{{ p.title }}" maxLength="120" placeholder="{{ t.phTitle }}" onChange="{{ p.onTitle }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:400 17px/1.4 'Onest',sans-serif"></div>
-<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ p.placeIcon }};font-size:15px">⌖</span><input data-f="place" aria-label="{{ t.fPlace }}" value="{{ p.place }}" maxLength="200" placeholder="{{ t.phPlace }}" onChange="{{ p.onPlace }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 15px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
-<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ ui.muted }};font-size:13px">↗</span><input data-f="address" aria-label="{{ t.phAddr }}" value="{{ p.address }}" maxLength="300" placeholder="{{ t.phAddr }}" onChange="{{ p.onAddr }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 14px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
+<div style="display:flex;flex-wrap:wrap;column-gap:10px;align-items:baseline;border-bottom:1px solid rgba({{ ui.inkRgb }},.1)"><input type="time" data-f="time" aria-label="{{ t.fTime }}" value="{{ p.time }}" onChange="{{ p.onTime }}" style="flex:none;width:auto;min-width:76px;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:500 15px 'JetBrains Mono',monospace;color:#d4452a"><textarea data-f="title" data-grow="1" rows="1" aria-label="{{ t.itemTitle }}" value="{{ p.title }}" maxLength="120" placeholder="{{ t.phTitle }}" onChange="{{ p.onTitle }}" onKeyDown="{{ p.noEnter }}" style="flex:1 1 180px;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:400 17px/1.4 'Onest',sans-serif;resize:none;overflow:hidden;field-sizing:content;overflow-wrap:anywhere;display:block"></textarea></div>
+<label style="display:flex;gap:8px;align-items:baseline"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ p.placeIcon }};font-size:15px">⌖</span><textarea data-f="place" data-grow="1" rows="1" aria-label="{{ t.fPlace }}" value="{{ p.place }}" maxLength="200" placeholder="{{ t.phPlace }}" onChange="{{ p.onPlace }}" onKeyDown="{{ p.noEnter }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 15px/1.4 'Onest',sans-serif;color:{{ ui.body }};resize:none;overflow:hidden;field-sizing:content;overflow-wrap:anywhere;display:block"></textarea></label>
+<label style="display:flex;gap:8px;align-items:baseline"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ ui.muted }};font-size:13px">↗</span><textarea data-f="address" data-grow="1" rows="1" aria-label="{{ t.phAddr }}" value="{{ p.address }}" maxLength="300" placeholder="{{ t.phAddr }}" onChange="{{ p.onAddr }}" onKeyDown="{{ p.noEnter }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 14px/1.4 'Onest',sans-serif;color:{{ ui.body }};resize:none;overflow:hidden;field-sizing:content;overflow-wrap:anywhere;display:block"></textarea></label>
 <sc-if value="{{ p.noteOn }}"><span data-linknote="{{ p.noteKind }}" style="margin:0 0 4px 24px;font-size:12px;line-height:1.4;color:{{ p.noteColor }}">{{ p.note }}</span></sc-if>
 </div>
 <div style="display:flex;flex-direction:column;gap:4px;padding-top:4px"><button onClick="{{ p.onUp }}" title="{{ t.moveUp }}" aria-label="{{ t.moveUp }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.upOp }}">↑</button><button onClick="{{ p.onDown }}" title="{{ t.moveDown }}" aria-label="{{ t.moveDown }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.downOp }}">↓</button><button onClick="{{ p.onRemove }}" title="{{ t.deleteD }}" aria-label="{{ t.deleteD }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;color:{{ ui.muted }};font-size:18px" style-hover="background:rgba({{ ui.inkRgb }},.08)">×</button></div>
@@ -734,7 +734,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ hasRoute }}"><div data-route="1" style="margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:0 28px">
 <sc-for list="{{ routeList }}" as="r"><div data-stopn="{{ r.n }}" style="display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid {{ th.line }}"><span style="width:28px;height:28px;border-radius:50%;background:{{ r.badgeBg }};color:{{ r.badgeColor }};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ r.n }}</span><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2em;color:{{ th.accentInk }}">{{ r.time }}</div><div style="font-size:17px;margin-top:4px;overflow-wrap:anywhere">{{ r.place }}</div><sc-if value="{{ r.hasTitle }}"><div style="font-size:14px;color:{{ th.muted }};margin-top:2px">{{ r.title }}</div></sc-if><sc-if value="{{ r.hasAddr }}"><div data-addr="1" style="font-size:13px;line-height:1.4;color:{{ th.muted }};margin-top:4px;overflow-wrap:anywhere">{{ r.addr }}</div></sc-if><a data-stoplink="1" href="{{ r.href }}" target="_blank" rel="noopener" style="display:inline-block;padding:7px 0;margin-top:2px;color:{{ th.ink }};font-size:14px;text-decoration:underline;text-decoration-color:{{ th.accent }};text-underline-offset:3px">{{ gt.howToGet }} ↗</a></div></div></sc-for>
 </div></sc-if>
-<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:22px">
+<sc-if value="{{ mapFor }}"><div data-map-for="1" style="margin-top:22px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accentInk }};overflow-wrap:anywhere">{{ mapFor }}</div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:{{ mapBtnTop }}">
 <a href="{{ mapUrl }}" target="_blank" rel="noopener" style="height:48px;padding:0 20px;display:inline-flex;align-items:center;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};color:{{ th.ink }};text-decoration:none;font-size:15px">{{ gt.openMap }} ↗</a>
 <a href="{{ routeUrl }}" target="_blank" rel="noopener" style="height:48px;padding:0 20px;display:inline-flex;align-items:center;border-radius:{{ th.radius }};background:{{ th.accent }};color:{{ th.onAccent }};text-decoration:none;font-size:15px;font-weight:600">{{ gt.directions }} ↗</a>
 </div>
@@ -813,7 +814,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="color:{{ th.muted }};margin-top:8px;line-height:1.5">{{ rsvpSummary }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px">
 <sc-if value="{{ hasDate }}"><button onClick="{{ addCal }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};background:transparent;color:{{ th.ink }};font-size:14px;cursor:pointer">{{ gt.addCal }}</button></sc-if>
-<sc-if value="{{ hasBot }}"><button onClick="{{ viaBot }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:0;background:{{ th.ink }};color:{{ th.bg }};font-size:14px;cursor:pointer">{{ gt.viaBot }}</button></sc-if>
+<sc-if value="{{ hasBot }}"><button data-remind-tg="1" onClick="{{ viaBot }}" style="height:46px;padding:0 18px;border-radius:{{ th.radius }};border:0;background:{{ th.ink }};color:{{ th.bg }};font-size:14px;cursor:pointer">{{ gt.remindTg }}</button></sc-if>
 </div>
 <sc-if value="{{ entry.show }}"><div data-entry-qr="1" style="margin:24px auto 0;max-width:260px;padding:16px 16px 14px;border-radius:{{ th.radius }};background:#ffffff;color:#1a1714;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 24px 44px -30px rgba(0,0,0,.5)">
 <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6e665b">{{ gt.entryQr }}</div>
@@ -856,9 +857,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-for list="{{ prog }}" as="p"><div data-stop="{{ $index }}" style="display:grid;grid-template-columns:28px minmax(0,1fr) 32px;gap:10px;align-items:start;padding:12px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
 <span data-badge="{{ p.badge }}" style="width:26px;height:26px;margin-top:9px;box-sizing:border-box;border-radius:50%;border:1.5px solid {{ p.badgeBorder }};background:{{ p.badgeBg }};color:{{ p.badgeColor }};font:500 12px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">{{ p.n }}</span>
 <div style="min-width:0;display:flex;flex-direction:column">
-<div style="display:flex;gap:10px;align-items:center;border-bottom:1px solid rgba({{ ui.inkRgb }},.1)"><input type="time" data-f="time" aria-label="{{ t.fTime }}" value="{{ p.time }}" onChange="{{ p.onTime }}" style="flex:none;width:auto;min-width:76px;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:500 15px 'JetBrains Mono',monospace;color:#d4452a"><input data-f="title" aria-label="{{ t.itemTitle }}" value="{{ p.title }}" maxLength="120" placeholder="{{ t.phTitle }}" onChange="{{ p.onTitle }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:400 17px/1.4 'Onest',sans-serif"></div>
-<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ p.placeIcon }};font-size:15px">⌖</span><input data-f="place" aria-label="{{ t.fPlace }}" value="{{ p.place }}" maxLength="200" placeholder="{{ t.phPlace }}" onChange="{{ p.onPlace }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 15px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
-<label style="display:flex;gap:8px;align-items:center"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ ui.muted }};font-size:13px">↗</span><input data-f="address" aria-label="{{ t.phAddr }}" value="{{ p.address }}" maxLength="300" placeholder="{{ t.phAddr }}" onChange="{{ p.onAddr }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 14px/1.4 'Onest',sans-serif;color:{{ ui.body }}"></label>
+<div style="display:flex;flex-wrap:wrap;column-gap:10px;align-items:baseline;border-bottom:1px solid rgba({{ ui.inkRgb }},.1)"><input type="time" data-f="time" aria-label="{{ t.fTime }}" value="{{ p.time }}" onChange="{{ p.onTime }}" style="flex:none;width:auto;min-width:76px;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:500 15px 'JetBrains Mono',monospace;color:#d4452a"><textarea data-f="title" data-grow="1" rows="1" aria-label="{{ t.itemTitle }}" value="{{ p.title }}" maxLength="120" placeholder="{{ t.phTitle }}" onChange="{{ p.onTitle }}" onKeyDown="{{ p.noEnter }}" style="flex:1 1 180px;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:10px 0;font:400 17px/1.4 'Onest',sans-serif;resize:none;overflow:hidden;field-sizing:content;overflow-wrap:anywhere;display:block"></textarea></div>
+<label style="display:flex;gap:8px;align-items:baseline"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ p.placeIcon }};font-size:15px">⌖</span><textarea data-f="place" data-grow="1" rows="1" aria-label="{{ t.fPlace }}" value="{{ p.place }}" maxLength="200" placeholder="{{ t.phPlace }}" onChange="{{ p.onPlace }}" onKeyDown="{{ p.noEnter }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 15px/1.4 'Onest',sans-serif;color:{{ ui.body }};resize:none;overflow:hidden;field-sizing:content;overflow-wrap:anywhere;display:block"></textarea></label>
+<label style="display:flex;gap:8px;align-items:baseline"><span aria-hidden="true" style="flex:none;width:16px;text-align:center;color:{{ ui.muted }};font-size:13px">↗</span><textarea data-f="address" data-grow="1" rows="1" aria-label="{{ t.phAddr }}" value="{{ p.address }}" maxLength="300" placeholder="{{ t.phAddr }}" onChange="{{ p.onAddr }}" onKeyDown="{{ p.noEnter }}" style="flex:1;min-width:0;width:100%;background:transparent;border:0;border-radius:0;outline:none;color:{{ ui.ink }};padding:9px 0;font:400 14px/1.4 'Onest',sans-serif;color:{{ ui.body }};resize:none;overflow:hidden;field-sizing:content;overflow-wrap:anywhere;display:block"></textarea></label>
 <sc-if value="{{ p.noteOn }}"><span data-linknote="{{ p.noteKind }}" style="margin:0 0 4px 24px;font-size:12px;line-height:1.4;color:{{ p.noteColor }}">{{ p.note }}</span></sc-if>
 </div>
 <div style="display:flex;flex-direction:column;gap:4px;padding-top:4px"><button onClick="{{ p.onUp }}" title="{{ t.moveUp }}" aria-label="{{ t.moveUp }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.upOp }}">↑</button><button onClick="{{ p.onDown }}" title="{{ t.moveDown }}" aria-label="{{ t.moveDown }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;opacity:{{ p.downOp }}">↓</button><button onClick="{{ p.onRemove }}" title="{{ t.deleteD }}" aria-label="{{ t.deleteD }}" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:transparent;color:{{ ui.ink }};cursor:pointer;font-size:14px;padding:0;color:{{ ui.muted }};font-size:18px" style-hover="background:rgba({{ ui.inkRgb }},.08)">×</button></div>
@@ -2188,12 +2189,13 @@ class Component extends DCLogic {
       this.openPay({ dto: inv, kind, ...(seats > 0 ? { seats } : {}) });
     } catch (e) { /* тост уже показан */ }
   }
-  // Подпись приглашения для экранов заказа и тестовой оплаты: имена и шаблон («Лола и Тимур · Шаблон «Ivory»»).
+  // Подпись приглашения для экранов заказа и тестовой оплаты: имена и шаблон («Лола и Тимур · Шаблон «Классика»»).
   invLabel(id) {
     const s = this.state, d = (s.draft && s.draft.id === id && s.draft) || (s.invs || []).find((x) => x.id === id);
     if (!d) return '';
     const [ev, st] = this.tplOf(d).split('-'), E = this.D.EVENTS[ev], names = String((d.data && d.data.names) || '').trim();
-    return [names, this.t().template + ' «' + E.names[E.styles.indexOf(st)] + '»'].filter(Boolean).join(' · ');
+    const t = this.t();
+    return [names, t.template + ' «' + ((t.stName && t.stName[st]) || E.names[E.styles.indexOf(st)]) + '»'].filter(Boolean).join(' · ');
   }
 
   // ---------- экран цен и подписка ----------
@@ -3113,6 +3115,11 @@ class Component extends DCLogic {
       clearTimeout(this._skipT); this._skipT = setTimeout(() => this.setState({ skipOn: true }), this.reducedMotion() ? 0 : 4000);
     }
     if (!si && this._siEl) { this._siEl = null; clearTimeout(this._skipT); }
+    // Многострочные поля программы (data-grow): высота по тексту. Где нет field-sizing: content (Safari, старый
+    // Chromium), высота ставится по scrollHeight — заново, только когда изменились текст или ширина поля.
+    if (this._fsc === undefined) this._fsc = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('field-sizing', 'content');
+    const rg = !this._fsc && (s.screen === 'build' || s.screen === 'guest') && this.rootRef.current;
+    if (rg) rg.querySelectorAll('textarea[data-grow]').forEach((el) => { const k = el.value + '|' + el.clientWidth; if (el._gk !== k) { el._gk = k; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } });
     // camera: включена только на вкладке «Чек-ин»
     if (this.stream && (s.screen !== 'manage' || s.mtab !== 'checkin')) this.stopCam();
     const cv = this.camRef.current;
@@ -3339,7 +3346,7 @@ class Component extends DCLogic {
   // Значения-примеры события на всех языках (после смены языка приглашения пример остаётся примером).
   sampleVals(ev, k) { const E = this.D.EVENTS[ev]; return E ? Object.values(E.text).map((L) => String((L && L[k]) || '').trim()).filter(Boolean) : []; }
   // Что в приглашении осталось из примера шаблона: имена, дата (сегодня + E.days — от сегодня или от создания
-  // черновика, ±1 день), место, адрес и фото из фотобанка (примеры шаблонов). step — шаг конструктора и лист
+  // черновика, ±1 день), место, адрес, программа, дресс-код и фото из фотобанка (примеры шаблонов). step — шаг конструктора и лист
   // редактора с этим полем.
   samplesLeft() {
     const s = this.state, inv = s.inv, E = this.D.EVENTS[s.event], t = this.t(); if (!E || s.demo) return [];
@@ -3347,8 +3354,14 @@ class Component extends DCLogic {
     const near = (iso, base) => /^\d{4}-\d{2}-\d{2}$/.test(iso || '') && Math.abs(Date.parse(iso) - Date.parse(base)) <= 864e5;
     const made = s.draft && s.draft.createdAt ? new Date(Date.parse(this.tashDate(s.draft.createdAt)) + E.days * 864e5).toISOString().slice(0, 10) : '';
     const stock = (u) => /^https:\/\/images\.unsplash\.com\//.test(u || '');
+    // Программа из примера: те же пункты (время и название на любом языке примера), что у события; хотя бы один
+    // пункт изменён, добавлен или удалён — программа своя.
+    // Раздел выключен — гости его не видят, спрашивать не о чем.
+    const P = inv.program || [], SP = E.program || [], sec = (k) => !(inv.sections || []).some((x) => x.k === k && !x.on);
+    const progSame = sec('program') && P.length > 0 && P.length === SP.length && P.every((p, i) => String(p.time || '') === SP[i].t && [SP[i].en, SP[i].ru, SP[i].uz, SP[i].uzc].includes(String(p.title || '').trim()));
     return [['names', 'basics', t.fNames, same('names')], ['date', 'when', t.fDate, near(inv.date, this.todayIso(E.days)) || (!!made && near(inv.date, made))],
-      ['venue', 'where', t.fVenue, same('venue')], ['address', 'where', t.fAddress, same('address')], ['photos', 'photos', t.smpPhotos, stock(inv.cover) || (inv.gallery || []).some(stock)]]
+      ['venue', 'where', t.fVenue, same('venue')], ['address', 'where', t.fAddress, same('address')], ['program', 'where', t.fStops, progSame], ['dress', 'details', t.fDress, sec('dress') && same('dress')],
+      ['photos', 'photos', t.smpPhotos, stock(inv.cover) || (inv.gallery || []).some(stock)]]
       .filter((x) => x[3]).map(([k, step, label]) => ({ k, step, label }));
   }
   // К полю: в редакторе на странице приглашения — его лист, иначе — шаг конструктора.
@@ -3357,7 +3370,7 @@ class Component extends DCLogic {
     if (s.screen === 'guest' && s.guestMode === 'edit') { this.setState({ sheet: step }); return; }
     this.go('build', { step: Math.max(0, (this._stepKeys || []).indexOf(step)) });
   }
-  // Перед публикацией: если имена, дата, место или адрес остались из примера, подтверждение со списком (фото
+  // Перед публикацией: если имена, дата, место, адрес, программа или дресс-код остались из примера, подтверждение со списком (фото
   // шаблона — в том же списке, но одни подтверждения не вызывают; «Изменить» ведёт к первому такому полю).
   // Согласие помнится для этого черновика и этого набора полей.
   checkSamples(fn) {
@@ -3682,7 +3695,8 @@ class Component extends DCLogic {
     const pub = this.isPublic(), me = s.me, mu = me && me.user, cfg = s.cfg || {};
     const th = this.theme(s.tplId, inv.font, inv.palette); this.curTh = s.screen === 'guest' ? th : null;
     const E = D.EVENTS[s.event], evLabel = E.label[lang];
-    const tplStyle = s.tplId.split('-')[1], tplIdx = E.styles.indexOf(tplStyle), tplName = E.names[tplIdx];
+    // Название шаблона для заказчика — как в карусели и «Мои приглашения» («Классика»), а не код палитры (Ivory).
+    const tplStyle = s.tplId.split('-')[1], tplIdx = E.styles.indexOf(tplStyle), tplName = (t.stName && t.stName[tplStyle]) || E.names[tplIdx];
     const isGuest = s.screen === 'guest', isEdit = isGuest && s.guestMode === 'edit';
     // Язык страницы гостя (gl, gt): на публичной странице это язык интерфейса (его выбирает гость), в предпросмотре,
     // редакторе и мини-обложке конструктора — язык приглашения, ведь гости увидят именно его. Кнопки и листы
@@ -4004,7 +4018,9 @@ class Component extends DCLogic {
       return { n: String(i + 1), time: p.time, title: p.title, place: p.place, address: addr, badge: on ? 'stop' : 'item',
         badgeBg: on ? '#d4452a' : 'transparent', badgeBorder: on ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', badgeColor: on ? '#fff' : U.muted, placeIcon: on ? '#d4452a' : U.muted,
         noteOn: !!link || bad, noteKind: link ? 'ok' : 'bad', note: link ? t.linkOk : t.linkBad, noteColor: link ? (U.dark ? '#86c79c' : '#2e7d4f') : (U.dark ? '#ef8a72' : '#b5361e'), upOp: i ? 1 : 0.3, downOp: i < progLen - 1 ? 1 : 0.3,
-        onTime: (e) => this.setProg(i, { time: e.target.value }), onTitle: (e) => this.setProg(i, { title: e.target.value }), onPlace: (e) => this.setProg(i, { place: e.target.value }), onAddr: (e) => this.setProg(i, { address: e.target.value }),
+        // Название, место и адрес — многострочные поля (длинный текст виден целиком), но в одну строку: Enter не
+        // переносит строку, вставленный перенос становится пробелом.
+        onTime: (e) => this.setProg(i, { time: e.target.value }), onTitle: (e) => this.setProg(i, { title: oneLine(e) }), onPlace: (e) => this.setProg(i, { place: oneLine(e) }), onAddr: (e) => this.setProg(i, { address: oneLine(e) }), noEnter,
         onUp: () => this.moveProg(i, -1), onDown: () => this.moveProg(i, 1), onRemove: () => this.setState((x) => ({ inv: { ...x.inv, program: x.inv.program.filter((_, j) => j !== i) }, dirty: true })) };
     });
     // «По времени» видна, только когда указанные времена идут не по порядку.
@@ -4031,10 +4047,13 @@ class Component extends DCLogic {
     // Программа гостя: пункты без названия и места (только что добавленные в конструкторе) не показываются.
     const gProg = inv.program.filter((p) => (p.title || '').trim() || (p.place || '').trim()).map((p) => ({ time: p.time, title: p.title, place: (p.place || '').trim(), address: (p.address || '').trim(), hasPlace: !!(p.place || '').trim() }));
     const n = gProg.length;
-    // Маршрут: остановки — пункты программы с местом, в порядке списка. Главное место — отметка «●»: остановка с тем же
-    // названием становится ею, иначе место встаёт в маршрут по времени начала (inv.time), без времени — в конец.
+    // Маршрут: остановки — пункты программы с местом или с адресом (ссылкой на карту), в порядке списка; у пункта
+    // без места остановка подписана его названием — ссылку, которую конструктор принял, гости видят. Главное место —
+    // отметка «●»: остановка с тем же названием становится ею, иначе место встаёт в маршрут по времени начала
+    // (inv.time), без времени — в конец.
     const pkey = (x) => (x || '').trim().toLowerCase(), venueK = pkey(inv.venue);
-    const visits = gProg.filter((p) => p.hasPlace).map((p) => ({ time: p.time, title: p.title, place: p.place, addr: p.address }));
+    const visits = gProg.filter((p) => p.hasPlace || this.E.mapLink(p.address) || this.E.mapText(p.address))
+      .map((p) => ({ time: p.time, title: p.hasPlace ? p.title : '', place: p.place || (p.title || '').trim(), addr: p.address }));
     const stopsN = visits.length;
     if (venueK && stopsN && !visits.some((v) => pkey(v.place) === venueK)) { const vi = inv.time ? visits.findIndex((v) => v.time && v.time > inv.time) : -1; visits.splice(vi < 0 ? visits.length : vi, 0, { time: inv.time, title: '', place: inv.venue.trim(), addr: '' }); }
     // Отметки рисованной карты — по одной на место, по их числу: на телефоне сверху вниз в две колонки, на широком
@@ -4490,7 +4509,7 @@ class Component extends DCLogic {
       isPreview: isGuest && s.guestMode === 'preview', isRefine: isEdit,
       backFromPreview: () => { this.stopMusic(); this.setState({ music: false }); this.go(s.fromTour ? 'tour' : 'templates'); },
       backToBuild: () => this.go('build', { step: STEPS.length - 1 }),
-      tplChips: this.activeStyles(s.event, s.tplId).map(({ i, id }) => { const a = id === s.tplId; return { name: E.names[i], bg: a ? U.paper : 'transparent', color: a ? U.ink : U.paper, onClick: () => this.pickTpl(id) }; }),
+      tplChips: this.activeStyles(s.event, s.tplId).map(({ st, i, id }) => { const a = id === s.tplId; return { name: stN(st) || E.names[i], bg: a ? U.paper : 'transparent', color: a ? U.ink : U.paper, onClick: () => this.pickTpl(id) }; }),
       ed, eo: isEdit ? `1.5px dashed ${th.accent}` : 'none', ec: isEdit ? 'pointer' : 'auto',
       goShare: () => this.goShare(),
       gateShow: gateShow || (isGuest && s.pubLocked), pwTry: s.pwTry, pwErr: !!s.pwErr, pwErrText: s.pwErr === 'limited' ? gt.tooManyPw : gt.wrongPw, onPwTry: (e) => this.setState({ pwTry: e.target.value, pwErr: false }),
@@ -4515,6 +4534,8 @@ class Component extends DCLogic {
       hasGallery: inv.gallery.length > 0, hpinH: (100 + inv.gallery.length * 55) + 'vh', galCount: String(inv.gallery.length).padStart(2, '0'), galW: wide ? '380px' : '66vw',
       gGallery: inv.gallery.map((src, i) => ({ src, n: String(i + 1).padStart(2, '0'), rot: (i % 2 ? 2 : -2) + 'deg', y: (i % 2 ? 24 : -10) + 'px' })),
       mapAR: wide ? '16/7' : '4/5', pins, routePts, routeList, hasRoute: stopsN > 0, gProg, mapNote: stopsN > 0 && inv.mapMode !== 'real',
+      // Под списком остановок кнопки ведут только к главному месту: подпись над ними называет его.
+      mapFor: stopsN > 0 && (inv.venue || '').trim() ? gt.mapFor.replace('{place}', inv.venue.trim()) : '', mapBtnTop: stopsN > 0 && (inv.venue || '').trim() ? '10px' : '22px',
       mapUrl: venueLink || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(venueQ),
       routeUrl: venueLink || 'https://yandex.uz/maps/?rtext=~' + encodeURIComponent(venueQ) + '&rtt=auto',
       hasDress: !!inv.dress || inv.dressColors.length > 0, dressSw: inv.dressColors.map((c, i) => ({ c, delay: i * 90 + 'ms' })), infoCards,

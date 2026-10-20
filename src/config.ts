@@ -151,7 +151,7 @@ type BotConfig = Pick<Config, "TELEGRAM_MODE" | "TELEGRAM_BOT_TOKEN" | "TELEGRAM
 /** Бот запускается: режим не off и задан токен. */
 export const botEnabled = (c: BotConfig) => c.TELEGRAM_MODE !== "off" && c.TELEGRAM_BOT_TOKEN !== "";
 
-/** Имя бота для сайта (вход через Telegram, «Ответить через бота»); null, если бот не запущен. */
+/** Имя бота для сайта (вход через Telegram, «Напомнить мне в Telegram»); null, если бот не запущен. */
 export const botUsername = (c: BotConfig): string | null => (botEnabled(c) && c.TELEGRAM_BOT_USERNAME) || null;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {

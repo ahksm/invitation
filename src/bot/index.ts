@@ -224,7 +224,7 @@ export function createBot(ctx: Ctx) {
     await track(ctx, c.user.id, "bot_start");
     const payload = c.match;
     // t.me/<бот>?start=auth_<nonce> приходит с кнопки «Войти через Telegram» или «Подключить Telegram»
-    // на сайте, t.me/<бот>?start=g_<token> — с кнопки «Ответить через бота» на странице гостя.
+    // на сайте, t.me/<бот>?start=g_<token> — с кнопки «Напомнить мне в Telegram» на странице гостя после ответа.
     const known = (payload.startsWith("auth_") && isNonce(payload.slice(5))) || GUEST_PAYLOAD.test(payload);
     if (known) {
       if (!c.user.phone) return waitForPhone(c, payload);
