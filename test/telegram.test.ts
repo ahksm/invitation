@@ -51,7 +51,7 @@ describe("подпись Multicard", () => {
 
 describe("переводы ошибок", () => {
   it("переводит известные и оставляет неизвестные", () => {
-    expect(translateError("Неверный или устаревший код", "uz")).toBe("Kod noto'g'ri yoki eskirgan");
+    expect(translateError("Неверный или устаревший код", "uz")).toBe("Kod noto‘g‘ri yoki eskirgan");
     expect(translateError("Неверный или устаревший код", "en")).toBe("Wrong or expired code");
     expect(translateError("Что-то новое", "en")).toBe("Что-то новое");
   });

@@ -156,7 +156,7 @@ describe("POST /api/ai/write", () => {
       respond = c;
       const r = await write(cookie, input, { "x-lang": "uz" });
       expect(r.statusCode).toBe(502);
-      expect(r.json().error).toBe("Yordamchi matn yoza olmadi, qayta urinib ko'ring");
+      expect(r.json().error).toBe("Yordamchi matn yoza olmadi, qayta urinib ko‘ring");
     }
   });
 

@@ -246,9 +246,9 @@ describe("оболочка", () => {
     expect(html).toContain(`<title>${DEFAULT_META.title}</title>`);
     expect(metaOf(html, "description")).toBe(DEFAULT_META.description);
     expect(metaOf(html, "og:title")).toBe(DEFAULT_META.title);
-    // Как первый экран: приглашение онлайн, ссылка в Telegram и WhatsApp, ответы гостей, личные приглашения.
+    // Как первый экран: приглашение онлайн, ссылка в Telegram и WhatsApp, ответы гостей, персональные приглашения.
     expect(DEFAULT_META.title).toMatch(/приглашения/);
-    for (const word of ["Telegram", "WhatsApp", "ответы гостей", "личные приглашения", "бесплатно"]) expect(DEFAULT_META.description).toContain(word);
+    for (const word of ["Telegram", "WhatsApp", "ответы гостей", "персональные приглашения", "бесплатно"]) expect(DEFAULT_META.description).toContain(word);
     for (const tag of ['<link rel="icon" href="/favicon.ico" sizes="48x48">', '<link rel="icon" href="/favicon.svg" type="image/svg+xml">', '<link rel="apple-touch-icon" href="/apple-touch-icon.png">']) {
       expect(html).toContain(tag);
     }

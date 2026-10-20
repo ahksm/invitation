@@ -120,8 +120,9 @@ describe("главная", () => {
       await hero.waitFor();
       const heroText = await text(hero);
       for (const s of [ru.home.kick, ru.hero1, ru.hero2, ru.heroSub, ...ru.home.trust]) expect(heroText).toContain(s);
-      // Что это: онлайн-приглашение, ссылка в Telegram и WhatsApp, ответы гостей, личные приглашения.
-      for (const s of ["Telegram", "WhatsApp", "ответ", "личных приглашениях"]) expect(ru.heroSub).toContain(s);
+      // Что это: онлайн-приглашение, ссылка в Telegram и WhatsApp, ответы гостей, персональные приглашения
+      // (так же, как на экране цен и в листе оплаты).
+      for (const s of ["Telegram", "WhatsApp", "ответ", "персональных приглашениях"]) expect(ru.heroSub).toContain(s);
       expect(await text(hero.locator('[data-cta="create"]'))).toContain(ru.create);
       expect(await text(hero.locator('[data-cta="tpls"]'))).toBe(ru.home.seeTpls);
       // Цены — из ответов сервера.
@@ -154,7 +155,9 @@ describe("главная", () => {
       expect(await page.locator('[data-home-faq][aria-expanded="true"]').count()).toBe(0);
       // Вопрос об оплате: раскрывается, второй вопрос закрывает первый.
       const pay = ru.home.faq.findIndex(([q]: string[]) => q === "Как оплатить?");
-      expect(ru.home.faq[pay][1]).toMatch(/Uzcard|Humo|банковской картой/);
+      // Банковской картой через Multicard, без названий платёжных систем (какие карты принимаются, показывает страница оплаты).
+      expect(ru.home.faq[pay][1]).toMatch(/^Банковской картой .*Multicard/);
+      expect(ru.home.faq[pay][1]).not.toMatch(/Uzcard|Humo|Visa|Mastercard/);
       await page.locator(`[data-home-faq="${pay}"]`).click();
       expect(await page.locator(`[data-home-faq="${pay}"]`).getAttribute("aria-expanded")).toBe("true");
       expect(await text(page.locator("#faq"))).toContain(ru.home.faq[pay][1]);

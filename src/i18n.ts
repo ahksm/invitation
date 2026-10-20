@@ -48,13 +48,13 @@ export function requestLocale(headers: Record<string, string | string[] | undefi
  * поэтому новые ошибки работают сразу, а перевод можно добавить позже.
  */
 const errors: Record<string, Partial<Record<Locale, string>>> = {
-  "Слишком много запросов, попробуйте позже": { uz: "So'rovlar juda ko'p, keyinroq urinib ko'ring", en: "Too many requests, please try later" },
+  "Слишком много запросов, попробуйте позже": { uz: "So‘rovlar juda ko‘p, keyinroq urinib ko‘ring", en: "Too many requests, please try later" },
   "Нужно войти": { uz: "Tizimga kiring", en: "Please sign in" },
   "Доступ заблокирован": { uz: "Kirish bloklangan", en: "Access is blocked" },
   "Привяжите номер телефона": { uz: "Telefon raqamingizni ulang", en: "Please link your phone number" },
   "Только для администратора": { uz: "Faqat administrator uchun", en: "Administrators only" },
-  "Запрос с чужого сайта отклонён": { uz: "Begona saytdan so'rov rad etildi", en: "Cross-site request rejected" },
-  "Неверные данные": { uz: "Noto'g'ri ma'lumotlar", en: "Invalid data" },
+  "Запрос с чужого сайта отклонён": { uz: "Begona saytdan so‘rov rad etildi", en: "Cross-site request rejected" },
+  "Неверные данные": { uz: "Noto‘g‘ri ma’lumotlar", en: "Invalid data" },
   "Внутренняя ошибка сервера": { uz: "Serverda ichki xatolik", en: "Internal server error" },
   "Пользователь не найден": { uz: "Foydalanuvchi topilmadi", en: "User not found" },
   "Приглашение не найдено": { uz: "Taklifnoma topilmadi", en: "Invitation not found" },
@@ -67,23 +67,23 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Платёжная система недоступна, попробуйте позже": { uz: "To‘lov tizimi ishlamayapti, keyinroq urinib ko‘ring", en: "Payment system is unavailable, please try later" },
   "Сначала оплатите шаблон или оформите подписку": { uz: "Avval shablon uchun to‘lang yoki obuna bo‘ling", en: "Pay for the template or subscribe first" },
   "Сначала оплатите места для гостей": { uz: "Avval mehmonlar uchun joylarni to‘lang", en: "Pay for guest seats first" },
-  "Гости добавляются только в персональное приглашение": { uz: "Mehmonlar faqat shaxsiy taklifnomaga qo'shiladi", en: "Guests can be added only to personal invitations" },
+  "Гости добавляются только в персональное приглашение": { uz: "Mehmonlar faqat shaxsiy taklifnomaga qo‘shiladi", en: "Guests can be added only to personal invitations" },
   "SMS отправляются гостям персонального приглашения": { uz: "SMS faqat shaxsiy taklifnoma mehmonlariga yuboriladi", en: "SMS are sent to guests of personal invitations" },
   "Сначала опубликуйте приглашение": { uz: "Avval taklifnomani e’lon qiling", en: "Publish the invitation first" },
   "Для этого шаблона рассылка SMS недоступна": { uz: "Bu shablon uchun SMS yuborish mavjud emas", en: "SMS sending is not available for this template" },
-  "Слишком много SMS за час, попробуйте позже": { uz: "Bir soatda juda ko'p SMS, keyinroq urinib ko'ring", en: "Too many SMS this hour, please try later" },
-  "Код уже отправлен, повторить можно через минуту": { uz: "Kod yuborildi, bir daqiqadan keyin qayta so'rash mumkin", en: "Code already sent, you can retry in a minute" },
-  "Слишком много запросов кода, попробуйте через час": { uz: "Kod juda ko'p so'raldi, bir soatdan keyin urinib ko'ring", en: "Too many code requests, try again in an hour" },
-  "Слишком много запросов кода, попробуйте позже": { uz: "Kod juda ko'p so'raldi, keyinroq urinib ko'ring", en: "Too many code requests, please try later" },
-  "Не удалось отправить SMS, попробуйте позже": { uz: "SMS yuborib bo'lmadi, keyinroq urinib ko'ring", en: "Could not send SMS, please try later" },
-  "Неверный или устаревший код": { uz: "Kod noto'g'ri yoki eskirgan", en: "Wrong or expired code" },
+  "Слишком много SMS за час, попробуйте позже": { uz: "Bir soatda juda ko‘p SMS, keyinroq urinib ko‘ring", en: "Too many SMS this hour, please try later" },
+  "Код уже отправлен, повторить можно через минуту": { uz: "Kod yuborildi, bir daqiqadan keyin qayta so‘rash mumkin", en: "Code already sent, you can retry in a minute" },
+  "Слишком много запросов кода, попробуйте через час": { uz: "Kod juda ko‘p so‘raldi, bir soatdan keyin urinib ko‘ring", en: "Too many code requests, try again in an hour" },
+  "Слишком много запросов кода, попробуйте позже": { uz: "Kod juda ko‘p so‘raldi, keyinroq urinib ko‘ring", en: "Too many code requests, please try later" },
+  "Не удалось отправить SMS, попробуйте позже": { uz: "SMS yuborib bo‘lmadi, keyinroq urinib ko‘ring", en: "Could not send SMS, please try later" },
+  "Неверный или устаревший код": { uz: "Kod noto‘g‘ri yoki eskirgan", en: "Wrong or expired code" },
   "Код состоит из 6 цифр": { uz: "Kod 6 ta raqamdan iborat", en: "The code has 6 digits" },
   "Введите имя": { uz: "Ismingizni kiriting", en: "Enter your first name" },
-  "Имя и фамилия: до 64 символов, без переносов строк": { uz: "Ism va familiya: 64 belgigacha, qator ko'chirishsiz", en: "First and last name: up to 64 characters, no line breaks" },
-  "Введите узбекский номер: +998 XX XXX-XX-XX": { uz: "O'zbekiston raqamini kiriting: +998 XX XXX-XX-XX", en: "Enter an Uzbek number: +998 XX XXX-XX-XX" },
+  "Имя и фамилия: до 64 символов, без переносов строк": { uz: "Ism va familiya: 64 belgigacha, qator ko‘chirishsiz", en: "First and last name: up to 64 characters, no line breaks" },
+  "Введите узбекский номер: +998 XX XXX-XX-XX": { uz: "O‘zbekiston raqamini kiriting: +998 XX XXX-XX-XX", en: "Enter an Uzbek number: +998 XX XXX-XX-XX" },
   "Укажите номер телефона или Telegram ID": { uz: "Telefon raqami yoki Telegram ID ni kiriting", en: "Enter a phone number or Telegram ID" },
   "Вход через Telegram не настроен": { uz: "Telegram orqali kirish sozlanmagan", en: "Telegram sign-in is not configured" },
-  "Данные Telegram не прошли проверку": { uz: "Telegram ma'lumotlari tekshiruvdan o'tmadi", en: "Telegram data failed verification" },
+  "Данные Telegram не прошли проверку": { uz: "Telegram ma’lumotlari tekshiruvdan o‘tmadi", en: "Telegram data failed verification" },
   "Этот номер уже привязан к другому Telegram-аккаунту": { uz: "Bu raqam boshqa Telegram akkauntiga ulangan", en: "This number is linked to another Telegram account" },
   "Этот Telegram уже привязан к другому аккаунту": { uz: "Bu Telegram boshqa akkauntga ulangan", en: "This Telegram account is linked to another account" },
   "Номер этого Telegram отличается от номера аккаунта: подключите Telegram с тем же номером": {
@@ -91,30 +91,30 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
     en: "This Telegram has a different phone number than the account: connect a Telegram with the same number",
   },
   "Эта ссылка уже занята": { uz: "Bu havola band", en: "This link is already taken" },
-  "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo'lmaydi", en: "This link cannot be used" },
+  "Эту ссылку занять нельзя": { uz: "Bu havolani olib bo‘lmaydi", en: "This link cannot be used" },
   "Режим можно сменить только у неоплаченного черновика": { uz: "Rejimni faqat to‘lanmagan qoralamada o‘zgartirish mumkin", en: "The mode can be changed only for an unpaid draft" },
   "Этот шаблон дороже оплаченного": { uz: "Bu shablon to‘langanidan qimmatroq", en: "This template costs more than the one you paid for" },
   "Режим можно сменить, только пока в приглашении нет гостей": {
-    uz: "Rejimni faqat taklifnomada mehmonlar yo'qligida o'zgartirish mumkin",
+    uz: "Rejimni faqat taklifnomada mehmonlar yo‘qligida o‘zgartirish mumkin",
     en: "The mode can be changed only while the invitation has no guests",
   },
   "Приглашение в архиве": { uz: "Taklifnoma arxivda", en: "The invitation is archived" },
   "Шаблон больше недоступен, выберите другой": { uz: "Shablon endi mavjud emas, boshqasini tanlang", en: "This template is no longer available, choose another one" },
   "Заказ отменён, оформите оплату заново": { uz: "Buyurtma bekor qilindi, qaytadan to‘lov qiling", en: "The order was cancelled, please pay again" },
   "У вас бесплатный доступ: подписка не нужна": { uz: "Sizda bepul foydalanish huquqi bor: obuna kerak emas", en: "You have free access: no subscription needed" },
-  "Такого стола нет": { uz: "Bunday stol yo'q", en: "There is no such table" },
-  "За один раз можно добавить не больше 500 гостей": { uz: "Bir martada ko'pi bilan 500 ta mehmon qo'shish mumkin", en: "You can add at most 500 guests at a time" },
+  "Такого стола нет": { uz: "Bunday stol yo‘q", en: "There is no such table" },
+  "За один раз можно добавить не больше 500 гостей": { uz: "Bir martada ko‘pi bilan 500 ta mehmon qo‘shish mumkin", en: "You can add at most 500 guests at a time" },
   "Приглашение защищено паролем": { uz: "Taklifnoma parol bilan himoyalangan", en: "This invitation is protected by a password" },
-  "Неверный пароль": { uz: "Parol noto'g'ri", en: "Wrong password" },
-  "Слишком много попыток, попробуйте через минуту": { uz: "Urinishlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many attempts, try again in a minute" },
-  "Для этого приглашения собрано слишком много ответов": { uz: "Bu taklifnomaga javoblar juda ko'p", en: "This invitation has received too many responses" },
-  "Приём ответов завершён": { uz: "Javoblar qabul qilish yakunlandi", en: "Replies are closed" },
+  "Неверный пароль": { uz: "Parol noto‘g‘ri", en: "Wrong password" },
+  "Слишком много попыток, попробуйте через минуту": { uz: "Urinishlar juda ko‘p, bir daqiqadan keyin urinib ko‘ring", en: "Too many attempts, try again in a minute" },
+  "Для этого приглашения собрано слишком много ответов": { uz: "Bu taklifnomaga javoblar juda ko‘p", en: "This invitation has received too many responses" },
+  "Приём ответов завершён": { uz: "Javoblarni qabul qilish yakunlandi", en: "Replies are closed" },
   "Нужна картинка PNG или JPEG": { uz: "PNG yoki JPEG rasm kerak", uzc: "PNG ёки JPEG расм керак", en: "A PNG or JPEG image is required" },
   "Файл слишком большой": { uz: "Fayl juda katta", en: "The file is too large" },
-  "Этот тип файла не поддерживается": { uz: "Bu fayl turi qo'llab-quvvatlanmaydi", en: "This file type is not supported" },
+  "Этот тип файла не поддерживается": { uz: "Bu fayl turi qo‘llab-quvvatlanmaydi", en: "This file type is not supported" },
   "Закончилось место для файлов": { uz: "Fayllar uchun joy tugadi", en: "You have run out of file storage" },
   "Прикрепите файл в поле file": { uz: "Faylni file maydoniga biriktiring", uzc: "Файлни file майдонига бириктиринг", en: "Attach the file in the “file” field" },
-  "Слишком много загрузок, попробуйте через минуту": { uz: "Yuklashlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many uploads, try again in a minute" },
+  "Слишком много загрузок, попробуйте через минуту": { uz: "Yuklashlar juda ko‘p, bir daqiqadan keyin urinib ko‘ring", en: "Too many uploads, try again in a minute" },
   "Файл не найден": { uz: "Fayl topilmadi", en: "File not found" },
   // Сообщения схем zod: обработчик ошибок показывает их вместо общего «Неверные данные».
   "Ссылка: 3–40 символов, латинские буквы, цифры и дефис": {
@@ -122,11 +122,11 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
     en: "Link: 3–40 characters, Latin letters, digits and hyphens",
   },
   "Файл должен быть загружен через /api/media": { uz: "Fayl /api/media orqali yuklanishi kerak", en: "The file must be uploaded via /api/media" },
-  "Время в формате ЧЧ:ММ": { uz: "Vaqt SS:DD formatida bo'lishi kerak", en: "Time must be in HH:MM format" },
-  "Дата в формате ГГГГ-ММ-ДД": { uz: "Sana YYYY-OO-KK formatida bo'lishi kerak", en: "Date must be in YYYY-MM-DD format" },
-  "Такой даты нет": { uz: "Bunday sana yo'q", en: "There is no such date" },
-  "Цвет в формате #rrggbb": { uz: "Rang #rrggbb formatida bo'lishi kerak", uzc: "Ранг #rrggbb форматида бўлиши керак", en: "Colour must be in #rrggbb format" },
-  "Неизвестное событие": { uz: "Noma'lum tadbir", en: "Unknown event" },
+  "Время в формате ЧЧ:ММ": { uz: "Vaqt SS:DD formatida bo‘lishi kerak", en: "Time must be in HH:MM format" },
+  "Дата в формате ГГГГ-ММ-ДД": { uz: "Sana YYYY-OO-KK formatida bo‘lishi kerak", en: "Date must be in YYYY-MM-DD format" },
+  "Такой даты нет": { uz: "Bunday sana yo‘q", en: "There is no such date" },
+  "Цвет в формате #rrggbb": { uz: "Rang #rrggbb formatida bo‘lishi kerak", uzc: "Ранг #rrggbb форматида бўлиши керак", en: "Colour must be in #rrggbb format" },
+  "Неизвестное событие": { uz: "Noma’lum tadbir", en: "Unknown event" },
   // Реквизиты в админке (PUT /api/admin/legal).
   "Email: адрес вида name@example.com": {
     uz: "Elektron pochta: name@example.com ko‘rinishidagi manzil",
@@ -138,14 +138,14 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Рассылка уже идёт, подождите": { uz: "Yuborish davom etmoqda, kuting", en: "Sending is already in progress, please wait" },
   "Подключите Telegram, чтобы получать уведомления": { uz: "Bildirishnomalarni olish uchun Telegramni ulang", en: "Connect Telegram to receive notifications" },
   "Бот сейчас недоступен": { uz: "Bot hozir ishlamayapti", en: "The bot is unavailable right now" },
-  "Не удалось отправить сообщение в Telegram": { uz: "Telegramga xabar yuborib bo'lmadi", en: "Could not send the message to Telegram" },
+  "Не удалось отправить сообщение в Telegram": { uz: "Telegramga xabar yuborib bo‘lmadi", en: "Could not send the message to Telegram" },
   "Помощник с текстом сейчас недоступен": { uz: "Matn yordamchisi hozir ishlamayapti", en: "The text assistant is unavailable right now" },
   "Слишком много запросов к помощнику, попробуйте через минуту": {
-    uz: "Yordamchiga so'rovlar juda ko'p, bir daqiqadan keyin urinib ko'ring",
+    uz: "Yordamchiga so‘rovlar juda ko‘p, bir daqiqadan keyin urinib ko‘ring",
     en: "Too many requests to the assistant, try again in a minute",
   },
-  "Помощник на сегодня исчерпал лимит, попробуйте завтра": { uz: "Yordamchining bugungi limiti tugadi, ertaga urinib ko'ring", en: "The assistant's daily limit is used up, try again tomorrow" },
-  "Помощник не смог написать текст, попробуйте ещё раз": { uz: "Yordamchi matn yoza olmadi, qayta urinib ko'ring", en: "The assistant could not write the text, please try again" },
+  "Помощник на сегодня исчерпал лимит, попробуйте завтра": { uz: "Yordamchining bugungi limiti tugadi, ertaga urinib ko‘ring", en: "The assistant's daily limit is used up, try again tomorrow" },
+  "Помощник не смог написать текст, попробуйте ещё раз": { uz: "Yordamchi matn yoza olmadi, qayta urinib ko‘ring", en: "The assistant could not write the text, please try again" },
 };
 
 // Кириллица (uzc) получается из латиницы, если не задана отдельно.
@@ -187,10 +187,10 @@ export const botTexts = {
   sharePhoneButton: { ru: "📱 Поделиться номером", uz: "📱 Raqamni yuborish", en: "📱 Share phone number" },
   ownPhoneOnly: {
     ru: "Отправьте, пожалуйста, свой номер кнопкой «Поделиться номером».",
-    uz: "Iltimos, o'z raqamingizni «Raqamni yuborish» tugmasi orqali yuboring.",
+    uz: "Iltimos, o‘z raqamingizni «Raqamni yuborish» tugmasi orqali yuboring.",
     en: "Please send your own number with the “Share phone number” button.",
   },
-  badPhone: { ru: "Не удалось распознать номер.", uz: "Raqamni aniqlab bo'lmadi.", en: "Could not recognise the number." },
+  badPhone: { ru: "Не удалось распознать номер.", uz: "Raqamni aniqlab bo‘lmadi.", en: "Could not recognise the number." },
   phoneLinked: { ru: "Номер {phone} привязан.", uz: "{phone} raqami ulandi.", en: "Number {phone} is linked." },
   whatNext: { ru: "Что дальше?", uz: "Keyingi qadam?", en: "What next?" },
   welcome: {
@@ -200,7 +200,7 @@ export const botTexts = {
   },
   confirmLogin: {
     ru: "Подтвердите вход на сайт с устройства: {device}.\nЕсли это не вы, просто проигнорируйте сообщение.",
-    uz: "Saytga kirishni tasdiqlang, qurilma: {device}.\nAgar bu siz bo'lmasangiz, xabarni e'tiborsiz qoldiring.",
+    uz: "Saytga kirishni tasdiqlang, qurilma: {device}.\nAgar bu siz bo‘lmasangiz, xabarni e’tiborsiz qoldiring.",
     en: "Confirm sign-in from device: {device}.\nIf this wasn't you, just ignore this message.",
   },
   confirmButton: { ru: "✅ Подтвердить вход", uz: "✅ Kirishni tasdiqlash", en: "✅ Confirm sign-in" },
@@ -208,7 +208,7 @@ export const botTexts = {
   // «Подключить Telegram» в аккаунте на сайте: номер аккаунта со скрытой серединой.
   confirmLink: {
     ru: "Подключить этот Telegram к аккаунту {phone}? Запрос с устройства: {device}.\nЕсли это не вы, просто проигнорируйте сообщение.",
-    uz: "Ushbu Telegramni {phone} akkauntiga ulaysizmi? So'rov qurilmadan: {device}.\nAgar bu siz bo'lmasangiz, xabarni e'tiborsiz qoldiring.",
+    uz: "Ushbu Telegramni {phone} akkauntiga ulaysizmi? So‘rov qurilmadan: {device}.\nAgar bu siz bo‘lmasangiz, xabarni e’tiborsiz qoldiring.",
     en: "Connect this Telegram to the account {phone}? Request from device: {device}.\nIf this wasn't you, just ignore this message.",
   },
   confirmLinkButton: { ru: "✅ Подключить", uz: "✅ Ulash", en: "✅ Connect" },
@@ -219,7 +219,7 @@ export const botTexts = {
   },
   loginExpired: {
     ru: "Запрос входа устарел. Нажмите «Войти через Telegram» на сайте ещё раз.",
-    uz: "Kirish so'rovi eskirgan. Saytda «Telegram orqali kirish» tugmasini qayta bosing.",
+    uz: "Kirish so‘rovi eskirgan. Saytda «Telegram orqali kirish» tugmasini qayta bosing.",
     en: "The sign-in request has expired. Tap “Sign in with Telegram” on the site again.",
   },
   loginLink: {
@@ -232,10 +232,10 @@ export const botTexts = {
   menuPrices: { ru: "Тарифы", uz: "Tariflar", en: "Prices" },
   menuLang: { ru: "🌐 Язык", uz: "🌐 Til", en: "🌐 Language" },
   chooseLang: { ru: "Выберите язык", uz: "Tilni tanlang", en: "Choose a language" },
-  langSaved: { ru: "Язык: русский", uz: "Til: o'zbekcha", en: "Language: English" },
+  langSaved: { ru: "Язык: русский", uz: "Til: o‘zbekcha", en: "Language: English" },
   noInvitations: {
     ru: "У вас пока нет приглашений. Создайте первое на сайте: /login",
-    uz: "Sizda hali taklifnomalar yo'q. Birinchisini saytda yarating: /login",
+    uz: "Sizda hali taklifnomalar yo‘q. Birinchisini saytda yarating: /login",
     en: "You have no invitations yet. Create the first one on the website: /login",
   },
   unknown: {
@@ -247,20 +247,20 @@ export const botTexts = {
   priceSeat: { ru: "Персональное приглашение: {price} за гостя", uz: "Shaxsiy taklifnoma: har bir mehmon uchun {price}", en: "Personal invitation: {price} per guest" },
   priceSub: {
     ru: "Подписка: {price} в месяц, любые шаблоны без оплаты, места гостей оплачиваются отдельно",
-    uz: "Obuna: oyiga {price}, barcha shablonlar bepul, mehmon joylari alohida to'lanadi",
+    uz: "Obuna: oyiga {price}, barcha shablonlar bepul, mehmon joylari alohida to‘lanadi",
     en: "Subscription: {price} per month, all templates included, guest seats are paid separately",
   },
   accessFree: { ru: "У вас бесплатный доступ ко всей платформе.", uz: "Sizda butun platformaga bepul kirish bor.", en: "You have free access to the whole platform." },
   accessSub: { ru: "Ваша подписка активна до {date}.", uz: "Obunangiz {date} gacha faol.", en: "Your subscription is active until {date}." },
-  accessNone: { ru: "Подписки нет.", uz: "Obuna yo'q.", en: "No subscription." },
+  accessNone: { ru: "Подписки нет.", uz: "Obuna yo‘q.", en: "No subscription." },
   invShared: { ru: "общее", uz: "umumiy", en: "shared" },
   invPersonal: {
     ru: "персональное, гостей {guests}, оплачено мест {paid}",
-    uz: "shaxsiy, mehmonlar {guests}, to'langan joylar {paid}",
+    uz: "shaxsiy, mehmonlar {guests}, to‘langan joylar {paid}",
     en: "personal, {guests} guests, {paid} seats paid",
   },
   statusDraft: { ru: "черновик", uz: "qoralama", en: "draft" },
-  statusActive: { ru: "опубликовано", uz: "e'lon qilingan", en: "published" },
+  statusActive: { ru: "опубликовано", uz: "e’lon qilingan", en: "published" },
   statusArchived: { ru: "в архиве", uz: "arxivda", en: "archived" },
   menuStart: { ru: "Главное меню", uz: "Asosiy menyu", en: "Main menu" },
   // Карточка приглашения для гостя (/start g_<token>): на языке приглашения.
@@ -277,7 +277,7 @@ export const botTexts = {
   rsvpMaybe: { ru: "🤔 Возможно", uz: "🤔 Balki", en: "🤔 Maybe" },
   rsvpNo: { ru: "❌ Не приду", uz: "❌ Kela olmayman", en: "❌ Can't make it" },
   rsvpSaved: { ru: "Ответ сохранён", uz: "Javob saqlandi", en: "Reply saved" },
-  rsvpClosed: { ru: "Приём ответов завершён", uz: "Javoblar qabul qilish yakunlandi", en: "Replies are closed" },
+  rsvpClosed: { ru: "Приём ответов завершён", uz: "Javoblarni qabul qilish yakunlandi", en: "Replies are closed" },
 } satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
 
 export type BotTextKey = keyof typeof botTexts;
@@ -290,5 +290,5 @@ export function bt(locale: Locale, key: BotTextKey, vars: Record<string, string 
   return fillText(text, vars);
 }
 
-export const localeNames: Record<Locale, string> = { ru: "Русский", uz: "O'zbekcha", uzc: "Ўзбекча", en: "English" };
+export const localeNames: Record<Locale, string> = { ru: "Русский", uz: "O‘zbekcha", uzc: "Ўзбекча", en: "English" };
 export const dateLocale: Record<Locale, string> = { ru: "ru-RU", uz: "uz-Latn-UZ", uzc: "uz-Cyrl-UZ", en: "en-GB" };
