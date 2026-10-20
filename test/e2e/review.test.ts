@@ -468,6 +468,46 @@ describe("тема", () => {
   });
 });
 
+describe("тема: родные элементы", () => {
+  it("значки времени и даты — в цвет своего фона: лист редактора по теме конструктора, панель — наоборот, приглашение — по шаблону", async () => {
+    // Тёмный шаблон в светлой теме конструктора и светлый — в тёмной.
+    for (const [template, theme, tplScheme] of [["wedding-luxe", "light", "dark"], ["wedding-classic", "dark", "light"]] as const) {
+      const context = await e.newContext();
+      await context.addInitScript((v) => { try { localStorage.setItem("invito.theme", v); } catch {} }, theme);
+      const user = await e.signIn(context);
+      const names = "Схема " + theme;
+      const inv = await createInvitation(user.id, { template, data: { names, intro: "none", date: "2026-12-20", time: "18:00", program: [{ time: "16:00", title: "Церемония", place: "Зал" }] } });
+      const { page, problems, close } = await e.open("/app/", { context, waitText: names });
+      await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+      await page.getByTitle(ru.stepsX.sections).click();
+      await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+      const scheme = (sel: string) => page.locator(sel).first().evaluate((x) => getComputedStyle(x).colorScheme);
+      await page.locator("[data-prog]").first().click({ force: true });
+      const time = page.locator("[data-stop] input[type=time]").first();
+      await time.waitFor();
+      expect(await scheme("[data-stop] input[type=time]"), theme).toBe(theme);
+      expect(await scheme('[data-sheet="editor"]'), theme).toBe(theme);
+      expect(await scheme("[data-guest-page]"), theme).toBe(tplScheme);
+      await e.shot(page, `editor-time-${theme}-390x844.png`);
+      // Панель редактора в цвет чернил: родные элементы на ней — наоборот.
+      await page.getByRole("button", { name: ru.done }).first().click();
+      expect(await scheme("[data-editor-bar]"), theme).toBe(theme === "light" ? "dark" : "light");
+      await e.expectClean(page, problems);
+      await close();
+
+      // Страница гостя — по шаблону, какая бы тема ни была у конструктора на этом устройстве.
+      await e.db.update(invitations).set({ status: "active", publishedAt: new Date(), unlocked: true }).where(eq(invitations.id, inv.id));
+      const guest = await e.newContext();
+      await guest.addInitScript((v) => { try { localStorage.setItem("invito.theme", v); } catch {} }, theme);
+      const g = await e.open(`/i/${(await invOf(inv.id)).slug}`, { context: guest, waitText: ru.yes });
+      await g.page.locator("#rsvp input").first().waitFor();
+      expect(await g.page.locator("#rsvp input").first().evaluate((x) => getComputedStyle(x).colorScheme), theme).toBe(tplScheme);
+      await e.expectClean(g.page, g.problems);
+      await g.close();
+    }
+  });
+});
+
 describe("узкий экран (320 px)", () => {
   it("заголовок главной на 320 px мельче (с 375 px — как в дизайне); «Оплачено мест» переносится под заголовок, а не за край карточки", async () => {
     const narrow = { width: 320, height: 800 };
