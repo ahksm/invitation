@@ -11,6 +11,7 @@ import { runMigrations } from "./db/migrate.js";
 import { seed } from "./db/seed.js";
 import { createPaymentProvider } from "./payments/index.js";
 import { startReminderJob } from "./services/reminders.js";
+import { getLegal } from "./services/settings.js";
 import { createSmsProvider } from "./sms/index.js";
 
 const config = loadConfig();
@@ -54,6 +55,14 @@ if (bot && config.TELEGRAM_MODE === "webhook") {
 }
 
 await app.listen({ port: config.PORT, host: config.HOST });
+
+// Без названия, ИНН и адреса оферта (/oferta) называет исполнителем «администрацию сайта»: перед боевым режимом
+// Multicard их нужно заполнить в админке, раздел «Реквизиты». Предупреждение и на главной админки.
+if (config.NODE_ENV === "production") {
+  const legal = await getLegal(app.ctx).catch(() => null);
+  const missing = legal ? (["companyName", "inn", "address"] as const).filter((k) => !legal[k]) : [];
+  if (missing.length) app.log.warn({ missing }, "реквизиты для оферты не заполнены: админка → «Реквизиты»");
+}
 
 let stopping = false;
 async function shutdown(signal: string) {

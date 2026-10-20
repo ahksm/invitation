@@ -45,13 +45,21 @@ async function loginCard() {
 
 const routes = {
   async "/"() {
-    const s = await api("/api/admin/stats");
+    const [s, legal] = await Promise.all([api("/api/admin/stats"), api("/api/admin/legal").catch(() => null)]);
     const stat = (v, label) => h("div", { class: "card stat" }, h("b", {}, v), h("span", {}, label));
-    return h("div", { class: "grid" },
+    // Без названия, ИНН и адреса оферта называет исполнителем «администрацию сайта», а Multicard не подключит боевой режим.
+    const missing = legal ? [["companyName", "название"], ["inn", "ИНН"], ["address", "адрес"]].filter(([k]) => !legal[k]).map(([, label]) => label) : [];
+    const contactless = legal && !legal.phone && !legal.email && !legal.telegram;
+    const warn = missing.length || contactless
+      ? h("div", { class: "card", "data-legal-warn": "1", style: "border-color:var(--bad)" },
+          h("b", {}, "Реквизиты не заполнены"),
+          h("p", { style: "margin:6px 0 0" }, [missing.length ? `Нет: ${missing.join(", ")}. ` : "", legal.companyName ? "" : "Оферта называет исполнителем администрацию сайта. ", contactless ? "Нет контактов для клиентов (телефон, почта или Telegram). " : "", "Заполните раздел ", h("a", { href: "#/legal" }, "«Реквизиты»"), " до подключения боевого режима Multicard."]))
+      : null;
+    return [warn, h("div", { class: "grid" },
       stat(s.users, "пользователей"), stat(s.activeLast30Days, "активных за 30 дней"), stat(s.freeAccessUsers, "с бесплатным доступом"),
       stat(s.pendingFreeAccess, "доступ выдан заранее, ещё не входили"),
       stat(s.activeSubscriptions, "активных подписок"), stat(s.invitations, "приглашений"), stat(s.paidOrders, "оплаченных заказов"),
-      stat(m(s.revenue), "выручка"));
+      stat(m(s.revenue), "выручка"))].filter(Boolean);
   },
 
   async "/users"(params) {

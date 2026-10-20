@@ -43,6 +43,11 @@ describe("реквизиты в админке", () => {
     const admin = await e.signIn(context, { firstName: "Админ" });
     e.config.ADMIN_PHONES.push(admin.phone!);
     try {
+      // Пока реквизитов нет, главная админки предупреждает: оферта называет исполнителем администрацию сайта.
+      const home = await e.open("/admin/#/", { context, waitText: "Реквизиты не заполнены" });
+      expect(await home.page.locator("[data-legal-warn]").innerText()).toContain("Нет: название, ИНН, адрес");
+      await home.page.close();
+
       const { page, problems } = await e.open("/admin/#/legal", { context, waitText: "Юридический адрес" });
       await expect.poll(() => page.locator('#tabs a[href="#/legal"]').getAttribute("class")).toBe("active");
       // Пустая форма: значения ещё не заданы.
@@ -71,6 +76,10 @@ describe("реквизиты в админке", () => {
       expect(await contacts.locator('[data-field="telegram"] a').getAttribute("href")).toBe("https://t.me/invito_support");
       expect(await contacts.locator('[data-field="phone"] a').getAttribute("href")).toBe("tel:+998901234567");
       expect(await contacts.locator('[data-field="bankAccount"]').count()).toBe(0);
+      // Реквизиты заполнены: предупреждения на главной админки больше нет.
+      await page.goto(e.base + "/admin/#/");
+      await e.waitText(page, "пользователей");
+      expect(await page.locator("[data-legal-warn]").count()).toBe(0);
       // Единственная ошибка в консоли — ожидаемый ответ 400 на неверный email.
       expect(problems.console).toEqual(["Failed to load resource: the server responded with a status of 400 (Bad Request)"]);
       problems.console = [];
