@@ -322,7 +322,9 @@ describe("страница гостя: ответ и гостевая книга
 
   it("обратный отсчёт: подписи по числу («1 день»), на узбекском без изменений", async () => {
     const user = await e.signIn(await e.newContext());
-    const inv = await createInvitation(user.id, { data: { names: "Отсчёт тест", date: tashDay(1), time: "23:59", intro: "none" } });
+    // Послезавтра в 00:00 по Ташкенту — до события от 24 до 48 часов в любое время суток («завтра в 23:59» в последнюю
+    // минуту ташкентских суток давало меньше суток и «00»).
+    const inv = await createInvitation(user.id, { data: { names: "Отсчёт тест", date: tashDay(2), time: "00:00", intro: "none" } });
     await publish(inv.id);
     const { page, problems, close } = await e.open(`/i/${inv.slug}`, { viewport: M, waitText: "Отсчёт тест" });
     await page.locator('[data-cd="d"]').scrollIntoViewIfNeeded();
