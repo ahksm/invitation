@@ -177,9 +177,12 @@ export async function startE2E(opts: E2EOptions = {}) {
     browser,
     sms,
 
-    /** Контекст браузера: внешние ресурсы (Telegram, Google Fonts, Unsplash) — заглушки, CSP-нарушения собираются. */
-    async newContext(opts: { viewport?: { width: number; height: number }; locale?: string; timezoneId?: string } = {}) {
-      const context = await browser.newContext({ viewport: opts.viewport ?? { width: 390, height: 844 }, locale: opts.locale ?? "ru-RU", ...(opts.timezoneId && { timezoneId: opts.timezoneId }) });
+    /**
+     * Контекст браузера: внешние ресурсы (Telegram, Google Fonts, Unsplash) — заглушки, CSP-нарушения собираются.
+     * hasTouch — сенсорный экран, как у телефона (pointer: coarse).
+     */
+    async newContext(opts: { viewport?: { width: number; height: number }; locale?: string; timezoneId?: string; hasTouch?: boolean } = {}) {
+      const context = await browser.newContext({ viewport: opts.viewport ?? { width: 390, height: 844 }, locale: opts.locale ?? "ru-RU", ...(opts.timezoneId && { timezoneId: opts.timezoneId }), ...(opts.hasTouch && { hasTouch: true, isMobile: true }) });
       // Сеть наружу не нужна: CSP браузер проверяет до запроса, так что запрещённый адрес всё равно даст нарушение.
       await context.route(
         (url) => url.origin !== base,
