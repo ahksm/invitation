@@ -2691,6 +2691,8 @@ class Component extends DCLogic {
     if (e && e.target && e.target.closest && e.target.closest('[data-music],input,textarea,select')) return;
     // Касание, которое не даёт права на звук (палец прокручивал страницу), ждёт следующего.
     if (navigator.userActivation && !navigator.userActivation.isActive) return;
+    // Без navigator.userActivation (iOS до 16.4) touchend бывает и концом прокрутки; за касанием всегда идёт click.
+    if (!navigator.userActivation && e && e.type === 'touchend') return;
     const name = inv.music;
     this._autoMus = true;
     this.music.play(name, inv.musicSrc).then((ok) => {

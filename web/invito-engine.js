@@ -37,8 +37,8 @@ export function createMusic() {
   };
   const this_ = {};
   const schedule = () => { if (!track) return; while (nextT < ac.currentTime + 0.25) { track.play(nextT, step++); nextT += track.spb; } };
-  // Заблокированный браузером resume() может не завершиться никогда: ждём его не дольше 400 мс.
-  const running = () => Promise.race([Promise.resolve(ac.resume()).then(() => true, () => false), new Promise((r) => setTimeout(r, 400, false))]).then((ok) => ok || ac.state === 'running');
+  // Заблокированный браузером resume() может не завершиться никогда: ждём его не дольше секунды (старым iPhone нужно время).
+  const running = () => Promise.race([Promise.resolve(ac.resume()).then(() => true, () => false), new Promise((r) => setTimeout(r, 1000, false))]).then((ok) => ok || ac.state === 'running');
   let paused = false;
   const api = {
     get playing() { return playing; },

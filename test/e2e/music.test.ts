@@ -216,6 +216,21 @@ describe("музыка на странице гостя", () => {
     await b.close();
   });
 
+  it("браузер без navigator.userActivation (iOS до 16.4): конец прокрутки не включает, касание включает", async () => {
+    const slug = await published({ names: "Старый iPhone", intro: "none" });
+    const g = await openGuest(`/i/${slug}`, "Старый iPhone", () => {
+      Object.defineProperty(Navigator.prototype, "userActivation", { get: () => undefined, configurable: true });
+    });
+    await swipe(g);
+    expect(await pressed(g)).toBe("false");
+    expect(await contexts(g)).toBe(0);
+    await tap(g, 195, 300);
+    expect(await pressed(g)).toBe("true");
+    expect(await playing(g)).toBe(true);
+    await expectClean(g);
+    await g.close();
+  });
+
   it("ввод имени в ответе музыку не включает, касание кнопки ответа включает", async () => {
     const slug = await published({ names: "Нодира и Фарход", intro: "none" });
     const g = await openGuest(`/i/${slug}`, "Нодира и Фарход");
@@ -291,12 +306,12 @@ describe("музыка на странице гостя", () => {
       };
     });
     await tap(g, 195, 300);
-    await expect.poll(() => pressed(g), { timeout: 3000 }).toBe("false");
+    await expect.poll(() => pressed(g), { timeout: 4000 }).toBe("false");
     const tries = await g.read("window.__resumes");
     expect(tries).toBeGreaterThanOrEqual(1);
     await tap(g, 195, 300);
     await expect.poll(() => g.read("window.__resumes")).toBeGreaterThan(tries);
-    await expect.poll(() => pressed(g), { timeout: 3000 }).toBe("false");
+    await expect.poll(() => pressed(g), { timeout: 4000 }).toBe("false");
     await expectClean(g);
     await g.close();
   });
