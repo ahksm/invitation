@@ -1990,7 +1990,8 @@ class Component extends DCLogic {
       let r = null;
       if (P.mode === 'shared') { if (!inv.unlocked) r = await this.createOrder({ kind: 'template', invitationId: id }); }
       else if (P.seats > 0) r = await this.createOrder({ kind: 'seats', invitationId: id, quantity: P.seats });
-      if (r && r.status === 'pending') { this.checkout(r, { inv: id, then, pub }); return; }
+      // Вид листа (публикация или «Докупить места») и число мест — для «Попробовать снова» после отказа в оплате.
+      if (r && r.status === 'pending') { this.checkout(r, { inv: id, then, pub, kind: P.kind, ...(P.mode === 'personal' && P.seats > 0 ? { seats: P.seats } : {}) }); return; }
       if (r && r.message) this.toast(r.message);
       this.setState({ pay: null });
       await this.afterPaid(id, then, pub);
@@ -2174,9 +2175,17 @@ class Component extends DCLogic {
       // «Купить шаблон» не прошёл: экран шаблонов и снова оплата того же шаблона этого черновика.
       if (cont.buy && inv.status !== 'active' && !inv.unlocked) { this.go('templates'); this.buyTplNow(inv); return; }
       // Подписка или шаблон ради другого шаблона (then: 'edit') — снова лист «Другой шаблон» в редакторе.
-      const kind = cont.then === 'edit' ? 'upgrade' : inv.status === 'active' && inv.mode === 'personal' ? 'seats' : 'publish';
-      if (kind === 'upgrade') this.openGuest('edit'); else this.go(inv.status === 'active' ? 'manage' : 'build', { step: 0 });
-      this.openPay({ dto: inv, kind, ...(cont.seats > 0 ? { seats: cont.seats } : {}) });
+      // Вид листа — из контекста заказа: «Докупить места» у черновика остаётся покупкой мест (без публикации), а не
+      // публикацией. Заказы, начатые до того, как вид стал запоминаться: места без публикации — pub: false.
+      const seatsOrder = o && o.kind === 'seats';
+      const kind = cont.then === 'edit' ? 'upgrade' : cont.kind === 'seats' || cont.kind === 'publish' ? cont.kind
+        : seatsOrder && cont.pub === false ? 'seats' : inv.status === 'active' && inv.mode === 'personal' ? 'seats' : 'publish';
+      const seats = cont.seats > 0 ? cont.seats : seatsOrder ? o.quantity : 0;
+      if (kind === 'upgrade') this.openGuest('edit');
+      // Места докупали со списка гостей или с «Поделиться» (только у опубликованного) — туда же.
+      else if (kind === 'seats') this.go(cont.then === 'share' && inv.status === 'active' ? 'share' : 'manage', { music: false });
+      else this.go(inv.status === 'active' ? 'manage' : 'build', { step: 0 });
+      this.openPay({ dto: inv, kind, ...(seats > 0 ? { seats } : {}) });
     } catch (e) { /* тост уже показан */ }
   }
   // Подпись приглашения для экранов заказа и тестовой оплаты: имена и шаблон («Лола и Тимур · Шаблон «Ivory»»).
@@ -2206,6 +2215,13 @@ class Component extends DCLogic {
     const F = (this.state.pricing && this.state.pricing.from) || null;
     this.setPricing({ from: null, done: null, err: '' });
     const scr = F && F.screen;
+    // С главной, где лист оплаты открыт с карточки «Мои приглашения»: снова главная, то же приглашение и тот же лист.
+    if (scr === 'home' && F.inv) {
+      this.goHome();
+      if (this.state.draftId !== F.inv) { await this.openInv({ id: F.inv }); if (this.state.draftId !== F.inv) return; }
+      if (F.pay && this.state.draft) this.openPay({ dto: this.state.draft, ...F.pay });
+      return;
+    }
     if (!F || !['events', 'templates', 'build', 'guest', 'share', 'manage', 'tour'].includes(scr)) { this.goHome(); return; }
     if (F.inv && this.state.draftId !== F.inv) {
       await this.openInv({ id: F.inv });

@@ -467,6 +467,86 @@ describe("оплата: ожидание и места", () => {
     await close();
   });
 
+  it("отказ в оплате «Докупить места» у черновика: «Попробовать снова» — снова места с тем же числом, черновик не публикуется", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const P = await pricesFor(user.id);
+    const inv = await createInvitation(user.id, { mode: "personal", data: { names: "Места повтор", intro: "none" } });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Места повтор" });
+    await page.locator("#my-inv").getByRole("button", { name: ru.guests, exact: true }).first().click();
+    await e.waitText(page, ru.guestList);
+    await page.getByRole("button", { name: new RegExp("^" + ru.buySeats + " · ") }).click();
+    const pay = sheet(page, "pay");
+    await pay.waitFor();
+    await pay.getByRole("button", { name: "+", exact: true }).click();
+    await pay.getByRole("button", { name: "+", exact: true }).click();
+    await expect.poll(() => pay.locator("input[name=seats]").inputValue()).toBe("3");
+    await pay.locator('[data-pay="go"]').click();
+    await page.locator('[data-screen="mock-pay"]').waitFor();
+    await page.locator('[data-mock="failed"]').click();
+    await page.locator('[data-order-status="failed"]').waitFor();
+    await page.getByRole("button", { name: new RegExp("^" + ru.orderRetry) }).click();
+    // Снова лист мест у списка гостей, а не публикация в конструкторе: то же число мест и та же сумма.
+    await pay.waitFor();
+    expect(await pay.innerText()).toContain(ru.seatsTitle);
+    expect(await pay.locator("[data-mode]").count()).toBe(0);
+    expect(await pay.locator("input[name=seats]").inputValue()).toBe("3");
+    await expect.poll(() => pay.locator("[data-pay-total]").innerText()).toBe(await money(page, 3 * P.seat));
+    expect(await page.locator("[data-step-of]").count()).toBe(0);
+    await e.waitText(page, ru.guestList);
+    await pay.locator('[data-pay="go"]').click();
+    await page.locator('[data-screen="mock-pay"]').waitFor();
+    await page.locator('[data-mock="paid"]').click();
+    await expect.poll(async () => (await invOf(inv.id)).paidSeats).toBe(3);
+    // «Докупить места» черновик не публикует.
+    expect((await invOf(inv.id)).status).toBe("draft");
+    expect((await ordersOfUser(user.id)).map((o) => [o.kind, o.quantity, o.status])).toEqual([["seats", 3, "failed"], ["seats", 3, "paid"]]);
+    await e.waitText(page, ru.guestList);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("лист оплаты с карточки на главной → «Подробнее о подписке»: «Назад» и «Вернуться к приглашению» снова открывают тот же лист", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "С главной", intro: "none" } });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "С главной" });
+    const pay = sheet(page, "pay");
+    const openSheet = async () => {
+      await page.locator('#my-inv [data-inv-share="publish"]').first().click();
+      // Перед публикацией — проверка примеров: часть полей черновика ещё из примера шаблона.
+      await Promise.race([pay.waitFor(), sheet(page, "confirm").waitFor()]);
+      if (await sheet(page, "confirm").count()) await sheet(page, "confirm").getByRole("button", { name: ru.smpAnyway }).click();
+      await pay.waitFor();
+    };
+    await openSheet();
+    await pay.locator("[data-sub-more]").click();
+    await pricing(page).waitFor();
+    expect(await pricing(page).locator("[data-pricing-back]").count()).toBe(1);
+    await pricing(page).locator("[data-pricing-back]").click();
+    // Снова главная с тем же приглашением и листом оплаты.
+    await pay.waitFor();
+    expect(await page.locator("#my-inv").count()).toBe(1);
+    expect(await page.locator("[data-step-of]").count()).toBe(0);
+    expect(await pay.locator('[data-mode="shared"]').count()).toBe(1);
+    // Подписка с экрана цен: после оплаты «Вернуться к приглашению» — снова лист, теперь без оплаты.
+    await pay.locator("[data-sub-more]").click();
+    await pricing(page).locator('[data-buy-sub="1"]').click();
+    await page.locator('[data-screen="mock-pay"]').waitFor();
+    await page.locator('[data-mock="paid"]').click();
+    const next = pricing(page).locator("[data-sub-next]");
+    await next.waitFor();
+    expect(await next.innerText()).toContain(ru.backToInv);
+    await next.click();
+    await pay.waitFor();
+    await expect.poll(() => pay.locator("[data-pay-total]").innerText()).toBe(ru.free);
+    expect(await page.locator("#my-inv").count()).toBe(1);
+    await pay.locator('[data-pay="go"]').click();
+    await expect.poll(async () => (await invOf(inv.id)).status).toBe("active");
+    await e.expectClean(page, problems);
+    await close();
+  });
+
   it("«Докупить места»: без карточки типа, «Сколько мест докупить», оплачено и без места", async () => {
     const context = await e.newContext();
     const user = await e.signIn(context);
