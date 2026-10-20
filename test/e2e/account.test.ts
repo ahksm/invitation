@@ -125,6 +125,15 @@ describe("шапка: язык интерфейса и разделы", () => {
       expect(box.x, sel).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width, sel).toBeLessThanOrEqual(360);
     }
+    // Меню языка целиком на экране: кнопка языка левее середины, но меню не уходит за левый край.
+    await page.locator("[data-lang-btn]").click();
+    const langMenu = page.locator('[data-menu="lang"]');
+    await langMenu.waitFor();
+    const lm = (await langMenu.boundingBox())!;
+    expect(lm.x).toBeGreaterThanOrEqual(0);
+    expect(lm.x + lm.width).toBeLessThanOrEqual(360);
+    await page.keyboard.press("Escape");
+    await langMenu.waitFor({ state: "detached" });
     // На телефоне разделов в шапке нет — они в меню.
     expect(await page.locator("[data-nav]").count()).toBe(0);
     await page.locator("[data-nav-btn]").click();
