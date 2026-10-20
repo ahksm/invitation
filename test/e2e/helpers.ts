@@ -130,6 +130,8 @@ export type E2EOptions = {
    * с подменённой сетью (createMulticardProvider с fetch-заглушкой). base — адрес этого сервера.
    */
   payments?: (config: Config, cache: Cache, base: string) => PaymentProvider;
+  /** Флаги запуска Chromium, например правило автозапуска звука. */
+  browserArgs?: string[];
 };
 
 export async function startE2E(opts: E2EOptions = {}) {
@@ -163,7 +165,7 @@ export async function startE2E(opts: E2EOptions = {}) {
     { logger: false },
   );
   await app.listen({ port, host: "127.0.0.1" });
-  const browser: Browser = await chromium.launch({ executablePath: chromiumPath() });
+  const browser: Browser = await chromium.launch({ executablePath: chromiumPath(), ...(opts.browserArgs && { args: opts.browserArgs }) });
   const shotsDir = process.env.E2E_SHOTS_DIR;
 
   const e = {

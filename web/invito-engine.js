@@ -39,13 +39,15 @@ export function createMusic() {
   const schedule = () => { if (!track) return; while (nextT < ac.currentTime + 0.25) { track.play(nextT, step++); nextT += track.spb; } };
   const api = {
     get playing() { return playing; },
+    // Promise<boolean>: false, если браузер не дал включить звук (нет касания страницы).
     play(name, src) {
       api.stop();
-      if (name === 'custom' && src) { audioEl = new Audio(src); audioEl.loop = true; audioEl.volume = 0.6; audioEl.play().catch(() => {}); playing = name; return; }
-      if (!TRACKS[name]) return;
-      ensure(); ac.resume(); track = TRACKS[name]; step = 0; nextT = ac.currentTime + 0.05;
+      if (name === 'custom' && src) { audioEl = new Audio(src); audioEl.loop = true; audioEl.volume = 0.6; playing = name; return audioEl.play().then(() => true, () => false); }
+      if (!TRACKS[name]) return Promise.resolve(false);
+      ensure(); const resumed = Promise.resolve(ac.resume()); track = TRACKS[name]; step = 0; nextT = ac.currentTime + 0.05;
       master.gain.cancelScheduledValues(ac.currentTime); master.gain.setValueAtTime(0.0001, ac.currentTime); master.gain.linearRampToValueAtTime(0.9, ac.currentTime + 1.2);
       timer = setInterval(schedule, 40); schedule(); playing = name;
+      return resumed.then(() => ac.state === 'running', () => false);
     },
     stop() {
       if (audioEl) { audioEl.pause(); audioEl = null; }

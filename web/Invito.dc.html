@@ -282,7 +282,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 
 <div style="position:fixed;top:{{ floatTop }};right:12px;z-index:50;display:flex;gap:8px">
 <button onClick="{{ cycleLang }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 11px 'JetBrains Mono',monospace;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">{{ langCode }}</button>
-<button onClick="{{ toggleMusic }}" title="Music" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)"><span style="width:3px;border-radius:2px;height:{{ mb.a }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.b }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.d }};background:{{ mb.c }};transition:height .4s"></span></button>
+<button onClick="{{ toggleMusic }}" title="Music" data-music="1" aria-pressed="{{ musicPressed }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)"><span style="width:3px;border-radius:2px;height:{{ mb.a }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.b }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.d }};background:{{ mb.c }};transition:height .4s"></span></button>
 </div>
 <sc-if value="{{ fromTourLive }}"><button onClick="{{ backTour }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:90;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.tour }}</button></sc-if>
 <sc-if value="{{ isPreview }}"><button onClick="{{ backFromPreview }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:50;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
@@ -2414,7 +2414,8 @@ class Component extends DCLogic {
     // Возврат в приложение (страница оплаты в Telegram закрыта): заказ проверяется сразу.
     this.onVis = () => {
       if (!this.state.ready) return;
-      if (document.visibilityState === 'hidden') { if (this.stream) this.stopCam(); this.flushSave({ keepalive: true }); return; }
+      if (document.visibilityState === 'hidden') { if (this.stream) this.stopCam(); this.pauseMusic(); this.flushSave({ keepalive: true }); return; }
+      if (this._musPaused) { this._musPaused = false; this.autoMusic(null, true); }
       const o = this.state.order; if (this.state.screen === 'order' && o) this.pollOrder(o.id);
     };
     document.addEventListener('visibilitychange', this.onVis);
@@ -2428,6 +2429,10 @@ class Component extends DCLogic {
     this.tick = setInterval(() => { this.updateCountdown(); const L = this.state.login; if (L && L.step === 'code' && Date.now() < L.resendAt + 1000) this.setState({ clock: Date.now() }); }, 1000);
     this.onImgErr = (e) => { const el = e.target; if (el && el.tagName === 'IMG') el.style.opacity = '0'; };
     document.addEventListener('error', this.onImgErr, true);
+    // Музыка гостя стартует от первого касания страницы (см. autoMusic).
+    // События, после которых браузер разрешает звук: конец касания пальцем (iOS), клик, клавиша.
+    this.onGesture = (e) => this.autoMusic(e); this.gestures = ['touchend', 'click', 'keydown'];
+    this.gestures.forEach((t) => document.addEventListener(t, this.onGesture, true));
     let fcount = 0;
     const loop = () => { this.frame(); if ((fcount++ % 15) === 0) this.observe(); this.loopId = requestAnimationFrame(loop); };
     this.loopId = requestAnimationFrame(loop);
@@ -2436,6 +2441,7 @@ class Component extends DCLogic {
     window.removeEventListener('scroll', this.onScroll, true); window.removeEventListener('resize', this.onResize);
     window.removeEventListener('hashchange', this.onHash); document.removeEventListener('visibilitychange', this.onVis);
     if (this.onLink) document.removeEventListener('click', this.onLink, true);
+    this.gestures.forEach((t) => document.removeEventListener(t, this.onGesture, true));
     [this._saveT, this._retryT, this._tgT, this._tgPollT, this._orderT, this._slugT, this._pwT].forEach((x) => clearTimeout(x));
     clearInterval(this.tick); cancelAnimationFrame(this.loopId); this.io && this.io.disconnect(); this.stopMusic(); this.stopCam(true);
   }
@@ -2565,8 +2571,7 @@ class Component extends DCLogic {
     if (g && g.status !== 'pending') { rsvp.status = g.status; rsvp.count = 1 + g.plus; }
     // guestFrom — откуда открыли: туда и ведёт «Назад» (черновик с главной не должен попасть на «Ссылка готова»).
     const from = this.state.screen === 'guest' ? this.state.guestFrom : this.state.screen;
-    this.setState({ screen: 'guest', guestMode: mode, guestFrom: from, toGuestId: g ? g.id : null, myGuestId: null, env: (mode === 'edit' || !intro) ? 4 : 0, unlocked: false, pwTry: '', pwErr: false, rsvp, sheet: null });
-    if (mode !== 'edit') this.armMusic();
+    this.setState({ screen: 'guest', guestMode: mode, guestFrom: from, toGuestId: g ? g.id : null, myGuestId: null, env: (mode === 'edit' || !intro) ? 4 : 0, unlocked: false, pwTry: '', pwErr: false, rsvp, sheet: null, musicOff: false });
   }
   submitRsvp() {
     if (this.state.pub) return this.sendPublicRsvp();
@@ -2658,9 +2663,9 @@ class Component extends DCLogic {
 
   // ---------- music ----------
   toggleMusic() {
-    if (this.state.music) { this.stopMusic(); this.setState({ music: false }); return; }
+    if (this.state.music) { this.stopMusic(); this.setState({ music: false, musicOff: true }); return; }
     const inv = this.state.inv;
-    if (this.music && inv.music !== 'none') { this.music.play(inv.music, inv.musicSrc); this.setState({ music: true, previewTrack: null }); return; }
+    if (this.music && inv.music !== 'none') { this.music.play(inv.music, inv.musicSrc); this.setState({ music: true, musicOff: false, previewTrack: null }); return; }
     try {
       const AC = window.AudioContext || window.webkitAudioContext; this.ac = this.ac || new AC(); this.ac.resume();
       const g = this.ac.createGain(); g.gain.value = 0.05; g.connect(this.ac.destination); this.mg = g;
@@ -2669,23 +2674,35 @@ class Component extends DCLogic {
       play(); this.mus = setInterval(play, 420); this.setState({ music: true });
     } catch (e) { console.warn(e); }
   }
-  // Музыка приглашения включена по умолчанию. Звук браузер разрешает только после действия человека, поэтому
-  // трек стартует с первого касания страницы гостя: конверт, занавес, скретч или любое место. Поля ввода и сама
-  // кнопка музыки не в счёт: кнопка переключает музыку сама, а ввод пароля не должен начинаться со звука.
-  // pointerup и keydown, а не pointerdown: на телефонах касание даёт право на звук только по pointerup.
-  armMusic() {
-    this.disarmMusic();
-    this._musArm = (e) => {
-      const el = e.target && e.target.closest ? e.target : null;
-      if (el && el.closest('input,textarea,select,[title="Music"]')) return;
-      this.disarmMusic();
-      const s = this.state;
-      if (s.screen === 'guest' && s.guestMode !== 'edit' && !s.music && s.inv.music !== 'none') this.toggleMusic();
-    };
-    document.addEventListener('pointerup', this._musArm, true); document.addEventListener('keydown', this._musArm, true);
+  // Музыка на странице гостя включена по умолчанию. Звук браузер разрешает только после касания страницы,
+  // поэтому она стартует от первого касания гостя: конверт, занавес, скретч-карта или любая кнопка.
+  // Не играет в редакторе, за паролем, без трека и после того, как гость выключил её сам.
+  // resume: возврат на вкладку, где музыка играла; касание для этого уже было.
+  autoMusic(e, resume) {
+    const s = this.state, inv = s.inv;
+    if (this._autoMus || !this.music || !s.ready || s.screen !== 'guest' || s.guestMode === 'edit' || s.music || s.musicOff) return;
+    if (!inv || !inv.music || inv.music === 'none' || (inv.music === 'custom' && !inv.musicSrc)) return;
+    if (s.pubLocked || (s.guestMode === 'live' && s.share.pwOn && !!s.share.pw && !s.unlocked)) return;
+    // Кнопка музыки переключает её сама: иначе первое нажатие на неё включило бы и сразу выключило музыку.
+    // Поля ввода не в счёт: имя в ответе начинают печатать без музыки.
+    if (e && e.target && e.target.closest && e.target.closest('[data-music],input,textarea,select')) return;
+    // Касание, которое не даёт права на звук (палец прокручивал страницу), ждёт следующего.
+    if (!resume && navigator.userActivation && !navigator.userActivation.isActive) return;
+    const name = inv.music;
+    this._autoMus = true;
+    this.music.play(name, inv.musicSrc).then((ok) => {
+      this._autoMus = false;
+      // Браузер не дал включить звук: кнопка снова «выключено», следующее касание попробует ещё раз.
+      if (!ok && this.music.playing === name) { this.stopMusic(); this.setState({ music: false }); }
+    });
+    this.setState({ music: true, previewTrack: null });
   }
-  disarmMusic() { if (this._musArm) { document.removeEventListener('pointerup', this._musArm, true); document.removeEventListener('keydown', this._musArm, true); this._musArm = null; } }
-  stopMusic() { this.disarmMusic(); if (this.music) this.music.stop(); clearInterval(this.mus); this.mus = null; if (this.mg) { try { this.mg.disconnect(); } catch (e) {} this.mg = null; } }
+  // Вкладку свернули: музыка гостя молчит, пока его нет, и продолжается при возвращении.
+  pauseMusic() {
+    if (!this.state.music || this.state.screen !== 'guest') return;
+    this.stopMusic(); this._musPaused = true; this.setState({ music: false });
+  }
+  stopMusic() { if (this.music) this.music.stop(); clearInterval(this.mus); this.mus = null; if (this.mg) { try { this.mg.disconnect(); } catch (e) {} this.mg = null; } }
 
   // ---------- scroll fx ----------
   observe() {
@@ -3308,7 +3325,7 @@ class Component extends DCLogic {
       nextStep: () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit'),
       nextLabel: s.step < STEPS.length - 1 ? t.next : t.toEditor,
       particlesOn: density > 0, cycleLang: () => { const LC = D.LANGS.map((x) => x.code); if (!pub && s.draftId && !s.demo) this.setInvLang(LC[(LC.indexOf(gl) + 1) % LC.length]); else this.setLang(LC[(LC.indexOf(lang) + 1) % LC.length], { save: true }); }, langCode: D.LANGS.find((x) => x.code === gl).label,
-      toggleMusic: () => this.toggleMusic(), mb: s.music ? { a: '14px', b: '22px', d: '10px', c: th.accent } : { a: '6px', b: '6px', d: '6px', c: th.muted },
+      toggleMusic: () => this.toggleMusic(), musicPressed: s.music ? 'true' : 'false', mb: s.music ? { a: '14px', b: '22px', d: '10px', c: th.accent } : { a: '6px', b: '6px', d: '6px', c: th.muted },
       isPreview: isGuest && s.guestMode === 'preview', isRefine: isEdit,
       backFromPreview: () => { this.stopMusic(); this.setState({ music: false }); this.go(s.fromTour ? 'tour' : 'templates'); },
       backToBuild: () => this.go('build', { step: STEPS.length - 1 }),
