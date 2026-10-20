@@ -204,15 +204,18 @@ describe("ссылки из приложения", () => {
     expect(await offer.title()).toBe("Публичная оферта — Invito");
     await offer.close();
 
-    // Лист оплаты черновика: под «Оплатить …» и под кнопкой подписки — согласие со ссылкой на оферту.
+    // Лист оплаты черновика: под «Оплатить …» и под кнопкой подписки — согласие со ссылкой на оферту;
+    // в кавычках — подпись кнопки целиком, как она написана на кнопке.
     await page.locator('#my-inv [data-inv-share="publish"]').first().click();
     const pay = page.locator('[data-sheet="pay"]');
     await pay.locator('[data-consent="pay"]').waitFor();
-    expect(await pay.locator('[data-pay="go"]').innerText()).toMatch(new RegExp("^" + ru.payWord + " "));
-    expect(await text(page, '[data-sheet="pay"] [data-consent="pay"]')).toBe(consent(ru, ru.payWord));
-    expect(consent(ru, ru.payWord)).toBe("Нажимая «Оплатить», вы принимаете условия оферты");
-    expect(await pay.locator('[data-pay="sub"]').innerText()).toMatch(new RegExp("^" + ru.subBuy + " "));
-    expect(await text(page, '[data-sheet="pay"] [data-consent="sub"]')).toBe(consent(ru, ru.subBuy));
+    const goLabel = (await pay.locator('[data-pay="go"]').innerText()).replace(/\s*→$/, "");
+    expect(goLabel).toMatch(/^Оплатить \d[\d\s\u00a0]* сум$/);
+    expect(await text(page, '[data-sheet="pay"] [data-consent="pay"]')).toBe(consent(ru, goLabel).replace(/\s+/g, " "));
+    expect(await text(page, '[data-sheet="pay"] [data-consent="pay"]')).toMatch(/^Нажимая «Оплатить \d[\d ]* сум», вы принимаете условия оферты$/);
+    const subLabel = await pay.locator('[data-pay="sub"]').innerText();
+    expect(subLabel).toMatch(new RegExp("^" + ru.subBuy + " "));
+    expect(await text(page, '[data-sheet="pay"] [data-consent="sub"]')).toBe(consent(ru, subLabel).replace(/\s+/g, " "));
     for (const k of ["pay", "sub"]) {
       const a = pay.locator(`[data-consent="${k}"] a`);
       expect(await a.getAttribute("href"), k).toBe("/oferta");

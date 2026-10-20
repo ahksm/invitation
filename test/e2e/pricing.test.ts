@@ -65,13 +65,16 @@ async function smsLogin(page: Page, phone: string) {
   await sheet(page, "login").waitFor({ state: "detached" });
 }
 
-/** Главная → «Создать приглашение» → «Свадьба» → экран шаблонов. */
+/** Главная → «Создать приглашение» → «Свадьба» → экран шаблонов (ждёт цену на первой карточке). */
 async function toTemplates(page: Page, t: Dict = ru, lang = "ru") {
   await page.getByRole("button", { name: t.create }).first().click();
   await e.waitText(page, t.chooseEvent);
   await page.locator("[data-rv]").filter({ hasText: D.EVENTS.wedding.label[lang] }).first().click();
-  await page.locator('[data-buy="tpl"]').first().waitFor();
+  await expect.poll(() => page.locator("[data-tpl-price]").first().innerText()).not.toBe("");
 }
+/** Согласие так, как его собирает приложение: «Нажимая «{btn}», вы принимаете условия {link}». */
+const consent = (t: Dict, btn: string) => t.payConsent.replace("{btn}", btn).replace("{link}", t.consentLink);
+const textOf = (page: Page, selector: string) => page.locator(selector).first().evaluate((x) => (x.textContent || "").replace(/\s+/g, " ").trim());
 
 /** Предпросмотр: заставка (конверт) закрывает кнопки, пока её не открыли. */
 async function previewOf(page: Page, t: Dict = ru) {
@@ -216,6 +219,9 @@ describe("экран цен", () => {
     expect(await scr2.locator('[data-sub-state="free"]').innerText()).toContain(ru.freeTitle);
     expect(await scr2.locator("[data-buy-sub]").count()).toBe(0);
     expect(await scr2.locator('[data-price-card="shared"]').innerText()).toContain(ru.tplFreeYou.toUpperCase());
+    // Места у бесплатного доступа тоже бесплатны: строки «места оплачиваются отдельно» нет.
+    expect(await scr2.locator("[data-sub-incl] [data-incl=\"in\"]").count()).toBe(ru.subIncl.length);
+    expect(await scr2.locator('[data-incl="out"]').count()).toBe(0);
     await e.expectClean(second.page, second.problems);
     await second.close();
   });
@@ -315,6 +321,10 @@ describe("«Купить шаблон»", () => {
     const price = tpl!.price ?? cfg.prices.sharedTemplate;
     await expect.poll(() => card.innerText()).toContain((await money(page, price)).toUpperCase());
     expect(await card.locator('[data-buy="tpl"]').innerText()).toBe(ru.buyTpl);
+    // Рядом с кнопкой: за что платят (только это приглашение) и согласие с офертой — покупка сразу ведёт на оплату.
+    expect(await card.locator("[data-tpl-for]").innerText()).toBe(ru.tplFor);
+    expect(await textOf(page, '[data-ci="0"] [data-consent="tpl"]')).toBe(consent(ru, ru.buyTpl));
+    expect(await page.locator('[data-ci="0"] [data-consent="tpl"] a').getAttribute("href")).toBe("/oferta");
     // Цена и подсказка под каруселью.
     expect(await page.locator("[data-cur-price]").innerText()).toContain(await money(page, price));
     await e.shot(page, "templates-buy-ru-390x844.png");
@@ -341,6 +351,18 @@ describe("«Купить шаблон»", () => {
     expect(page.url()).toBe(`${e.base}/app/`);
     expect(await invOf(inv!.id)).toMatchObject({ status: "draft", unlocked: true });
     expect(await e.app.inject({ url: "/i/" + (await invOf(inv!.id)).slug }).then((r) => r.statusCode)).toBe(404);
+    // Назад к шаблонам: у этого шаблона «Оплачено», у шаблонов не дороже — «Без доплаты»; купить больше нечего.
+    await page.getByRole("button", { name: "← " + ru.back }).first().click();
+    await expect.poll(() => card.innerText()).toContain(ru.paidMark.toUpperCase());
+    const botanical = (await pricesFor(user!.id, "wedding-botanical")).template;
+    expect(await page.locator('[data-tpl-price="wedding-botanical"]').innerText()).toContain(botanical <= price ? ru.tplNoExtra.toUpperCase() : (await money(page, botanical)).toUpperCase());
+    expect(await page.locator('[data-buy="tpl"]').count()).toBe(0);
+    expect(await page.locator('[data-consent="tpl"]').count()).toBe(0);
+    // На главной черновик помечен «Оплачено · не опубликовано».
+    await page.getByRole("button", { name: "Invito" }).first().click();
+    await expect.poll(() => page.locator("#my-inv [data-inv-status]").first().innerText()).toBe(ru.draftPaid);
+    await page.locator("#my-inv").getByRole("button", { name: ru.edit, exact: true }).first().click();
+    await builder(page);
     // Ссылка потом — без новой оплаты: лист показывает «Оплачено», кнопка «Опубликовать». Черновик создан покупкой
     // и ещё с именами и датой из примера: перед публикацией — проверка примеров, «Всё равно опубликовать».
     await page.getByTitle(ru.stepsX.sections).click();
@@ -351,7 +373,7 @@ describe("«Купить шаблон»", () => {
     await cf.getByRole("button", { name: ru.smpAnyway }).click();
     const pay = sheet(page, "pay");
     await expect.poll(() => pay.locator('[data-price="shared"]').innerText()).toBe(ru.paidMark);
-    expect(await pay.locator("[data-pay-total]").innerText()).toBe(ru.free);
+    expect(await pay.locator("[data-pay-total]").innerText()).toBe(ru.paidMark);
     expect(await pay.locator("[data-sub]").count()).toBe(0);
     await pay.locator('[data-pay="go"]').click();
     await e.waitText(page, ru.linkReady);
@@ -372,6 +394,8 @@ describe("«Купить шаблон»", () => {
     await previewOf(page);
     const buy = page.locator('[data-buy="tpl"]');
     await expect.poll(() => buy.innerText()).toBe(ru.buyFor.replace("{price}", await money(page, P.template)));
+    // Согласие под кнопками предпросмотра цитирует подпись кнопки.
+    expect(await textOf(page, '[data-consent="tpl-preview"]')).toBe((ru.tplOnce + " " + consent(ru, await buy.innerText())).replace(/\s+/g, " "));
     // Заказ создаётся медленно: кнопка занята, повторное нажатие второго заказа не создаёт.
     let release!: () => void;
     const slow = new Promise<void>((r) => (release = r));
@@ -412,8 +436,8 @@ describe("«Купить шаблон»", () => {
     await close();
   });
 
-  it("бесплатный доступ и подписка: цена «Бесплатно для вас» / «Входит в подписку», кнопка сразу открывает конструктор", async () => {
-    for (const [kind, label, start] of [["free", ru.tplFreeYou, ru.tplStartFree], ["sub", ru.tplInSub, ru.tplStartSub]] as const) {
+  it("бесплатный доступ и подписка: цена «Бесплатно для вас» / «Входит в подписку», кнопки покупки нет — «Выбрать шаблон» открывает конструктор", async () => {
+    for (const [kind, label] of [["free", ru.tplFreeYou], ["sub", ru.tplInSub]] as const) {
       const context = await e.newContext();
       const user = await e.signIn(context, { freeAccess: kind === "free" });
       if (kind === "sub") await e.db.insert(subscriptions).values({ userId: user.id, startsAt: new Date(), endsAt: new Date(Date.now() + 10 * 864e5) });
@@ -421,15 +445,18 @@ describe("«Купить шаблон»", () => {
       await toTemplates(page);
       const card = page.locator('[data-tpl-price="wedding-classic"]');
       await expect.poll(() => card.innerText()).toContain(label.toUpperCase());
-      expect(await card.locator('[data-buy="tpl"]').innerText()).toBe(start);
+      // Платить не за что: ни «Купить шаблон», ни согласия с офертой — только «Выбрать шаблон» в панели.
+      expect(await page.locator('[data-buy="tpl"]').count()).toBe(0);
+      expect(await page.locator('[data-consent="tpl"]').count()).toBe(0);
       await e.shot(page, `templates-${kind}-ru-390x844.png`);
-      // В предпросмотре платить не за что — только «Выбрать шаблон».
+      // В предпросмотре — тоже только «Выбрать шаблон».
       await previewOf(page);
       expect(await page.locator('[data-buy="tpl"]').count()).toBe(0);
+      expect(await page.locator('[data-consent="tpl-preview"]').count()).toBe(0);
       await page.getByRole("button", { name: "← " + ru.back }).first().click();
-      await card.locator('[data-buy="tpl"]').click();
+      await page.getByRole("button", { name: ru.useTpl + " →" }).click();
       await builder(page);
-      await e.waitText(page, label);
+      await expect.poll(async () => (await invsOf(user.id)).length).toBe(1);
       const [inv] = await invsOf(user.id);
       expect(inv).toMatchObject({ status: "draft" });
       expect(await ordersOfUser(user.id)).toEqual([]);

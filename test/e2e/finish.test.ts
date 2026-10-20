@@ -124,10 +124,11 @@ describe("конец конструктора", () => {
     const eb = (await editorBtn.boundingBox())!;
     expect(eb.y + eb.height).toBeLessThan(844 - 79 - 64);
     expect(await onTop(page, "[data-finish] button")).toBe(true);
-    const price = ru.priceFrom.replace("{price}", await money(page, await priceOfTemplate(user.id)));
+    // Цена общей ссылки — точная цена шаблона, без «от»: персональные приглашения считаются отдельно, за гостя.
+    const price = await money(page, await priceOfTemplate(user.id));
     await expect.poll(() => fin.locator('[data-finish-price="price"]').textContent()).toBe(ru.pubPrice + " · " + price);
     expect(await fin.innerText()).toContain(ru.finishD);
-    expect(await fin.locator("[data-smp]").evaluateAll((els) => els.map((x) => x.getAttribute("data-smp")))).toEqual(["names", "date", "venue", "address", "photos"]);
+    expect(await fin.locator("[data-smp]").evaluateAll((els) => els.map((x) => x.getAttribute("data-smp")))).toEqual(["names", "date", "venue", "address", "program", "dress", "photos"]);
     // Одна основная кнопка «Получить ссылку →» — в нижней панели, с ценой под ней.
     expect(await page.getByRole("button", { name: ru.toShare + " →" }).count()).toBe(1);
     expect(await page.locator('[data-next="share"] [data-next-price]').textContent()).toBe(price);

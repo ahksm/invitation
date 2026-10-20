@@ -163,6 +163,17 @@ describe("оплата из мини-аппа через Multicard", () => {
     await e.waitText(page, ru.linkReady);
     expect(polls()).toBeGreaterThan(hiddenPolls);
     expect((await e.db.select().from(invitations).where(eq(invitations.id, inv.id)))[0]).toMatchObject({ status: "active", unlocked: true });
+    // Экран ссылки в мини-аппе: MainButton — «Отправить в Telegram», назад — BackButton Telegram; своих
+    // «← Назад» и «Отправить в Telegram» на странице нет, «Скопировать» остаётся.
+    await expect.poll(async () => (await tgState(page)).main.text).toBe(ru.sendTg);
+    expect((await tgState(page)).back).toBe(true);
+    expect(await page.getByRole("button", { name: "← " + ru.back }).count()).toBe(0);
+    expect(await page.getByRole("button", { name: ru.sendTg, exact: true }).count()).toBe(0);
+    expect(await page.getByRole("button", { name: ru.copy, exact: true }).count()).toBeGreaterThan(0);
+    await page.evaluate(() => (window as any).__tg.main.fn());
+    const shared = (await tgState(page)).links.at(-1)!;
+    expect(shared[0]).toBe("tg");
+    expect(shared[1]).toMatch(/^https:\/\/t\.me\/share\/url\?url=/);
     await e.shot(page, "multicard-miniapp-back-ru-390x844.png");
     await e.expectClean(page, problems);
     expect(problems.me401).toBe(0);

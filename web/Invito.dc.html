@@ -55,7 +55,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="display:flex;gap:8px;min-width:0;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}"><span style="flex:none">{{ m.event }}</span><span>·</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.tplName }}</span></div>
 <div style="font:500 28px/1.05 'Cormorant Garamond',serif;color:{{ ui.ink }};overflow-wrap:anywhere">{{ m.names }}</div>
 <div style="font-size:14px;color:{{ ui.muted }}">{{ m.date }}</div>
-<div style="display:flex;gap:10px;align-items:center;margin-top:2px"><span style="padding:3px 10px;border-radius:999px;font-size:12px;background:{{ m.stBg }};color:{{ m.stColor }};border:1px solid {{ m.stBorder }}">{{ m.status }}</span><span style="font:500 11px 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ m.replies }}</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin-top:2px"><span data-inv-status="1" style="padding:3px 10px;border-radius:999px;font-size:12px;white-space:nowrap;background:{{ m.stBg }};color:{{ m.stColor }};border:1px solid {{ m.stBorder }}">{{ m.status }}</span><span style="font:500 11px 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ m.replies }}</span></div>
 <sc-if value="{{ m.draft }}"><div data-draft-hint="1" style="font-size:13px;line-height:1.4;color:{{ ui.muted }}">{{ t.invDraftHint }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
 <button data-inv-share="{{ m.mainKey }}" onClick="{{ m.onMain }}" style="height:36px;padding:0 16px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap" style-hover="background:{{ ui.ink }};color:{{ ui.paper }}">{{ m.mainLabel }} →</button>
@@ -218,18 +218,19 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 
 <sc-if value="{{ isTemplates }}">
 <main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
-<div style="padding:24px 0 0">
+<div style="padding:clamp(14px,4vw,24px) 0 0">
 <sc-if value="{{ notTg }}"><button onClick="{{ goEvents }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
-<div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.flow2 }} · {{ evLabel }}</div>
-<h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;color:{{ ui.ink }}">{{ t.pickTemplate }}</h2>
+<div style="margin-top:clamp(16px,4.5vw,24px);font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.flow2 }} · {{ evLabel }}</div>
+<h2 style="margin:10px 0 0;font:500 clamp(38px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;color:{{ ui.ink }}">{{ t.pickTemplate }}</h2>
 </div>
 </main>
 <div style="position:relative">
-<div data-carousel="1" style="position:relative;display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;padding:34px calc(50% - {{ cardHalf }}) 30px;scrollbar-width:none">
+<div data-carousel="1" style="position:relative;display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;padding:clamp(20px,5vw,34px) calc(50% - {{ cardHalf }}) 30px;scrollbar-width:none">
 <sc-for list="{{ tpls }}" as="c" hint-placeholder-count="0"><div data-ci="{{ $index }}" onClick="{{ c.onClick }}" style="flex:none;width:{{ cardW }};scroll-snap-align:center;cursor:pointer;transform-origin:50% 70%;will-change:transform">
 <div style="border-radius:14px;overflow:hidden;box-shadow:0 34px 60px -30px rgba({{ ui.inkRgb }},.55);outline:{{ c.outline }};outline-offset:6px;transition:outline-color .3s"><dc-import name="InviteCover" th="{{ c.th }}" names="{{ c.names }}" date="{{ c.date }}" cover="{{ c.cover }}" kicker="{{ c.kicker }}" hint-size="100%,350px"></dc-import></div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:16px;color:{{ ui.ink }}"><span style="font:500 30px/1 'Cormorant Garamond',serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.name }}</span><span style="flex:none;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.style }}</span></div>
-<div data-tpl-price="{{ c.id }}" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 10px;min-height:40px;margin-top:10px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ c.priceColor }}">{{ c.price }}</span><sc-if value="{{ c.buyOn }}"><button data-buy="tpl" onClick="{{ c.buy }}" style="height:40px;padding:0 16px;border-radius:999px;border:0;background:{{ c.buyBg }};color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;opacity:{{ c.buyOp }};transition:background .2s,opacity .2s" style-hover="background:{{ ui.ink }}">{{ c.buyLabel }}</button></sc-if></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:12px;color:{{ ui.ink }}"><span style="font:500 30px/1 'Cormorant Garamond',serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.name }}</span><span style="flex:none;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.style }}</span></div>
+<div data-tpl-price="{{ c.id }}" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 10px;min-height:40px;margin-top:8px"><span style="flex:1 1 76px;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ c.priceColor }}">{{ c.price }}</span><sc-if value="{{ c.buyOn }}"><span data-tpl-for="1" style="font-size:11px;line-height:1.2;color:{{ ui.muted }}">{{ t.tplFor }}</span></sc-if></span><sc-if value="{{ c.buyOn }}"><button data-buy="tpl" onClick="{{ c.buy }}" style="flex:none;height:40px;padding:0 12px;border-radius:999px;border:0;background:{{ c.buyBg }};color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;opacity:{{ c.buyOp }};transition:background .2s,opacity .2s" style-hover="background:{{ ui.ink }}">{{ c.buyLabel }}</button></sc-if></div>
+<sc-if value="{{ c.buyOn }}"><div data-consent="tpl" style="margin-top:4px;font-size:11px;line-height:1.4;color:{{ ui.muted }}">{{ tplConsent.pre }}<a href="{{ tplConsent.href }}" target="_blank" rel="noopener" onClick="{{ tplConsent.stop }}" style="color:inherit;text-decoration:underline;text-underline-offset:2px" style-hover="color:#d4452a">{{ tplConsent.link }}</a>{{ tplConsent.post }}</div></sc-if>
 </div></sc-for>
 </div>
 <!-- Стрелки карусели — только на широком экране; на телефоне листают пальцем -->
@@ -251,9 +252,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><sc-for list="{{ palettes }}" as="p"><button onClick="{{ p.onClick }}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 6px;border-radius:999px;border:1px solid {{ p.border }};background:{{ p.bg }};cursor:pointer;color:{{ ui.ink }};font-size:13px"><span style="display:flex;width:30px;height:30px;border-radius:50%;overflow:hidden;border:1px solid rgba({{ ui.inkRgb }},.15)"><span style="flex:1;background:{{ p.c1 }}"></span><span style="flex:1;background:{{ p.c2 }}"></span><span style="flex:1;background:{{ p.c3 }}"></span></span>{{ p.name }}</button></sc-for></div>
 </div></div>
 </main>
-<sc-if value="{{ notTg }}"><div style="position:sticky;bottom:0;z-index:20;background:rgba({{ ui.paperRgb }},.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid rgba({{ ui.inkRgb }},.14)"><div style="max-width:1200px;margin:0 auto;padding:12px clamp(18px,4vw,40px);display:flex;gap:10px;justify-content:flex-end">
-<button onClick="{{ previewTpl }}" style="height:54px;padding:0 22px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.preview }}</button>
-<button onClick="{{ useTpl }}" style="flex:1;max-width:340px;height:54px;padding:0 22px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.useTpl }} →</button>
+<sc-if value="{{ notTg }}"><div data-tpl-bar="1" style="position:sticky;bottom:0;z-index:20;background:rgba({{ ui.paperRgb }},.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid rgba({{ ui.inkRgb }},.14)"><div style="max-width:1200px;margin:0 auto;padding:12px clamp(18px,4vw,40px);display:flex;gap:10px;justify-content:flex-end">
+<button onClick="{{ previewTpl }}" style="flex:none;height:54px;padding:0 clamp(16px,4vw,22px);border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer;white-space:nowrap">{{ t.preview }}</button>
+<button onClick="{{ useTpl }}" style="flex:1;min-width:0;max-width:340px;height:54px;padding:0 clamp(14px,4vw,22px);border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" style-hover="background:#d4452a">{{ t.useTpl }} →</button>
 </div></div></sc-if>
 </sc-if>
 
@@ -401,6 +402,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-preview-bar="1" style="position:fixed;left:50%;bottom:{{ previewBottom }};transform:translateX(-50%);z-index:90;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:max-content;max-width:calc(100vw - 24px)">
 <sc-if value="{{ tb.on }}"><button data-buy="tpl" onClick="{{ tb.buy }}" style="height:54px;padding:0 22px;border-radius:999px;border:0;background:{{ tb.bg }};color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap;opacity:{{ tb.op }}">{{ tb.label }}</button></sc-if>
 <button onClick="{{ useTpl }}" style="height:54px;padding:0 26px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap">{{ t.useTpl }} →</button>
+<sc-if value="{{ tb.on }}"><div data-consent="tpl-preview" style="flex-basis:100%;max-width:360px;margin:0 auto;padding:6px 12px;border-radius:12px;background:rgba({{ ui.paperRgb }},.92);color:{{ ui.muted }};font:400 11px/1.4 'Onest',sans-serif;text-align:center">{{ t.tplOnce }} {{ tb.consent.pre }}<a href="{{ tb.consent.href }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:2px" style-hover="color:#d4452a">{{ tb.consent.link }}</a>{{ tb.consent.post }}</div></sc-if>
 </div></sc-if>
 <sc-if value="{{ isRefine }}"><button onClick="{{ backToBuild }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:50;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
 <div style="position:fixed;left:12px;right:12px;bottom:14px;z-index:50;max-width:620px;margin:0 auto;background:rgba({{ ui.inkRgb }},.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:{{ ui.paper }};border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 40px rgba(0,0,0,.35);font-family:'Onest',sans-serif">
@@ -926,9 +928,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div></sc-if>
 
 <sc-if value="{{ isShare }}"><main style="max-width:1200px;margin:0 auto;padding:24px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
-<button onClick="{{ backToRefine }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<sc-if value="{{ notTg }}"><button onClick="{{ backToRefine }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
 <div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.flow4 }}</div>
-<h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ t.linkReady }}</h2>
+<h2 data-share-title="1" style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ shareTitle }}</h2>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:44px;margin-top:34px;align-items:start">
 <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
 <sc-if value="{{ shareShared }}"><div style="border:1px solid {{ ui.ink }};border-radius:16px;padding:20px;background:{{ ui.card }}">
@@ -938,7 +940,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ sh.slugWarn }}"><div data-slug-warn="1" style="margin-top:8px;color:{{ ui.muted }};font-size:13px;line-height:1.4">{{ t.slugWarn }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
 <button onClick="{{ copyLink }}" style="flex:1;min-width:140px;height:52px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:#000">{{ t.copy }}</button>
-<button onClick="{{ sendTg }}" style="flex:1;min-width:140px;height:52px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.sendTg }}</button>
+<sc-if value="{{ notTg }}"><button onClick="{{ sendTg }}" style="flex:1;min-width:140px;height:52px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.sendTg }}</button></sc-if>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
 <sc-if value="{{ sh.canNative }}"><button data-share-any="1" onClick="{{ sh.native }}" style="flex:1;min-width:140px;height:48px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.shareAny }}</button></sc-if>
@@ -1003,7 +1005,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </main></sc-if>
 
 <sc-if value="{{ isManage }}"><main style="max-width:1200px;margin:0 auto;padding:24px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
-<button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<sc-if value="{{ notTg }}"><button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
 <div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ namesDate }}</div>
 <h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ t.guests }}</h2>
 <div style="display:grid;grid-template-columns:{{ statCols }};gap:16px;margin-top:30px">
@@ -1155,7 +1157,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </main></sc-if>
 
 <sc-if value="{{ isPricing }}"><main data-screen="pricing" style="max-width:1200px;margin:0 auto;padding:24px clamp(18px,4vw,40px) 90px;color:{{ ui.ink }}">
-<button data-pricing-back="1" onClick="{{ pr.back }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<sc-if value="{{ notTg }}"><button data-pricing-back="1" onClick="{{ pr.back }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
 <div style="margin-top:24px;display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase"><span style="color:#d4452a">{{ t.navPrices }}</span><span style="color:{{ ui.muted }}">{{ monthYear }}</span></div>
 <h2 style="margin:26px 0 0;max-width:15ch;font:500 clamp(44px,9vw,96px)/.92 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ t.pricingTitle }}</h2>
 <p style="margin:18px 0 0;max-width:52ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.pricingSub }}</p>
@@ -1190,7 +1192,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
 <sc-for list="{{ pr.plans }}" as="p" hint-placeholder-count="4"><div data-plan="{{ p.m }}" onClick="{{ p.pick }}" aria-pressed="{{ p.pressed }}" style="display:flex;flex-direction:column;gap:6px;min-width:0;padding:16px;border-radius:16px;border:1.5px solid {{ p.border }};background:{{ p.bg }};cursor:pointer;transition:border-color .2s,background .2s">
 <div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ p.kick }}">{{ p.label }}</div>
-<div data-plan-price="{{ p.m }}" style="margin-top:4px;font:500 clamp(22px,2.4vw,30px)/1.1 'Cormorant Garamond',serif;white-space:nowrap">{{ p.price }}</div>
+<div data-plan-price="{{ p.m }}" style="margin-top:4px;font:500 clamp(22px,2.4vw,30px)/1.1 'Cormorant Garamond',serif">{{ p.price }}</div>
 <div style="font-size:13px;line-height:1.4;color:{{ ui.muted }}">{{ p.per }}</div>
 <sc-if value="{{ p.until }}"><div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#2e7d4f">{{ p.until }}</div></sc-if>
 <button data-buy-sub="{{ p.m }}" onClick="{{ p.buy }}" style="margin-top:auto;height:44px;padding:0 14px;border-radius:999px;border:1px solid {{ p.btnBorder }};background:{{ p.btnBg }};color:{{ p.btnColor }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ pr.op }};transition:background .2s,opacity .2s" style-hover="background:#d4452a;color:#fff;border-color:#d4452a">{{ p.btn }}</button>
@@ -1351,7 +1353,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ acc.ordersLoading }}"><div style="padding:10px 0;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};animation:invPulse 1.4s ease-in-out infinite">{{ t.loading }}</div></sc-if>
 <sc-if value="{{ acc.ordersEmpty }}"><div style="padding:10px 0;font-size:14px;color:{{ ui.muted }}">{{ t.payNone }}</div></sc-if>
 <sc-if value="{{ acc.ordersErr }}"><div role="alert" style="padding:10px 0;font-size:14px;color:#d4452a">{{ acc.ordersErr }}</div></sc-if>
-<sc-for list="{{ acc.orders }}" as="o" hint-placeholder-count="0"><div data-order-row="{{ o.st }}" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px dashed rgba({{ ui.inkRgb }},.12)"><span style="font-size:14px;color:{{ ui.ink }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.kind }}</span><span style="font:500 13px 'JetBrains Mono',monospace;color:{{ ui.ink }};text-align:right;white-space:nowrap">{{ o.amount }}</span><span style="font:500 11px 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ o.date }}</span><span style="font-size:12px;color:{{ o.color }};text-align:right;white-space:nowrap">{{ o.status }}</span></div></sc-for>
+<sc-for list="{{ acc.orders }}" as="o" hint-placeholder-count="0"><div data-order-row="{{ o.st }}" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px dashed rgba({{ ui.inkRgb }},.12)"><span style="font-size:14px;color:{{ ui.ink }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.kind }}</span><span style="font:500 13px 'JetBrains Mono',monospace;color:{{ ui.ink }};text-align:right;white-space:nowrap">{{ o.amount }}</span><sc-if value="{{ o.what }}"><span data-order-what="1" style="grid-column:1 / -1;font-size:12px;line-height:1.4;color:{{ ui.muted }};overflow-wrap:anywhere">{{ o.what }}</span></sc-if><span style="font:500 11px 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ o.date }}</span><span style="font-size:12px;color:{{ o.color }};text-align:right;white-space:nowrap">{{ o.status }}</span></div></sc-for>
 </div></sc-if>
 <button onClick="{{ acc.openLang }}" data-acc-row="lang" style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:16px 0;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;text-align:left;cursor:pointer"><span>{{ t.uiLang }}</span><span style="font-size:14px;color:{{ ui.muted }};white-space:nowrap">{{ hd.langName }} ▸</span></button>
 <sc-if value="{{ acc.admin }}"><button onClick="{{ accAdmin }}" data-acc-row="admin" style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:16px 0;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;text-align:left;cursor:pointer"><span>{{ t.adminPanel }}</span><span style="color:{{ ui.muted }}">↗</span></button></sc-if>
@@ -3796,6 +3798,8 @@ class Component extends DCLogic {
       ordersLoading: !!MO && MO.loading && !oList, ordersEmpty: !!oList && !oList.length, ordersErr: MO && !oList && !MO.loading ? MO.err : '',
       orders: (oList || []).map((o) => ({ st: o.status, status: t.orderSt[o.status] || o.status, color: OST[o.status] || U.muted, amount: this.money(o.amount),
         kind: (t.orderKinds[o.kind] || o.kind) + (o.kind === 'seats' ? ' · ' + o.quantity : o.kind === 'subscription' ? ' · ' + planOf(o.quantity) : ''),
+        // За какое приглашение (имена и шаблон), если оно есть в списке пользователя.
+        what: o.invitationId ? this.invLabel(o.invitationId) : '',
         date: o.createdAt ? this.fmt(this.tashDate(o.createdAt), '12:00', { day: 'numeric', month: 'short', year: 'numeric' }) : '' })),
       openLang: () => { this.setState({ account: false, nameEd: null }); this.openMenu('lang', this.rootRef.current && this.rootRef.current.querySelector('[data-lang-btn]')); },
       // В мини-аппе вход — аккаунт Telegram: «Выйти» вернуло бы его же, вместо кнопки — пояснение.
@@ -3858,8 +3862,10 @@ class Component extends DCLogic {
         { key: 'personal', title: t.payPersonal, price: this.money(PP.seat), unit: t.perGuestU, desc: t.payPersonalDesc + ' ' + t.payPersonalFree, note: t.priceEx.replace('{price}', this.money(100 * PP.seat)),
           tag: acc0.free ? t.tplFreeYou : '', strike: acc0.free ? 'line-through' : 'none' },
       ] : [],
-      incl: t.subIncl.map((text) => ({ kind: 'in', sign: '✓', mark: '#2e7d4f', color: U.body, text })).concat(PP ? [{ kind: 'out', sign: '—', mark: U.muted, color: U.muted, text: t.subExcl.replace('{price}', this.money(PP.seat)) }] : []),
-      worth: PP && minTpl > 0 && !acc0.free ? (() => { const n = Math.max(1, Math.ceil(PP.subscriptionMonth / minTpl)); return D.plural(lang, n, t.subWorth).replace('{n}', n); })() : '',
+      // «Места оплачиваются отдельно» — не для бесплатного доступа: у него места тоже бесплатны.
+      incl: t.subIncl.map((text) => ({ kind: 'in', sign: '✓', mark: '#2e7d4f', color: U.body, text })).concat(PP && !acc0.free ? [{ kind: 'out', sign: '—', mark: U.muted, color: U.muted, text: t.subExcl.replace('{price}', this.money(PP.seat)) }] : []),
+      // «Выгодно от n приглашений»: n — первое число, при котором подписка дешевле, а не столько же (150 000 / 50 000 → 4).
+      worth: PP && minTpl > 0 && !acc0.free ? (() => { const n = Math.max(1, Math.floor(PP.subscriptionMonth / minTpl) + 1); return D.plural(lang, n, t.subWorth).replace('{n}', n); })() : '',
       showPlans: !acc0.free, plansNote: subOn ? t.subExtendNote : '', consent: consentOf(subOn ? t.subRenew : t.subBuy),
       plans: [1, 3, 6, 12].map((m) => {
         const a = selM === m;
@@ -3884,8 +3890,9 @@ class Component extends DCLogic {
       let v = this._invView.get(d);
       if (!v) { const tid = this.tplOf(d), di = this.invOf(d); v = { tid, di }; this._invView.set(d, v); }
       const { tid, di } = v, ev = tid.split('-')[0], st = tid.split('-')[1], EE = D.EVENTS[ev], live = d.status === 'active';
-      const n = (d.stats && d.stats.replies) || 0;
-      return { th: this.theme(tid, di.font, di.palette), names: di.names.trim() || EE.label[lang], cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: (t.stName && t.stName[st]) || EE.names[EE.styles.indexOf(st)], date: [this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }), di.time].filter(Boolean).join(' · '), dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + D.plural(lang, n, t.replies), canDel: true,
+      const n = (d.stats && d.stats.replies) || 0, paidD = !live && !!d.unlocked;
+      // Оплаченный, но не опубликованный черновик (купили шаблон заранее) — зелёная пометка «Оплачено».
+      return { th: this.theme(tid, di.font, di.palette), names: di.names.trim() || EE.label[lang], cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: (t.stName && t.stName[st]) || EE.names[EE.styles.indexOf(st)], date: [this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }), di.time].filter(Boolean).join(' · '), dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : paidD ? t.draftPaid : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : paidD ? '#2e7d4f' : U.ink, stBorder: live ? '#d4452a' : paidD ? '#2e7d4f' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + D.plural(lang, n, t.replies), canDel: true,
         state: live ? 'live' : 'draft', draft: !live, mainKey: live ? 'share' : 'publish', mainLabel: live ? t.invShare : t.publishBtn,
         onMain: () => this.openInv(d, () => setTimeout(() => this.goShare(), 0)),
         onGuests: () => this.openInv(d, () => this.go('manage', { mtab: 'list' })), onEdit: () => this.openInv(d, () => (live ? this.openGuest('edit') : this.go('build', { step: this.savedStep(d.id) }))),
@@ -3911,12 +3918,14 @@ class Component extends DCLogic {
     // templates
     const cardWpx = wide ? 320 : 250;
     // Цена шаблона на карточке: сумма, «Входит в подписку», «Бесплатно для вас» или «Оплачено» (шаблон открытого
-    // черновика уже оплачен); у выбранной карточки — «Купить шаблон» (с подпиской и бесплатно — сразу конструктор).
+    // черновика уже оплачен); у выбранной карточки — «Купить шаблон» (с подпиской и бесплатно платить не за что:
+    // кнопки нет, «Выбрать шаблон» в панели снизу).
     const drT = !s.demo && s.draftId && s.draft ? s.draft : null, paidTpl = drT && drT.unlocked ? this.tplOf(drT) : null;
-    const tplPrice = (id) => (!QQ ? ['', U.muted] : paidTpl === id ? [t.paidMark, '#2e7d4f'] : QQ.free ? [t.tplFreeYou, '#2e7d4f'] : QQ.subscribed ? [t.tplInSub, '#2e7d4f'] : [this.money(QQ.list(id)), U.ink]);
+    // Оплаченный черновик можно перевести на шаблон не дороже (так проверяет сервер): у таких — «Без доплаты».
+    const tplPrice = (id) => (!QQ ? ['', U.muted] : paidTpl === id ? [t.paidMark, '#2e7d4f'] : QQ.free ? [t.tplFreeYou, '#2e7d4f'] : QQ.subscribed ? [t.tplInSub, '#2e7d4f'] : paidTpl && QQ.list(id) <= QQ.list(paidTpl) ? [t.tplNoExtra, '#2e7d4f'] : [this.money(QQ.list(id)), U.ink]);
     const tbBusy = s.tplBuy === 'go' ? t.toCheckout : s.tplBuy ? t.loading : '';
     const tpls = this.activeStyles(s.event, s.tplId).map(({ st, i, id }, j) => { const [price, priceColor] = tplPrice(id), a = id === s.tplId; return { id, th: a ? th : this.theme(id), names: inv.names, date: gDateShort, cover: inv.cover, kicker: t.youreInvited, name: stN(st), style: E.names[i], outline: a ? '1.5px solid ' + U.ink : '1.5px solid transparent', onClick: () => { if (a) { this.openGuest('preview'); return; } this.pickTpl(id); this.centerCard(j); },
-      price, priceColor, buyOn: a && !!QQ && paidTpl !== id, buyLabel: tbBusy || (QQ && QQ.free ? t.tplStartFree : QQ && QQ.subscribed ? t.tplStartSub : t.buyTpl), buyBg: QQ && (QQ.free || QQ.subscribed) ? '#2e7d4f' : '#d4452a', buyOp: s.tplBuy ? 0.6 : 1,
+      price, priceColor, buyOn: a && !!QQ && !QQ.free && !QQ.subscribed && !paidTpl, buyLabel: tbBusy || t.buyTpl, buyBg: '#d4452a', buyOp: s.tplBuy ? 0.6 : 1,
       buy: (e) => { if (e) e.stopPropagation(); this.buyTpl(); } }; });
     const stl = D.STYLES[tplStyle]; const stl0 = () => D.STYLES[tplStyle];
     const VV = D.VARIANTS[tplStyle] || [];
@@ -3926,7 +3935,10 @@ class Component extends DCLogic {
     const cur = { name: tplName, title: stN(tplStyle), desc: t.sd[tplStyle], what: t.tplWhatL.map((x) => x.replace('{p}', VV.length || 1).replace('{f}', stl.fonts.length)), palette: [stl.bg, stl.surface, stl.ink, stl.accent, stl.accent2],
       price: curPrice, priceColor: curPriceColor, priceNote: QQ && QQ.free ? t.freeText : QQ && QQ.subscribed ? t.subDesc : t.tplPriceNote, more: () => this.goPricing(), moreLabel: QQ && QQ.free ? t.navPrices : t.subMore };
     // Предпросмотр шаблона: «Купить · цена» рядом с «Выбрать шаблон» (с подпиской и бесплатно платить не за что).
-    const tb = { on: !!QQ && !QQ.free && !QQ.subscribed && paidTpl !== s.tplId, label: tbBusy || t.buyFor.replace('{price}', QQ ? this.money(QQ.list(s.tplId)) : '…'), bg: '#d4452a', op: s.tplBuy ? 0.6 : 1, buy: () => this.buyTpl() };
+    // Согласие с офертой под кнопками покупки: оплата сразу уходит на страницу оплаты, листа оплаты нет.
+    const tbFor = t.buyFor.replace('{price}', QQ ? this.money(QQ.list(s.tplId)) : '…');
+    const tb = { on: !!QQ && !QQ.free && !QQ.subscribed && !paidTpl, label: tbBusy || tbFor, consent: consentOf(tbFor), bg: '#d4452a', op: s.tplBuy ? 0.6 : 1, buy: () => this.buyTpl() };
+    const tplConsent = { ...consentOf(t.buyTpl), stop: (e) => e.stopPropagation() };
     // Карусель: стрелки по бокам на компьютере (mid — середина обложки по высоте), под ней точки и «2 из 5»
     // (на телефоне — «листайте»).
     const tplList = this.activeStyles(s.event, s.tplId), tplAt = Math.max(0, tplList.findIndex((x) => x.id === s.tplId));
@@ -3975,13 +3987,13 @@ class Component extends DCLogic {
     const steps = STEPS.map((k, i) => ({ label: SL[k], bar: i === s.step ? '#d4452a' : i < s.step ? U.ink : 'rgba(' + U.inkRgb + ',.15)', onClick: () => this.setState({ step: i }) }));
     const on = {}; ['names', 'host', 'date', 'time', 'rsvpBy', 'venue', 'address', 'message', 'dress', 'gifts', 'notes', 'contact', 'secret'].forEach((k) => { on[k] = (e) => this.setInv({ [k]: e.target.value }); });
     // Конец конструктора и публикация. Цена — из ответов сервера (как в листе оплаты): опубликовано, шаблон оплачен,
-    // бесплатный доступ, место гостя персонального приглашения, подписка или «от» цены шаблона. Поля, оставшиеся
+    // бесплатный доступ, место гостя персонального приглашения, подписка или цена шаблона общей ссылки. Поля, оставшиеся
     // из примера шаблона, — кнопками, ведущими к их шагу (в редакторе — к листу).
     this._stepKeys = STEPS;
     const drF = !s.demo && s.draft ? s.draft : null, liveF = !!drF && drF.status === 'active', QF = this.quotes();
     const [priceF, priceKey] = liveF ? [t.live, 'live'] : !QF ? ['…', 'wait'] : drF && drF.mode !== 'personal' && drF.unlocked ? [t.paidMark, 'paid'] : QF.free ? [t.free, 'free']
       : drF && drF.mode === 'personal' ? (QF.seat ? [t.perGuest.replace('{price}', this.money(QF.seat)), 'price'] : [t.free, 'free'])
-      : QF.subscribed ? [t.inSub, 'sub'] : [t.priceFrom.replace('{price}', this.money(QF.template)), 'price'];
+      : QF.subscribed ? [t.inSub, 'sub'] : [this.money(QF.template), 'price'];
     const smpLeft = drF && !liveF ? this.samplesLeft() : [];
     const fin = { label: t.pubPrice, price: priceF, priceKey, color: priceKey === 'price' || priceKey === 'wait' ? U.ink : '#2e7d4f', text: liveF ? t.finishLive : t.finishD,
       smpOn: smpLeft.length > 0, smp: smpLeft.map((x) => ({ k: x.k, label: x.label, onClick: () => this.jumpTo(x.step) })) };
@@ -4012,10 +4024,11 @@ class Component extends DCLogic {
     const pyAmount = !PYX || !QF || !s.draft ? null : pyPers ? QF.seats(PYX.seats) : s.draft.unlocked ? 0 : QF.template;
     const pyx = { title: !PYX ? '' : PYX.kind === 'seats' ? t.seatsTitle : PYX.kind === 'upgrade' ? t.payUpTitle : pyAmount ? t.payTitlePub : t.payTitle,
       sum: pyPub, names: (inv.names || '').trim() || evLabel, what: t.payWhat.replace('{tpl}', tplName).replace('{mode}', pyPers ? t.payPersonal : t.payShared),
-      after: pyAmount == null ? '' : pyAmount ? t.payAfter : t.payAfterFree };
+      after: pyAmount == null ? '' : pyPers ? (pyAmount ? t.payAfterPers : t.payAfterPersFree) : pyAmount ? t.payAfter : t.payAfterFree };
     // Программа и маршрут (шаг и лист «Место»): время, название, место и адрес или ссылка на карту. Пункт с местом —
     // остановка на карте гостя (номер закрашен). Под адресом — подсказка, откроется ли вставленная ссылка у гостей.
     const progLen = inv.program.length, progFull = progLen >= 8;
+    const oneLine = (e) => e.target.value.replace(/[\r\n]+/g, ' '), noEnter = (e) => { if (e.key === 'Enter') e.preventDefault(); };
     const prog = inv.program.map((p, i) => {
       const addr = p.address || '', link = this.E.mapLink(addr), bad = !link && this.E.hasUrl(addr), on = !!(p.place || '').trim();
       return { n: String(i + 1), time: p.time, title: p.title, place: p.place, address: addr, badge: on ? 'stop' : 'item',
@@ -4278,7 +4291,7 @@ class Component extends DCLogic {
     const anySheet = !!closeTop || !!s.upload;
     // Лист оплаты сверху (не под меню, входом или профилем): MainButton мини-аппа — оплата из листа (см. py).
     const payTop = !!s.pay && !!s.draft && !s.menu && !s.confirm && !L && !s.account && !s.addSheet && !s.importOpen && !s.upload;
-    let MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toShare, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare()] : isEdit ? [t.toShare, () => this.goShare()] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.copy, () => copyText(fullLink, t.copied)]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : scr === 'pricing' ? pr.mb : null;
+    let MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toShare, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare()] : isEdit ? [t.toShare, () => this.goShare()] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.sendTg, () => this.openUrl('https://t.me/share/url?url=' + encodeURIComponent(fullLink) + '&text=' + encodeURIComponent(ogTitle))]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : scr === 'pricing' ? pr.mb : null;
     // ---- tour ----
     const live = (patch, gid, scrollId, extra) => { this.setState((x) => ({ inv: { ...x.inv, ...(patch || {}) }, share: { ...x.share, pwOn: false }, unlocked: false, ...(extra || {}) })); setTimeout(() => { this.openGuest('live', gid); if (scrollId) setTimeout(() => { this.setState({ env: 4 }); setTimeout(() => { const el = document.getElementById(scrollId); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' }); }, 350); }, 60); }, 0); };
     // Шаблон или демо из тура: открытый черновик отвязывается, чтобы его не перезаписать.
@@ -4336,25 +4349,28 @@ class Component extends DCLogic {
       const valid = !!Q && !PY.busy && !(personalSel && PY.seats < minSeats);
       const setSeats = (n) => this.setPay({ seats: Math.max(minSeats, Math.min(1000, n | 0)), err: '' });
       const SUBM = [1, 3, 6, 12], viaSub = PY.redirect && PY.via === 'sub', unpaidG = (s.guests || []).filter((g) => g.paid === false).length;
+      // Подписи кнопок оплаты и подписки: согласие с офертой цитирует их дословно.
+      const payLbl = amount ? t.payBtn.replace('{price}', this.money(amount)) : '', subLbl = t.subBuyFor.replace('{plan}', planOf(PY.months)).replace('{price}', Q ? this.money(Q.sub(PY.months)) : '…');
       py = {
         title: PY.kind === 'seats' ? t.seatsTitle : up ? t.payUpTitle : t.payTitle, note: PY.note || '', hint: PY.kind === 'seats' ? '' : up ? t.payUpHint : t.payHint,
         modes, lock: lockM, isPersonal: !up && personalSel, showMain: !up, seats: String(PY.seats),
         seatsLabel: PY.kind === 'seats' ? t.seatsMore : t.payGuests,
         seatNote: PY.kind === 'seats' ? t.seatsNote.replace('{paid}', pd.paidSeats || 0).replace('{unpaid}', unpaidG) : t.paySeatsPaid.replace(/ \{n\}/, '\u00a0{n}').replace('{n}', pd.paidSeats || 0),
         dec: () => setSeats(PY.seats - 1), inc: () => setSeats(PY.seats + 1), onSeats: (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 4); this.setPay({ seats: d ? Math.min(1000, +d) : 0, err: '' }); },
-        total: amount == null ? '…' : amount ? this.money(amount) : t.free,
-        goLabel: PY.redirect && !viaSub ? t.toCheckout : PY.busy ? t.loading : amount ? t.payBtn.replace('{price}', this.money(amount)) : PY.kind === 'seats' ? t.buySeats : t.publishBtn,
+        // Шаблон уже оплачен (купили заранее) — «Оплачено», а не «Бесплатно».
+        total: amount == null ? '…' : amount ? this.money(amount) : pd.unlocked && !personalSel ? t.paidMark : t.free,
+        goLabel: PY.redirect && !viaSub ? t.toCheckout : PY.busy ? t.loading : amount ? payLbl : PY.kind === 'seats' ? t.buySeats : t.publishBtn,
         goArrow: PY.busy ? '' : ' →', goOp: valid ? 1 : 0.45, go: () => { if (valid) this.pay(); }, err: PY.err || '',
         // В мини-аппе оплата — нативная MainButton Telegram, кнопка в листе не нужна.
         goBtn: !this.tgReal,
         // Согласие с офертой — только когда есть что оплатить (бесплатная публикация — без него); в мини-аппе
         // кнопка оплаты — MainButton с тем же «Оплатить …».
-        payConsent: !!amount, consent: consentOf(t.payWord), subConsent: consentOf(t.subBuy),
+        payConsent: !!amount, consent: consentOf(payLbl), subConsent: consentOf(subLbl),
         // Подписка открывает шаблоны общих ссылок: персональным приглашениям она ничего не даёт (места платные), оплаченному шаблону — тоже.
         showSub: !!Q && !Q.free && !Q.subscribed && (up || (PY.kind === 'publish' && PY.mode === 'shared' && !pd.unlocked)),
         subPer: Q ? t.perMonth.replace('{price}', this.money(Q.P.subscriptionMonth)) : '',
         subOpts: SUBM.map((m) => { const a = PY.months === m; return { m, label: planOf(m), price: Q ? this.money(Q.sub(m)) : '…', pressed: a ? 'true' : 'false', border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', bg: a ? 'rgba(212,69,42,.07)' : 'transparent', color: U.ink, onClick: () => { if (!PY.busy) this.setPay({ months: m }); } }; }),
-        subLabel: viaSub ? t.toCheckout : PY.busy && PY.via === 'sub' ? t.loading : t.subBuyFor.replace('{plan}', planOf(PY.months)).replace('{price}', Q ? this.money(Q.sub(PY.months)) : '…'), subGo: () => { if (Q && !PY.busy) this.subscribe(); },
+        subLabel: viaSub ? t.toCheckout : PY.busy && PY.via === 'sub' ? t.loading : subLbl, subGo: () => { if (Q && !PY.busy) this.subscribe(); },
         subMore: () => { if (!PY.busy) this.goPricing({ fromPay: true }); },
       };
     }
@@ -4476,7 +4492,7 @@ class Component extends DCLogic {
       events, hm, car,
       // Кнопки предпросмотра шаблона — над симулятором главной кнопки Telegram, если он виден.
       previewBottom: tgSim && MB ? '84px' : 'calc(18px + env(safe-area-inset-bottom))',
-      tpls, cardW: cardWpx + 'px', cardHalf: cardWpx / 2 + 'px',
+      tpls, tplConsent, cardW: cardWpx + 'px', cardHalf: cardWpx / 2 + 'px',
       previewTpl: () => this.openGuest('preview'), useTpl: () => this.useTpl(), invLangOpts, tb,
       // лист входа, аккаунт, подтверждение
       loginOpen: !!L, lg, closeLogin: () => this.closeLogin(), phoneRef: this.phoneRef, codeRef: this.codeRef,
@@ -4573,6 +4589,8 @@ class Component extends DCLogic {
       sheetOpen: isEdit && !!s.sheet, sheetTitle: s.sheet ? SL[s.sheet] : '', closeSheet: () => this.setState({ sheet: null }),
       share: s.share, link, shareUrl, ogTitle, ogDesc, metaCode,
       slugPrefix: host + '/i/', slugErr: s.slugErr || '', slugLine: s.slugErr ? '#d4452a' : 'rgba(' + U.inkRgb + ',.22)',
+      // Персональные приглашения: общей ссылки нет — «Приглашение опубликовано», ссылки у гостей.
+      shareTitle: isPersonalInv ? t.personalReady : t.linkReady,
       shareShared: !isPersonalInv, sharePersonal: !dr || isPersonalInv, personalActs: isPersonalInv,
       onSlug: (e) => this.onSlugInput(e.target.value),
       copyLink: () => copyText(isPersonalInv ? firstLink : fullLink, t.copied),

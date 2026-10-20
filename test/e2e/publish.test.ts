@@ -433,13 +433,17 @@ describe("персональные приглашения", () => {
     await pay.getByRole("button", { name: "−" }).click();
     expect(await seats.inputValue()).toBe("2");
     expect(await pay.locator("[data-pay-total]").innerText()).toBe(await money(page, 2 * P.seat));
+    // Что будет после оплаты — про гостей и их персональные ссылки, а не про одну ссылку.
+    expect(await pay.locator("[data-pay-after]").textContent()).toBe(ru.payAfterPers);
     await pay.locator('[data-pay="go"]').click();
     await page.locator('[data-screen="mock-pay"]').waitFor();
     const [order] = await ordersOf(inv.id);
     expect(order).toMatchObject({ kind: "seats", quantity: 2, amount: 2 * P.seat });
     expect((await invOf(inv.id)).mode).toBe("personal");
     await page.locator('[data-mock="paid"]').click();
-    await e.waitText(page, ru.linkReady);
+    // Общей ссылки у персонального нет: заголовок — «Приглашение опубликовано», а не «Ссылка готова».
+    await e.waitText(page, ru.personalReady);
+    expect(await page.locator("[data-share-title]").innerText()).toBe(ru.personalReady);
     expect(await invOf(inv.id)).toMatchObject({ status: "active", paidSeats: 2 });
     // Персональное: общей ссылки, адреса и QR нет; список личных ссылок пуст.
     expect(await page.locator("input[name=slug]").count()).toBe(0);
@@ -480,7 +484,7 @@ describe("персональные приглашения", () => {
     await pay.locator('[data-pay="go"]').click();
     await page.locator('[data-screen="mock-pay"]').waitFor();
     await page.locator('[data-mock="paid"]').click();
-    await e.waitText(page, ru.linkReady);
+    await e.waitText(page, ru.personalReady);
     await expect.poll(async () => (await invOf(inv.id)).paidSeats).toBe(3);
     await expect.poll(() => page.locator("[data-personal-links] [data-unpaid]").count()).toBe(0);
 

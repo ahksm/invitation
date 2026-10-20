@@ -391,9 +391,17 @@ describe("профиль", () => {
   it("имя и фамилия, подписка → цены, история платежей, «Мои приглашения»", async () => {
     const context = await e.newContext();
     const user = await e.signIn(context, { firstName: null, lastName: null, locale: "ru" });
+    const created = await e.app.inject({
+      method: "POST",
+      url: "/api/invitations",
+      headers: { cookie: `session=${e.app.jwt.sign({ sub: user.id })}`, origin: e.base },
+      payload: { template: "wedding-classic", mode: "personal", language: "ru", data: { names: "Лола и Бахтиёр" } },
+    });
+    expect(created.statusCode, created.body).toBeLessThan(300);
+    const invId = (created.json() as { id: string }).id;
     await e.db.insert(orders).values([
       { userId: user.id, kind: "subscription", quantity: 3, amount: 27_000_000, currency: "UZS", status: "paid", provider: "mock", createdAt: new Date(Date.now() - 864e5) },
-      { userId: user.id, kind: "seats", quantity: 40, amount: 8_000_000, currency: "UZS", status: "pending", provider: "mock" },
+      { userId: user.id, invitationId: invId, kind: "seats", quantity: 40, amount: 8_000_000, currency: "UZS", status: "pending", provider: "mock" },
     ] as never);
     const { page, problems, close } = await e.open("/app/", { context, waitText: ru.hero1 });
     await page.locator("[data-account][aria-label]").click();
@@ -427,6 +435,9 @@ describe("профиль", () => {
     await rows.first().waitFor();
     expect(await rows.evaluateAll((els) => els.map((x) => x.getAttribute("data-order-row")))).toEqual(["pending", "paid"]);
     expect(await rows.nth(0).innerText()).toContain(ru.orderSt.pending);
+    // Места — за какое приглашение: имена и шаблон; у подписки приглашения нет.
+    expect(await rows.nth(0).locator("[data-order-what]").innerText()).toBe("Лола и Бахтиёр · " + ru.template + " «" + ru.stName.classic + "»");
+    expect(await rows.nth(1).locator("[data-order-what]").count()).toBe(0);
     expect(await rows.nth(1).innerText()).toContain(ru.subMonths[1]);
     expect(await rows.nth(1).innerText()).toContain(ru.orderSt.paid);
     await e.shot(page, "account-orders-ru-390x844.png");
