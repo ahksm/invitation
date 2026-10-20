@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Ctx } from "../context.js";
 import { invitations, orders, subscriptions, templates, users, type Order } from "../db/schema.js";
 import { extendSubscription, quoteSeats, quoteSubscription, quoteTemplate, templatePrice, type Prices } from "../pricing.js";
@@ -23,25 +23,43 @@ export type OrderRequest =
  */
 export type ReturnTo = "app" | "telegram";
 
-/** Заказ для клиента: без meta (там уведомление платёжной системы и служебные отметки). */
+/**
+ * Заказ для клиента: без meta (там уведомление платёжной системы и служебные отметки). template — slug
+ * шаблона, за который выставлен счёт (meta.templateId заказа шаблона): шаблон приглашения после оплаты
+ * могут сменить, а история платежей показывает оплаченный. У остальных заказов null.
+ */
 export type OrderDto = Pick<
   Order,
   "id" | "number" | "kind" | "invitationId" | "quantity" | "amount" | "currency" | "status" | "checkoutUrl" | "paidAt" | "createdAt"
->;
+> & { template: string | null };
 
-export const orderDto = (o: Order): OrderDto => ({
-  id: o.id,
-  number: o.number,
-  kind: o.kind,
-  invitationId: o.invitationId,
-  quantity: o.quantity,
-  amount: o.amount,
-  currency: o.currency,
-  status: o.status,
-  checkoutUrl: o.checkoutUrl,
-  paidAt: o.paidAt,
-  createdAt: o.createdAt,
-});
+const orderTemplateId = (o: Order) => (o.kind === "template" && typeof o.meta.templateId === "string" ? o.meta.templateId : null);
+
+const orderDto = (o: Order, slugs: ReadonlyMap<string, string> = new Map()): OrderDto => {
+  const tid = orderTemplateId(o);
+  return {
+    id: o.id,
+    number: o.number,
+    kind: o.kind,
+    invitationId: o.invitationId,
+    quantity: o.quantity,
+    amount: o.amount,
+    currency: o.currency,
+    status: o.status,
+    checkoutUrl: o.checkoutUrl,
+    paidAt: o.paidAt,
+    createdAt: o.createdAt,
+    template: (tid && slugs.get(tid)) ?? null,
+  };
+};
+
+/** Заказы для клиента одним запросом к шаблонам: slug оплаченного шаблона по meta.templateId. */
+export async function orderDtos(ctx: Pick<Ctx, "db">, list: Order[]): Promise<OrderDto[]> {
+  const ids = [...new Set(list.map(orderTemplateId).filter((x): x is string => x !== null))];
+  const rows = ids.length ? await ctx.db.select({ id: templates.id, slug: templates.slug }).from(templates).where(inArray(templates.id, ids)) : [];
+  const slugs = new Map(rows.map((r) => [r.id, r.slug]));
+  return list.map((o) => orderDto(o, slugs));
+}
 
 // Поля уведомления об оплате, которые хранятся в заказе. Остальное (маскированный номер и токен карты,
 // подпись, телефон плательщика) не сохраняется: для сверки с кабинетом платёжной системы хватает uuid,

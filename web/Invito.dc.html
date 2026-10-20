@@ -2197,13 +2197,16 @@ class Component extends DCLogic {
       this.openPay({ dto: inv, kind, ...(seats > 0 ? { seats } : {}) });
     } catch (e) { /* тост уже показан */ }
   }
-  // Подпись приглашения для экранов заказа и тестовой оплаты: имена и шаблон («Лола и Тимур · Шаблон «Классика»»).
-  invLabel(id) {
-    const s = this.state, d = (s.draft && s.draft.id === id && s.draft) || (s.invs || []).find((x) => x.id === id);
-    if (!d) return '';
-    const [ev, st] = this.tplOf(d).split('-'), E = this.D.EVENTS[ev], names = String((d.data && d.data.names) || '').trim();
-    const t = this.t();
-    return [names, t.template + ' «' + ((t.stName && t.stName[st]) || E.names[E.styles.indexOf(st)]) + '»'].filter(Boolean).join(' · ');
+  // Что оплачено, для истории платежей, экрана заказа и тестовой оплаты: имена приглашения и шаблон
+  // («Лола и Тимур · Шаблон «Классика»»). У заказа шаблона — тот, за который выставлен счёт (o.template):
+  // шаблон приглашения после оплаты могли сменить. У мест — шаблон приглашения, чтобы узнать, какое оно.
+  orderLabel(o) {
+    const s = this.state, id = o && o.invitationId;
+    const d = id ? (s.draft && s.draft.id === id && s.draft) || (s.invs || []).find((x) => x.id === id) : null;
+    const slug = o && o.kind === 'template' ? o.template : d ? this.tplOf(d) : null;
+    const [ev, st] = String(slug || '').split('-'), E = this.D.EVENTS[ev], t = this.t();
+    const tpl = E && E.styles.includes(st) ? t.template + ' «' + ((t.stName && t.stName[st]) || E.names[E.styles.indexOf(st)]) + '»' : '';
+    return [d ? String((d.data && d.data.names) || '').trim() : '', tpl].filter(Boolean).join(' · ');
   }
 
   // ---------- экран цен и подписка ----------
@@ -3801,8 +3804,8 @@ class Component extends DCLogic {
       ordersLoading: !!MO && MO.loading && !oList, ordersEmpty: !!oList && !oList.length, ordersErr: MO && !oList && !MO.loading ? MO.err : '',
       orders: (oList || []).map((o) => ({ st: o.status, status: t.orderSt[o.status] || o.status, color: OST[o.status] || U.muted, amount: this.money(o.amount),
         kind: (t.orderKinds[o.kind] || o.kind) + (o.kind === 'seats' ? ' · ' + o.quantity : o.kind === 'subscription' ? ' · ' + planOf(o.quantity) : ''),
-        // За какое приглашение (имена и шаблон), если оно есть в списке пользователя.
-        what: o.invitationId ? this.invLabel(o.invitationId) : '',
+        // Что оплачено: имена приглашения (если оно есть в списке пользователя) и шаблон.
+        what: this.orderLabel(o),
         date: o.createdAt ? this.fmt(this.tashDate(o.createdAt), '12:00', { day: 'numeric', month: 'short', year: 'numeric' }) : '' })),
       openLang: () => { this.setState({ account: false, nameEd: null }); this.openMenu('lang', this.rootRef.current && this.rootRef.current.querySelector('[data-lang-btn]')); },
       // В мини-аппе вход — аккаунт Telegram: «Выйти» вернуло бы его же, вместо кнопки — пояснение.
@@ -4390,7 +4393,7 @@ class Component extends DCLogic {
       return { num: oD ? '№ ' + oD.number : '№ …', kind: oD ? (t.orderKinds[oD.kind] || oD.kind) + (oD.kind === 'seats' ? ' · ' + oD.quantity : oD.kind === 'subscription' ? ' · ' + planOf(oD.quantity) : '') : '', status: st,
         title: st === 'paid' ? t.orderPaid : st === 'failed' ? t.orderFailed : st === 'cancelled' ? t.orderCancelled : t.orderWait,
         text: st === 'paid' ? paidText : fin ? t.orderFailHint : O.stopped ? t.orderStopped : stuck ? t.orderStuck : t.orderWaitHint, amount: oD ? this.money(oD.amount) : '',
-        what: oD && oD.invitationId ? this.invLabel(oD.invitationId) : '',
+        what: oD ? this.orderLabel(oD) : '',
         color: st === 'paid' ? '#2e7d4f' : fin ? '#d4452a' : '#93723f', pulse: st === 'pending' && !O.missing && !O.stopped ? 'invPulse 1.4s ease-in-out infinite' : 'none',
         // Страница оплаты: на сайте — переход, в Telegram — openLink; тестовая оплата в мини-аппе — внутри (#/mock-pay).
         err: O.err || '', canOpen: wait && !!oD.checkoutUrl, open: () => { if (this.tgReal && mockUrl) location.hash = '#/mock-pay/' + oD.id; else if (this.tgReal) this.openUrl(oD.checkoutUrl); else location.href = oD.checkoutUrl; },
@@ -4398,7 +4401,7 @@ class Component extends DCLogic {
         canRetry: fin || (st === 'paid' && !!O.err), retry: () => (st === 'paid' ? this.finishOrder(oD) : this.retryOrder()) };
     })() : {};
     const M = s.mock, mD = M && M.data;
-    const mk = M ? { num: mD ? '№ ' + mD.number : '№ …', kind: mD ? (t.orderKinds[mD.kind] || mD.kind) + (mD.kind === 'seats' ? ' · ' + mD.quantity : mD.kind === 'subscription' ? ' · ' + planOf(mD.quantity) : '') : '', what: mD && mD.invitationId ? this.invLabel(mD.invitationId) : '', amount: mD ? this.money(mD.amount) : '…', err: M.err || '', op: M.busy || !mD ? 0.5 : 1, pay: () => this.mockResult('paid'), fail: () => this.mockResult('failed') } : {};
+    const mk = M ? { num: mD ? '№ ' + mD.number : '№ …', kind: mD ? (t.orderKinds[mD.kind] || mD.kind) + (mD.kind === 'seats' ? ' · ' + mD.quantity : mD.kind === 'subscription' ? ' · ' + planOf(mD.quantity) : '') : '', what: mD ? this.orderLabel(mD) : '', amount: mD ? this.money(mD.amount) : '…', err: M.err || '', op: M.busy || !mD ? 0.5 : 1, pay: () => this.mockResult('paid'), fail: () => this.mockResult('failed') } : {};
     // Лист «Добавить гостей».
     const AS = s.addSheet, addLines = AS ? this.parseGuests(AS.text).list.length : 0;
     const ad = AS ? { shared: !!dr && !isPersonalInv, personal: isPersonalInv, canSwitch: !!dr && !this.modeLocked(dr), toPersonal: () => this.toPersonal(), op: AS.busy ? 0.5 : 1,

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { BrowserContext, Page } from "playwright-core";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { invitations, orders, subscriptions, users } from "../../src/db/schema.js";
+import { invitations, orders, subscriptions, templates, users } from "../../src/db/schema.js";
 import { formatPhone } from "../../src/services/phone.js";
 import { I18N, INVITO } from "../../web/invito-data.js";
 import { botHarness, startE2E, telegramStub, tgState, uniquePhone, type E2E } from "./helpers.js";
@@ -453,6 +453,28 @@ describe("профиль", () => {
     await page.locator("#my-inv").waitFor();
     expect(await acc.count()).toBe(0);
     expect(await page.evaluate(() => location.hash)).toBe("");
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("история платежей: у заказа шаблона — оплаченный шаблон, а не нынешний шаблон приглашения", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context, { firstName: "Тест", locale: "ru" });
+    const api = (method: "POST" | "PATCH", url: string, payload: Dict) =>
+      e.app.inject({ method, url, headers: { cookie: `session=${e.app.jwt.sign({ sub: user.id })}`, origin: e.base }, payload });
+    const inv = (await api("POST", "/api/invitations", { template: "wedding-classic", mode: "shared", language: "ru", data: { names: "История тест" } })).json() as { id: string };
+    const [classic] = await e.db.select().from(templates).where(eq(templates.slug, "wedding-classic"));
+    await e.db.update(invitations).set({ unlocked: true }).where(eq(invitations.id, inv.id));
+    await e.db.insert(orders).values({ userId: user.id, invitationId: inv.id, kind: "template", amount: 5_000_000, currency: "UZS", status: "paid", provider: "mock", paidAt: new Date(), meta: { templateId: classic!.id } } as never);
+    // После оплаты шаблон сменили на не более дорогой («Без доплаты»).
+    expect((await api("PATCH", `/api/invitations/${inv.id}`, { template: "wedding-botanical" })).statusCode).toBe(200);
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "История тест" });
+    await page.locator("[data-account][aria-label]").click();
+    const acc = sheet(page, "account");
+    await acc.locator('[data-acc-row="orders"]').click();
+    const row = acc.locator("[data-order-row]");
+    await row.first().waitFor();
+    expect(await row.locator("[data-order-what]").innerText()).toBe("История тест · " + ru.template + " «" + ru.stName.classic + "»");
     await e.expectClean(page, problems);
     await close();
   });

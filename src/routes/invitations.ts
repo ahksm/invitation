@@ -20,7 +20,7 @@ import {
   updateInvitation,
 } from "../services/invitations.js";
 import { sendBotTest } from "../services/notify.js";
-import { createOrder, orderDto } from "../services/orders.js";
+import { createOrder, orderDtos } from "../services/orders.js";
 import { remindGuests } from "../services/remind.js";
 import { sendInvitationSms } from "../services/sms.js";
 import { phoneSchema } from "./auth.js";
@@ -201,12 +201,12 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
       // Telegram откроет оплату, сессии не имеет: без явного returnTo такой заказ возвращает в Telegram.
       const { returnTo = req.headers.authorization?.startsWith("Bearer ") ? "telegram" : "app" } = returnToSchema.parse(req.body);
       const result = await createOrder(ctx, req.user.id, order, returnTo);
-      if (result.status === "pending") return reply.code(201).send({ ...result, order: orderDto(result.order) });
+      if (result.status === "pending") return reply.code(201).send({ ...result, order: (await orderDtos(ctx, [result.order]))[0] });
       return { status: result.status, order: null, message: apiText(requestLocale(req.headers), result.messageKey, { n: result.n ?? 0 }) };
     });
 
     priv.get("/orders", async (req) =>
-      (await ctx.db.select().from(orders).where(eq(orders.userId, req.user.id)).orderBy(desc(orders.createdAt)).limit(100)).map(orderDto),
+      orderDtos(ctx, await ctx.db.select().from(orders).where(eq(orders.userId, req.user.id)).orderBy(desc(orders.createdAt)).limit(100)),
     );
 
     priv.get("/orders/:id", async (req, reply) => {
@@ -214,7 +214,7 @@ export const invitationRoutes: FastifyPluginAsync = async (app) => {
         .select()
         .from(orders)
         .where(and(eq(orders.id, id.parse(req.params).id), eq(orders.userId, req.user.id)));
-      return order ? orderDto(order) : reply.code(404).send({ error: "Заказ не найден" });
+      return order ? (await orderDtos(ctx, [order]))[0] : reply.code(404).send({ error: "Заказ не найден" });
     });
   });
 };

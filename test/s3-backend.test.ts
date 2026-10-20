@@ -108,6 +108,7 @@ describe("заказы", () => {
       checkoutUrl: `https://checkout.test/${number}`,
       paidAt: expect.any(String),
       createdAt: expect.any(String),
+      template: null,
     });
     const one = (await req(cookie, "GET", `/api/orders/${id}`)).json();
     expect(one).not.toHaveProperty("meta");
@@ -124,6 +125,24 @@ describe("заказы", () => {
       receipt_url: "https://receipt.test/1",
     });
     expect(JSON.stringify(row!.meta)).not.toMatch(/860002|\*{6}|tok-secret|998901234567/);
+  });
+
+  it("в заказе шаблона — оплаченный шаблон, даже если шаблон приглашения потом сменили", async () => {
+    const { cookie } = await user();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template, mode: "shared" })).json();
+    const created = (await req(cookie, "POST", "/api/orders", { kind: "template", invitationId: inv.id })).json();
+    expect(created.order.template).toBe("wedding-classic");
+    await t.callback(created.order.number, created.order.amount);
+    // Шаблон не дороже оплаченного: сменить можно без доплаты.
+    expect((await req(cookie, "PATCH", `/api/invitations/${inv.id}`, { template: "wedding-botanical" })).json().template).toBe("wedding-botanical");
+    const sub = (await req(cookie, "POST", "/api/orders", { kind: "subscription", months: 1 })).json();
+    const list = (await req(cookie, "GET", "/api/orders")).json();
+    expect(list.map((o: any) => [o.kind, o.template])).toEqual([["subscription", null], ["template", "wedding-classic"]]);
+    expect((await req(cookie, "GET", `/api/orders/${created.order.id}`)).json()).toMatchObject({ status: "paid", template: "wedding-classic" });
+    expect((await req(cookie, "GET", `/api/orders/${sub.order.id}`)).json().template).toBeNull();
+    // Места: шаблон не оплачивается.
+    const pers = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal" })).json();
+    expect((await req(cookie, "POST", "/api/orders", { kind: "seats", invitationId: pers.id, quantity: 2 })).json().order.template).toBeNull();
   });
 
   it("миграция 0007 убирает из сохранённых уведомлений номер карты и прочие лишние поля, остальное не трогает", async () => {
