@@ -63,7 +63,7 @@ const en = {
   to:'To', personal:'{name}, you are invited', whoComing:'Who is coming', comingN:{ one:'guest said yes', other:'guests said yes' }, showGuests:'Show who is coming on the invitation', personalLinks:'Personal links', personalHint:'Each guest gets a link with their name on the envelope. Their reply goes straight to your list.', openAs:'Open as guest', yourName:'Your name', you:'you', copied2:'Personal link copied', linkBtn:'Link', andMore:'and {n} more', replying:'Replying as',
 
   stepsX:{ style:'Style & colour', music:'Music', sections:'Sections' },
-  hintsX:{ style:'Palette and headline font for this template.', music:'Background music guests can turn on.', sections:'Turn sections on or off, change their order and the opening.' },
+  hintsX:{ style:'Palette and headline font for this template.', music:'Background music: plays when the guest opens the invitation.', sections:'Turn sections on or off, change their order and the opening.' },
   fPalette:'Colour palette', fFont:'Headline font', fMotion:'Cover motion', still:'Still', zoom:'Slow zoom', video:'Video', uploadVideo:'Upload video',
   fMap:'Map', mapDrawn:'Illustrated', mapReal:'Real map', fIntro:'Opening', intro:{ envelope:'Envelope', curtain:'Curtain', scratch:'Scratch card', none:'None' },
   fSecret:'Secret to scratch', secretHint:'Guests scratch to reveal it — great for a gender reveal or a surprise.',
@@ -168,7 +168,7 @@ const ru = {
   to:'Кому', personal:'{name}, вы приглашены', whoComing:'Кто придёт', comingN:{ one:'гость ответил «да»', few:'гостя ответили «да»', many:'гостей ответили «да»', other:'гостя ответили «да»' }, showGuests:'Показывать на приглашении, кто придёт', personalLinks:'Персональные ссылки', personalHint:'У каждого гостя своя ссылка — его имя на конверте, а ответ сразу попадает в ваш список.', openAs:'Открыть как гость', yourName:'Ваше имя', you:'вы', copied2:'Персональная ссылка скопирована', linkBtn:'Ссылка', andMore:'и ещё {n}', replying:'Отвечает',
 
   stepsX:{ style:'Стиль и цвет', music:'Музыка', sections:'Разделы' },
-  hintsX:{ style:'Палитра и шрифт заголовков для этого шаблона.', music:'Фоновая музыка, которую гости могут включить.', sections:'Включайте и выключайте разделы, меняйте порядок и открытие.' },
+  hintsX:{ style:'Палитра и шрифт заголовков для этого шаблона.', music:'Фоновая музыка: включается, когда гость открывает приглашение.', sections:'Включайте и выключайте разделы, меняйте порядок и открытие.' },
   fPalette:'Палитра', fFont:'Шрифт заголовков', fMotion:'Движение обложки', still:'Статично', zoom:'Медленный зум', video:'Видео', uploadVideo:'Загрузить видео',
   fMap:'Карта', mapDrawn:'Рисованная', mapReal:'Настоящая карта', fIntro:'Открытие', intro:{ envelope:'Конверт', curtain:'Занавес', scratch:'Скретч-карта', none:'Без интро' },
   fSecret:'Секрет под скретч-слоем', secretHint:'Гости стирают слой, чтобы узнать секрет — идеально для гендер-пати или сюрприза.',
@@ -273,7 +273,7 @@ const uz = {
   to:'Kimga', personal:'{name}, siz taklif qilingansiz', whoComing:'Kimlar keladi', comingN:'mehmon “ha” deb javob berdi', showGuests:'Taklifnomada kimlar kelishini ko‘rsatish', personalLinks:'Shaxsiy havolalar', personalHint:'Har bir mehmonga o‘z havolasi — konvertda uning ismi, javobi esa darhol ro‘yxatingizga tushadi.', openAs:'Mehmon sifatida ochish', yourName:'Ismingiz', you:'siz', copied2:'Shaxsiy havola nusxalandi', linkBtn:'Havola', andMore:'va yana {n}', replying:'Javob beruvchi',
 
   stepsX:{ style:'Uslub va rang', music:'Musiqa', sections:'Bo‘limlar' },
-  hintsX:{ style:'Ushbu shablon uchun ranglar va sarlavha shrifti.', music:'Mehmonlar yoqishi mumkin bo‘lgan fon musiqasi.', sections:'Bo‘limlarni yoqing yoki o‘chiring, tartibini va ochilishini o‘zgartiring.' },
+  hintsX:{ style:'Ushbu shablon uchun ranglar va sarlavha shrifti.', music:'Fon musiqasi: mehmon taklifnomani ochganda yoqiladi.', sections:'Bo‘limlarni yoqing yoki o‘chiring, tartibini va ochilishini o‘zgartiring.' },
   fPalette:'Ranglar palitrasi', fFont:'Sarlavha shrifti', fMotion:'Muqova harakati', still:'Harakatsiz', zoom:'Sekin yaqinlashish', video:'Video', uploadVideo:'Video yuklash',
   fMap:'Xarita', mapDrawn:'Chizilgan', mapReal:'Haqiqiy xarita', fIntro:'Ochilish', intro:{ envelope:'Konvert', curtain:'Parda', scratch:'Skretch-karta', none:'Introsiz' },
   fSecret:'Skretch ostidagi sir', secretHint:'Mehmonlar qatlamni o‘chirib, sirni bilib oladi — jins ochish bayrami yoki syurpriz uchun ajoyib.',

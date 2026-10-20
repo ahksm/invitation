@@ -2566,6 +2566,7 @@ class Component extends DCLogic {
     // guestFrom — откуда открыли: туда и ведёт «Назад» (черновик с главной не должен попасть на «Ссылка готова»).
     const from = this.state.screen === 'guest' ? this.state.guestFrom : this.state.screen;
     this.setState({ screen: 'guest', guestMode: mode, guestFrom: from, toGuestId: g ? g.id : null, myGuestId: null, env: (mode === 'edit' || !intro) ? 4 : 0, unlocked: false, pwTry: '', pwErr: false, rsvp, sheet: null });
+    if (mode !== 'edit') this.armMusic();
   }
   submitRsvp() {
     if (this.state.pub) return this.sendPublicRsvp();
@@ -2668,7 +2669,23 @@ class Component extends DCLogic {
       play(); this.mus = setInterval(play, 420); this.setState({ music: true });
     } catch (e) { console.warn(e); }
   }
-  stopMusic() { if (this.music) this.music.stop(); clearInterval(this.mus); this.mus = null; if (this.mg) { try { this.mg.disconnect(); } catch (e) {} this.mg = null; } }
+  // Музыка приглашения включена по умолчанию. Звук браузер разрешает только после действия человека, поэтому
+  // трек стартует с первого касания страницы гостя: конверт, занавес, скретч или любое место. Поля ввода и сама
+  // кнопка музыки не в счёт: кнопка переключает музыку сама, а ввод пароля не должен начинаться со звука.
+  // pointerup и keydown, а не pointerdown: на телефонах касание даёт право на звук только по pointerup.
+  armMusic() {
+    this.disarmMusic();
+    this._musArm = (e) => {
+      const el = e.target && e.target.closest ? e.target : null;
+      if (el && el.closest('input,textarea,select,[title="Music"]')) return;
+      this.disarmMusic();
+      const s = this.state;
+      if (s.screen === 'guest' && s.guestMode !== 'edit' && !s.music && s.inv.music !== 'none') this.toggleMusic();
+    };
+    document.addEventListener('pointerup', this._musArm, true); document.addEventListener('keydown', this._musArm, true);
+  }
+  disarmMusic() { if (this._musArm) { document.removeEventListener('pointerup', this._musArm, true); document.removeEventListener('keydown', this._musArm, true); this._musArm = null; } }
+  stopMusic() { this.disarmMusic(); if (this.music) this.music.stop(); clearInterval(this.mus); this.mus = null; if (this.mg) { try { this.mg.disconnect(); } catch (e) {} this.mg = null; } }
 
   // ---------- scroll fx ----------
   observe() {
