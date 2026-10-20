@@ -107,9 +107,10 @@ export const cacheKeys = {
   settings: "settings",
   templates: "templates:catalog",
   user: (id: string) => `user:${id}`,
-  // Записи публичных страниц (см. src/services/public.ts).
-  publicShared: (slug: string) => `public:i:${slug}`,
-  publicGuest: (token: string) => `public:g:${token}`,
+  // Записи публичных страниц (см. src/services/public.ts). Версия в ключе меняется вместе с составом записи:
+  // после выкладки старые записи (v1 — гостевая книга со всеми сообщениями гостей, даже личными) не читаются.
+  publicShared: (slug: string) => `public:v2:i:${slug}`,
+  publicGuest: (token: string) => `public:v2:g:${token}`,
   loginCode: (code: string) => `login:${code}`,
   multicardToken: "multicard:token",
   eskizToken: "eskiz:token",
