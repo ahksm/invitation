@@ -318,5 +318,9 @@ describe("renderLegalPage", () => {
     expect(rows("90 123 45 67")).toContain('<a href="tel:+998901234567">90 123 45 67</a>');
     expect(rows("+998 (71) 200-00-00")).toContain('href="tel:+998712000000"');
     expect(rows("1234")).toContain("<dd>1234</dd>");
+    // Добавочный номер и текст вокруг номера в ссылку не попадают.
+    expect(rows("+998 71 200-00-00 (доб. 105)")).toContain('<a href="tel:+998712000000">+998 71 200-00-00 (доб. 105)</a>');
+    expect(rows("javascript:alert(4) +998 90 123 45 67")).toContain('href="tel:+998901234567"');
+    expect(rows("+998 90 123 45 67, +998 71 200 00 00")).toContain('href="tel:+998901234567"');
   });
 });

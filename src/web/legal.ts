@@ -63,9 +63,14 @@ function inline(text: string, env: LegalEnv, t: LegalTexts): string {
     );
 }
 
-/** Ссылка tel: для номера, в котором 9 цифр (узбекский без кода) или 11–15 цифр; иначе null. */
+/**
+ * Ссылка tel: для первого номера в поле (цифры, пробелы, скобки, дефисы): 9 цифр (узбекский без кода) или
+ * 11–15 цифр; иначе null. Добавочный («доб. 105») и другой текст в поле в ссылку не попадают.
+ */
 function telHref(phone: string): string | null {
-  const digits = phone.replace(/\D/g, "");
+  const m = /\+?\d[\d\s()\u2011-]{6,}\d/.exec(phone);
+  if (!m) return null;
+  const digits = m[0].replace(/\D/g, "");
   const full = digits.length === 9 ? `998${digits}` : digits;
   return full.length >= 11 && full.length <= 15 ? `tel:+${full}` : null;
 }
