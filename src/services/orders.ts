@@ -43,9 +43,10 @@ export const orderDto = (o: Order): OrderDto => ({
   createdAt: o.createdAt,
 });
 
-// Поля уведомления об оплате, которые хранятся в заказе. Остальное (токен карты, подпись, телефон
-// плательщика) не сохраняется: для сверки с кабинетом платёжной системы оно не нужно.
-const NOTIFICATION_FIELDS = ["uuid", "invoice_id", "billing_id", "payment_time", "ps", "card_pan", "receipt_url", "amount", "order_number", "status"];
+// Поля уведомления об оплате, которые хранятся в заказе. Остальное (маскированный номер и токен карты,
+// подпись, телефон плательщика) не сохраняется: для сверки с кабинетом платёжной системы хватает uuid,
+// invoice_id и чека, а оферта и политика конфиденциальности обещают, что данные карты не хранятся.
+const NOTIFICATION_FIELDS = ["uuid", "invoice_id", "billing_id", "payment_time", "ps", "receipt_url", "amount", "order_number", "status"];
 
 export function notificationMeta(raw: unknown): Record<string, unknown> {
   if (!raw || typeof raw !== "object") return {};

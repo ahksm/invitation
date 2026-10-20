@@ -69,7 +69,7 @@ describe("заказы", () => {
     expect((await req(cookie, "POST", "/api/orders", { kind: "subscription", months: 1, returnTo: "x" })).statusCode).toBe(400);
   });
 
-  it("клиент не получает meta заказа, а из уведомления не сохраняются токен карты и подпись", async () => {
+  it("клиент не получает meta заказа, а из уведомления не сохраняются номер и токен карты, подпись и телефон", async () => {
     const { cookie } = await user();
     const created = (await req(cookie, "POST", "/api/orders", { kind: "subscription", months: 1 })).json();
     expect(created.order).not.toHaveProperty("meta");
@@ -120,9 +120,9 @@ describe("заказы", () => {
       billing_id: "b-1",
       payment_time: "2026-10-19 20:00:00",
       ps: "uzcard",
-      card_pan: "860002******1234",
       receipt_url: "https://receipt.test/1",
     });
+    expect(JSON.stringify(row!.meta)).not.toMatch(/860002|\*{6}|tok-secret|998901234567/);
   });
 });
 
