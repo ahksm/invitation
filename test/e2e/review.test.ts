@@ -483,10 +483,8 @@ describe("узкий экран (320 px)", () => {
     const user = await e.signIn(context);
     await personalWith(user.id, [{ name: "Анна" }, { name: "Бобур" }, { name: "Севара" }], { data: { names: "Узкий экран", intro: "none" } }, 2);
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Узкий экран" });
-    await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
-    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+    // Опубликованное: «Получить ссылку» прямо с карточки «Мои приглашения».
+    await page.locator("#my-inv [data-inv-share]").first().click();
     const links = page.locator("[data-personal-links]");
     const badge = links.getByText(ru.seatsLine.replace("{paid}", "2").replace("{n}", "3"), { exact: true });
     await badge.waitFor();

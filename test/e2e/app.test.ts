@@ -388,10 +388,8 @@ describe("вход и черновики", () => {
     const r = await e.app.inject({ method: "POST", url: `/api/public/i/${inv.slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Зарина Сабирова", status: "yes", count: 1, diet: [], msg: "Секретное пожелание", code: "TopSecret42" } });
     expect(r.statusCode).toBe(200);
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Тайна тест" });
-    await editOf(page, "Тайна тест").click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
-    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+    // Опубликованное: «Получить ссылку» прямо с карточки «Мои приглашения».
+    await page.locator("#my-inv [data-rv]").filter({ hasText: "Тайна тест" }).locator("[data-inv-share]").click();
     await e.waitText(page, ru.linkReady);
     await expect.poll(() => page.locator("input[name=access-code]").inputValue()).toBe("TopSecret42");
     // Выход из аккаунта.

@@ -83,9 +83,13 @@ function allRequests(context: BrowserContext) {
   return list;
 }
 
-/** «Мои приглашения» → конструктор → последний шаг → редактор на странице гостя. */
+/** «Мои приглашения» → редактор на странице гостя: опубликованное «Изменить» открывает в нём сразу, черновик —
+ * в конструкторе, оттуда последний шаг → «✎ К редактору». */
 async function toRefine(page: Page, t: Dict = ru) {
   await page.locator("#my-inv").getByRole("button", { name: t.edit }).first().click();
+  const editor = page.locator("[data-ed-tools]");
+  await editor.or(page.locator("[data-step-of]")).first().waitFor();
+  if (await editor.count()) return;
   await page.getByTitle(t.stepsX.sections).click();
   await page.getByRole("button", { name: "✎ " + t.toEditor }).click();
 }
@@ -160,7 +164,7 @@ describe("публикация и оплата", () => {
     expect((await ordersOf(inv.id))[0]!.status).toBe("paid");
     expect(page.url()).toBe(`${e.base}/app/`);
     expect(await page.locator("input[name=slug]").inputValue()).toBe(saved.slug);
-    expect(await page.locator("pre").innerText()).toContain(`content="${e.base}/i/${saved.slug}"`);
+    expect(await page.locator("pre").textContent()).toContain(`content="${e.base}/i/${saved.slug}"`);
     // Превью ссылки уходит на сервер (PUT /og) и становится og:image страницы.
     await expect.poll(async () => (await invOf(inv.id)).ogImageUrl ?? "", { timeout: 15_000 }).toMatch(/^\/media\/[0-9a-f-]{36}\.jpg$/);
     // Повторно «Получить ссылку» у опубликованного: сразу «Поделиться», без листа оплаты.
@@ -179,10 +183,11 @@ describe("публикация и оплата", () => {
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Конец шагов" });
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
     await page.getByTitle(ru.stepsX.sections).click();
-    // Последний шаг: карточка «Всё готово», в нижней панели — «Получить ссылку» вместо «К редактору».
+    // Последний шаг: карточка «Всё готово» объясняет публикацию, а «Получить ссылку» — одна, в нижней панели
+    // (раньше была ещё красная кнопка в карточке: две одинаковые основные кнопки на одном экране).
     await page.locator("[data-finish]").waitFor();
-    expect(await page.getByRole("button", { name: ru.toShare + " →" }).count()).toBe(2);
-    await page.getByRole("button", { name: ru.toShare + " →" }).last().click();
+    expect(await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).count()).toBe(1);
+    await page.locator('[data-next="share"]').click();
     await sheet(page, "pay").waitFor();
     await sheet(page, "pay").getByRole("button", { name: ru.close }).click();
     // Редактор: кнопка ссылки не уезжает за прокрутку шаблонов.
@@ -676,12 +681,10 @@ describe("страница гостя", () => {
     }
     // «Поделиться» узбекского приглашения: og:title тот же, что у сервера.
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Malika va Jasur" });
-    await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).getByRole("button", { name: ru.edit }).click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
-    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+    // Опубликованное: «Получить ссылку» прямо с карточки «Мои приглашения».
+    await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).locator("[data-inv-share]").click();
     await e.waitText(page, ru.linkReady);
-    await expect.poll(() => page.locator("pre").innerText()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');
+    await expect.poll(() => page.locator("pre").textContent()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');
     // Превью ссылки — тоже на языке приглашения (интерфейс здесь русский).
     const og = page.locator('img[src^="data:image"]:not([data-qr]):not([alt="QR"])').first();
     await og.waitFor();
@@ -774,9 +777,9 @@ describe("«Поделиться»", () => {
     const fresh = "shahzoda-" + inv.slug;
     await slugIn.fill(fresh);
     await expect.poll(async () => (await invOf(inv.id)).slug, { timeout: 10_000 }).toBe(fresh);
-    await expect.poll(() => page.locator("pre").innerText()).toContain(`${e.base}/i/${fresh}`);
-    expect(await page.locator("pre").innerText()).toContain("Ждём вас на нашей свадьбе!");
-    expect(await page.locator("pre").innerText()).not.toContain("invito.app");
+    await expect.poll(() => page.locator("pre").textContent()).toContain(`${e.base}/i/${fresh}`);
+    expect(await page.locator("pre").textContent()).toContain("Ждём вас на нашей свадьбе!");
+    expect(await page.locator("pre").textContent()).not.toContain("invito.app");
     // Пароль страницы: включение и ввод сохраняют accessCode.
     await page.getByRole("button", { name: new RegExp("^" + ru.pw) }).click();
     await page.locator("input[name=access-code]").fill("2026");
