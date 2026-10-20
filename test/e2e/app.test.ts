@@ -421,6 +421,44 @@ describe("вход и черновики", () => {
     await close();
   });
 
+  it("выход, пока грузятся гости: ответ, пришедший после выхода, не шлёт запросов прежнего аккаунта без сессии", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Гонка тест", intro: "none" } });
+    await e.db.update(invitations).set({ status: "active", publishedAt: new Date(), unlocked: true }).where(eq(invitations.id, inv.id));
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Гонка тест" });
+    // «Поделиться» открывает приглашение (первый GET) и грузит гостей (второй GET). Ответ второго придерживается
+    // и приходит, когда cookie сессии уже удалена ответом на выход, а страница этот ответ ещё не получила.
+    let gets = 0, out = false, release = () => {};
+    const held = new Promise<void>((r) => (release = r));
+    const late: string[] = [];
+    page.on("request", (r) => { if (out && r.url().startsWith(e.base + "/api/invitations")) late.push(r.method() + " " + r.url().slice(e.base.length)); });
+    await context.route(e.base + "/api/invitations/" + inv.id, async (route) => {
+      if (route.request().method() !== "GET" || ++gets < 2) return route.continue();
+      const res = await route.fetch();
+      await held;
+      await route.fulfill({ response: res });
+    });
+    await context.route(e.base + "/api/auth/logout", async (route) => {
+      const res = await route.fetch();
+      out = true;
+      release();
+      await new Promise((r) => setTimeout(r, 30));
+      await route.fulfill({ response: res });
+    });
+    await page.locator("#my-inv [data-rv]").filter({ hasText: "Гонка тест" }).locator("[data-inv-share]").click();
+    await e.waitText(page, ru.linkReady);
+    await expect.poll(() => gets).toBe(2);
+    await page.locator("[data-account]").first().click();
+    await sheet(page, "account").getByRole("button", { name: ru.logout }).click();
+    await e.waitText(page, ru.loggedOut);
+    await page.waitForTimeout(500);
+    expect(out).toBe(true);
+    expect(late).toEqual([]);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
   it("сохранение без сети: тост и «Не сохранено», затем повтор сохраняет", async () => {
     const context = await e.newContext();
     const user = await e.signIn(context);

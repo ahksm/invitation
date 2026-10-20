@@ -1864,13 +1864,16 @@ class Component extends DCLogic {
   }
   // Номер для показа: узбекский как «+998 90 123-45-67», остальные (контакт из Telegram) — «+<цифры>», как в боте.
   phoneText(p) { const d = String(p || '').replace(/\D/g, ''); return !d ? '' : /^998\d{9}$/.test(d) ? '+998 ' + d.slice(3, 5) + ' ' + d.slice(5, 8) + '-' + d.slice(8, 10) + '-' + d.slice(10) : '+' + d; }
+  // Выход: черновик сохраняется, страница забывает аккаунт и только потом закрывает сессию (POST /logout).
+  // Ответ на запрос, ушедший раньше (гости, активность), приходит уже без открытого приглашения и не запускает
+  // новых запросов прежнего аккаунта, которые без cookie получили бы 401.
   async logout() {
     await this.flushSave().catch(() => {});
-    try { await this.A.api('/api/auth/logout', { body: {} }); } catch (e) { console.error(e); }
     this.A.setToken(null);
     this._uid = null;
     this.setState({ me: null });
     this.resetAccountState();
+    try { await this.A.api('/api/auth/logout', { body: {} }); } catch (e) { console.error(e); }
     this.toast(this.t().loggedOut);
   }
   // Данные аккаунта не переживают выход и вход другим человеком: открытое приглашение, его гости, адрес и пароль
