@@ -4032,7 +4032,8 @@ class Component extends DCLogic {
       sum: pyPub, names: (inv.names || '').trim() || evLabel, what: t.payWhat.replace('{tpl}', tplName).replace('{mode}', pyPers ? t.payPersonal : t.payShared),
       after: pyAmount == null ? '' : pyPers ? (pyAmount ? t.payAfterPers : t.payAfterPersFree) : pyAmount ? t.payAfter : t.payAfterFree };
     // Программа и маршрут (шаг и лист «Место»): время, название, место и адрес или ссылка на карту. Остановка на карте
-    // гостя (номер закрашен) — по тому же правилу, что и у гостя (this.E.isStop): пункт с местом или адресом. Под адресом — подсказка, откроется ли вставленная ссылка у гостей.
+    // гостя (номер закрашен) — по тому же правилу, что и у гостя (this.E.isStop): пункт с местом или адресом.
+    // Под адресом — подсказка, откроется ли вставленная ссылка у гостей.
     const progLen = inv.program.length, progFull = progLen >= 8;
     const oneLine = (e) => e.target.value.replace(/[\r\n]+/g, ' '), noEnter = (e) => { if (e.key === 'Enter') e.preventDefault(); };
     const prog = inv.program.map((p, i) => {
@@ -4070,7 +4071,8 @@ class Component extends DCLogic {
     const gProg = inv.program.filter((p) => (p.title || '').trim() || (p.place || '').trim()).map((p) => ({ time: p.time, title: p.title, place: (p.place || '').trim(), address: (p.address || '').trim(), hasPlace: !!(p.place || '').trim() }));
     const n = gProg.length;
     // Маршрут: остановки — пункты программы с местом или с адресом (ссылкой на карту; правило this.E.isStop, как
-    // у номеров в конструкторе), в порядке списка; у пункта без места остановка подписана его названием — ссылку, которую конструктор принял, гости видят. Главное место —
+    // у номеров в конструкторе), в порядке списка; у пункта без места остановка подписана его названием — ссылку,
+    // которую конструктор принял, гости видят. Главное место —
     // отметка «●»: остановка с тем же названием становится ею, иначе место встаёт в маршрут по времени начала
     // (inv.time), без времени — в конец.
     const pkey = (x) => (x || '').trim().toLowerCase(), venueK = pkey(inv.venue);
