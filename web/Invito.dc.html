@@ -2704,14 +2704,6 @@ class Component extends DCLogic {
     setTimeout(() => { this.setState({ env: 3 }); this.fireBurst(); }, 1650);
     setTimeout(() => this.setState({ env: 4 }), 2450);
   }
-  // «Получить ссылку»: в демо — экран как в дизайне; иначе нужен вход и черновик на сервере. Опубликованное
-  // приглашение сразу открывает «Поделиться», неопубликованное — лист оплаты и публикации.
-  goShare() {
-    this.stopMusic();
-    const show = () => { this.flushSave(); this.setState((x) => ({ screen: 'share', music: false, share: { ...x.share, slug: x.share.edited ? x.share.slug : this.D.slugify(x.inv.names) } })); };
-    if (this.state.demo) return show();
-    this.requireLogin(() => this.ensureDraft((dto) => { this.setState({ music: false }); if (dto && dto.status === 'active') show(); else this.checkSamples(() => this.openPay({ dto })); }));
-  }
   // Значения-примеры события на всех языках (после смены языка приглашения пример остаётся примером).
   sampleVals(ev, k) { const E = this.D.EVENTS[ev]; return E ? Object.values(E.text).map((L) => String((L && L[k]) || '').trim()).filter(Boolean) : []; }
   // Что в приглашении осталось из примера шаблона: имена, дата (сегодня + E.days — от сегодня или от создания
@@ -2740,6 +2732,14 @@ class Component extends DCLogic {
     const s = this.state, t = this.t(), left = this.samplesLeft(), key = s.draftId + ':' + left.map((x) => x.k).join(',');
     if (!left.some((x) => x.k !== 'photos') || this._smpOk === key) return fn();
     this.askConfirm({ title: t.smpTitle, text: t.smpText, items: left.map((x) => ({ label: x.label })), ok: t.smpAnyway, cancel: t.edit, onCancel: () => this.jumpTo(left[0].step) }, () => { this._smpOk = key; fn(); });
+  }
+  // «Получить ссылку»: в демо — экран как в дизайне; иначе нужен вход и черновик на сервере. Опубликованное
+  // приглашение сразу открывает «Поделиться», неопубликованное — лист оплаты и публикации.
+  goShare() {
+    this.stopMusic();
+    const show = () => { this.flushSave(); this.setState((x) => ({ screen: 'share', music: false, share: { ...x.share, slug: x.share.edited ? x.share.slug : this.D.slugify(x.inv.names) } })); };
+    if (this.state.demo) return show();
+    this.requireLogin(() => this.ensureDraft((dto) => { this.setState({ music: false }); if (dto && dto.status === 'active') show(); else this.checkSamples(() => this.openPay({ dto })); }));
   }
   goManage(extra) { if (this.state.demo) return this.go('manage', extra); this.requireLogin(() => this.go('manage', extra)); }
   // «Докупить места»: лист оплаты мест персонального приглашения.
