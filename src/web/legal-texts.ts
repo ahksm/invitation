@@ -99,7 +99,7 @@ const ru: LegalTexts = {
                 "«Сервис» — программные средства Сайта для создания, публикации и рассылки приглашений;",
                 "«Приглашение» — онлайн-страница о событии, которую Заказчик создаёт на Сайте по одному из шаблонов;",
                 "«Гость» — человек, которому Заказчик отправляет Приглашение;",
-                "«Место» — личная ссылка на Приглашение для одного Гостя;",
+                "«Место» — персональная ссылка на Приглашение для одного Гостя;",
                 "«Подписка» — доступ ко всем шаблонам Сайта на оплаченный срок;",
                 "«Заказ» — Услуга, которую Заказчик выбрал и оплатил на Сайте.",
               ],
@@ -115,7 +115,7 @@ const ru: LegalTexts = {
             {
               list: [
                 "публикацию Приглашения по одной общей ссылке для всех Гостей — оплата за шаблон;",
-                "личные Приглашения: у каждого Гостя своя ссылка, а его ответ сразу попадает в список Заказчика — оплата за каждое Место; если для шаблона доступна рассылка по SMS, Гостям можно отправить приглашение и по SMS;",
+                "персональные Приглашения: у каждого Гостя своя ссылка, а его ответ сразу попадает в список Заказчика — оплата за каждое Место; если для шаблона доступна рассылка по SMS, Гостям можно отправить приглашение и по SMS;",
                 "Подписку на срок, выбранный при оплате: любые шаблоны без отдельной оплаты, Места оплачиваются отдельно.",
               ],
             },
@@ -128,7 +128,7 @@ const ru: LegalTexts = {
           title: "Акцепт оферты и оформление Заказа",
           blocks: [
             "Акцепт оферты — оплата Заказа на Сайте. Оплачивая Заказ, Заказчик подтверждает, что прочитал оферту и [Политику конфиденциальности](privacy) и принимает их полностью и без оговорок.",
-            "Чтобы оформить Заказ, Заказчик входит на Сайт по номеру телефона или через Telegram, выбирает шаблон, способ публикации и, для личных Приглашений, количество Мест.",
+            "Чтобы оформить Заказ, Заказчик входит на Сайт по номеру телефона или через Telegram, выбирает шаблон, способ публикации и, для персональных Приглашений, количество Мест.",
             "Если Исполнитель предоставил Заказчику бесплатный доступ, Заказы выполняются без оплаты, а остальные условия оферты действуют.",
           ],
         },
@@ -138,7 +138,7 @@ const ru: LegalTexts = {
           blocks: [
             "Цены Услуг указаны на Сайте в узбекских сумах. Действует цена, которая показана на Сайте в момент оплаты Заказа.",
             "Исполнитель вправе менять цены. Новые цены не применяются к уже оплаченным Заказам.",
-            "Оплата принимается банковскими картами через платёжную систему Multicard, в том числе картами Uzcard и Humo. Данные карты Заказчик вводит на странице платёжной системы; Исполнитель их не получает и не хранит.",
+            "Оплата принимается банковскими картами через платёжную систему Multicard; доступные виды карт показаны на странице оплаты. Данные карты Заказчик вводит на странице платёжной системы; полный номер карты, срок её действия и код безопасности Исполнитель не получает и не хранит.",
             "Заказ считается оплаченным, когда платёжная система подтвердит оплату. Фискальный чек формирует платёжная система в порядке, установленном законодательством Республики Узбекистан.",
             "Подписка не продлевается автоматически: без действия Заказчика повторных списаний нет.",
           ],
@@ -149,7 +149,7 @@ const ru: LegalTexts = {
           blocks: [
             "Услуга оказана, когда после подтверждения оплаты Сайт открыл доступ к оплаченному: Приглашение можно опубликовать или оно уже опубликовано, Места добавлены к Приглашению, Подписка действует. Обычно это происходит сразу после оплаты.",
             "Подписка действует оплаченное число месяцев с момента оплаты. Если в момент оплаты уже действует Подписка, новый срок прибавляется к ней.",
-            "Опубликованное Приглашение открывается по ссылке, пока Заказчик его не удалит: удалённое Приглашение переносится в архив и больше не открывается Гостям.",
+            "Опубликованное Приглашение открывается по ссылке, пока Заказчик его не удалит: удалённое Приглашение переносится в архив и больше не открывается Гостям, а список Гостей и их ответы удаляются.",
             "Заказчик может менять содержание опубликованного Приглашения; Гости видят изменения сразу.",
             "Доставка SMS и сообщений в Telegram зависит от операторов связи и Telegram. Исполнитель не гарантирует, что Гость прочитает приглашение или ответит на него.",
           ],
@@ -162,7 +162,7 @@ const ru: LegalTexts = {
             "После публикации Услуга считается оказанной. Деньги возвращаются в случаях, предусмотренных законодательством Республики Узбекистан, в том числе если Услуга оказана ненадлежащим образом по вине Исполнителя.",
             "Если оплата прошла, а доступ не открылся, Исполнитель выполнит Заказ или вернёт оплату полностью.",
             "Запрос на возврат направляется по [контактам Исполнителя](contacts) с номером Заказа и номером телефона аккаунта. Исполнитель рассматривает запрос в течение 10 рабочих дней.",
-            "Деньги возвращаются на карту, с которой была оплата, через платёжную систему; срок зачисления зависит от банка, выпустившего карту. После возврата доступ к оплаченному (шаблону, Местам или Подписке) прекращается.",
+            "Деньги возвращаются на карту, с которой была оплата, через платёжную систему; срок зачисления зависит от банка, выпустившего карту. После возврата Исполнитель вправе закрыть доступ к оплаченному (шаблону, Местам или Подписке).",
           ],
         },
         {
@@ -238,7 +238,7 @@ const ru: LegalTexts = {
     },
     privacy: {
       title: "Политика конфиденциальности",
-      description: "Какие персональные данные собирает {app}, зачем, где хранит, кому передаёт и как их удалить.",
+      description: "Какие персональные данные собирает {app}, зачем, как хранит и защищает, кому передаёт и как их удалить.",
       lead: "Как мы обрабатываем персональные данные пользователей и гостей сайта {site}.",
       numbered: true,
       sections: [
@@ -266,7 +266,7 @@ const ru: LegalTexts = {
             "Содержание приглашений: имена, дата, время и место события, тексты, программа, контакты организатора, загруженные фотографии, видео и музыка.",
             "Данные гостей, которые добавляет организатор или сам гость: имя, номер телефона, группа и стол в рассадке, ответ на приглашение (придёт ли, сколько человек, пожелания по питанию, сообщение организатору), время открытия приглашения и отметка о приходе. Если гость пишет боту, мы сохраняем ID его чата в Telegram, чтобы присылать напоминания.",
             "Технические данные: IP-адрес, сведения о браузере (User-Agent), время запросов. Они нужны для работы и защиты Сервиса.",
-            "Данные банковских карт мы не получаем и не храним: их вводят на странице платёжной системы.",
+            "Полный номер банковской карты, срок её действия и код безопасности мы не получаем и не храним: их вводят на странице платёжной системы.",
           ],
         },
         {
@@ -301,9 +301,8 @@ const ru: LegalTexts = {
           id: "storage",
           title: "Хранение и защита",
           blocks: [
-            "Данные хранятся на защищённых серверах Сервиса. Доступ к серверам и базам данных есть только у администраторов Сервиса.",
-            "Сайт работает только по защищённому протоколу HTTPS. Доступ к данным есть только у тех, кому он нужен для работы Сервиса.",
-            "Личные ссылки гостей содержат случайный ключ, страницы приглашений закрыты от поисковых систем, а организатор может защитить приглашение паролем.",
+            "Данные хранятся на защищённых серверах Сервиса, сайт работает только по защищённому протоколу HTTPS. Доступ к серверам и базам данных есть только у администраторов Сервиса.",
+            "Персональные ссылки гостей содержат случайный ключ, страницы приглашений закрыты от поисковых систем, а организатор может защитить приглашение паролем.",
             "Загруженные фотографии, видео и музыка открываются по прямой ссылке без входа: так их видят гости на странице приглашения.",
           ],
         },
@@ -321,7 +320,7 @@ const ru: LegalTexts = {
                 "Google, Unsplash и Telegram — страницы сайта загружают шрифты Google Fonts, примеры фотографий из Unsplash и скрипт мини-приложения Telegram, а страница приглашения — карту Google Maps с адресом места, поэтому эти сервисы получают IP-адрес браузера.",
               ],
             },
-            "За пределы Республики Узбекистан данные передаются только зарубежным сервисам из этого списка (Telegram, Anthropic, Google, Unsplash) и только в описанном объёме.",
+            "Зарубежным сервисам из этого списка (Telegram, Anthropic, Google, Unsplash) данные передаются только в описанном объёме.",
             "Гости видят то, что организатор разместил в приглашении. Если организатор включил список «Кто придёт», гости видят имя и первую букву фамилии тех, кто ответил «да»; пожелания в гостевой книге видят все, кто открыл приглашение.",
             "Государственным органам мы раскрываем данные только по основаниям, предусмотренным законодательством Республики Узбекистан.",
           ],
@@ -333,8 +332,8 @@ const ru: LegalTexts = {
             "Мы храним данные не дольше, чем нужно:",
             {
               list: [
-                "данные аккаунта и приглашений — пока существует аккаунт; удалённый черновик удаляется сразу, а опубликованное или оплаченное приглашение переносится в архив и больше не открывается гостям;",
-                "данные гостей — пока организатор не удалит гостя или приглашение;",
+                "данные аккаунта и приглашений — пока существует аккаунт; удалённый черновик без оплат удаляется сразу, а опубликованное или оплаченное приглашение (и черновик с начатой оплатой) переносится в архив и больше не открывается гостям;",
+                "данные гостей — пока организатор не удалит гостя или приглашение; при удалении приглашения, в том числе при переносе в архив, его гости удаляются сразу;",
                 "сведения о заказах и платежах — в сроки, установленные законодательством о бухгалтерском учёте и налогах;",
                 "технические журналы — ограниченное время, которое нужно для защиты Сервиса.",
               ],
@@ -364,7 +363,7 @@ const ru: LegalTexts = {
           title: "Cookie и хранилище браузера",
           blocks: [
             "Мы используем только необходимые cookie: cookie сессии хранит вход на сайт до 30 дней или до выхода, ещё одна действует, пока идёт вход через Telegram.",
-            "В хранилище браузера (localStorage) сохраняются язык и тема интерфейса, незавершённая оплата, а у гостя — его ответ на приглашение, чтобы его можно было изменить.",
+            "В хранилище браузера (localStorage) сохраняются язык и тема интерфейса, незавершённые вход через Telegram и оплата, последний открытый шаг конструктора, а у гостя — его ответ на приглашение, чтобы его можно было изменить.",
             "Рекламных и аналитических cookie сторонних сервисов на сайте нет.",
           ],
         },
@@ -492,7 +491,7 @@ const uz: LegalTexts = {
           blocks: [
             "Xizmatlar narxi Saytda o‘zbek so‘mida ko‘rsatilgan. Buyurtma to‘langan paytda Saytda ko‘rsatilgan narx amal qiladi.",
             "Ijrochi narxlarni o‘zgartirishga haqli. Yangi narxlar allaqachon to‘langan Buyurtmalarga qo‘llanilmaydi.",
-            "To‘lov Multicard to‘lov tizimi orqali bank kartalari, jumladan Uzcard va Humo kartalari bilan qabul qilinadi. Karta ma’lumotlarini Buyurtmachi to‘lov tizimi sahifasida kiritadi; Ijrochi ularni olmaydi va saqlamaydi.",
+            "To‘lov Multicard to‘lov tizimi orqali bank kartalari bilan qabul qilinadi; qaysi kartalar qabul qilinishi to‘lov sahifasida ko‘rsatiladi. Karta ma’lumotlarini Buyurtmachi to‘lov tizimi sahifasida kiritadi; kartaning to‘liq raqami, amal qilish muddati va xavfsizlik kodini Ijrochi olmaydi va saqlamaydi.",
             "To‘lov tizimi to‘lovni tasdiqlaganda Buyurtma to‘langan hisoblanadi. Fiskal chekni to‘lov tizimi O‘zbekiston Respublikasi qonunchiligida belgilangan tartibda shakllantiradi.",
             "Obuna avtomatik ravishda uzaytirilmaydi: Buyurtmachining harakatisiz kartadan qayta pul yechib olinmaydi.",
           ],
@@ -503,7 +502,7 @@ const uz: LegalTexts = {
           blocks: [
             "To‘lov tasdiqlangandan so‘ng Sayt to‘langan imkoniyatni ochganda Xizmat ko‘rsatilgan hisoblanadi: Taklifnomani e’lon qilish mumkin yoki u allaqachon e’lon qilingan, Joylar Taklifnomaga qo‘shilgan, Obuna amal qilmoqda. Odatda bu to‘lovdan so‘ng darhol sodir bo‘ladi.",
             "Obuna to‘lov paytidan boshlab to‘langan oylar soni davomida amal qiladi. Agar to‘lov paytida Obuna allaqachon amal qilayotgan bo‘lsa, yangi muddat unga qo‘shiladi.",
-            "E’lon qilingan Taklifnoma Buyurtmachi uni o‘chirmaguncha havola orqali ochiladi: o‘chirilgan Taklifnoma arxivga o‘tkaziladi va Mehmonlarga boshqa ochilmaydi.",
+            "E’lon qilingan Taklifnoma Buyurtmachi uni o‘chirmaguncha havola orqali ochiladi: o‘chirilgan Taklifnoma arxivga o‘tkaziladi va Mehmonlarga boshqa ochilmaydi, Mehmonlar ro‘yxati va ularning javoblari esa o‘chiriladi.",
             "Buyurtmachi e’lon qilingan Taklifnoma mazmunini o‘zgartirishi mumkin; Mehmonlar o‘zgarishlarni darhol ko‘radi.",
             "SMS va Telegramdagi xabarlarning yetkazilishi aloqa operatorlari va Telegramga bog‘liq. Ijrochi Mehmon taklifnomani o‘qishi yoki unga javob berishiga kafolat bermaydi.",
           ],
@@ -516,7 +515,7 @@ const uz: LegalTexts = {
             "E’lon qilingandan so‘ng Xizmat ko‘rsatilgan hisoblanadi. Pul O‘zbekiston Respublikasi qonunchiligida nazarda tutilgan hollarda, jumladan Xizmat Ijrochining aybi bilan lozim darajada ko‘rsatilmagan bo‘lsa, qaytariladi.",
             "Agar to‘lov o‘tgan, lekin imkoniyat ochilmagan bo‘lsa, Ijrochi Buyurtmani bajaradi yoki to‘lovni to‘liq qaytaradi.",
             "Pulni qaytarish so‘rovi Buyurtma raqami va akkaunt telefon raqami ko‘rsatilgan holda [Ijrochi kontaktlari](contacts) orqali yuboriladi. Ijrochi so‘rovni 10 ish kuni ichida ko‘rib chiqadi.",
-            "Pul to‘lov tizimi orqali to‘lov qilingan kartaga qaytariladi; tushish muddati kartani chiqargan bankka bog‘liq. Pul qaytarilgandan so‘ng to‘langan imkoniyatdan (shablon, Joylar yoki Obuna) foydalanish to‘xtatiladi.",
+            "Pul to‘lov tizimi orqali to‘lov qilingan kartaga qaytariladi; tushish muddati kartani chiqargan bankka bog‘liq. Pul qaytarilgandan so‘ng Ijrochi to‘langan imkoniyatdan (shablon, Joylar yoki Obuna) foydalanishni to‘xtatishga haqli.",
           ],
         },
         {
@@ -592,7 +591,7 @@ const uz: LegalTexts = {
     },
     privacy: {
       title: "Maxfiylik siyosati",
-      description: "{app} qanday shaxsga doir ma’lumotlarni yig‘adi, nima uchun, qayerda saqlaydi, kimga beradi va ularni qanday o‘chirish mumkin.",
+      description: "{app} qanday shaxsga doir ma’lumotlarni yig‘adi, nima uchun, ularni qanday saqlaydi va himoya qiladi, kimga beradi va ularni qanday o‘chirish mumkin.",
       lead: "{site} sayti foydalanuvchilari va mehmonlarining shaxsga doir ma’lumotlarini qanday qayta ishlashimiz haqida.",
       numbered: true,
       sections: [
@@ -620,7 +619,7 @@ const uz: LegalTexts = {
             "Taklifnomalar mazmuni: ismlar, tadbir sanasi, vaqti va joyi, matnlar, dastur, tashkilotchi kontaktlari, yuklangan fotosuratlar, video va musiqa.",
             "Tashkilotchi yoki mehmonning o‘zi qo‘shadigan mehmonlar ma’lumotlari: ism, telefon raqami, guruh va o‘tirish tartibidagi stol, taklifnomaga javob (keladimi, necha kishi, ovqatlanish bo‘yicha istaklar, tashkilotchiga xabar), taklifnoma ochilgan vaqt va kelganlik belgisi. Agar mehmon botga yozsa, eslatmalar yuborish uchun uning Telegramdagi chat ID raqamini saqlaymiz.",
             "Texnik ma’lumotlar: IP-manzil, brauzer haqidagi ma’lumotlar (User-Agent), so‘rovlar vaqti. Ular Servisning ishlashi va himoyasi uchun kerak.",
-            "Bank kartalari ma’lumotlarini biz olmaymiz va saqlamaymiz: ular to‘lov tizimi sahifasida kiritiladi.",
+            "Bank kartasining to‘liq raqami, amal qilish muddati va xavfsizlik kodini biz olmaymiz va saqlamaymiz: ular to‘lov tizimi sahifasida kiritiladi.",
           ],
         },
         {
@@ -655,8 +654,7 @@ const uz: LegalTexts = {
           id: "storage",
           title: "Saqlash va himoya",
           blocks: [
-            "Ma’lumotlar Servisning himoyalangan serverlarida saqlanadi. Serverlar va ma’lumotlar bazalariga faqat Servis administratorlari kira oladi.",
-            "Sayt faqat himoyalangan HTTPS protokoli orqali ishlaydi. Ma’lumotlardan faqat Servis ishlashi uchun zarur bo‘lgan shaxslar foydalana oladi.",
+            "Ma’lumotlar Servisning himoyalangan serverlarida saqlanadi, sayt faqat himoyalangan HTTPS protokoli orqali ishlaydi. Serverlar va ma’lumotlar bazalariga faqat Servis administratorlari kira oladi.",
             "Mehmonlarning shaxsiy havolalarida tasodifiy kalit bor, taklifnoma sahifalari qidiruv tizimlaridan yopilgan, tashkilotchi esa taklifnomani parol bilan himoya qilishi mumkin.",
             "Yuklangan fotosuratlar, video va musiqa kirishsiz to‘g‘ridan-to‘g‘ri havola orqali ochiladi: mehmonlar ularni taklifnoma sahifasida shunday ko‘radi.",
           ],
@@ -675,7 +673,7 @@ const uz: LegalTexts = {
                 "Google, Unsplash va Telegram — sayt sahifalari Google Fonts shriftlarini, Unsplash saytidan namuna fotosuratlarni va Telegram mini-ilovasi skriptini, taklifnoma sahifasi esa joy manzili ko‘rsatilgan Google Maps xaritasini yuklaydi, shuning uchun bu servislar brauzerning IP-manzilini oladi.",
               ],
             },
-            "O‘zbekiston Respublikasidan tashqariga ma’lumotlar faqat ushbu ro‘yxatdagi xorijiy servislarga (Telegram, Anthropic, Google, Unsplash) va faqat tavsiflangan hajmda uzatiladi.",
+            "Ushbu ro‘yxatdagi xorijiy servislarga (Telegram, Anthropic, Google, Unsplash) ma’lumotlar faqat tavsiflangan hajmda uzatiladi.",
             "Mehmonlar tashkilotchi taklifnomaga joylagan narsalarni ko‘radi. Agar tashkilotchi «Kimlar keladi» ro‘yxatini yoqqan bo‘lsa, mehmonlar «ha» deb javob berganlarning ismi va familiyasining birinchi harfini ko‘radi; «Mehmonlar kitobi»dagi tilaklarni taklifnomani ochgan har bir kishi ko‘radi.",
             "Davlat organlariga ma’lumotlarni faqat O‘zbekiston Respublikasi qonunchiligida nazarda tutilgan asoslar bo‘yicha oshkor qilamiz.",
           ],
@@ -687,8 +685,8 @@ const uz: LegalTexts = {
             "Ma’lumotlarni kerakli muddatdan ortiq saqlamaymiz:",
             {
               list: [
-                "akkaunt va taklifnomalar ma’lumotlari — akkaunt mavjud ekan; o‘chirilgan qoralama darhol o‘chiriladi, e’lon qilingan yoki to‘langan taklifnoma esa arxivga o‘tkaziladi va mehmonlarga boshqa ochilmaydi;",
-                "mehmonlar ma’lumotlari — tashkilotchi mehmonni yoki taklifnomani o‘chirmaguncha;",
+                "akkaunt va taklifnomalar ma’lumotlari — akkaunt mavjud ekan; to‘lovsiz o‘chirilgan qoralama darhol o‘chiriladi, e’lon qilingan yoki to‘langan taklifnoma (va to‘lovi boshlangan qoralama) esa arxivga o‘tkaziladi va mehmonlarga boshqa ochilmaydi;",
+                "mehmonlar ma’lumotlari — tashkilotchi mehmonni yoki taklifnomani o‘chirmaguncha; taklifnoma o‘chirilganda, jumladan arxivga o‘tkazilganda, uning mehmonlari darhol o‘chiriladi;",
                 "buyurtmalar va to‘lovlar haqidagi ma’lumotlar — buxgalteriya hisobi va soliqlar to‘g‘risidagi qonunchilikda belgilangan muddatlarda;",
                 "texnik jurnallar — Servisni himoya qilish uchun zarur bo‘lgan cheklangan muddat.",
               ],
@@ -718,7 +716,7 @@ const uz: LegalTexts = {
           title: "Cookie va brauzer xotirasi",
           blocks: [
             "Biz faqat zarur cookie fayllaridan foydalanamiz: sessiya cookie fayli saytga kirishni 30 kungacha yoki chiqqunga qadar saqlaydi, yana bittasi Telegram orqali kirish davomidagina amal qiladi.",
-            "Brauzer xotirasida (localStorage) interfeys tili va mavzusi, tugallanmagan to‘lov, mehmonda esa uni o‘zgartirish mumkin bo‘lishi uchun taklifnomaga bergan javobi saqlanadi.",
+            "Brauzer xotirasida (localStorage) interfeys tili va mavzusi, tugallanmagan Telegram orqali kirish va to‘lov, konstruktorning oxirgi ochilgan qadami, mehmonda esa uni o‘zgartirish mumkin bo‘lishi uchun taklifnomaga bergan javobi saqlanadi.",
             "Saytda uchinchi tomon servislarining reklama va tahliliy cookie fayllari yo‘q.",
           ],
         },
@@ -847,7 +845,7 @@ const en: LegalTexts = {
           blocks: [
             "Prices are shown on the Website in Uzbek soums. The price shown on the Website at the moment of payment applies.",
             "The Provider may change prices. New prices do not apply to Orders that are already paid.",
-            "Payment is accepted by bank cards through the Multicard payment system, including Uzcard and Humo cards. The Customer enters card details on the payment system’s page; the Provider does not receive or store them.",
+            "Payment is accepted by bank cards through the Multicard payment system; the accepted card types are shown on the payment page. The Customer enters card details on the payment system’s page; the Provider does not receive or store the full card number, expiry date or security code.",
             "An Order is paid once the payment system confirms the payment. The fiscal receipt is issued by the payment system as required by the laws of the Republic of Uzbekistan.",
             "A Subscription does not renew automatically: there are no repeat charges without the Customer’s action.",
           ],
@@ -858,7 +856,7 @@ const en: LegalTexts = {
           blocks: [
             "A Service is provided when, after the payment is confirmed, the Website unlocks what was paid for: the Invitation can be published or is already published, Seats are added to the Invitation, or the Subscription is active. This usually happens right after payment.",
             "A Subscription lasts the paid number of months from the moment of payment. If a Subscription is already active at that moment, the new period is added to it.",
-            "A published Invitation opens by its link until the Customer deletes it: a deleted Invitation is moved to the archive and no longer opens for Guests.",
+            "A published Invitation opens by its link until the Customer deletes it: a deleted Invitation is moved to the archive and no longer opens for Guests, and its Guest list and replies are deleted.",
             "The Customer may change the content of a published Invitation; Guests see the changes immediately.",
             "Delivery of SMS and Telegram messages depends on mobile operators and Telegram. The Provider does not guarantee that a Guest will read or answer the invitation.",
           ],
@@ -871,7 +869,7 @@ const en: LegalTexts = {
             "After publication the Service is considered provided. Refunds are made in the cases provided for by the laws of the Republic of Uzbekistan, including when the Service was not properly provided through the Provider’s fault.",
             "If a payment went through but access was not unlocked, the Provider will fulfil the Order or refund the payment in full.",
             "Send refund requests through the [Provider’s contacts](contacts) with the Order number and the account phone number. The Provider reviews a request within 10 working days.",
-            "Money is returned to the card used for payment through the payment system; when it arrives depends on the bank that issued the card. After a refund, access to what was paid for (template, Seats or Subscription) ends.",
+            "Money is returned to the card used for payment through the payment system; when it arrives depends on the bank that issued the card. After a refund, the Provider may close access to what was paid for (template, Seats or Subscription).",
           ],
         },
         {
@@ -947,7 +945,7 @@ const en: LegalTexts = {
     },
     privacy: {
       title: "Privacy policy",
-      description: "What personal data {app} collects, why, where it is stored, who receives it and how to delete it.",
+      description: "What personal data {app} collects, why, how it is stored and protected, who receives it and how to delete it.",
       lead: "How we process the personal data of users and guests of {site}.",
       numbered: true,
       sections: [
@@ -975,7 +973,7 @@ const en: LegalTexts = {
             "Invitation content: names, date, time and place of the event, texts, programme, the organiser’s contacts, uploaded photos, videos and music.",
             "Guest data added by the organiser or by the guest: name, phone number, group and table in the seating plan, the reply to the invitation (coming or not, number of people, dietary notes, message to the organiser), when the invitation was opened and the check-in mark. If a guest writes to the bot, we store their Telegram chat ID to send reminders.",
             "Technical data: IP address, browser details (User-Agent), request times. We need them to run and protect the Service.",
-            "We do not receive or store bank card details: they are entered on the payment system’s page.",
+            "We do not receive or store the full bank card number, expiry date or security code: they are entered on the payment system’s page.",
           ],
         },
         {
@@ -1010,8 +1008,7 @@ const en: LegalTexts = {
           id: "storage",
           title: "Storage and protection",
           blocks: [
-            "Data is stored on the Service’s protected servers. Only the Service’s administrators have access to the servers and databases.",
-            "The Website works only over secure HTTPS. Only people who need it to run the Service have access to the data.",
+            "Data is stored on the Service’s protected servers, and the Website works only over secure HTTPS. Only the Service’s administrators have access to the servers and databases.",
             "Guests’ personal links contain a random key, invitation pages are hidden from search engines, and the organiser can protect an invitation with a password.",
             "Uploaded photos, videos and music open by direct link without signing in: this is how guests see them on the invitation page.",
           ],
@@ -1030,7 +1027,7 @@ const en: LegalTexts = {
                 "Google, Unsplash and Telegram — website pages load Google Fonts, sample photos from Unsplash and the Telegram mini app script, and the invitation page loads a Google Maps map with the venue address, so these services receive the browser’s IP address.",
               ],
             },
-            "Data is transferred outside the Republic of Uzbekistan only to the foreign services on this list (Telegram, Anthropic, Google, Unsplash) and only to the extent described.",
+            "The foreign services on this list (Telegram, Anthropic, Google, Unsplash) receive data only to the extent described.",
             "Guests see what the organiser has put in the invitation. If the organiser has turned on the “Who is coming” list, guests see the first name and the initial of the last name of those who replied “yes”; guestbook wishes are visible to everyone who opens the invitation.",
             "We disclose data to state authorities only on the grounds provided by the laws of the Republic of Uzbekistan.",
           ],
@@ -1042,8 +1039,8 @@ const en: LegalTexts = {
             "We keep data no longer than needed:",
             {
               list: [
-                "account and invitation data — while the account exists; a deleted draft is deleted immediately, while a published or paid invitation is moved to the archive and no longer opens for guests;",
-                "guest data — until the organiser deletes the guest or the invitation;",
+                "account and invitation data — while the account exists; a deleted draft without payments is deleted immediately, while a published or paid invitation (or a draft with a started payment) is moved to the archive and no longer opens for guests;",
+                "guest data — until the organiser deletes the guest or the invitation; when an invitation is deleted, including when it is moved to the archive, its guests are deleted right away;",
                 "order and payment records — for the periods set by accounting and tax laws;",
                 "technical logs — for a limited time needed to protect the Service.",
               ],
@@ -1073,7 +1070,7 @@ const en: LegalTexts = {
           title: "Cookies and browser storage",
           blocks: [
             "We use only necessary cookies: the session cookie keeps you signed in for up to 30 days or until you sign out, and another one works only while you sign in with Telegram.",
-            "Browser storage (localStorage) keeps the interface language and theme, an unfinished payment, and for guests their reply to the invitation so they can change it.",
+            "Browser storage (localStorage) keeps the interface language and theme, an unfinished Telegram sign-in or payment, the last open builder step, and for guests their reply to the invitation so they can change it.",
             "The Website has no advertising or analytics cookies from third-party services.",
           ],
         },
