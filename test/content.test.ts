@@ -32,6 +32,9 @@ describe("данные дизайна", () => {
     expect(toCyr("o‘g‘il")).toBe("ўғил");
     expect(toCyr("Telegram orqali kirish")).toBe("Telegram орқали кириш");
     expect(toCyr("ertaga choy")).toBe("эртага чой");
+    // Названия сервисов и карт остаются латиницей (вопросы и ответы на главной).
+    expect(toCyr("Havolani WhatsApp yoki Telegram orqali yuboring")).toBe("Ҳаволани WhatsApp ёки Telegram орқали юборинг");
+    expect(toCyr("Multicard, Uzcard yoki Humo karta")).toBe("Multicard, Uzcard ёки Humo карта");
   });
 });
 

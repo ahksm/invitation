@@ -389,9 +389,9 @@ describe("вход и черновики", () => {
     const r = await e.app.inject({ method: "POST", url: `/api/public/i/${inv.slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Зарина Сабирова", status: "yes", count: 1, diet: [], msg: "Секретное пожелание", code: "TopSecret42" } });
     expect(r.statusCode).toBe(200);
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Тайна тест" });
+    // «Изменить» у опубликованного — сразу редактор на странице приглашения.
     await editOf(page, "Тайна тест").click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+    await e.waitText(page, ru.tapHint);
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     await e.waitText(page, ru.linkReady);
     await expect.poll(() => page.locator("input[name=access-code]").inputValue()).toBe("TopSecret42");
@@ -516,10 +516,16 @@ describe("языки", () => {
       const { page, problems, close } = await e.open("/app/", { locale, waitText: t.hero1 });
       expect(await page.evaluate(() => localStorage.getItem("invito.lang"))).toBeNull();
       const text = await page.evaluate(() => document.body.textContent || "");
-      // Месяц «№ 01 — …» на главной — из таблиц узбекских дат (Chromium их не знает), а не «2026 M10».
+      // Даты на главной (витрина шаблонов) — из таблиц узбекских дат (Chromium их не знает), а не «2026 M10».
       expect(text).not.toMatch(/\bM\d{1,2}\b/);
-      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].months.some((m: string) => text.includes(m + ", 20"))).toBe(true);
+      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].monthsShort.some((m: string) => text.includes(D.UZ_DATES[lang].daySep + m + ", 20"))).toBe(true);
       await e.shot(page, `home-${lang}-390x844.png`);
+      // Месяц в шапке раздела (на главной его больше нет, он на экране цен) — словами.
+      await page.evaluate(() => { location.hash = "#/pricing"; });
+      await page.locator('[data-screen="pricing"]').waitFor();
+      const prices = await page.evaluate(() => document.body.textContent || "");
+      expect(prices).not.toMatch(/\bM\d{1,2}\b/);
+      if (lang === "uz" || lang === "uzc") expect(D.UZ_DATES[lang].months.some((m: string) => prices.includes(m + ", 20"))).toBe(true);
       await e.expectClean(page, problems);
       await close();
     }

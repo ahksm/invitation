@@ -38,10 +38,19 @@ export type PublicPageRequest = {
 /** Источник публичных страниц: подключается в src/app.ts. */
 export type PublicPageResolver = (req: PublicPageRequest) => Promise<PublicPage>;
 
-const DEFAULT_META: ShellMeta = {
-  title: "Invito",
-  description: "Выберите событие и шаблон, добавьте текст, маршрут и фото. Получите ссылку с красивым превью для любого чата.",
+/** Главная и приложение: что такое Invito, как на первом экране (web/invito-data.js, hero и heroSub). */
+export const DEFAULT_META: ShellMeta = {
+  title: "Invito — электронные приглашения на свадьбу и праздник",
+  description:
+    "Онлайн-приглашение на свадьбу, день рождения или любой праздник: одна ссылка для Telegram и WhatsApp, ответы гостей в одном списке, личные приглашения с именем гостя. Собрать и посмотреть — бесплатно.",
 };
+
+/** Значок сайта: файлы в public/ (отдаёт @fastify/static), /favicon.ico браузер просит и без ссылки. */
+const ICONS = [
+  '<link rel="icon" href="/favicon.ico" sizes="48x48">',
+  '<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
+  '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
+];
 
 const HTML_LANG: Record<string, string> = { ru: "ru", uz: "uz-Latn", uzc: "uz-Cyrl", en: "en" };
 
@@ -86,6 +95,7 @@ export function renderShell(design: Design, opts: ShellOptions): string {
     meta.description && `<meta property="og:description" content="${esc(meta.description)}">`,
     meta.image && `<meta property="og:image" content="${esc(meta.image)}">`,
     '<meta name="twitter:card" content="summary_large_image">',
+    ...ICONS,
     `<style>${SHELL_CSS}</style>`,
     design.fontsHref && '<link rel="preconnect" href="https://fonts.googleapis.com">',
     design.fontsHref && '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>',

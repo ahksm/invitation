@@ -86,11 +86,28 @@ async function ogOf(slug: string) {
   return Object.fromEntries([...html.matchAll(/<meta property="(og:[^"]+)" content="([^"]*)">/g)].map((m) => [m[1]!, m[2]!]));
 }
 
-/** «Мои приглашения» → конструктор → «Разделы» → редактор → «Получить ссылку» (у опубликованного — сразу «Поделиться»). */
-async function toShare(page: Page) {
+/**
+ * «Мои приглашения» → «Изменить»: опубликованное открывается сразу в редакторе на странице приглашения,
+ * черновик — в конструкторе. Возвращает true, если открылся редактор.
+ */
+async function editFromList(page: Page) {
   await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
-  await page.getByTitle(ru.stepsX.sections).click();
-  await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+  await page.waitForFunction((x) => !!document.querySelector(`[title="${x.s}"]`) || document.body.innerText.includes(x.h), { s: ru.stepsX.sections, h: ru.tapHint });
+  return (await page.getByTitle(ru.stepsX.sections).count()) === 0;
+}
+
+/** «Изменить» → конструктор (из редактора опубликованного — его кнопкой «Назад»). */
+async function toBuilder(page: Page) {
+  if (await editFromList(page)) await page.getByRole("button", { name: "← " + ru.back, exact: true }).click();
+  await page.getByTitle(ru.stepsX.sections).waitFor();
+}
+
+/** «Изменить» → редактор (у черновика — через «Разделы») → «Получить ссылку» (у опубликованного — сразу «Поделиться»). */
+async function toShare(page: Page) {
+  if (!(await editFromList(page))) {
+    await page.getByTitle(ru.stepsX.sections).click();
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+  }
   await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
   await e.waitText(page, ru.linkReady);
 }
@@ -220,7 +237,7 @@ describe("стёртая дата приглашения", () => {
     page.on("request", (r) => { if (r.method() === "PATCH" && r.url() === `${e.base}/api/invitations/${inv.id}`) sent.push(r.postDataJSON() as Dict); });
     await page.goto(e.base + "/app/");
     await e.waitText(page, "Дата стёрта");
-    await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+    await toBuilder(page);
     await page.getByTitle(ru.steps.when).click();
     await page.locator("input[type=date]").first().fill("");
     await page.locator("input[type=time]").first().fill("");
@@ -243,7 +260,7 @@ describe("стёртая дата приглашения", () => {
     await e.waitText(page, "Дата стёрта");
     // Карточка в «Моих приглашениях» без даты.
     expect(await page.locator("#my-inv").textContent()).not.toMatch(/26|17:00/);
-    await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+    await toBuilder(page);
     await page.getByTitle(ru.steps.when).click();
     expect(await page.locator("input[type=date]").first().inputValue()).toBe("");
     expect(await page.locator("input[type=time]").first().inputValue()).toBe("");

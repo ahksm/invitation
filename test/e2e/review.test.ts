@@ -449,16 +449,20 @@ describe("конструктор", () => {
 });
 
 describe("тема", () => {
-  it("тёмная тема из «Возможностей» переживает перезагрузку (и возврат со страницы оплаты)", async () => {
+  // Переключатель темы переехал из тура в подвал главной (в туре — только то, что увидит клиент).
+  it("тёмная тема из подвала главной переживает перезагрузку (и возврат со страницы оплаты)", async () => {
     const { page, problems, close } = await e.open("/app/", { waitText: ru.hero1 });
-    await page.getByRole("button", { name: ru.tour }).first().click();
-    await e.waitText(page, ru.tourTitle);
-    await page.getByRole("button", { name: new RegExp(ru.demos.dark[0]) }).click();
+    const btn = page.locator("[data-theme-btn]");
+    expect(await btn.innerText()).toContain(ru.home.dark);
+    expect(await btn.getAttribute("aria-pressed")).toBe("false");
+    await btn.click();
     await expect.poll(() => page.evaluate(() => localStorage.getItem("invito.theme"))).toBe("dark");
+    expect(await btn.innerText()).toContain(ru.home.light);
     await page.reload();
     await e.waitText(page, ru.hero1);
     const bg = () => page.evaluate(() => getComputedStyle(document.querySelector('[style*="min-height: 100vh"]')!).backgroundColor);
     await expect.poll(bg).toBe("rgb(21, 19, 17)");
+    expect(await page.locator("[data-theme-btn]").getAttribute("aria-pressed")).toBe("true");
     await e.expectClean(page, problems);
     await close();
   });
@@ -482,9 +486,9 @@ describe("узкий экран (320 px)", () => {
     const user = await e.signIn(context);
     await personalWith(user.id, [{ name: "Анна" }, { name: "Бобур" }, { name: "Севара" }], { data: { names: "Узкий экран", intro: "none" } }, 2);
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Узкий экран" });
+    // «Изменить» у опубликованного — сразу редактор на странице приглашения.
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+    await e.waitText(page, ru.tapHint);
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     const links = page.locator("[data-personal-links]");
     const badge = links.getByText(ru.seatsLine.replace("{paid}", "2").replace("{n}", "3"), { exact: true });

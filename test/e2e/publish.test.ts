@@ -86,9 +86,14 @@ function allRequests(context: BrowserContext) {
   return list;
 }
 
-/** «Мои приглашения» → конструктор → последний шаг → редактор на странице гостя. */
+/**
+ * «Мои приглашения» → «Изменить» → редактор на странице гостя. Опубликованное открывается в редакторе сразу,
+ * черновик — в конструкторе: последний шаг → «Редактировать на приглашении».
+ */
 async function toRefine(page: Page, t: Dict = ru) {
   await page.locator("#my-inv").getByRole("button", { name: t.edit }).first().click();
+  await page.waitForFunction((x) => !!document.querySelector(`[title="${x.s}"]`) || document.body.innerText.includes(x.h), { s: t.stepsX.sections, h: t.tapHint });
+  if (!(await page.getByTitle(t.stepsX.sections).count())) return;
   await page.getByTitle(t.stepsX.sections).click();
   await page.getByRole("button", { name: "✎ " + t.toEditor }).click();
 }
@@ -686,9 +691,9 @@ describe("страница гостя", () => {
     }
     // «Поделиться» узбекского приглашения: og:title тот же, что у сервера.
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Malika va Jasur" });
+    // «Изменить» у опубликованного — сразу редактор на странице приглашения.
     await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).getByRole("button", { name: ru.edit }).click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+    await e.waitText(page, ru.tapHint);
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     await e.waitText(page, ru.linkReady);
     await expect.poll(() => page.locator("pre").innerText()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');

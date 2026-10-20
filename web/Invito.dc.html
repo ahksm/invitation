@@ -44,40 +44,21 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div></div></header></sc-if>
 
 <sc-if value="{{ isHome }}">
-<main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
-<section style="padding:26px 0 40px">
-<div style="display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.ink }}"><span>№ 01 — {{ monthYear }}</span><span>{{ t.issueTag }}</span></div>
-<h1 style="margin:30px 0 0;font:500 clamp(min(54px,14.5vw),13vw,172px)/.86 'Cormorant Garamond',serif;letter-spacing:-.03em;color:{{ ui.ink }};text-wrap:balance"><span data-rv="1" style="display:block;opacity:0;transform:translateY(40px);transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.7,.2,1)">{{ t.hero1 }}</span><em data-rv="1" style="display:block;font-style:italic;color:#d4452a;opacity:0;transform:translateY(40px);transition:opacity 1s ease .15s,transform 1.1s cubic-bezier(.2,.7,.2,1) .15s">{{ t.hero2 }}</em></h1>
-<div style="display:flex;flex-wrap:wrap;gap:24px 48px;align-items:flex-end;justify-content:space-between;margin-top:32px">
-<p style="margin:0;max-width:42ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.heroSub }}</p>
-<button onClick="{{ goEvents }}" style="display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 28px;border-radius:999px;background:{{ ui.ink }};color:{{ ui.paper }};border:0;font:500 16px 'Onest',sans-serif;cursor:pointer;transition:transform .2s,background .2s" style-hover="background:#d4452a;transform:translateY(-2px)">{{ t.create }}<span style="font-size:20px">→</span></button>
-<button onClick="{{ goTour }}" style="display:inline-flex;align-items:center;gap:10px;height:58px;padding:0 24px;border-radius:999px;background:transparent;color:{{ ui.ink }};border:1px solid rgba({{ ui.inkRgb }},.3);font:500 16px 'Onest',sans-serif;cursor:pointer">{{ t.seeAll }} ✦</button>
-</div>
-</section>
-</main>
-<section style="overflow:hidden;padding:22px 0 26px;border-top:1px solid rgba({{ ui.inkRgb }},.14);border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
-<div data-marq="1" style="display:flex;gap:18px;width:max-content;will-change:transform;padding-left:18px">
-<sc-for list="{{ showcase }}" as="s" hint-placeholder-count="0"><div onClick="{{ s.onClick }}" style="width:{{ marqW }};flex:none;cursor:pointer">
-<div style="border-radius:10px;overflow:hidden;box-shadow:0 24px 40px -28px rgba({{ ui.inkRgb }},.55);transform:rotate({{ s.rot }});transition:transform .4s" style-hover="transform:rotate(0deg) translateY(-6px)"><dc-import name="InviteCover" th="{{ s.th }}" names="{{ s.names }}" date="{{ s.date }}" cover="{{ s.cover }}" kicker="{{ s.kicker }}" hint-size="100%,240px"></dc-import></div>
-<div style="display:flex;justify-content:space-between;gap:8px;margin-top:10px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}"><span>{{ s.name }}</span><span>{{ s.event }}</span></div>
-</div></sc-for>
-</div>
-</section>
-<main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
-<section id="my-inv" style="padding:60px 0 90px;scroll-margin-top:{{ headTop }}">
-<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.myInv }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;color:{{ ui.muted }}">{{ myCount }}</span></div>
-<sc-if value="{{ invOut }}"><div style="display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between;padding:26px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><p style="margin:0;max-width:44ch;font-size:16px;line-height:1.5;color:{{ ui.body }}">{{ t.invLoginHint }}</p><button onClick="{{ loginMyInv }}" style="height:46px;padding:0 22px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.login }} →</button></div></sc-if>
+<sc-if value="{{ hm.invTop }}"><main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
+<section id="my-inv" data-inv-top="1" style="padding:26px 0 34px;scroll-margin-top:{{ headTop }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(34px,6vw,56px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.myInv }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;color:{{ ui.muted }}">{{ myCount }}</span></div>
 <sc-if value="{{ invLoading }}"><div style="padding:28px 0;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};animation:invPulse 1.4s ease-in-out infinite">{{ t.loading }}</div></sc-if>
-<sc-if value="{{ invEmpty }}"><p style="margin:0;padding:28px 0;max-width:30ch;font:italic 500 26px/1.2 'Cormorant Garamond',serif;color:{{ ui.muted }}">{{ t.noInv }}</p></sc-if>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:0 36px">
-<sc-for list="{{ myInvites }}" as="m" hint-placeholder-count="0"><div data-rv="1" style="opacity:0;transform:translateY(24px);transition:opacity .8s,transform .9s cubic-bezier(.2,.7,.2,1);display:grid;grid-template-columns:100px minmax(0,1fr);gap:18px;padding:24px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
-<div style="width:100px;align-self:start;border-radius:6px;overflow:hidden;box-shadow:0 14px 24px -16px rgba({{ ui.inkRgb }},.5)"><dc-import name="InviteCover" th="{{ m.th }}" names="{{ m.names }}" date="{{ m.dateShort }}" cover="{{ m.cover }}" kicker="{{ m.kicker }}" hint-size="100px,133px"></dc-import></div>
+<sc-for list="{{ hm.invCards }}" as="m" hint-placeholder-count="0"><div data-rv="1" data-inv-card="{{ m.state }}" style="opacity:0;transform:translateY(24px);transition:opacity .8s,transform .9s cubic-bezier(.2,.7,.2,1);display:grid;grid-template-columns:100px minmax(0,1fr);gap:18px;padding:24px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
+<div onClick="{{ m.onOpen }}" style="width:100px;align-self:start;border-radius:6px;overflow:hidden;cursor:pointer;box-shadow:0 14px 24px -16px rgba({{ ui.inkRgb }},.5)"><dc-import name="InviteCover" th="{{ m.th }}" names="{{ m.names }}" date="{{ m.dateShort }}" cover="{{ m.cover }}" kicker="{{ m.kicker }}" hint-size="100px,133px"></dc-import></div>
 <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
-<div style="display:flex;gap:8px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}"><span>{{ m.event }}</span><span>·</span><span>{{ m.tplName }}</span></div>
-<div style="font:500 28px/1.05 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ m.names }}</div>
+<div style="display:flex;gap:8px;min-width:0;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}"><span style="flex:none">{{ m.event }}</span><span>·</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.tplName }}</span></div>
+<div style="font:500 28px/1.05 'Cormorant Garamond',serif;color:{{ ui.ink }};overflow-wrap:anywhere">{{ m.names }}</div>
 <div style="font-size:14px;color:{{ ui.muted }}">{{ m.date }}</div>
 <div style="display:flex;gap:10px;align-items:center;margin-top:2px"><span style="padding:3px 10px;border-radius:999px;font-size:12px;background:{{ m.stBg }};color:{{ m.stColor }};border:1px solid {{ m.stBorder }}">{{ m.status }}</span><span style="font:500 11px 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ m.replies }}</span></div>
+<sc-if value="{{ m.draft }}"><div data-draft-hint="1" style="font-size:13px;line-height:1.4;color:{{ ui.muted }}">{{ t.invDraftHint }}</div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">
+<button data-inv-share="{{ m.mainKey }}" onClick="{{ m.onMain }}" style="height:36px;padding:0 16px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap" style-hover="background:{{ ui.ink }};color:{{ ui.paper }}">{{ m.mainLabel }} →</button>
 <button onClick="{{ m.onGuests }}" style="height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:13px;cursor:pointer" style-hover="background:{{ ui.ink }};color:{{ ui.paper }}">{{ t.guests }}</button>
 <button onClick="{{ m.onEdit }}" style="height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:13px;cursor:pointer" style-hover="background:{{ ui.ink }};color:{{ ui.paper }}">{{ t.edit }}</button>
 <button onClick="{{ m.onDup }}" style="height:36px;padding:0 14px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font-size:13px;cursor:pointer" style-hover="background:{{ ui.ink }};color:{{ ui.paper }}">{{ t.duplicate }}</button>
@@ -85,52 +66,152 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ m.canDel }}"><button onClick="{{ m.onDel }}" style="height:36px;padding:0 10px;border:0;background:transparent;color:{{ ui.muted }};font-size:13px;cursor:pointer;text-decoration:underline">{{ t.deleteD }}</button></sc-if>
 </div></div></div></sc-for>
 </div>
-<button onClick="{{ goEvents }}" style="margin-top:28px;width:100%;height:64px;border:1px dashed rgba({{ ui.inkRgb }},.35);border-radius:10px;background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="border-color:#d4452a;color:#d4452a">+ {{ t.create }}</button>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:22px">
+<sc-if value="{{ hm.invMore }}"><button data-inv-all="1" onClick="{{ hm.toggleAll }}" style="height:48px;padding:0 20px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer" style-hover="border-color:#d4452a;color:#d4452a">{{ hm.allLabel }}</button></sc-if>
+<button onClick="{{ goEvents }}" style="flex:1;min-width:min(100%,240px);height:48px;border:1px dashed rgba({{ ui.inkRgb }},.35);border-radius:999px;background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer" style-hover="border-color:#d4452a;color:#d4452a">+ {{ t.create }}</button>
+</div>
+</section></main></sc-if>
+<main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
+<section data-home="hero" style="padding:26px 0 44px">
+<div style="border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;font:500 11px/1.5 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.ink }}">{{ t.home.kick }}</div>
+<h1 style="margin:30px 0 0;max-width:12ch;font:500 clamp(min(54px,14.5vw),10vw,112px)/.9 'Cormorant Garamond',serif;letter-spacing:-.03em;color:{{ ui.ink }};text-wrap:balance"><span data-rv="1" style="display:block;opacity:0;transform:translateY(40px);transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.7,.2,1)">{{ t.hero1 }}</span><em data-rv="1" style="display:block;font-style:italic;color:#d4452a;opacity:0;transform:translateY(40px);transition:opacity 1s ease .15s,transform 1.1s cubic-bezier(.2,.7,.2,1) .15s">{{ t.hero2 }}</em></h1>
+<p style="margin:26px 0 0;max-width:46ch;font-size:17px;line-height:1.55;color:{{ ui.body }};text-wrap:pretty">{{ t.heroSub }}</p>
+<sc-if value="{{ hm.priceLine }}"><p data-hero-price="1" style="margin:14px 0 0;max-width:62ch;font:500 12px/1.6 'JetBrains Mono',monospace;letter-spacing:.03em;color:{{ hm.priceColor }}">{{ hm.priceLine }}</p></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px">
+<button data-cta="create" onClick="{{ goEvents }}" style="flex:{{ hm.ctaFlex }};display:inline-flex;align-items:center;justify-content:center;gap:12px;height:58px;padding:0 28px;border-radius:999px;background:{{ ui.ink }};color:{{ ui.paper }};border:0;font:500 16px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;transition:transform .2s,background .2s" style-hover="background:#d4452a;transform:translateY(-2px)">{{ t.create }}<span style="font-size:20px">→</span></button>
+<button data-cta="tpls" onClick="{{ hm.goGallery }}" style="flex:{{ hm.ctaFlex }};display:inline-flex;align-items:center;justify-content:center;height:58px;padding:0 24px;border-radius:999px;background:transparent;color:{{ ui.ink }};border:1px solid rgba({{ ui.inkRgb }},.3);font:500 16px 'Onest',sans-serif;cursor:pointer;white-space:nowrap" style-hover="border-color:#d4452a;color:#d4452a">{{ t.home.seeTpls }}</button>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:22px"><sc-for list="{{ t.home.trust }}" as="x"><span style="padding:7px 12px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.2);font:500 11px/1.3 'JetBrains Mono',monospace;letter-spacing:.04em;color:{{ ui.muted }}">✓ {{ x }}</span></sc-for></div>
 </section>
 </main>
+<section data-home="show" style="overflow:hidden;padding:28px 0 26px;border-top:1px solid rgba({{ ui.inkRgb }},.14);border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
+<div style="max-width:1200px;margin:0 auto 20px;padding:0 clamp(18px,4vw,40px);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px"><h2 style="margin:0;font:500 clamp(30px,5vw,44px)/1.05 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.home.showT }}</h2><button data-home-gallery="1" onClick="{{ hm.goGallery }}" style="padding:6px 0;border:0;background:none;color:#d4452a;font:500 14px 'Onest',sans-serif;cursor:pointer;white-space:nowrap">{{ t.templatesAll }} · {{ hm.tplTotal }} →</button></div>
+<div data-marq="1" style="display:flex;gap:18px;width:max-content;will-change:transform;padding-left:18px">
+<sc-for list="{{ showcase }}" as="s" hint-placeholder-count="0"><div onClick="{{ s.onClick }}" data-show="{{ s.id }}" style="width:{{ marqW }};flex:none;cursor:pointer">
+<div style="border-radius:10px;overflow:hidden;box-shadow:0 24px 40px -28px rgba({{ ui.inkRgb }},.55);transform:rotate({{ s.rot }});transition:transform .4s" style-hover="transform:rotate(0deg) translateY(-6px)"><dc-import name="InviteCover" th="{{ s.th }}" names="{{ s.names }}" date="{{ s.date }}" cover="{{ s.cover }}" kicker="{{ s.kicker }}" hint-size="100%,240px"></dc-import></div>
+<div style="display:flex;flex-direction:column;gap:3px;margin-top:10px;min-width:0"><span style="font:500 17px/1.1 'Cormorant Garamond',serif;color:{{ ui.ink }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</span><span style="font:500 10px/1.3 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ ui.muted }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.event }}</span><sc-if value="{{ s.price }}"><span style="font:500 10px/1.3 'JetBrains Mono',monospace;letter-spacing:.06em;color:{{ s.priceColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.price }}</span></sc-if></div>
+</div></sc-for>
+</div>
+</section>
+<main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
+<section id="how" data-home="how" style="padding:72px 0 0;scroll-margin-top:{{ headTop }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.home.howT }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;color:{{ ui.muted }}">01 — 04</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:30px 28px;margin-top:30px">
+<sc-for list="{{ hm.how }}" as="h" hint-placeholder-count="4"><div data-how="{{ h.n }}" style="display:flex;flex-direction:column;gap:10px">
+<span style="font:italic 500 56px/.9 'Cormorant Garamond',serif;color:#d4452a">{{ h.n }}</span>
+<div style="font:500 26px/1.1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ h.title }}</div>
+<p style="margin:0;font-size:15px;line-height:1.55;color:{{ ui.body }}">{{ h.text }}</p>
+</div></sc-for>
+</div>
+</section>
+<section id="features" data-home="features" style="padding:80px 0 0;scroll-margin-top:{{ headTop }}">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 16px;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.home.featT }}</h2><button data-home-tour="1" onClick="{{ goTour }}" style="padding:6px 0;border:0;background:none;color:#d4452a;font:500 14px 'Onest',sans-serif;cursor:pointer;white-space:nowrap">{{ t.home.allFeat }} →</button></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px;margin-top:24px">
+<sc-for list="{{ hm.feat }}" as="f" hint-placeholder-count="6"><div data-feat="1" style="display:flex;gap:16px;align-items:flex-start;padding:20px;border-radius:16px;border:1px solid rgba({{ ui.inkRgb }},.14);background:{{ ui.card }}">
+<span style="width:42px;height:42px;flex:none;border-radius:50%;background:{{ f.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">{{ f.glyph }}</span>
+<div style="min-width:0"><div style="font:500 24px/1.1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ f.title }}</div><p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:{{ ui.muted }}">{{ f.text }}</p></div>
+</div></sc-for>
+</div>
+</section>
+<section id="prices" data-home="prices" style="padding:80px 0 0;scroll-margin-top:{{ headTop }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.home.priceT }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ hm.cur }}</span></div>
+<p style="margin:18px 0 0;max-width:56ch;font-size:16px;line-height:1.55;color:{{ ui.body }}">{{ t.home.priceSub }}</p>
+<sc-if value="{{ hm.accLine }}"><div data-home-access="1" style="margin-top:14px;font:500 13px 'Onest',sans-serif;color:#2e7d4f">✓ {{ hm.accLine }}</div></sc-if>
+<sc-if value="{{ hm.pricesLoading }}"><div style="padding:28px 0;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};animation:invPulse 1.4s ease-in-out infinite">{{ t.loading }}</div></sc-if>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:22px">
+<sc-for list="{{ hm.prices }}" as="c" hint-placeholder-count="0"><div data-home-price="{{ c.key }}" style="display:flex;flex-direction:column;gap:8px;padding:22px;border-radius:16px;border:1.5px solid {{ c.border }};background:{{ ui.card }}">
+<div style="font:500 26px/1.1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ c.title }}</div>
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px"><span data-price="1" style="font:500 40px/1 'Cormorant Garamond',serif;color:{{ ui.ink }};text-decoration:{{ c.strike }};white-space:nowrap">{{ c.price }}</span><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.unit }}</span></div>
+<sc-if value="{{ c.tag }}"><div style="font:500 13px 'Onest',sans-serif;color:#2e7d4f">✓ {{ c.tag }}</div></sc-if>
+<p style="margin:0;font-size:14px;line-height:1.5;color:{{ ui.muted }}">{{ c.desc }}</p>
+<sc-if value="{{ c.note }}"><p style="margin:0;font:500 12px/1.5 'JetBrains Mono',monospace;color:{{ ui.muted }}">{{ c.note }}</p></sc-if>
+</div></sc-for>
+</div>
+<button data-home-pricing="1" onClick="{{ hm.goPricing }}" style="margin-top:20px;height:50px;padding:0 24px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="background:{{ ui.ink }};color:{{ ui.paper }}">{{ t.home.priceMore }} →</button>
+</section>
+<section id="faq" data-home="faq" style="padding:80px 0 0;scroll-margin-top:{{ headTop }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.home.faqT }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;color:{{ ui.muted }}">{{ hm.faqCount }}</span></div>
+<div style="max-width:820px">
+<sc-for list="{{ hm.faq }}" as="q" hint-placeholder-count="0"><div style="border-bottom:1px solid rgba({{ ui.inkRgb }},.14)">
+<button data-home-faq="{{ $index }}" onClick="{{ q.toggle }}" aria-expanded="{{ q.exp }}" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0;border:0;background:none;text-align:left;cursor:pointer;color:{{ ui.ink }};font:500 21px/1.25 'Cormorant Garamond',serif"><span style="min-width:0">{{ q.q }}</span><span aria-hidden="true" style="flex:none;font:400 22px/1 'Onest',sans-serif;color:#d4452a;transform:rotate({{ q.rot }});transition:transform .25s">+</span></button>
+<sc-if value="{{ q.open }}"><p style="margin:0;padding:0 0 18px;max-width:64ch;font-size:15px;line-height:1.6;color:{{ ui.body }}">{{ q.a }}</p></sc-if>
+</div></sc-for>
+</div>
+</section>
+<sc-if value="{{ hm.invBottom }}"><section id="my-inv" style="padding:80px 0 0;scroll-margin-top:{{ headTop }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid {{ ui.ink }};padding-bottom:12px"><h2 style="margin:0;font:500 clamp(38px,7vw,64px)/1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.myInv }}</h2><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;color:{{ ui.muted }}">{{ myCount }}</span></div>
+<sc-if value="{{ invOut }}"><div style="display:flex;flex-wrap:wrap;gap:16px 28px;align-items:center;justify-content:space-between;padding:26px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14)"><p style="margin:0;max-width:44ch;font-size:16px;line-height:1.5;color:{{ ui.body }}">{{ t.invLoginHint }}</p><button onClick="{{ loginMyInv }}" style="height:46px;padding:0 22px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 14px 'Onest',sans-serif;cursor:pointer" style-hover="background:#d4452a">{{ t.login }} →</button></div></sc-if>
+<sc-if value="{{ invLoading }}"><div style="padding:28px 0;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};animation:invPulse 1.4s ease-in-out infinite">{{ t.loading }}</div></sc-if>
+<sc-if value="{{ invEmpty }}"><p style="margin:0;padding:28px 0 6px;max-width:30ch;font:italic 500 26px/1.2 'Cormorant Garamond',serif;color:{{ ui.muted }}">{{ t.noInv }}</p>
+<button onClick="{{ goEvents }}" style="margin-top:16px;width:100%;height:64px;border:1px dashed rgba({{ ui.inkRgb }},.35);border-radius:10px;background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer" style-hover="border-color:#d4452a;color:#d4452a">+ {{ t.create }}</button></sc-if>
+</section></sc-if>
+</main>
+<section data-home="cta" style="margin-top:90px;background:{{ ui.ink }};color:{{ ui.paper }}">
+<div style="max-width:1200px;margin:0 auto;padding:clamp(56px,9vw,96px) clamp(18px,4vw,40px)">
+<h2 style="margin:0;max-width:16ch;font:italic 500 clamp(40px,7vw,88px)/.95 'Cormorant Garamond',serif;letter-spacing:-.02em;text-wrap:balance">{{ t.home.ctaT }}</h2>
+<p style="margin:20px 0 0;max-width:48ch;font-size:17px;line-height:1.55;opacity:.78">{{ t.home.ctaSub }}</p>
+<button data-cta="final" onClick="{{ goEvents }}" style="margin-top:30px;display:inline-flex;align-items:center;gap:12px;height:58px;padding:0 28px;border-radius:999px;border:0;background:{{ ui.paper }};color:{{ ui.ink }};font:500 16px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s" style-hover="background:#d4452a;color:#fff">{{ t.create }}<span style="font-size:20px">→</span></button>
+</div>
+</section>
+<footer data-foot="1" style="border-top:1px solid rgba({{ ui.inkRgb }},.14);color:{{ ui.ink }}">
+<div style="max-width:1200px;margin:0 auto;padding:40px clamp(18px,4vw,40px) calc(40px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:28px 36px">
+<div><div style="font:italic 500 34px/1 'Cormorant Garamond',serif">Invito</div><p style="margin:10px 0 0;max-width:30ch;font-size:14px;line-height:1.5;color:{{ ui.muted }}">{{ t.home.kick }}</p></div>
+<nav style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><sc-for list="{{ hm.footNav }}" as="n"><button data-foot-nav="{{ n.key }}" onClick="{{ n.onClick }}" style="padding:6px 0;border:0;background:none;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;text-align:left" style-hover="color:#d4452a">{{ n.label }}</button></sc-for></nav>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><sc-for list="{{ hm.footLinks }}" as="l"><a data-foot-link="{{ l.key }}" href="{{ l.href }}" target="{{ l.target }}" rel="noopener" style="padding:6px 0;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;text-decoration:none" style-hover="color:#d4452a">{{ l.label }}</a></sc-for></div>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px">
+<sc-if value="{{ notTg }}"><button data-theme-btn="1" onClick="{{ hm.toggleTheme }}" aria-pressed="{{ hm.darkOn }}" style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 13px 'Onest',sans-serif;cursor:pointer" style-hover="border-color:#d4452a">{{ hm.themeGlyph }} {{ hm.themeLabel }}</button></sc-if>
+<span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;color:{{ ui.muted }}">{{ hm.copy }}</span>
+</div>
+</div>
+</footer>
 </sc-if>
 
 <sc-if value="{{ isTour }}"><main style="max-width:1200px;margin:0 auto;padding:24px clamp(18px,4vw,40px) 100px;color:{{ ui.ink }}">
-<button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<sc-if value="{{ notTg }}"><button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
 <div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.tourKick }}</div>
 <h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,112px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em">{{ t.tourTitle }}</h2>
 <p style="margin:16px 0 0;max-width:52ch;font-size:17px;line-height:1.55;color:{{ ui.body }}">{{ t.tourSub }}</p>
-<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;margin-top:48px"><h3 style="margin:0;font:500 clamp(32px,6vw,52px)/1 'Cormorant Garamond',serif">{{ t.featuresAll }}</h3><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ demoCount }}</span></div>
+<div role="tablist" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:30px"><sc-for list="{{ tourTabs }}" as="b"><button role="tab" data-tour-tab="{{ b.key }}" aria-selected="{{ b.sel }}" onClick="{{ b.onClick }}" style="display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:999px;border:1px solid {{ b.border }};background:{{ b.bg }};color:{{ b.color }};font:500 14px 'Onest',sans-serif;cursor:pointer;white-space:nowrap">{{ b.label }}<span style="font:500 11px 'JetBrains Mono',monospace;opacity:.6">{{ b.count }}</span></button></sc-for></div>
+<sc-if value="{{ tourFeat }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;margin-top:36px"><h3 style="margin:0;font:500 clamp(32px,6vw,52px)/1 'Cormorant Garamond',serif">{{ t.featuresAll }}</h3><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ demoCount }}</span></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:12px;margin-top:20px">
-<sc-for list="{{ demos }}" as="d" hint-placeholder-count="0"><button onClick="{{ d.onClick }}" data-rv="1" style="opacity:0;transform:translateY(24px);transition:opacity .6s ease {{ d.delay }},transform .7s cubic-bezier(.2,.7,.2,1) {{ d.delay }},background .2s;display:flex;flex-direction:column;gap:12px;text-align:left;padding:20px;border-radius:16px;border:1px solid rgba({{ ui.inkRgb }},.14);background:{{ ui.card }};cursor:pointer;color:{{ ui.ink }};min-height:190px" style-hover="background:rgba(212,69,42,.06)">
-<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ d.num }} · {{ d.area }}</span><span style="width:40px;height:40px;border-radius:50%;background:{{ d.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px">{{ d.glyph }}</span></div>
+<sc-for list="{{ demos }}" as="d" hint-placeholder-count="0"><button onClick="{{ d.onClick }}" data-rv="1" data-demo="{{ d.key }}" style="opacity:0;transform:translateY(24px);transition:opacity .6s ease {{ d.delay }},transform .7s cubic-bezier(.2,.7,.2,1) {{ d.delay }},background .2s;display:flex;flex-direction:column;gap:12px;text-align:left;padding:20px;border-radius:16px;border:1px solid rgba({{ ui.inkRgb }},.14);background:{{ ui.card }};cursor:pointer;color:{{ ui.ink }};min-height:190px" style-hover="background:rgba(212,69,42,.06)">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ d.num }} · {{ d.area }}</span><span style="width:40px;height:40px;flex:none;border-radius:50%;background:{{ d.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px">{{ d.glyph }}</span></div>
 <div style="font:500 26px/1.05 'Cormorant Garamond',serif">{{ d.title }}</div>
 <div style="font-size:14px;line-height:1.45;color:{{ ui.muted }};flex:1">{{ d.desc }}</div>
-<div style="display:flex;justify-content:space-between;align-items:center;font-size:14px;color:#d4452a;font-weight:500"><span>{{ t.tryIt }} →</span><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ d.state }}</span></div>
+<div style="font-size:14px;color:#d4452a;font-weight:500">{{ t.tryIt }} →</div>
 </button></sc-for>
 </div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;margin-top:64px"><h3 style="margin:0;font:500 clamp(32px,6vw,52px)/1 'Cormorant Garamond',serif">{{ t.templatesAll }}</h3><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ galleryCount }}</span></div>
-<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:18px"><sc-for list="{{ styleChips }}" as="c"><button onClick="{{ c.onClick }}" style="flex:none;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px 0 8px;border-radius:999px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-size:13px;cursor:pointer"><span style="width:22px;height:22px;border-radius:50%;background:{{ c.sw }};border:1px solid rgba({{ ui.inkRgb }},.15)"></span>{{ c.label }}</button></sc-for></div>
-<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px"><sc-for list="{{ eventChips }}" as="c"><button onClick="{{ c.onClick }}" style="flex:none;height:34px;padding:0 14px;border-radius:999px;border:1px dashed {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-size:13px;cursor:pointer">{{ c.label }}</button></sc-for></div>
+</sc-if>
+<sc-if value="{{ tourTpl }}">
+<div id="all-tpls" style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ ui.ink }};padding-bottom:10px;margin-top:36px"><h3 style="margin:0;font:500 clamp(32px,6vw,52px)/1 'Cormorant Garamond',serif">{{ t.templatesAll }}</h3><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ galleryCount }}</span></div>
+<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:18px"><sc-for list="{{ eventChips }}" as="c"><button onClick="{{ c.onClick }}" style="flex:none;height:38px;padding:0 14px;border-radius:999px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-size:13px;cursor:pointer">{{ c.label }}</button></sc-for></div>
+<div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:8px"><sc-for list="{{ styleChips }}" as="c"><button onClick="{{ c.onClick }}" style="flex:none;display:flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 6px;border-radius:999px;border:1px dashed {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-size:13px;cursor:pointer"><span style="width:20px;height:20px;border-radius:50%;background:{{ c.sw }};border:1px solid rgba({{ ui.inkRgb }},.15)"></span>{{ c.label }}</button></sc-for></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(46%,190px),1fr));gap:22px 14px;margin-top:22px">
-<sc-for list="{{ allTpls }}" as="g" hint-placeholder-count="0"><button onClick="{{ g.onClick }}" style="padding:0;border:0;background:none;cursor:pointer;text-align:left;color:{{ ui.ink }};display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ allTpls }}" as="g" hint-placeholder-count="0"><button onClick="{{ g.onClick }}" data-gal="{{ g.id }}" style="padding:0;border:0;background:none;cursor:pointer;text-align:left;color:{{ ui.ink }};display:flex;flex-direction:column;gap:8px;min-width:0">
 <div style="border-radius:10px;overflow:hidden;box-shadow:0 20px 34px -24px rgba(0,0,0,.55);transition:transform .35s cubic-bezier(.2,.7,.2,1)" style-hover="transform:translateY(-6px) rotate(-1deg)"><dc-import name="InviteCover" th="{{ g.th }}" names="{{ g.names }}" date="{{ g.date }}" cover="{{ g.cover }}" kicker="{{ g.kicker }}" hint-size="100%,250px"></dc-import></div>
-<div style="display:flex;justify-content:space-between;gap:6px;align-items:baseline"><span style="font:500 20px/1 'Cormorant Garamond',serif">{{ g.name }}</span><span style="font:500 9px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ ui.muted }}">{{ g.style }}</span></div>
-<div style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#d4452a;margin-top:-4px">{{ g.event }}</div>
+<div style="display:flex;justify-content:space-between;gap:6px;align-items:baseline;min-width:0"><span style="font:500 20px/1 'Cormorant Garamond',serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ g.name }}</span><span style="flex:none;font:500 9px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ ui.muted }}">{{ g.style }}</span></div>
+<div style="font:500 10px/1.4 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#d4452a;margin-top:-4px">{{ g.event }}</div>
+<sc-if value="{{ g.price }}"><div style="font:500 10px/1.4 'JetBrains Mono',monospace;letter-spacing:.06em;color:{{ g.priceColor }};margin-top:-6px">{{ g.price }}</div></sc-if>
 </button></sc-for>
 </div>
+</sc-if>
 </main></sc-if>
 
 <sc-if value="{{ isEvents }}"><main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px) 90px">
 <div style="padding:24px 0 6px">
-<button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<sc-if value="{{ notTg }}"><button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
 <div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.flow1 }}</div>
 <h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,112px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;color:{{ ui.ink }}">{{ t.chooseEvent }}</h2>
 </div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(44%,250px),1fr));gap:30px 14px;margin-top:34px">
-<sc-for list="{{ events }}" as="e" hint-placeholder-count="0"><button onClick="{{ e.onClick }}" data-rv="1" style="opacity:0;transform:translateY(34px);transition:opacity .8s ease {{ e.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ e.delay }};background:none;border:0;padding:0;text-align:left;cursor:pointer;color:{{ ui.ink }};display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ events }}" as="e" hint-placeholder-count="0"><button onClick="{{ e.onClick }}" data-rv="1" data-ev="{{ e.key }}" style="opacity:0;transform:translateY(34px);transition:opacity .8s ease {{ e.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ e.delay }};background:none;border:0;padding:0;text-align:left;cursor:pointer;color:{{ ui.ink }};display:flex;flex-direction:column;gap:12px">
 <div style="position:relative;width:100%;aspect-ratio:4/5;overflow:hidden;border-radius:4px;background:{{ e.bg }}">
 <img src="{{ e.img }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.85);transition:transform 1.2s cubic-bezier(.2,.7,.2,1),filter .6s" style-hover="transform:scale(1.07);filter:saturate(1.05)">
-<span style="position:absolute;top:10px;left:10px;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;background:{{ ui.paper }};color:{{ ui.ink }};padding:4px 7px;border-radius:3px">{{ e.num }}</span>
 <span style="position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:4px">
 <sc-for list="{{ e.swatches }}" as="c"><span style="flex:1;height:5px;border-radius:3px;background:{{ c }}"></span></sc-for></span>
 </div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font:500 clamp(22px,5vw,30px)/1 'Cormorant Garamond',serif">{{ e.label }}</span><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.templatesN }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0"><span style="font:500 clamp(22px,5vw,30px)/1 'Cormorant Garamond',serif">{{ e.label }}</span><span data-ev-count="1" style="font:500 10px/1.3 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ ui.muted }};white-space:nowrap">{{ e.count }}</span><sc-if value="{{ e.from }}"><span data-ev-price="1" style="margin-top:-2px;font:500 10px/1.3 'JetBrains Mono',monospace;letter-spacing:.06em;color:{{ e.fromColor }};white-space:nowrap">{{ e.from }}</span></sc-if></div>
 </button></sc-for>
 </div>
 </main></sc-if>
@@ -138,25 +219,35 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ isTemplates }}">
 <main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px)">
 <div style="padding:24px 0 0">
-<button onClick="{{ goEvents }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button>
+<sc-if value="{{ notTg }}"><button onClick="{{ goEvents }}" style="background:none;border:0;padding:0;cursor:pointer;font:500 14px 'Onest',sans-serif;color:{{ ui.muted }}">← {{ t.back }}</button></sc-if>
 <div style="margin-top:24px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#d4452a">{{ t.flow2 }} · {{ evLabel }}</div>
 <h2 style="margin:10px 0 0;font:500 clamp(46px,10vw,104px)/.9 'Cormorant Garamond',serif;letter-spacing:-.02em;color:{{ ui.ink }}">{{ t.pickTemplate }}</h2>
 </div>
 </main>
+<div style="position:relative">
 <div data-carousel="1" style="position:relative;display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;padding:34px calc(50% - {{ cardHalf }}) 30px;scrollbar-width:none">
 <sc-for list="{{ tpls }}" as="c" hint-placeholder-count="0"><div data-ci="{{ $index }}" onClick="{{ c.onClick }}" style="flex:none;width:{{ cardW }};scroll-snap-align:center;cursor:pointer;transform-origin:50% 70%;will-change:transform">
 <div style="border-radius:14px;overflow:hidden;box-shadow:0 34px 60px -30px rgba({{ ui.inkRgb }},.55);outline:{{ c.outline }};outline-offset:6px;transition:outline-color .3s"><dc-import name="InviteCover" th="{{ c.th }}" names="{{ c.names }}" date="{{ c.date }}" cover="{{ c.cover }}" kicker="{{ c.kicker }}" hint-size="100%,350px"></dc-import></div>
-<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;color:{{ ui.ink }}"><span style="font:500 30px/1 'Cormorant Garamond',serif">{{ c.name }}</span><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.style }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:16px;color:{{ ui.ink }}"><span style="font:500 30px/1 'Cormorant Garamond',serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.name }}</span><span style="flex:none;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ c.style }}</span></div>
 <div data-tpl-price="{{ c.id }}" style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 10px;min-height:40px;margin-top:10px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ c.priceColor }}">{{ c.price }}</span><sc-if value="{{ c.buyOn }}"><button data-buy="tpl" onClick="{{ c.buy }}" style="height:40px;padding:0 16px;border-radius:999px;border:0;background:{{ c.buyBg }};color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap;opacity:{{ c.buyOp }};transition:background .2s,opacity .2s" style-hover="background:{{ ui.ink }}">{{ c.buyLabel }}</button></sc-if></div>
 </div></sc-for>
 </div>
+<!-- Стрелки карусели — только на широком экране; на телефоне листают пальцем -->
+<sc-if value="{{ car.arrows }}"><button data-car="prev" onClick="{{ car.prev }}" aria-label="{{ t.prevTpl }}" title="{{ t.prevTpl }}" style="position:absolute;top:calc(34px + {{ car.mid }});left:max(16px,calc(50% - 590px));transform:translateY(-50%);z-index:3;width:52px;height:52px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:{{ ui.card }};box-shadow:0 14px 30px -16px rgba(0,0,0,.45);color:{{ ui.ink }};font:400 26px/1 'Onest',sans-serif;cursor:pointer;opacity:{{ car.prevOp }};transition:opacity .2s,border-color .2s,color .2s" style-hover="border-color:#d4452a;color:#d4452a">‹</button></sc-if>
+<sc-if value="{{ car.arrows }}"><button data-car="next" onClick="{{ car.next }}" aria-label="{{ t.nextTpl }}" title="{{ t.nextTpl }}" style="position:absolute;top:calc(34px + {{ car.mid }});right:max(16px,calc(50% - 590px));transform:translateY(-50%);z-index:3;width:52px;height:52px;border-radius:50%;border:1px solid rgba({{ ui.inkRgb }},.18);background:{{ ui.card }};box-shadow:0 14px 30px -16px rgba(0,0,0,.45);color:{{ ui.ink }};font:400 26px/1 'Onest',sans-serif;cursor:pointer;opacity:{{ car.nextOp }};transition:opacity .2s,border-color .2s,color .2s" style-hover="border-color:#d4452a;color:#d4452a">›</button></sc-if>
+</div>
+<div data-car-nav="1" style="position:relative;z-index:2;display:flex;align-items:center;justify-content:center;margin:0 auto 4px;padding:0 18px">
+<div style="display:flex;gap:8px;align-items:center"><sc-for list="{{ car.dots }}" as="d"><button data-dot="{{ $index }}" onClick="{{ d.onClick }}" aria-label="{{ d.label }}" aria-current="{{ d.cur }}" style="flex:none;border:0;padding:8px 0;background:none;cursor:pointer"><span style="display:block;width:{{ d.w }};height:8px;border-radius:4px;background:{{ d.bg }};transition:width .25s,background .25s"></span></button></sc-for></div>
+</div>
+<div data-car-pos="1" style="text-align:center;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};margin-bottom:18px">{{ car.pos }}</div>
+<sc-if value="{{ tg }}"><div style="display:flex;justify-content:center;margin:0 0 22px"><button data-tpl-preview="1" onClick="{{ previewTpl }}" style="height:46px;padding:0 22px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.preview }} ↗</button></div></sc-if>
 <main style="max-width:1200px;margin:0 auto;padding:0 clamp(18px,4vw,40px) 40px">
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:28px;border-top:1px solid {{ ui.ink }};padding-top:22px;color:{{ ui.ink }}">
-<div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.template }}</div><div style="font:500 54px/1 'Cormorant Garamond',serif;margin-top:8px">{{ cur.name }}</div><p style="margin:10px 0 0;color:{{ ui.body }};line-height:1.5;max-width:36ch">{{ cur.desc }}</p>
+<div data-tpl-info="1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:28px;border-top:1px solid {{ ui.ink }};padding-top:22px;color:{{ ui.ink }}">
+<div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.template }}</div><div style="font:500 54px/1 'Cormorant Garamond',serif;margin-top:8px">{{ cur.title }}</div><p style="margin:10px 0 0;color:{{ ui.body }};line-height:1.5;max-width:36ch">{{ cur.desc }}</p>
 <sc-if value="{{ cur.price }}"><div data-cur-price="1" style="margin-top:22px"><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.priceLabel }}</div><div style="margin-top:8px;font:500 34px/1 'Cormorant Garamond',serif;color:{{ cur.priceColor }}">{{ cur.price }}</div><p style="margin:10px 0 0;color:{{ ui.body }};font-size:14px;line-height:1.5;max-width:40ch">{{ cur.priceNote }}</p><button data-tpl-more="1" onClick="{{ cur.more }}" style="margin-top:8px;padding:4px 0;border:0;background:none;color:{{ ui.muted }};font:500 13px 'Onest',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#d4452a">{{ cur.moreLabel }} →</button></div></sc-if></div>
-<div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fontsLabel }}</div>
-<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><sc-for list="{{ cur.fonts }}" as="f"><span style="border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:999px;padding:8px 14px;font-family:{{ f.css }};font-size:18px;line-height:1.2">{{ f.name }}</span></sc-for></div>
-<div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};margin-top:22px">{{ t.palette }}</div>
+<div><div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.tplWhat }}</div>
+<ul data-tpl-what="1" style="margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ cur.what }}" as="w"><li style="display:flex;gap:10px;font-size:15px;line-height:1.45;color:{{ ui.body }}"><span style="color:#d4452a;flex:none">✓</span><span>{{ w }}</span></li></sc-for></ul>
+<div style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }};margin-top:22px">{{ t.colorsL }}</div>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><sc-for list="{{ palettes }}" as="p"><button onClick="{{ p.onClick }}" style="display:flex;align-items:center;gap:8px;height:42px;padding:0 14px 0 6px;border-radius:999px;border:1px solid {{ p.border }};background:{{ p.bg }};cursor:pointer;color:{{ ui.ink }};font-size:13px"><span style="display:flex;width:30px;height:30px;border-radius:50%;overflow:hidden;border:1px solid rgba({{ ui.inkRgb }},.15)"><span style="flex:1;background:{{ p.c1 }}"></span><span style="flex:1;background:{{ p.c2 }}"></span><span style="flex:1;background:{{ p.c3 }}"></span></span>{{ p.name }}</button></sc-for></div>
 </div></div>
 </main>
@@ -292,8 +383,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <button onClick="{{ toggleMusic }}" title="Music" data-music="1" aria-pressed="{{ musicPressed }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)"><span style="width:3px;border-radius:2px;height:{{ mb.a }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.b }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.d }};background:{{ mb.c }};transition:height .4s"></span></button>
 </div>
 <sc-if value="{{ fromTourLive }}"><button onClick="{{ backTour }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:90;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.tour }}</button></sc-if>
-<sc-if value="{{ isPreview }}"><button onClick="{{ backFromPreview }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:50;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
-<div style="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:max-content;max-width:calc(100vw - 24px)">
+<sc-if value="{{ isPreview }}"><button onClick="{{ backFromPreview }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:90;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
+<div data-preview-bar="1" style="position:fixed;left:50%;bottom:{{ previewBottom }};transform:translateX(-50%);z-index:90;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;width:max-content;max-width:calc(100vw - 24px)">
 <sc-if value="{{ tb.on }}"><button data-buy="tpl" onClick="{{ tb.buy }}" style="height:54px;padding:0 22px;border-radius:999px;border:0;background:{{ tb.bg }};color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap;opacity:{{ tb.op }}">{{ tb.label }}</button></sc-if>
 <button onClick="{{ useTpl }}" style="height:54px;padding:0 26px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;box-shadow:0 14px 30px rgba(0,0,0,.3);white-space:nowrap">{{ t.useTpl }} →</button>
 </div></sc-if>
@@ -2911,6 +3002,11 @@ class Component extends DCLogic {
     if (s.screen !== 'order' && this._orderT) { clearTimeout(this._orderT); this._orderT = null; }
     if (s.screen !== 'order' && this._orderEnded) { this.dropOrderCont(this._orderEnded); this._orderEnded = null; }
     this.syncTelegram();
+    // Шаг конструктора черновика запоминается: «Изменить» в «Мои приглашения» продолжает с него.
+    if (s.screen === 'build' && s.draftId && !s.demo && this._stepKey !== s.draftId + ':' + s.step) {
+      this._stepKey = s.draftId + ':' + s.step;
+      try { localStorage.setItem('invito.step.' + s.draftId, String(s.step)); } catch (e) {}
+    }
     if (this._lastScreen !== s.screen || this._lastMode !== s.guestMode) {
       this._lastScreen = s.screen; this._lastMode = s.guestMode;
       window.scrollTo(0, 0);
@@ -2985,6 +3081,13 @@ class Component extends DCLogic {
     this.setState({ event: ev, tplId: tid, inv, invLang: lang, dirty: false, screen: 'templates', step: 0, draftId: null, draft: null, savedAt: null, saveErr: false, guests: [], activity: [], toGuestId: null, myGuestId: null, share: { slug: '', pwOn: false, pw: '', edited: false }, slugErr: '' });
   }
   pickTpl(tid) { this.setState((s) => ({ tplId: tid, inv: { ...s.inv, font: this.D.STYLES[tid.split('-')[1]].fonts[0], palette: 0 } })); }
+  // Стрелки по бокам карусели шаблонов: соседний шаблон выбирается и встаёт в центр.
+  stepTpl(d) {
+    const s = this.state, a = this.activeStyles(s.event, s.tplId), i = a.findIndex((x) => x.id === s.tplId), j = Math.max(0, Math.min(a.length - 1, i + d));
+    if (a[j] && j !== i) { this.pickTpl(a[j].id); this.centerCard(j); }
+  }
+  // Шаг конструктора, на котором оставили черновик (запоминается в componentDidUpdate); без записи — первый.
+  savedStep(id) { let n = 0; try { n = Number(localStorage.getItem('invito.step.' + id) || 0); } catch (e) {} return Number.isInteger(n) && n >= 0 && n <= 8 ? n : 0; }
   centerCard(idx, behavior) {
     const r = this.rootRef.current; const car = r && r.querySelector('[data-carousel]'); if (!car) return;
     const el = car.querySelector(`[data-ci="${idx}"]`); if (!el) return;
@@ -3048,6 +3151,9 @@ class Component extends DCLogic {
     if (!this.tplOk(this.state.tplId)) { this.toast(this.t().tplOff); return; }
     this.requireLogin(() => this.createDraft(() => this.go('build', { step: 0 })), 'tpl', { k: 'tpl', ev: this.state.event, tpl: this.state.tplId });
   }
+  // «Возможности» — тур с демо; «Смотреть шаблоны» — тот же экран на вкладке всех шаблонов.
+  goTour() { this.stopMusic(); this.setState({ music: false, fromTour: true, tourTab: 'feat' }); this.go('tour'); }
+  goGallery() { this.flushSave(); this.stopMusic(); this.setState({ music: false, fromTour: true, tourTab: 'tpl', menu: null }); this.go('tour'); }
   goHome() {
     if (this.isPublic() || this.boot.mode === 'notfound') { location.href = '/app/'; return; }
     if (/^#\/(orders|mock-pay|paid)\//.test(location.hash)) this.clearHash();
@@ -3383,7 +3489,7 @@ class Component extends DCLogic {
     } : {};
     // Шапка: разделы (на телефоне — в меню), язык интерфейса, вход или аккаунт.
     const MN = s.menu, scrN = s.screen;
-    const navLinks = [['tpls', t.navTpls, () => { this.setState({ menu: null }); this.flushSave(); this.exitDemo(); this.setState({ screen: 'events', fromTour: false }); }, scrN === 'events' || scrN === 'templates'], ['prices', t.navPrices, () => this.goPricing(), scrN === 'pricing'], ['inv', t.myInv, () => this.goMyInv(), false], ['tour', t.tour, () => { this.setState({ menu: null }); this.stopMusic(); this.setState({ music: false, fromTour: true }); this.go('tour'); }, scrN === 'tour']];
+    const navLinks = [['tpls', t.navTpls, () => { this.setState({ menu: null }); this.flushSave(); this.exitDemo(); this.setState({ screen: 'events', fromTour: false }); }, scrN === 'events' || scrN === 'templates'], ['prices', t.navPrices, () => this.goPricing(), scrN === 'pricing'], ['inv', t.myInv, () => this.goMyInv(), false], ['tour', t.tour, () => { this.setState({ menu: null }); this.goTour(); }, scrN === 'tour']];
     const hd = {
       nav: wide, burger: !wide, links: navLinks.map(([key, label, onClick, a]) => ({ key, label, onClick, color: a ? '#d4452a' : U.ink, line: a ? '#d4452a' : 'transparent' })),
       langCode: (D.LANGS.find((x) => x.code === lang) || {}).label || '', langName: D.LANG_NAMES[lang],
@@ -3450,26 +3556,37 @@ class Component extends DCLogic {
     };
 
     // приглашения пользователя (GET /api/invitations)
+    // Главная кнопка карточки: опубликованное — «Поделиться» (экран ссылки), черновик — «Опубликовать» (оплата
+    // и публикация, как «Получить ссылку»). «Изменить»: опубликованное — сразу редактор на странице приглашения,
+    // черновик — конструктор на шаге, где его оставили (savedStep).
     this._invView = this._invView || new WeakMap();
     const myInvites = (me ? s.invs : []).map((d) => {
       let v = this._invView.get(d);
       if (!v) { const tid = this.tplOf(d), di = this.invOf(d); v = { tid, di }; this._invView.set(d, v); }
       const { tid, di } = v, ev = tid.split('-')[0], st = tid.split('-')[1], EE = D.EVENTS[ev], live = d.status === 'active';
       const n = (d.stats && d.stats.replies) || 0;
-      return { th: this.theme(tid, di.font, di.palette), names: di.names.trim() || EE.label[lang], cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: EE.names[EE.styles.indexOf(st)], date: [this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }), di.time].filter(Boolean).join(' · '), dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + D.plural(lang, n, t.replies), canDel: true,
-        onGuests: () => this.openInv(d, () => this.go('manage', { mtab: 'list' })), onEdit: () => this.openInv(d, () => this.go('build', { step: 0 })),
+      return { th: this.theme(tid, di.font, di.palette), names: di.names.trim() || EE.label[lang], cover: di.cover, kicker: t.youreInvited, event: EE.label[lang], tplName: (t.stName && t.stName[st]) || EE.names[EE.styles.indexOf(st)], date: [this.fmt(di.date, di.time, { day: 'numeric', month: 'long', year: 'numeric' }), di.time].filter(Boolean).join(' · '), dateShort: this.fmt(di.date, '12:00', { day: 'numeric', month: 'short', year: 'numeric' }), status: live ? t.live : t.draft, stBg: live ? '#d4452a' : 'transparent', stColor: live ? '#fff' : U.ink, stBorder: live ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', replies: n + ' ' + D.plural(lang, n, t.replies), canDel: true,
+        state: live ? 'live' : 'draft', draft: !live, mainKey: live ? 'share' : 'publish', mainLabel: live ? t.invShare : t.publishBtn,
+        onMain: () => this.openInv(d, () => setTimeout(() => this.goShare(), 0)),
+        onGuests: () => this.openInv(d, () => this.go('manage', { mtab: 'list' })), onEdit: () => this.openInv(d, () => (live ? this.openGuest('edit') : this.go('build', { step: this.savedStep(d.id) }))),
         onOpen: () => { if (live && d.links && d.links.shared) { this.openUrl(d.links.shared); return; } this.openInv(d, () => setTimeout(() => this.openGuest('live'), 0)); },
         onDup: () => this.dupInv(d), onDel: () => this.delInv(d) };
     });
 
     // home
-    const SHOW = ['wedding-classic', 'party-neon', 'birthday-polaroid', 'baby-watercolor', 'corporate-brutal', 'date-cinema', 'graduation-editorial', 'anniversary-luxe', 'kids-pastel', 'housewarming-boho', 'engagement-watercolor', 'birthday-riso', 'iftar-cinema', 'wedding-botanical'];
-    const show1 = SHOW.filter((id) => this.tplOk(id)).map((id, i) => { const [ev, st] = id.split('-'); const EE = D.EVENTS[ev]; const L = EE.text[lang]; return { th: this.theme(id), names: L.names, date: shortOf(isoIn(EE.days)), cover: EE.img[0], kicker: t.youreInvited, name: EE.names[EE.styles.indexOf(st)], event: EE.label[lang], rot: (i % 2 ? 1.5 : -1.5) + 'deg', onClick: () => this.pickEvent(ev, id) }; });
+    // Цена шаблона в каталоге (витрина, события, все шаблоны): своя цена шаблона или общая; с подпиской
+    // и бесплатным доступом — «Входит в подписку» / «Бесплатно для вас». Пока цен нет — пусто.
+    const catPrice = (id) => (!QQ ? ['', U.muted] : QQ.free ? [t.tplFreeYou, '#2e7d4f'] : QQ.subscribed ? [t.tplInSub, '#2e7d4f'] : [this.money(QQ.list(id)), U.muted]);
+    const stN = (st) => (t.stName && t.stName[st]) || D.STYLES[st].label;
+    const SHOW = ['wedding-classic', 'engagement-watercolor', 'birthday-polaroid', 'wedding-botanical', 'anniversary-luxe', 'kids-pastel', 'iftar-cinema', 'graduation-editorial', 'housewarming-boho', 'party-neon', 'birthday-riso', 'corporate-brutal', 'baby-watercolor', 'date-cinema'];
+    const show1 = SHOW.filter((id) => this.tplOk(id)).map((id, i) => { const [ev, st] = id.split('-'); const EE = D.EVENTS[ev]; const L = EE.text[lang]; const [price, priceColor] = catPrice(id); return { id, th: this.theme(id), names: L.names, date: shortOf(isoIn(EE.days)), cover: EE.img[0], kicker: t.youreInvited, name: stN(st), event: EE.label[lang], price, priceColor, rot: (i % 2 ? 1.5 : -1.5) + 'deg', onClick: () => this.pickEvent(ev, id) }; });
     const showcase = show1.concat(show1);
 
     // events
     // События без единого активного шаблона не показываются.
-    const events = D.EVENT_ORDER.map((k) => [k, this.activeStyles(k)]).filter(([, a]) => a.length).map(([k, a], i) => { const EE = D.EVENTS[k], st = D.STYLES[a[0].st]; return { label: EE.label[lang], num: String(i + 1).padStart(2, '0'), img: EE.img[0], bg: st.imgBg, delay: (i % 4) * 70 + 'ms', swatches: a.map((x) => D.STYLES[x.st].accent), onClick: () => this.pickEvent(k) }; });
+    // Под названием — сколько шаблонов события включено в админке и цена (самая низкая — «от …», если цены разные).
+    const evFrom = (a) => { if (!QQ) return ['', U.muted]; if (QQ.free || QQ.subscribed) return catPrice(a[0].id); const p = a.map((x) => QQ.list(x.id)), lo = Math.min(...p); return [lo !== Math.max(...p) ? t.fromPrice.replace('{price}', this.money(lo)) : this.money(lo), U.ink]; };
+    const events = D.EVENT_ORDER.map((k) => [k, this.activeStyles(k)]).filter(([, a]) => a.length).map(([k, a], i) => { const EE = D.EVENTS[k], st = D.STYLES[a[0].st], [from, fromColor] = evFrom(a); return { key: k, label: EE.label[lang], count: a.length + ' ' + D.plural(lang, a.length, t.tplCount), from, fromColor, img: EE.img[0], bg: st.imgBg, delay: (i % 4) * 70 + 'ms', swatches: a.map((x) => D.STYLES[x.st].accent), onClick: () => this.pickEvent(k) }; });
 
     // templates
     const cardWpx = wide ? 320 : 250;
@@ -3478,17 +3595,57 @@ class Component extends DCLogic {
     const drT = !s.demo && s.draftId && s.draft ? s.draft : null, paidTpl = drT && drT.unlocked ? this.tplOf(drT) : null;
     const tplPrice = (id) => (!QQ ? ['', U.muted] : paidTpl === id ? [t.paidMark, '#2e7d4f'] : QQ.free ? [t.tplFreeYou, '#2e7d4f'] : QQ.subscribed ? [t.tplInSub, '#2e7d4f'] : [this.money(QQ.list(id)), U.ink]);
     const tbBusy = s.tplBuy === 'go' ? t.toCheckout : s.tplBuy ? t.loading : '';
-    const tpls = this.activeStyles(s.event, s.tplId).map(({ st, i, id }, j) => { const [price, priceColor] = tplPrice(id), a = id === s.tplId; return { id, th: a ? th : this.theme(id), names: inv.names, date: gDateShort, cover: inv.cover, kicker: t.youreInvited, name: E.names[i], style: D.STYLES[st].label, outline: a ? '1.5px solid ' + U.ink : '1.5px solid transparent', onClick: () => { this.pickTpl(id); this.centerCard(j); },
+    const tpls = this.activeStyles(s.event, s.tplId).map(({ st, i, id }, j) => { const [price, priceColor] = tplPrice(id), a = id === s.tplId; return { id, th: a ? th : this.theme(id), names: inv.names, date: gDateShort, cover: inv.cover, kicker: t.youreInvited, name: stN(st), style: E.names[i], outline: a ? '1.5px solid ' + U.ink : '1.5px solid transparent', onClick: () => { if (a) { this.openGuest('preview'); return; } this.pickTpl(id); this.centerCard(j); },
       price, priceColor, buyOn: a && !!QQ && paidTpl !== id, buyLabel: tbBusy || (QQ && QQ.free ? t.tplStartFree : QQ && QQ.subscribed ? t.tplStartSub : t.buyTpl), buyBg: QQ && (QQ.free || QQ.subscribed) ? '#2e7d4f' : '#d4452a', buyOp: s.tplBuy ? 0.6 : 1,
       buy: (e) => { if (e) e.stopPropagation(); this.buyTpl(); } }; });
     const stl = D.STYLES[tplStyle]; const stl0 = () => D.STYLES[tplStyle];
     const VV = D.VARIANTS[tplStyle] || [];
-    const palettes = VV.map((v, i) => { const p = i ? { ...stl0(), ...Object.fromEntries(Object.entries(v).filter(([, x]) => x !== undefined)) } : stl0(); const a = (inv.palette || 0) === i; return { name: v.name, c1: p.bg, c2: p.accent, c3: p.accent2, c4: p.ink, ink: p.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', bg: a ? 'rgba(212,69,42,.08)' : 'transparent', ring: a ? '0 0 0 2px #d4452a' : 'none', onClick: () => this.setInv({ palette: i }) }; });
+    const palettes = VV.map((v, i) => { const p = i ? { ...stl0(), ...Object.fromEntries(Object.entries(v).filter(([, x]) => x !== undefined)) } : stl0(); const a = (inv.palette || 0) === i; return { name: (t.palName && t.palName[v.name]) || v.name, c1: p.bg, c2: p.accent, c3: p.accent2, c4: p.ink, ink: p.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', bg: a ? 'rgba(212,69,42,.08)' : 'transparent', ring: a ? '0 0 0 2px #d4452a' : 'none', onClick: () => this.setInv({ palette: i }) }; });
     const [curPrice, curPriceColor] = tplPrice(s.tplId);
-    const cur = { name: tplName, desc: t.sd[tplStyle], fonts: stl.fonts.map((f) => ({ name: f, css: `'${f}', serif` })), palette: [stl.bg, stl.surface, stl.ink, stl.accent, stl.accent2],
+    // Вместо списка шрифтов — что в шаблоне можно настроить (число вариантов цвета и шрифтов — из данных стиля).
+    const cur = { name: tplName, title: stN(tplStyle), desc: t.sd[tplStyle], what: t.tplWhatL.map((x) => x.replace('{p}', VV.length || 1).replace('{f}', stl.fonts.length)), palette: [stl.bg, stl.surface, stl.ink, stl.accent, stl.accent2],
       price: curPrice, priceColor: curPriceColor, priceNote: QQ && QQ.free ? t.freeText : QQ && QQ.subscribed ? t.subDesc : t.tplPriceNote, more: () => this.goPricing(), moreLabel: QQ && QQ.free ? t.navPrices : t.subMore };
     // Предпросмотр шаблона: «Купить · цена» рядом с «Выбрать шаблон» (с подпиской и бесплатно платить не за что).
     const tb = { on: !!QQ && !QQ.free && !QQ.subscribed && paidTpl !== s.tplId, label: tbBusy || t.buyFor.replace('{price}', QQ ? this.money(QQ.list(s.tplId)) : '…'), bg: '#d4452a', op: s.tplBuy ? 0.6 : 1, buy: () => this.buyTpl() };
+    // Карусель: стрелки по бокам на компьютере (mid — середина обложки по высоте), под ней точки и «2 из 5»
+    // (на телефоне — «листайте»).
+    const tplList = this.activeStyles(s.event, s.tplId), tplAt = Math.max(0, tplList.findIndex((x) => x.id === s.tplId));
+    const car = { arrows: s.w >= 720, mid: Math.round(cardWpx * 0.66) + 'px', prev: () => this.stepTpl(-1), next: () => this.stepTpl(1), prevOp: tplAt > 0 ? 1 : 0.35, nextOp: tplAt < tplList.length - 1 ? 1 : 0.35,
+      dots: tplList.map((x, j) => { const a = j === tplAt; return { label: stN(x.st), cur: a ? 'true' : 'false', w: a ? '22px' : '8px', bg: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', onClick: () => { this.pickTpl(x.id); this.centerCard(j); } }; }),
+      pos: t.tplPos.replace('{i}', tplAt + 1).replace('{n}', tplList.length) + (s.w >= 720 || tplList.length < 2 ? '' : ' · ' + t.swipe + ' →') };
+
+    // Главная: что такое Invito, как это работает, цены (только с сервера: cfg.prices или me.prices и цены шаблонов
+    // из /api/templates), вопросы и подвал. «Мои приглашения» вошедшего — над первым экраном: первые три карточки,
+    // остальные по «Показать все»; без входа и без приглашений блок внизу, перед последним призывом.
+    const HM = t.home;
+    const sharedTxt = PP ? (minTpl !== maxTpl ? t.fromPrice.replace('{price}', this.money(minTpl)) : this.money(minTpl)) : '';
+    const subUntilTxt = subOn ? t.subUntil.replace('{date}', isNaN(subEnd) ? '∞' : endDate(acc0.subscriptionEndsAt)) : '';
+    const invTop = !!me && (!s.invsLoaded || myInvites.length > 0);
+    const line = 'rgba(' + U.inkRgb + ',.18)';
+    const hm = {
+      invTop, invBottom: !invTop, invCards: s.invAll ? myInvites : myInvites.slice(0, 3), invMore: myInvites.length > 3,
+      allLabel: s.invAll ? HM.invLess : HM.invAll.replace('{n}', myInvites.length), toggleAll: () => this.setState({ invAll: !s.invAll }),
+      priceLine: !PP ? '' : acc0.free ? t.freeTitle : subOn ? subUntilTxt : HM.price.replace('{shared}', sharedTxt).replace('{seat}', this.money(PP.seat)),
+      priceColor: acc0.free || subOn ? '#2e7d4f' : U.muted, ctaFlex: s.w < 520 ? '1 1 100%' : '0 0 auto',
+      goGallery: () => this.goGallery(), goPricing: () => this.goPricing(), tplTotal: D.TEMPLATES.filter((x) => this.tplOk(x.id)).length,
+      how: HM.how.map(([title, text], i) => ({ n: String(i + 1).padStart(2, '0'), title, text })),
+      feat: HM.feat.map(([glyph, title, text], i) => ({ glyph, title, text, bg: ['#93723f', '#3f7a6c', '#d4452a', '#a9564f', '#2f6fe0', '#56713f'][i % 6] })),
+      cur: (me && me.currency) || cfg.currency || '', accLine: acc0.free ? t.freeTitle : subUntilTxt, pricesLoading: !PP,
+      prices: PP ? [
+        { key: 'shared', title: t.payShared, price: sharedTxt, unit: t.perInv, desc: t.paySharedDesc, note: minTpl !== maxTpl ? t.tplDiff : '', tag: acc0.free ? t.tplFreeYou : subOn ? t.tplInSub : '', strike: acc0.free || subOn ? 'line-through' : 'none', border: line },
+        { key: 'personal', title: t.payPersonal, price: this.money(PP.seat), unit: t.perGuestU, desc: t.payPersonalDesc, note: t.priceEx.replace('{price}', this.money(100 * PP.seat)), tag: acc0.free ? t.tplFreeYou : '', strike: acc0.free ? 'line-through' : 'none', border: line },
+        { key: 'sub', title: t.subTitle, price: this.money(PP.subscriptionMonth), unit: t.perMonthU, desc: HM.subCard, note: '', tag: acc0.free ? t.tplFreeYou : subUntilTxt, strike: acc0.free ? 'line-through' : 'none', border: acc0.free ? line : '#d4452a' },
+      ] : [],
+      faq: HM.faq.map(([q, a], i) => { const o = s.hmFaq === i; return { q, a, open: o, exp: o ? 'true' : 'false', rot: o ? '45deg' : '0deg', toggle: () => this.setState({ hmFaq: o ? -1 : i }) }; }),
+      faqCount: String(HM.faq.length).padStart(2, '0'),
+      footNav: [['tpls', t.navTpls, () => this.goGallery()], ['prices', t.navPrices, () => this.goPricing()], ['tour', t.tour, () => this.goTour()], ['inv', t.myInv, () => this.goMyInv()]].map(([key, label, onClick]) => ({ key, label, onClick })),
+      // Оферта, политика и контакты — страницы сервера на языке интерфейса (?lang=, у русского без него);
+      // в мини-аппе — через openLink (target _blank).
+      footLinks: [['oferta', HM.offer, '/oferta'], ['privacy', HM.privacy, '/privacy'], ['contacts', HM.contacts, '/contacts']].map(([key, label, path]) => ({ key, label, href: lang === 'ru' ? path : path + '?lang=' + lang, target: '_blank' }))
+        .concat(cfg.botUsername ? [{ key: 'bot', label: HM.bot, href: 'https://t.me/' + encodeURIComponent(cfg.botUsername), target: '_blank' }] : []),
+      toggleTheme: () => this.setTheme(U.dark ? 'light' : 'dark'), darkOn: U.dark ? 'true' : 'false', themeGlyph: U.dark ? '☀' : '☾', themeLabel: U.dark ? HM.light : HM.dark,
+      copy: HM.copy.replace('{year}', new Date().getFullYear()),
+    };
 
     // build
     const STEPS = ['basics', 'when', 'where', 'words', 'details', 'photos', 'font', 'music', 'sections'];
@@ -3695,38 +3852,35 @@ class Component extends DCLogic {
     // Гости, активность и ссылка открытого приглашения в превью не попадают; в демо остаются гости демо (enterDemo).
     const loadEv = (ev, id) => { this.flushSave(); const iv = this.defaults(ev, lang); iv.font = D.STYLES[id.split('-')[1]].fonts[0]; this.setState((x) => ({ event: ev, tplId: id, inv: iv, invLang: lang, dirty: false, draftId: null, draft: null, savedAt: null, saveErr: false, ...(x.demo ? {} : { guests: [], activity: [], toGuestId: null, myGuestId: null, share: { slug: '', pwOn: false, pw: '', edited: false } }) })); };
     const toBuild = (step) => this.go('build', { step });
+    // Демо для заказчика: подпись — раздел продукта (t.tourCat). Переключатели прототипа (язык, Telegram, тема)
+    // в тур не входят: язык — в шапке, тема — в подвале главной.
     const DEMO = [
-      ['envelope', '✉', '#93723f', t.sec.rsvp, () => { loadEv('wedding', 'wedding-classic'); live({ intro: 'envelope' }, 1); }],
-      ['curtain', '◫', '#a9564f', t.fIntro, () => { loadEv('anniversary', 'anniversary-cinema'); live({ intro: 'curtain' }); }],
-      ['scratchIntro', '▒', '#ff5a5f', t.fIntro, () => { loadEv('birthday', 'birthday-riso'); live({ intro: 'scratch' }); }],
-      ['personal', '☺', '#d4452a', t.personalLinks, () => live({ intro: 'envelope' }, 1)],
-      ['password', '✱', '#1a1714', t.pw, () => { live(null, null, null, { share: { slug: '', edited: false, pwOn: true, pw: '2026' } }); this.toast(t.demoPw); }],
-      ['reveal', '?', '#8f6fb8', t.sec.reveal, () => { loadEv('baby', 'baby-watercolor'); live({}, null, 'sec-reveal'); }],
-      ['guestbook', '“', '#2e7d4f', t.guestbook, () => live({ showGuests: true }, null, 'sec-who')],
-      ['map', '⌖', '#3f7a6c', t.fMap, () => { loadEv('date', 'date-cinema'); live({ mapMode: 'real' }, null, 'sec-venue'); }],
-      ['motion', '◐', '#3df5c8', t.fMotion, () => { loadEv('party', 'party-neon'); live({ motion: 'zoom', intro: 'none' }); }],
-      ['editor', '✎', '#d4452a', t.edit, () => this.openGuest('edit')],
-      ['ai', '✦', '#d4452a', t.steps.words, () => toBuild(3)],
-      ['music', '♪', '#93723f', t.stepsX.music, () => toBuild(7)],
-      ['sections', '☰', '#56713f', t.stepsX.sections, () => toBuild(8)],
-      ['palette', '◑', '#ad5233', t.stepsX.style, () => toBuild(6)],
-      ['share', '↗', '#1a1714', t.toShare, () => this.goShare()],
-      ['guests', '◎', '#1a1714', t.guests, () => this.go('manage', { mtab: 'list' })],
-      ['seating', '◍', '#93723f', t.seating, () => this.go('manage', { mtab: 'seat' })],
-      ['checkin', '⌗', '#2e7d4f', t.checkin, () => this.go('manage', { mtab: 'checkin' })],
-      ['activity', '↻', '#8a8378', t.activity, () => this.go('manage', { mtab: 'activity' })],
-      ['bot', '✉', '#2f6fe0', t.bot, () => this.go('manage', { mtab: 'bot' })],
-      ['languages', 'Aa', '#1a1714', D.LANGS.map((x) => x.label).join(' '), () => { const LC = D.LANGS.map((x) => x.code); this.setLang(LC[(LC.indexOf(lang) + 1) % LC.length]); }, lang.toUpperCase()],
-      ['telegram', '✈', '#2f6fe0', 'Telegram', () => { if (!this.tgReal) this.setState({ tgOv: tgSim ? 'web' : 'telegram' }); }, tg ? t.on : t.off],
-      ['dark', '☾', '#151311', t.uiTheme, () => this.setTheme(U.dark ? 'light' : 'dark'), U.dark ? t.on : t.off],
+      ['envelope', '✉', '#93723f', 'open', () => { loadEv('wedding', 'wedding-classic'); live({ intro: 'envelope' }, 1); }],
+      ['curtain', '◫', '#a9564f', 'open', () => { loadEv('anniversary', 'anniversary-cinema'); live({ intro: 'curtain' }); }],
+      ['scratchIntro', '▒', '#ff5a5f', 'open', () => { loadEv('birthday', 'birthday-riso'); live({ intro: 'scratch' }); }],
+      ['personal', '☺', '#d4452a', 'guest', () => live({ intro: 'envelope' }, 1)],
+      ['password', '✱', '#1a1714', 'guest', () => { live(null, null, null, { share: { slug: '', edited: false, pwOn: true, pw: '2026' } }); this.toast(t.demoPw); }],
+      ['reveal', '?', '#8f6fb8', 'guest', () => { loadEv('baby', 'baby-watercolor'); live({}, null, 'sec-reveal'); }],
+      ['guestbook', '“', '#2e7d4f', 'guest', () => live({ showGuests: true }, null, 'sec-who')],
+      ['map', '⌖', '#3f7a6c', 'guest', () => { loadEv('date', 'date-cinema'); live({ mapMode: 'real' }, null, 'sec-venue'); }],
+      ['motion', '◐', '#3df5c8', 'design', () => { loadEv('party', 'party-neon'); live({ motion: 'zoom', intro: 'none' }); }],
+      ['editor', '✎', '#d4452a', 'design', () => this.openGuest('edit')],
+      ['ai', '✦', '#d4452a', 'design', () => toBuild(3)],
+      ['music', '♪', '#93723f', 'design', () => toBuild(7)],
+      ['sections', '☰', '#56713f', 'design', () => toBuild(8)],
+      ['palette', '◑', '#ad5233', 'design', () => toBuild(6)],
+      ['share', '↗', '#1a1714', 'send', () => this.goShare()],
+      ['guests', '◎', '#1a1714', 'host', () => this.go('manage', { mtab: 'list' })],
+      ['seating', '◍', '#93723f', 'host', () => this.go('manage', { mtab: 'seat' })],
+      ['checkin', '⌗', '#2e7d4f', 'host', () => this.go('manage', { mtab: 'checkin' })],
+      ['activity', '↻', '#8a8378', 'host', () => this.go('manage', { mtab: 'activity' })],
+      ['bot', '✉', '#2f6fe0', 'host', () => this.go('manage', { mtab: 'bot' })],
     ];
-    // Карточки-переключатели (язык, Telegram, тема) остаются на странице тура и демо-режим не включают.
-    const TOGGLES = ['languages', 'telegram', 'dark'];
-    const demos = DEMO.map(([k, glyph, bg, area, fn, state], i) => ({ num: String(i + 1).padStart(2, '0'), glyph, bg, area, title: t.demos[k][0], desc: t.demos[k][1], state: state || '', delay: (i % 6) * 50 + 'ms', onClick: () => { if (!TOGGLES.includes(k)) this.enterDemo(); fn(); } }));
+    const demos = DEMO.map(([k, glyph, bg, cat, fn], i) => ({ key: k, num: String(i + 1).padStart(2, '0'), glyph, bg, area: t.tourCat[cat], title: t.demos[k][0], desc: t.demos[k][1], delay: (i % 6) * 50 + 'ms', onClick: () => { this.enterDemo(); fn(); } }));
     const STY = Object.keys(D.STYLES);
-    const styleChips = [['all', t.allStyles, 'conic-gradient(#d4452a,#93723f,#3df5c8,#ff4fbf,#d4452a)']].concat(STY.map((k) => [k, D.STYLES[k].label, D.STYLES[k].accent])).map(([k, label, sw]) => { const a = (s.tStyle || 'all') === k; return { label, sw, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.2)', onClick: () => this.setState({ tStyle: k }) }; });
+    const styleChips = [['all', t.allStyles, 'conic-gradient(#d4452a,#93723f,#3df5c8,#ff4fbf,#d4452a)']].concat(STY.map((k) => [k, stN(k), D.STYLES[k].accent])).map(([k, label, sw]) => { const a = (s.tStyle || 'all') === k; return { label, sw, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.2)', onClick: () => this.setState({ tStyle: k }) }; });
     const eventChips = [['all', t.allEvents]].concat(D.EVENT_ORDER.map((k) => [k, D.EVENTS[k].label[lang]])).map(([k, label]) => { const a = (s.tEvent || 'all') === k; return { label, bg: a ? 'rgba(212,69,42,.1)' : 'transparent', color: a ? '#d4452a' : U.ink, border: a ? '#d4452a' : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ tEvent: k }) }; });
-    const allTpls = s.screen === 'tour' ? D.TEMPLATES.filter((x) => this.tplOk(x.id) && ((s.tStyle || 'all') === 'all' || x.style === s.tStyle) && ((s.tEvent || 'all') === 'all' || x.event === s.tEvent)).map((x) => { const EE = D.EVENTS[x.event], L = EE.text[lang]; return { th: this.theme(x.id), names: L.names, date: shortOf(isoIn(EE.days)), cover: EE.img[0], kicker: t.youreInvited, name: x.name, style: D.STYLES[x.style].label, event: EE.label[lang], onClick: () => { loadEv(x.event, x.id); setTimeout(() => this.openGuest('preview'), 0); } }; }) : [];
+    const allTpls = s.screen === 'tour' ? D.TEMPLATES.filter((x) => this.tplOk(x.id) && ((s.tStyle || 'all') === 'all' || x.style === s.tStyle) && ((s.tEvent || 'all') === 'all' || x.event === s.tEvent)).map((x) => { const EE = D.EVENTS[x.event], L = EE.text[lang], [price, priceColor] = catPrice(x.id); return { id: x.id, th: this.theme(x.id), names: L.names, date: shortOf(isoIn(EE.days)), cover: EE.img[0], kicker: t.youreInvited, name: stN(x.style), style: x.name, event: EE.label[lang], price, priceColor, onClick: () => { loadEv(x.event, x.id); setTimeout(() => this.openGuest('preview'), 0); } }; }) : [];
     // Лист оплаты: цены только из ответов сервера; тип нельзя сменить у оплаченного или с гостями.
     const PY = s.pay, Q = this.quotes(), pd = s.draft;
     let py = {};
@@ -3809,7 +3963,10 @@ class Component extends DCLogic {
     const entry = entryOn ? { show: true, src: qrOf((PV.appUrl || appUrl) + '/g/' + myToken, 400, '#1a1714', '#ffffff'), hint: pg && pg.checkedIn ? '✓ ' + t.youCheckedIn : t.entryHint, color: pg && pg.checkedIn ? '#2e7d4f' : '#6e665b' } : { show: false };
     const isShareScr = s.screen === 'share' && !isPersonalInv;
     const X = {
-      isTour: s.screen === 'tour', goTour: () => { this.stopMusic(); this.setState({ music: false, fromTour: true }); this.go('tour'); }, fromTourLive: isGuest && !!s.fromTour && s.guestMode !== 'preview' && s.guestMode !== 'edit', backTour: () => { this.stopMusic(); this.setState((x) => ({ music: false, share: { ...x.share, pwOn: false }, unlocked: false })); this.go('tour'); }, tourColor: s.screen === 'tour' ? '#d4452a' : U.ink, demos, demoCount: String(demos.length).padStart(2, '0'), styleChips, eventChips, allTpls, galleryCount: allTpls.length + ' / ' + D.TEMPLATES.length,
+      isTour: s.screen === 'tour', goTour: () => this.goTour(),
+      // Тур — две вкладки: «Возможности» (демо) и «Все шаблоны» (с главной — «Смотреть шаблоны»).
+      tourFeat: s.tourTab !== 'tpl', tourTpl: s.tourTab === 'tpl',
+      tourTabs: [['feat', t.tour, String(demos.length)], ['tpl', t.templatesAll, String(D.TEMPLATES.filter((x) => this.tplOk(x.id)).length)]].map(([key, label, count]) => { const a = (s.tourTab === 'tpl') === (key === 'tpl'); return { key, label, count, sel: a ? 'true' : 'false', bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)', onClick: () => this.setState({ tourTab: key }) }; }), fromTourLive: isGuest && !!s.fromTour && s.guestMode !== 'preview' && s.guestMode !== 'edit', backTour: () => { this.stopMusic(); this.setState((x) => ({ music: false, share: { ...x.share, pwOn: false }, unlocked: false })); this.go('tour'); }, tourColor: s.screen === 'tour' ? '#d4452a' : U.ink, demos, demoCount: String(demos.length).padStart(2, '0'), styleChips, eventChips, allTpls, galleryCount: allTpls.length + ' / ' + D.TEMPLATES.length,
       galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill([kick, inv.names, gDateShort].filter(Boolean).join(' ✦ ')).join('   ✦   '), namesDate: [inv.names, gDateShort].filter(Boolean).join(' · '),
       ui: U, notTg: !tg, tgSim, tgBack: backFn, tgBackLabel: scr === 'home' && !closeTop ? '✕ ' + t.close : '← ' + t.back,
       mainBtn: { show: tgSim && !!MB, label: MB ? MB[0] : '', onClick: () => MB && MB[1](), bg: '#d4452a', barBg: isGuest ? th.bg : U.paper },
@@ -3873,7 +4030,9 @@ class Component extends DCLogic {
       loginMyInv: () => this.requireLogin(() => {}, 'inv'), goMyInv: () => this.goMyInv(),
       // шапка: разделы, язык интерфейса, вход или аккаунт; меню шапки; экран цен
       hd, mn, openAccount: () => this.openAccount(), isPricing: s.screen === 'pricing', pr,
-      events,
+      events, hm, car,
+      // Кнопки предпросмотра шаблона — над симулятором главной кнопки Telegram, если он виден.
+      previewBottom: tgSim && MB ? '84px' : 'calc(18px + env(safe-area-inset-bottom))',
       tpls, cardW: cardWpx + 'px', cardHalf: cardWpx / 2 + 'px',
       previewTpl: () => this.openGuest('preview'), useTpl: () => this.useTpl(), invLangOpts, tb,
       // лист входа, аккаунт, подтверждение
