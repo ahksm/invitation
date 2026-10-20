@@ -158,7 +158,25 @@ async function swipe(g: Guest) {
   await g.cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 195, y: 700 }] });
   for (let y = 660; y >= 220; y -= 40) await g.cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: 195, y }] });
   await g.cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await sleep(600);
+  // Инерция прокрутки: касание во время неё только останавливает страницу, щелчка нет. Ждём, пока прокрутка встанет.
+  let last = -1;
+  for (let same = 0, t0 = Date.now(); same < 3 && Date.now() - t0 < 5000; await sleep(150)) {
+    const y = await g.read("window.scrollY");
+    same = y === last ? same + 1 : 0;
+    last = y;
+  }
+}
+/** Касание по тексту страницы, а не по полю ввода, ссылке или кнопке (после прокрутки под пальцем может оказаться что угодно). */
+async function tapQuiet(g: Guest) {
+  const p = await g.read(`(() => {
+    for (let y = 300; y < innerHeight - 80; y += 20) for (const x of [195, 120, 270]) {
+      const el = document.elementFromPoint(x, y);
+      if (el && !el.closest('a,button,input,textarea,select,label,canvas,[role=button],[data-music]')) return { x, y };
+    }
+    return null;
+  })()`);
+  expect(p, "место для касания без полей и кнопок").not.toBeNull();
+  await tap(g, p.x, p.y);
 }
 /** Вкладку свернули или вернули; isActive — было ли у страницы право на звук в этот момент. */
 const visibility = (g: Guest, state: "hidden" | "visible") =>
@@ -201,7 +219,7 @@ describe("музыка на странице гостя", () => {
     await swipe(a);
     expect(await pressed(a)).toBe("false");
     expect(await contexts(a)).toBe(0);
-    await tap(a, 195, 300);
+    await tapQuiet(a);
     expect(await pressed(a)).toBe("true");
     expect(await playing(a)).toBe(true);
     await expectClean(a);
@@ -224,7 +242,7 @@ describe("музыка на странице гостя", () => {
     await swipe(g);
     expect(await pressed(g)).toBe("false");
     expect(await contexts(g)).toBe(0);
-    await tap(g, 195, 300);
+    await tapQuiet(g);
     expect(await pressed(g)).toBe("true");
     expect(await playing(g)).toBe(true);
     await expectClean(g);
