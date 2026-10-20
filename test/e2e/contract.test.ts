@@ -90,7 +90,7 @@ async function ogOf(slug: string) {
 async function toShare(page: Page) {
   await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
   await page.getByTitle(ru.stepsX.sections).click();
-  await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+  await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
   await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
   await e.waitText(page, ru.linkReady);
 }

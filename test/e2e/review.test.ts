@@ -485,7 +485,7 @@ describe("узкий экран (320 px)", () => {
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Узкий экран" });
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
     await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     const links = page.locator("[data-personal-links]");
     const badge = links.getByText(ru.seatsLine.replace("{paid}", "2").replace("{n}", "3"), { exact: true });
@@ -507,7 +507,7 @@ describe("оплата", () => {
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Подписка повтор" });
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
     await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     const pay = sheet(page, "pay");
     await pay.locator('[data-pay="sub"]').click();

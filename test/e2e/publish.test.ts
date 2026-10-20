@@ -83,17 +83,22 @@ function allRequests(context: BrowserContext) {
   return list;
 }
 
-/** «Мои приглашения» → конструктор → последний шаг → редактор на странице гостя. tg — кнопка MainButton мини-аппа. */
-async function toRefine(page: Page, t: Dict = ru, tg = false) {
+/** «Мои приглашения» → конструктор → последний шаг → редактор на странице гостя. */
+async function toRefine(page: Page, t: Dict = ru) {
   await page.locator("#my-inv").getByRole("button", { name: t.edit }).first().click();
   await page.getByTitle(t.stepsX.sections).click();
-  if (tg) await page.evaluate(() => (window as any).__main());
-  else await page.getByRole("button", { name: t.toEditor + " →" }).click();
+  await page.getByRole("button", { name: "✎ " + t.toEditor }).click();
 }
 
-/** Редактор → «Получить ссылку». */
+/** Редактор → «Получить ссылку». tg — кнопка MainButton мини-аппа на последнем шаге конструктора («Получить ссылку»). */
 async function toShare(page: Page, t: Dict = ru, tg = false) {
-  await toRefine(page, t, tg);
+  if (tg) {
+    await page.locator("#my-inv").getByRole("button", { name: t.edit }).first().click();
+    await page.getByTitle(t.stepsX.sections).click();
+    await page.evaluate(() => (window as any).__main());
+    return;
+  }
+  await toRefine(page, t);
   await page.getByRole("button", { name: new RegExp("^" + t.toShare) }).first().click();
 }
 
@@ -163,6 +168,34 @@ describe("публикация и оплата", () => {
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     await e.waitText(page, ru.linkReady);
     expect(await sheet(page, "pay").count()).toBe(0);
+    await e.expectClean(page, problems);
+    await close();
+  });
+
+  it("конец конструктора: «Получить ссылку» на последнем шаге, в редакторе кнопка целиком на экране 390 px", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    await createInvitation(user.id, { data: { names: "Конец шагов", intro: "none" } });
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Конец шагов" });
+    await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+    await page.getByTitle(ru.stepsX.sections).click();
+    // Последний шаг: карточка «Всё готово», в нижней панели — «Получить ссылку» вместо «К редактору».
+    await page.locator("[data-finish]").waitFor();
+    expect(await page.getByRole("button", { name: ru.toShare + " →" }).count()).toBe(2);
+    await page.getByRole("button", { name: ru.toShare + " →" }).last().click();
+    await sheet(page, "pay").waitFor();
+    await sheet(page, "pay").getByRole("button", { name: ru.close }).click();
+    // Редактор: кнопка ссылки не уезжает за прокрутку шаблонов.
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
+    const share = page.locator("[data-share]");
+    await share.waitFor();
+    const box = (await share.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(390);
+    expect(box.y + box.height).toBeLessThanOrEqual(844);
+    await e.shot(page, "editor-bar-ru-390x844.png");
+    await share.click();
+    await sheet(page, "pay").waitFor();
     await e.expectClean(page, problems);
     await close();
   });
@@ -645,7 +678,7 @@ describe("страница гостя", () => {
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Malika va Jasur" });
     await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).getByRole("button", { name: ru.edit }).click();
     await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     await e.waitText(page, ru.linkReady);
     await expect.poll(() => page.locator("pre").innerText()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');

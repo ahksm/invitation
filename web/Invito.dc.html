@@ -255,6 +255,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <button onClick="{{ r.onToggle }}" style="width:48px;height:28px;border-radius:99px;border:0;background:{{ r.track }};position:relative;cursor:pointer;padding:0"><span style="position:absolute;top:3px;left:{{ r.knob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></button>
 </div></sc-for>
 </div></div>
+<div data-finish="1" style="padding:20px;border-radius:16px;background:{{ ui.card }};border:1px solid rgba({{ ui.inkRgb }},.14)">
+<div style="font:500 28px/1.1 'Cormorant Garamond',serif;color:{{ ui.ink }}">{{ t.finishT }}</div>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:{{ ui.muted }};max-width:52ch">{{ t.finishD }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+<button onClick="{{ goShare }}" style="height:48px;padding:0 20px;border-radius:999px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer">{{ t.toShare }} →</button>
+<button onClick="{{ previewNow }}" style="height:48px;padding:0 18px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.3);background:transparent;color:{{ ui.ink }};font:500 15px 'Onest',sans-serif;cursor:pointer">✎ {{ t.toEditor }}</button>
+</div></div>
 </div></sc-if>
 
 </div>
@@ -295,8 +302,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <button onClick="{{ ed.music }}" style="flex:none;height:38px;width:42px;border-radius:99px;border:1px solid rgba({{ ui.paperRgb }},.25);background:transparent;color:{{ ui.paper }};font-size:16px;cursor:pointer">♪</button>
 <button onClick="{{ ed.sections }}" style="flex:none;height:38px;width:42px;border-radius:99px;border:1px solid rgba({{ ui.paperRgb }},.25);background:transparent;color:{{ ui.paper }};font-size:16px;cursor:pointer">☰</button>
 <button onClick="{{ ed.font }}" style="flex:none;height:38px;width:42px;border-radius:99px;border:1px solid rgba({{ ui.paperRgb }},.25);background:transparent;color:{{ ui.paper }};font:italic 500 18px 'Cormorant Garamond',serif;cursor:pointer">Aa</button>
-<button onClick="{{ goShare }}" style="flex:none;margin-left:auto;height:38px;padding:0 16px;border-radius:99px;border:0;background:#d4452a;color:#fff;font:500 13px 'Onest',sans-serif;cursor:pointer;white-space:nowrap">{{ t.toShare }} →</button>
-</div></div></sc-if>
+</div>
+<button data-share="1" onClick="{{ goShare }}" style="width:100%;height:48px;padding:0 18px;border-radius:99px;border:0;background:#d4452a;color:#fff;font:500 15px 'Onest',sans-serif;cursor:pointer;white-space:nowrap">{{ t.toShare }} →</button>
+</div></sc-if>
 
 <sc-if value="{{ gateShow }}"><div style="position:fixed;inset:0;z-index:85;background:{{ th.bg }};display:flex;align-items:center;justify-content:center;padding:24px"><div style="width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:14px">
 <div style="width:56px;height:56px;margin:0 auto 6px;border-radius:50%;border:1px solid {{ th.accent }};display:flex;align-items:center;justify-content:center;color:{{ th.accent }};font-size:22px">✱</div>
@@ -3142,7 +3150,7 @@ class Component extends DCLogic {
     const backFn = closeTop || (scr === 'home' ? (() => { try { window.Telegram.WebApp.close(); } catch (e) {} }) : scr === 'events' || scr === 'tour' ? () => this.goHome() : scr === 'templates' ? () => this.go('events') : scr === 'build' ? () => (s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates')) : scr === 'guest' ? () => { this.stopMusic(); this.setState({ music: false }); if (s.fromTour && gm === 'live') this.go('tour'); else if (gm === 'preview') this.go(s.fromTour ? 'tour' : 'templates'); else if (gm === 'edit') this.go('build', { step: STEPS.length - 1 }); else if (s.guestFrom === 'manage') this.go('manage'); else if (s.guestFrom !== 'home' && (s.demo || (s.draft && s.draft.status === 'active'))) this.go('share'); else this.goHome(); } : scr === 'share' ? () => this.openGuest('edit') : () => this.goHome());
     this._backFn = backFn; this._backShow = !pub && scr !== 'notfound' && (scr !== 'home' || !!closeTop);
     const anySheet = !!closeTop || !!s.upload;
-    const MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toEditor, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit')] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.copy, () => copyText(fullLink, t.copied)]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : null;
+    const MB = pub || anySheet ? null : scr === 'home' ? [t.create, () => this.setState({ screen: 'events', fromTour: false })] : scr === 'templates' ? [t.useTpl, () => this.useTpl()] : scr === 'build' ? [s.step < STEPS.length - 1 ? t.next : t.toShare, () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare()] : isEdit ? [t.toShare, () => this.goShare()] : scr === 'share' ? (isPersonalInv ? [t.addGuests, () => this.openAdd()] : [t.copy, () => copyText(fullLink, t.copied)]) : scr === 'manage' && s.demo ? [t.importTg, () => this.setState({ importOpen: true, picked: {} })] : scr === 'manage' && isPersonalInv ? [t.addGuests, () => this.openAdd()] : null;
     this._mainFn = MB ? MB[1] : null; this._main = { show: !!MB, label: MB ? MB[0] : '' };
     // ---- tour ----
     const live = (patch, gid, scrollId, extra) => { this.setState((x) => ({ inv: { ...x.inv, ...(patch || {}) }, share: { ...x.share, pwOn: false }, unlocked: false, ...(extra || {}) })); setTimeout(() => { this.openGuest('live', gid); if (scrollId) setTimeout(() => { this.setState({ env: 4 }); setTimeout(() => { const el = document.getElementById(scrollId); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 40, behavior: 'smooth' }); }, 350); }, 60); }, 0); };
@@ -3333,8 +3341,8 @@ class Component extends DCLogic {
       onGallery: (e) => this.pickMedia(e, (src) => this.setState((x) => ({ inv: { ...x.inv, gallery: x.inv.gallery.concat(src).slice(0, 12) }, dirty: true }))),
       previewNow: () => this.openGuest('edit'),
       prevStep: () => s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates'),
-      nextStep: () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.openGuest('edit'),
-      nextLabel: s.step < STEPS.length - 1 ? t.next : t.toEditor,
+      nextStep: () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare(),
+      nextLabel: s.step < STEPS.length - 1 ? t.next : t.toShare, lastStep: s.step === STEPS.length - 1,
       particlesOn: density > 0, cycleLang: () => { const LC = D.LANGS.map((x) => x.code); if (!pub && s.draftId && !s.demo) this.setInvLang(LC[(LC.indexOf(gl) + 1) % LC.length]); else this.setLang(LC[(LC.indexOf(lang) + 1) % LC.length], { save: true }); }, langCode: D.LANGS.find((x) => x.code === gl).label,
       toggleMusic: () => this.toggleMusic(), musicPressed: s.music ? 'true' : 'false', mb: s.music ? { a: '14px', b: '22px', d: '10px', c: th.accent } : { a: '6px', b: '6px', d: '6px', c: th.muted },
       isPreview: isGuest && s.guestMode === 'preview', isRefine: isEdit,
@@ -3369,7 +3377,7 @@ class Component extends DCLogic {
       sendRsvp: () => { if (rsvpReady) this.submitRsvp(); },
       rsvpSummary, addCal: ics, viaBot: () => (s.pub ? this.openUrl('https://t.me/' + PV.botUsername + '?start=g_' + myToken) : this.openUrl('https://t.me/share/url?url=' + encodeURIComponent(fullLink) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary))),
       changeRsvp: () => this.setState((x) => ({ rsvp: { ...x.rsvp, sent: false } })),
-      footPad: isEdit || (isGuest && s.guestMode === 'preview') ? '150px' : '60px',
+      footPad: isEdit ? '210px' : isGuest && s.guestMode === 'preview' ? '150px' : '60px',
       sheetOpen: isEdit && !!s.sheet, sheetTitle: s.sheet ? SL[s.sheet] : '', closeSheet: () => this.setState({ sheet: null }),
       share: s.share, link, shareUrl, ogTitle, ogDesc, metaCode,
       slugPrefix: host + '/i/', slugErr: s.slugErr || '', slugLine: s.slugErr ? '#d4452a' : 'rgba(' + U.inkRgb + ',.22)',

@@ -358,7 +358,7 @@ describe("музыка у владельца", () => {
     const { page, problems, close } = await e.open("/app/", { context: await owner(), waitText: "Черновик владельца" });
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
     await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
     await page.locator("[data-music]").waitFor();
     // Касание в редакторе открыло бы лист правки: клавиша — тоже действие человека.
     await page.keyboard.press("ArrowDown");

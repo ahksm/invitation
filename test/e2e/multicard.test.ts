@@ -91,8 +91,9 @@ describe("оплата из мини-аппа через Multicard", () => {
     page.on("request", (r) => { if (r.method() === "POST" && r.url() === e.base + "/api/orders") sent.push(r.postDataJSON() as Dict); });
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
     await page.getByTitle(ru.stepsX.sections).click();
+    // MainButton на последнем шаге — «Получить ссылку»: сразу лист оплаты.
+    expect((await tgState(page)).main.text).toBe(ru.toShare);
     await page.evaluate(() => (window as any).__tg.main.fn());
-    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     await sheet(page, "pay").locator('[data-pay="go"]').click();
 
     // Заказ: returnTo telegram, Multicard получил return_url на #/paid/<id>; оплата открыта через openLink.

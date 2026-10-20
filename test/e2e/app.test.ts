@@ -390,7 +390,7 @@ describe("вход и черновики", () => {
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Тайна тест" });
     await editOf(page, "Тайна тест").click();
     await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: ru.toEditor + " →" }).click();
+    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
     await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
     await e.waitText(page, ru.linkReady);
     await expect.poll(() => page.locator("input[name=access-code]").inputValue()).toBe("TopSecret42");
