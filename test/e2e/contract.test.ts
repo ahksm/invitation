@@ -86,13 +86,16 @@ async function ogOf(slug: string) {
   return Object.fromEntries([...html.matchAll(/<meta property="(og:[^"]+)" content="([^"]*)">/g)].map((m) => [m[1]!, m[2]!]));
 }
 
-/** «Мои приглашения» → конструктор → «Разделы» → редактор → «Получить ссылку» (у опубликованного — сразу «Поделиться»). */
+/** «Мои приглашения» → «Получить ссылку» на карточке (у опубликованного — сразу «Поделиться»). */
 async function toShare(page: Page) {
-  await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
-  await page.getByTitle(ru.stepsX.sections).click();
-  await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
-  await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+  await page.locator("#my-inv [data-inv-share]").first().click();
   await e.waitText(page, ru.linkReady);
+}
+
+/** «Изменить» у опубликованного открывает редактор; шаги конструктора — кнопкой «Шаги» в его панели. */
+async function toSteps(page: Page) {
+  await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+  await page.locator('[data-ed-tool="steps"]').click();
 }
 
 describe("возврат после оплаты из мини-аппа (#/paid/<id>)", () => {
@@ -220,7 +223,7 @@ describe("стёртая дата приглашения", () => {
     page.on("request", (r) => { if (r.method() === "PATCH" && r.url() === `${e.base}/api/invitations/${inv.id}`) sent.push(r.postDataJSON() as Dict); });
     await page.goto(e.base + "/app/");
     await e.waitText(page, "Дата стёрта");
-    await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+    await toSteps(page);
     await page.getByTitle(ru.steps.when).click();
     await page.locator("input[type=date]").first().fill("");
     await page.locator("input[type=time]").first().fill("");
@@ -243,7 +246,7 @@ describe("стёртая дата приглашения", () => {
     await e.waitText(page, "Дата стёрта");
     // Карточка в «Моих приглашениях» без даты.
     expect(await page.locator("#my-inv").textContent()).not.toMatch(/26|17:00/);
-    await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
+    await toSteps(page);
     await page.getByTitle(ru.steps.when).click();
     expect(await page.locator("input[type=date]").first().inputValue()).toBe("");
     expect(await page.locator("input[type=time]").first().inputValue()).toBe("");
@@ -255,7 +258,7 @@ describe("стёртая дата приглашения", () => {
     await toShare(page);
     await expect.poll(async () => (await invOf(inv.id)).ogImageUrl ?? "", { timeout: 15_000 }).toMatch(/^\/media\//);
     expect((await invOf(inv.id)).ogImageUrl).not.toBe(dated);
-    expect(await page.locator("pre").innerText()).toContain('<meta property="og:title" content="Дата стёрта">');
+    expect(await page.locator("pre").textContent()).toContain('<meta property="og:title" content="Дата стёрта">');
     expect(await page.locator("body").innerText()).not.toMatch(/NaN|Invalid Date|26 декабря/);
     await e.shot(page, "share-nodate-ru-390x844.png");
     // Картинки превью и сторис (renderCard) без даты — без плашки даты, а не с пустым цветным прямоугольником:

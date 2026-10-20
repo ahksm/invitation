@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { guests, invitationEvents, invitations } from "../src/db/schema.js";
 import { eventLabel } from "../src/design-data.js";
-import { getPublicPage, longDate, SELF_GUESTS_LIMIT } from "../src/services/public.js";
+import { getPublicPage, longDate, rsvpClosed, SELF_GUESTS_LIMIT } from "../src/services/public.js";
 import { APP_URL, samples, testContext } from "./helpers.js";
 
 const t = testContext();
@@ -44,8 +44,11 @@ async function personalPublished(names: string[], seats: number, data: Record<st
 const ownerGuests = async (cookie: string, id: string) => (await req(cookie, "GET", `/api/invitations/${id}`)).json().guests as any[];
 const activity = async (cookie: string, id: string) => (await req(cookie, "GET", `/api/invitations/${id}/activity`)).json() as any[];
 
-/** Гости, вставленные напрямую в базу, с ответами. Кэш публичных страниц после этого сбрасывается. */
-async function insertGuests(invitationId: string, rows: { name: string; rsvp: "yes" | "no" | "maybe" | "pending"; plus?: number; message?: string; at?: number }[]) {
+/** Гости, вставленные напрямую в базу, с ответами (pub — гость разрешил показать сообщение). Кэш публичных страниц после этого сбрасывается. */
+async function insertGuests(
+  invitationId: string,
+  rows: { name: string; rsvp: "yes" | "no" | "maybe" | "pending"; plus?: number; message?: string; pub?: boolean; at?: number }[],
+) {
   const [inv] = await db.select().from(invitations).where(eq(invitations.id, invitationId));
   let seat = inv!.nextSeat;
   const values = rows.map((r) => ({
@@ -54,6 +57,7 @@ async function insertGuests(invitationId: string, rows: { name: string; rsvp: "y
     rsvp: r.rsvp,
     plus: r.plus ?? 0,
     message: r.message ?? null,
+    messagePublic: r.pub ?? false,
     seat: seat++,
     token: randomBytes(12).toString("base64url"),
     source: "self" as const,
@@ -162,14 +166,14 @@ describe("общая ссылка", () => {
     expect(v3.guestbook).toEqual([]);
   });
 
-  it("гостевая книга: пожелания yes и maybe, новые первыми, не больше 30", async () => {
+  it("гостевая книга: публичные пожелания yes и maybe, новые первыми, не больше 30", async () => {
     const { inv } = await sharedPublished();
     await insertGuests(inv.id, [
-      { name: "Анна Каримова", rsvp: "yes", message: "  Поздравляем!  ", at: 1 },
-      { name: "Мадина", rsvp: "maybe", message: "Постараюсь прийти", at: 2 },
-      { name: "Борис Петров", rsvp: "no", message: "Не смогу", at: 3 },
-      { name: "Вика", rsvp: "yes", message: "   ", at: 4 },
-      ...Array.from({ length: 35 }, (_, i) => ({ name: `Друг ${i}`, rsvp: "yes" as const, message: `Текст ${i}`, at: 10 + i })),
+      { name: "Анна Каримова", rsvp: "yes", message: "  Поздравляем!  ", pub: true, at: 1 },
+      { name: "Мадина", rsvp: "maybe", message: "Постараюсь прийти", pub: true, at: 2 },
+      { name: "Борис Петров", rsvp: "no", message: "Не смогу", pub: true, at: 3 },
+      { name: "Вика", rsvp: "yes", message: "   ", pub: true, at: 4 },
+      ...Array.from({ length: 35 }, (_, i) => ({ name: `Друг ${i}`, rsvp: "yes" as const, message: `Текст ${i}`, pub: true, at: 10 + i })),
     ]);
     const { guestbook } = (await get(`/api/public/i/${inv.slug}`)).json();
     expect(guestbook).toHaveLength(30);
@@ -178,15 +182,74 @@ describe("общая ссылка", () => {
 
     const few = await sharedPublished();
     await insertGuests(few.inv.id, [
-      { name: "Анна Каримова", rsvp: "yes", message: "  Поздравляем!  ", at: 1 },
-      { name: "Мадина", rsvp: "maybe", message: "Постараюсь прийти", at: 2 },
-      { name: "Борис Петров", rsvp: "no", message: "Не смогу", at: 3 },
-      { name: "Вика", rsvp: "yes", message: "   ", at: 4 },
+      { name: "Анна Каримова", rsvp: "yes", message: "  Поздравляем!  ", pub: true, at: 1 },
+      { name: "Мадина", rsvp: "maybe", message: "Постараюсь прийти", pub: true, at: 2 },
+      { name: "Борис Петров", rsvp: "no", message: "Не смогу", pub: true, at: 3 },
+      { name: "Вика", rsvp: "yes", message: "   ", pub: true, at: 4 },
+      // Личное сообщение хозяевам: в книгу не попадает.
+      { name: "Тимур", rsvp: "yes", message: "Код от домофона 45", at: 5 },
     ]);
     expect((await get(`/api/public/i/${few.inv.slug}`)).json().guestbook).toEqual([
       { name: "Мадина", text: "Постараюсь прийти" },
       { name: "Анна К.", text: "Поздравляем!" },
     ]);
+  });
+
+  it("сообщение гостя видно в книге только с его согласия, владелец видит его всегда", async () => {
+    const { cookie, inv } = await sharedPublished();
+    const url = `/api/public/i/${inv.slug}/rsvp`;
+    const book = async () => (await get(`/api/public/i/${inv.slug}`)).json().guestbook;
+
+    // Без public сообщение остаётся личным: владелец видит его в списке гостей, гости — нет.
+    const first = await post(url, { name: "Анна Каримова", status: "yes", msg: "Буду после восьми, ключи у соседки" });
+    expect(first.statusCode, first.body).toBe(200);
+    const { guestToken } = first.json();
+    expect((await ownerGuests(cookie, inv.id))[0]).toMatchObject({ message: "Буду после восьми, ключи у соседки", messagePublic: false });
+    expect(await book()).toEqual([]);
+    expect((await get(`/api/public/g/${guestToken}`)).json().guest).toMatchObject({ msg: "Буду после восьми, ключи у соседки", msgPublic: false });
+
+    // Гость сам отметил «показать в гостевой книге».
+    expect((await post(url, { name: "Анна Каримова", status: "yes", msg: "Поздравляем!", public: true, guestToken })).statusCode).toBe(200);
+    expect(await book()).toEqual([{ name: "Анна К.", text: "Поздравляем!" }]);
+    expect((await ownerGuests(cookie, inv.id))[0]).toMatchObject({ message: "Поздравляем!", messagePublic: true });
+    expect((await get(`/api/public/g/${guestToken}`)).json().guest).toMatchObject({ msg: "Поздравляем!", msgPublic: true });
+
+    // Повторный ответ без отметки снова прячет сообщение; пустое сообщение публичным не бывает.
+    await post(url, { name: "Анна Каримова", status: "yes", msg: "Поздравляем!", guestToken });
+    expect(await book()).toEqual([]);
+    await post(url, { name: "Анна Каримова", status: "yes", msg: "  ", public: true, guestToken });
+    expect((await ownerGuests(cookie, inv.id))[0]).toMatchObject({ message: "", messagePublic: false });
+    expect((await post(url, { name: "A", status: "yes", public: "yes" })).statusCode).toBe(400);
+
+    // Личная ссылка: то же правило.
+    const { added } = await personalPublished(["Боря"], 1, { sections: [{ k: "guestbook", on: true }] });
+    const token = added[0]!.token;
+    await post(`/api/public/g/${token}/rsvp`, { status: "yes", msg: "Только хозяевам" });
+    expect((await get(`/api/public/g/${token}`)).json().guestbook).toEqual([]);
+    await post(`/api/public/g/${token}/rsvp`, { status: "yes", msg: "Всем привет", public: true });
+    expect((await get(`/api/public/g/${token}`)).json().guestbook).toEqual([{ name: "Боря", text: "Всем привет" }]);
+  });
+
+  it("остановки маршрута: адрес или ссылка пункта программы сохраняются и приходят гостю, старые пункты — с пустым адресом", async () => {
+    const program = [
+      { time: "15:00", title: "Никах", place: "Мечеть Минор", address: "https://yandex.uz/maps/-/CDabc" },
+      { time: "18:00", title: "Той", place: "Oqsaroy", address: "ул. Навои, 1" },
+      { time: "21:00", title: "Танцы", place: "" },
+    ];
+    const { cookie, inv } = await sharedPublished({ program });
+    const saved = [...program.slice(0, 2), { ...program[2], address: "" }];
+    expect((await req(cookie, "GET", `/api/invitations/${inv.id}`)).json().data.program).toEqual(saved);
+    expect((await get(`/api/public/i/${inv.slug}`)).json().data.program).toEqual(saved);
+
+    // Адрес длиннее 300 символов — 400, сохранённое не меняется.
+    const long = await req(cookie, "PATCH", `/api/invitations/${inv.id}`, { data: { program: [{ time: "", title: "x", address: "x".repeat(301) }] } });
+    expect(long.statusCode).toBe(400);
+    expect((await req(cookie, "GET", `/api/invitations/${inv.id}`)).json().data.program).toEqual(saved);
+
+    // Пункты, сохранённые до появления адреса, читаются с address: "".
+    await db.update(invitations).set({ data: { names: "Азиз & Мадина", program: [{ time: "16:00", title: "Сбор", place: "ЗАГС" }] } }).where(eq(invitations.id, inv.id));
+    await redis.flushdb();
+    expect((await get(`/api/public/i/${inv.slug}`)).json().data.program).toEqual([{ time: "16:00", title: "Сбор", place: "ЗАГС", address: "" }]);
   });
 });
 
@@ -244,7 +307,7 @@ describe("ответ по общей ссылке", () => {
     const { cookie, inv } = await sharedPublished();
     const url = `/api/public/i/${inv.slug}/rsvp`;
 
-    const first = await post(url, { name: "  Анна Каримова ", status: "yes", count: 3, diet: ["veg", "halal", "veg"], msg: " Будем! " });
+    const first = await post(url, { name: "  Анна Каримова ", status: "yes", count: 3, diet: ["veg", "halal", "veg"], msg: " Будем! ", public: true });
     expect(first.statusCode, first.body).toBe(200);
     const { guestToken } = first.json();
     expect(guestToken).toMatch(/^[\w-]{8,64}$/);
@@ -353,6 +416,54 @@ describe("ответ по общей ссылке", () => {
   });
 });
 
+describe("приём ответов закрыт", () => {
+  /** Меняет содержимое опубликованного приглашения в базе (минуя проверки PATCH) и сбрасывает кэш страниц. */
+  const setData = async (id: string, patch: Record<string, unknown>) => {
+    const [inv] = await db.select({ data: invitations.data }).from(invitations).where(eq(invitations.id, id));
+    await db.update(invitations).set({ data: { ...(inv!.data as object), ...patch } }).where(eq(invitations.id, id));
+    await redis.flushdb();
+  };
+  const tashkentToday = () => new Date(Date.now() + 5 * 3600_000).toISOString().slice(0, 10);
+
+  it("rsvpClosed: день после срока ответа или после дня события по Ташкенту", () => {
+    // 18:00 UTC 20 октября — 23:00 в Ташкенте: день события ещё идёт.
+    expect(rsvpClosed({ date: "2026-10-20" }, new Date("2026-10-20T18:00:00Z"))).toBe(false);
+    expect(rsvpClosed({ date: "2026-10-20" }, new Date("2026-10-20T19:30:00Z"))).toBe(true);
+    expect(rsvpClosed({ date: "2026-12-12", rsvpBy: "2026-10-10" }, new Date("2026-10-10T12:00:00Z"))).toBe(false);
+    expect(rsvpClosed({ date: "2026-12-12", rsvpBy: "2026-10-10" }, new Date("2026-10-11T00:00:00Z"))).toBe(true);
+    expect(rsvpClosed({}, new Date("2030-01-01T00:00:00Z"))).toBe(false);
+    expect(rsvpClosed({ date: "", rsvpBy: "" }, new Date("2030-01-01T00:00:00Z"))).toBe(false);
+  });
+
+  it("общая и личная ссылки отвечают 410 после срока ответа и после события, в день события ответ принимается", async () => {
+    const { cookie, inv } = await sharedPublished({ date: "2031-03-14" });
+    const url = `/api/public/i/${inv.slug}/rsvp`;
+    expect((await post(url, { name: "Ранний", status: "yes" })).statusCode).toBe(200);
+
+    await setData(inv.id, { rsvpBy: "2020-01-01" });
+    const late = await post(url, { name: "Поздний", status: "yes" });
+    expect(late.statusCode).toBe(410);
+    expect(late.json()).toEqual({ error: "Приём ответов завершён" });
+    // Страница при этом открывается: срок ответа и дата приходят гостю в data.
+    expect((await get(`/api/public/i/${inv.slug}`)).json().data).toMatchObject({ rsvpBy: "2020-01-01", date: "2031-03-14" });
+
+    await setData(inv.id, { rsvpBy: "", date: tashkentToday() });
+    expect((await post(url, { name: "В день той", status: "yes" })).statusCode).toBe(200);
+    await setData(inv.id, { date: "2020-01-01" });
+    expect((await post(url, { name: "После", status: "yes" })).statusCode).toBe(410);
+    expect((await ownerGuests(cookie, inv.id)).map((g) => g.name)).toEqual(["Ранний", "В день той"]);
+
+    const personal = await personalPublished(["Аня"], 1, { date: "2031-03-14", rsvpBy: "2031-03-01" });
+    const token = personal.added[0]!.token;
+    expect((await post(`/api/public/g/${token}/rsvp`, { status: "maybe" })).statusCode).toBe(200);
+    await setData(personal.inv.id, { rsvpBy: "2020-01-01" });
+    const closed = await post(`/api/public/g/${token}/rsvp`, { status: "yes" });
+    expect(closed.statusCode).toBe(410);
+    expect(closed.json()).toEqual({ error: "Приём ответов завершён" });
+    expect((await ownerGuests(personal.cookie, personal.inv.id))[0].rsvp).toBe("maybe");
+  });
+});
+
 describe("личная ссылка", () => {
   it("форма гостя, ответ и закрытые неоплаченные места", async () => {
     const { cookie, inv, added } = await personalPublished(["Аня Смирнова", "Боря"], 1);
@@ -363,7 +474,7 @@ describe("личная ссылка", () => {
     const view = res.json();
     expect(Object.keys(view).sort()).toEqual([...VIEW_KEYS, "guest"].sort());
     expect(view).toMatchObject({ kind: "personal", slug: inv.slug, data: { names: "Той" } });
-    expect(view.guest).toEqual({ name: "Аня Смирнова", token: a!.token, rsvp: "pending", count: 1, diet: [], msg: "", checkedIn: false });
+    expect(view.guest).toEqual({ name: "Аня Смирнова", token: a!.token, rsvp: "pending", count: 1, diet: [], msg: "", msgPublic: false, checkedIn: false });
 
     expect((await get(`/api/public/g/${b!.token}`)).statusCode).toBe(404);
     expect((await post(`/api/public/g/${b!.token}/rsvp`, { status: "yes" })).statusCode).toBe(404);

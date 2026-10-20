@@ -83,9 +83,13 @@ function allRequests(context: BrowserContext) {
   return list;
 }
 
-/** «Мои приглашения» → конструктор → последний шаг → редактор на странице гостя. */
+/** «Мои приглашения» → редактор на странице гостя: опубликованное «Изменить» открывает в нём сразу, черновик —
+ * в конструкторе, оттуда последний шаг → «✎ К редактору». */
 async function toRefine(page: Page, t: Dict = ru) {
   await page.locator("#my-inv").getByRole("button", { name: t.edit }).first().click();
+  const editor = page.locator("[data-ed-tools]");
+  await editor.or(page.locator("[data-step-of]")).first().waitFor();
+  if (await editor.count()) return;
   await page.getByTitle(t.stepsX.sections).click();
   await page.getByRole("button", { name: "✎ " + t.toEditor }).click();
 }
@@ -160,7 +164,7 @@ describe("публикация и оплата", () => {
     expect((await ordersOf(inv.id))[0]!.status).toBe("paid");
     expect(page.url()).toBe(`${e.base}/app/`);
     expect(await page.locator("input[name=slug]").inputValue()).toBe(saved.slug);
-    expect(await page.locator("pre").innerText()).toContain(`content="${e.base}/i/${saved.slug}"`);
+    expect(await page.locator("pre").textContent()).toContain(`content="${e.base}/i/${saved.slug}"`);
     // Превью ссылки уходит на сервер (PUT /og) и становится og:image страницы.
     await expect.poll(async () => (await invOf(inv.id)).ogImageUrl ?? "", { timeout: 15_000 }).toMatch(/^\/media\/[0-9a-f-]{36}\.jpg$/);
     // Повторно «Получить ссылку» у опубликованного: сразу «Поделиться», без листа оплаты.
@@ -179,10 +183,11 @@ describe("публикация и оплата", () => {
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Конец шагов" });
     await page.locator("#my-inv").getByRole("button", { name: ru.edit }).first().click();
     await page.getByTitle(ru.stepsX.sections).click();
-    // Последний шаг: карточка «Всё готово», в нижней панели — «Получить ссылку» вместо «К редактору».
+    // Последний шаг: карточка «Всё готово» объясняет публикацию, а «Получить ссылку» — одна, в нижней панели
+    // (раньше была ещё красная кнопка в карточке: две одинаковые основные кнопки на одном экране).
     await page.locator("[data-finish]").waitFor();
-    expect(await page.getByRole("button", { name: ru.toShare + " →" }).count()).toBe(2);
-    await page.getByRole("button", { name: ru.toShare + " →" }).last().click();
+    expect(await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).count()).toBe(1);
+    await page.locator('[data-next="share"]').click();
     await sheet(page, "pay").waitFor();
     await sheet(page, "pay").getByRole("button", { name: ru.close }).click();
     // Редактор: кнопка ссылки не уезжает за прокрутку шаблонов.
@@ -517,8 +522,9 @@ describe("страница гостя", () => {
     await page.locator("[data-entry-qr]").waitFor();
     // Язык меняет только просмотр гостя: ничего не сохраняется на сервере.
     const before = problems.requests.length;
-    const lb = page.getByRole("button", { name: D.LANGS.find((l: Dict) => l.code === "ru").label, exact: true }).first();
-    await lb.click();
+    // Кнопка языка открывает меню языков (раньше переключала по кругу).
+    await page.getByRole("button", { name: ru.langAria.replace("{lang}", D.LANG_NAMES.ru) }).click();
+    await page.getByRole("menuitemradio", { name: D.LANG_NAMES.uz }).click();
     await expect.poll(() => page.locator("body").innerText()).not.toContain(ru.thanks);
     expect(problems.requests.slice(before).filter((u) => u.startsWith("/api/"))).toEqual([]);
     await e.expectClean(page, problems);
@@ -549,8 +555,8 @@ describe("страница гостя", () => {
     const inv = await createInvitation(user.id, { data: { names: "Зарина и Акмаль", intro: "none", showGuests: true } });
     await activate(inv.id, { unlocked: true });
     const slug = inv.slug as string;
-    // Другой гость уже ответил и оставил пожелание.
-    const r0 = await e.app.inject({ method: "POST", url: `/api/public/i/${slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Феруза Алиева", status: "yes", count: 2, diet: [], msg: "Счастья вам!" } });
+    // Другой гость уже ответил и оставил пожелание (сам решил показать его в книге: по умолчанию его видит только владелец).
+    const r0 = await e.app.inject({ method: "POST", url: `/api/public/i/${slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Феруза Алиева", status: "yes", count: 2, diet: [], msg: "Счастья вам!", public: true } });
     expect(r0.statusCode).toBe(200);
     const { page, problems, close } = await e.open(`/i/${slug}`, { waitText: "Зарина и Акмаль" });
     expect(await page.locator("body").innerText()).toContain("Счастья вам!");
@@ -559,11 +565,12 @@ describe("страница гостя", () => {
     await page.locator(`#rsvp input[placeholder="${ru.yourName}"]`).fill("Отабек Юсупов");
     await page.locator("#rsvp").getByRole("button", { name: ru.yes }).click();
     await page.locator("#rsvp").locator("textarea").fill("Обязательно будем!");
+    await page.locator("#rsvp [data-msg-public]").click();
     await page.locator("#rsvp").getByRole("button", { name: ru.send }).click();
     await e.waitText(page, ru.thanks);
     await expect.poll(async () => (await guestsOf(inv.id)).length).toBe(2);
     const mine = (await guestsOf(inv.id)).find((g) => g.name === "Отабек Юсупов")!;
-    expect(mine).toMatchObject({ rsvp: "yes", source: "self", message: "Обязательно будем!" });
+    expect(mine).toMatchObject({ rsvp: "yes", source: "self", message: "Обязательно будем!", messagePublic: true });
     const saved = await page.evaluate((s) => JSON.parse(localStorage.getItem("invito.rsvp." + s) || "null"), slug);
     expect(saved.token).toBe(mine.token);
     // После ответа: «кто придёт» с отметкой «вы», пожелание в гостевой книге, QR для входа.
@@ -612,7 +619,7 @@ describe("страница гостя", () => {
     const body = await page.locator("body").innerText();
     const W = D.EVENTS.wedding, L = W.text.ru;
     // Ни выдуманной даты, ни программы, ни телефона, ни дресс-кода, подарков и «Ответьте до».
-    for (const made of [L.contact, L.dress, L.gifts, L.notes, ...W.program.map((x: Dict) => x.ru), ru.replyBy]) expect(body).not.toContain(made);
+    for (const made of [L.contact, L.dress, L.gifts, L.notes, ...W.program.map((x: Dict) => x.ru), ru.replyBy.split("{date}")[0].trim()]) expect(body).not.toContain(made);
     expect(body).not.toMatch(/\d{4} г\./);
     expect(body).not.toMatch(/^\s*·|·\s*$/m);
     for (const own of ["Кафе «Ромашка»", "ул. Навои, 1", "Ждём вас!"]) expect(body).toContain(own);
@@ -676,12 +683,10 @@ describe("страница гостя", () => {
     }
     // «Поделиться» узбекского приглашения: og:title тот же, что у сервера.
     const { page, problems, close } = await e.open("/app/", { context, waitText: "Malika va Jasur" });
-    await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).getByRole("button", { name: ru.edit }).click();
-    await page.getByTitle(ru.stepsX.sections).click();
-    await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
-    await page.getByRole("button", { name: new RegExp("^" + ru.toShare) }).first().click();
+    // Опубликованное: «Получить ссылку» прямо с карточки «Мои приглашения».
+    await page.locator("#my-inv [data-rv]").filter({ hasText: "Malika va Jasur" }).locator("[data-inv-share]").click();
     await e.waitText(page, ru.linkReady);
-    await expect.poll(() => page.locator("pre").innerText()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');
+    await expect.poll(() => page.locator("pre").textContent()).toContain('<meta property="og:title" content="Malika va Jasur — 26-dekabr, 2026">');
     // Превью ссылки — тоже на языке приглашения (интерфейс здесь русский).
     const og = page.locator('img[src^="data:image"]:not([data-qr]):not([alt="QR"])').first();
     await og.waitFor();
@@ -774,9 +779,9 @@ describe("«Поделиться»", () => {
     const fresh = "shahzoda-" + inv.slug;
     await slugIn.fill(fresh);
     await expect.poll(async () => (await invOf(inv.id)).slug, { timeout: 10_000 }).toBe(fresh);
-    await expect.poll(() => page.locator("pre").innerText()).toContain(`${e.base}/i/${fresh}`);
-    expect(await page.locator("pre").innerText()).toContain("Ждём вас на нашей свадьбе!");
-    expect(await page.locator("pre").innerText()).not.toContain("invito.app");
+    await expect.poll(() => page.locator("pre").textContent()).toContain(`${e.base}/i/${fresh}`);
+    expect(await page.locator("pre").textContent()).toContain("Ждём вас на нашей свадьбе!");
+    expect(await page.locator("pre").textContent()).not.toContain("invito.app");
     // Пароль страницы: включение и ввод сохраняют accessCode.
     await page.getByRole("button", { name: new RegExp("^" + ru.pw) }).click();
     await page.locator("input[name=access-code]").fill("2026");

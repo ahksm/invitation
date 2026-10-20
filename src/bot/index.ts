@@ -313,7 +313,14 @@ export function createBot(ctx: Ctx) {
   // Ответ гостя кнопкой под карточкой приглашения.
   verified.callbackQuery(/^rsvp:([0-9a-f-]{36}):(yes|maybe|no)$/, async (c) => {
     const status = c.match[2] as RsvpStatus;
-    const token = await rsvpFromChat(ctx, c.match[1]!, c.chat!.id, status);
+    let token: string | null;
+    try {
+      token = await rsvpFromChat(ctx, c.match[1]!, c.chat!.id, status);
+    } catch (e) {
+      // Срок ответа или день события прошли: ответ не меняется, гостю — объяснение.
+      if (e instanceof HttpError && e.statusCode === 410) return void (await c.answerCallbackQuery({ text: bt(c.lang, "rsvpClosed"), show_alert: true }));
+      throw e;
+    }
     const view = token ? await personalView(ctx, token) : null;
     if (!token || !view) return void (await c.answerCallbackQuery({ text: bt(c.lang, "guestNotFound"), show_alert: true }));
     await c.answerCallbackQuery({ text: bt(view.language, "rsvpSaved") });

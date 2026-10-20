@@ -6,6 +6,7 @@ import { parseRange } from "../src/routes/media.js";
 import { sniffMedia } from "../src/services/media.js";
 import { isPreviewBot, longDate, shortName } from "../src/services/public.js";
 import { inviteText, otpText } from "../src/sms/texts.js";
+import { hasUrl, mapLink, mapSearch, mapText } from "../web/invito-engine.js";
 import { samples } from "./helpers.js";
 
 describe("данные дизайна", () => {
@@ -97,9 +98,14 @@ describe("содержимое приглашения (InvContent)", () => {
     const ok = schema.parse({
       names: "Анна и Тимур",
       dressColors: ["#AABBCC"],
-      program: [{ time: "16:00", title: "Сбор гостей", place: null }, { time: "", title: "Ужин" }],
+      program: [
+        { time: "16:00", title: "Сбор гостей", place: null },
+        { time: "", title: "Ужин" },
+        { time: "17:30", title: "Фото", place: "Парк", address: "https://yandex.uz/maps/-/CDabc", extra: 1 },
+      ],
       date: "2026-12-26",
       time: "18:30",
+      rsvpBy: "2026-12-10",
       palette: 2,
       music: "custom",
       intro: "scratch",
@@ -110,9 +116,12 @@ describe("содержимое приглашения (InvContent)", () => {
     });
     expect(ok).not.toHaveProperty("extra");
     expect(ok.dressColors).toEqual(["#aabbcc"]);
+    expect(ok.rsvpBy).toBe("2026-12-10");
+    expect(schema.parse({ rsvpBy: "" })).toEqual({ rsvpBy: "" });
     expect(ok.program).toEqual([
-      { time: "16:00", title: "Сбор гостей", place: "" },
-      { time: "", title: "Ужин", place: "" },
+      { time: "16:00", title: "Сбор гостей", place: "", address: "" },
+      { time: "", title: "Ужин", place: "", address: "" },
+      { time: "17:30", title: "Фото", place: "Парк", address: "https://yandex.uz/maps/-/CDabc" },
     ]);
     const bad: Record<string, unknown>[] = [
       { names: "x".repeat(201) },
@@ -122,9 +131,14 @@ describe("содержимое приглашения (InvContent)", () => {
       { dressColors: Array(7).fill("#000000") },
       { program: Array(9).fill({ time: "", title: "x" }) },
       { program: [{ time: "25:00", title: "x" }] },
+      { program: [{ time: "", title: "x", address: "x".repeat(301) }] },
+      { program: [{ time: "", title: "x", address: 5 }] },
       { date: "2026-02-30" },
       { date: "26.12.2026" },
       { time: "7:00" },
+      { rsvpBy: "2026-13-01" },
+      { rsvpBy: "10.12.2026" },
+      { rsvpBy: null },
       { palette: 3 },
       { palette: 1.5 },
       { music: "rock" },
@@ -170,6 +184,61 @@ describe("содержимое приглашения (InvContent)", () => {
       time: "18:00",
     });
     expect(coerceContent(null, "classic")).toEqual({});
+  });
+});
+
+describe("ссылки остановок маршрута (web/invito-engine.js)", () => {
+  it("ссылкой становится только https-адрес карты из списка, как его записывает URL", () => {
+    for (const ok of [
+      "https://yandex.uz/maps/-/CDabc",
+      "https://yandex.ru/maps/?ll=69.24,41.31&z=16",
+      "https://maps.yandex.com/?text=Oqsaroy",
+      "https://maps.app.goo.gl/AbCdEf",
+      "https://goo.gl/maps/xyz",
+      "https://www.google.com/maps/place/Oqsaroy",
+      "https://google.co.uz/maps?q=1",
+      "https://maps.google.ru/?q=1",
+      "https://2gis.uz/tashkent/firm/123",
+      "https://go.2gis.com/abc",
+    ]) {
+      expect(mapLink(ok), ok).toBe(new URL(ok).href);
+    }
+    for (const bad of [
+      "javascript:alert(1)",
+      " JaVaScRiPt:alert(1)",
+      "data:text/html,<script>alert(1)</script>",
+      "http://yandex.uz/maps/-/CDabc",
+      "https://yandex.uz.evil.example/maps",
+      "https://evil.example/yandex.uz",
+      "https://evilyandex.uz/maps",
+      "https://yandex.com.evil/maps",
+      "https://user:pw@yandex.uz/maps",
+      "https://yandex.uz:8443/maps",
+      "https://www.google.com/search?q=1",
+      "https://goo.gl/abc",
+      "www.yandex.uz/maps",
+      "ул. Навои, 1",
+      "https://yandex.uz/maps/" + "x".repeat(300),
+    ]) {
+      expect(mapLink(bad), bad).toBe("");
+    }
+    // Ссылка внутри текста и после чужой ссылки; хвостовая пунктуация — не часть адреса.
+    expect(mapLink("ул. Навои, 1 (https://yandex.uz/maps/-/CDx).")).toBe("https://yandex.uz/maps/-/CDx");
+    expect(mapLink("https://evil.example/x https://maps.app.goo.gl/abc")).toBe("https://maps.app.goo.gl/abc");
+    // Обратная косая черта не уводит на другой хост: адрес остаётся на yandex.uz.
+    expect(mapLink("https://yandex.uz\\@evil.example")).toBe("https://yandex.uz/@evil.example");
+  });
+
+  it("текст адреса без ссылок, поиск по Яндекс Картам", () => {
+    expect(mapText("ул. Навои, 1 (https://yandex.uz/maps/-/CDx).")).toBe("ул. Навои, 1");
+    expect(mapText("javascript:alert(1)")).toBe("");
+    expect(mapText("http://maps.google.com/?q=x")).toBe("");
+    expect(mapText("Toshkent: Navoiy ko‘chasi, 1 (hovli tomondan)")).toBe("Toshkent: Navoiy ko‘chasi, 1 (hovli tomondan)");
+    expect(hasUrl("Toshkent: Navoiy ko‘chasi, 1")).toBe(false);
+    expect(hasUrl("javascript:alert(1)")).toBe(true);
+    expect(hasUrl("см. www.example.com")).toBe(true);
+    expect(mapSearch("ЗАГС, ул. Навои 1")).toBe("https://yandex.uz/maps/?text=" + encodeURIComponent("ЗАГС, ул. Навои 1"));
+    expect(mapSearch("  ")).toBe("");
   });
 });
 

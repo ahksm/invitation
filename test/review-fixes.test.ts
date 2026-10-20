@@ -330,6 +330,19 @@ describe("бот", () => {
     expect(h.of("answerCallbackQuery").at(-1)!.payload).toMatchObject({ text: bt("ru", "guestNotFound"), show_alert: true });
     expect((await guestOf(anya.id)).rsvp).toBe("yes");
 
+    // Кнопка не трогает пожелание и его видимость в гостевой книге.
+    await db.update(guests).set({ message: "Поздравляем!", messagePublic: true }).where(eq(guests.id, anya.id));
+    await h.press(tg, `rsvp:${anya.id}:maybe`);
+    expect(await guestOf(anya.id)).toMatchObject({ rsvp: "maybe", message: "Поздравляем!", messagePublic: true });
+
+    // После срока ответа кнопка отвечает предупреждением, ответ не меняется.
+    const [row] = await db.select({ data: invitations.data }).from(invitations).where(eq(invitations.id, inv.id));
+    await db.update(invitations).set({ data: { ...(row!.data as object), rsvpBy: "2020-01-01" } }).where(eq(invitations.id, inv.id));
+    await h.press(tg, `rsvp:${anya.id}:no`);
+    expect(h.of("answerCallbackQuery").at(-1)!.payload).toMatchObject({ text: bt("ru", "rsvpClosed"), show_alert: true });
+    expect((await guestOf(anya.id)).rsvp).toBe("maybe");
+    await db.update(invitations).set({ data: row!.data }).where(eq(invitations.id, inv.id));
+
     // Место Бори не оплачено: ссылка не открывается, чат не привязывается.
     await h.message(tg, `/start g_${borya.token}`);
     expect(h.replies().at(-1)).toBe(bt("ru", "guestNotFound"));

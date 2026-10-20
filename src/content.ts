@@ -50,12 +50,16 @@ const fields = {
   dressColors: z
     .array(z.string().regex(/^#[0-9a-fA-F]{6}$/, "Цвет в формате #rrggbb").transform((c) => c.toLowerCase()))
     .max(6),
+  // Пункты программы дня; пункт с местом — остановка маршрута на странице гостя. address — адрес остановки
+  // или ссылка на карту: ссылкой страница гостя делает только https-адрес картографического сайта из своего
+  // списка (Яндекс, Google, 2ГИС), остальное показывает текстом и ищет на Яндекс Картах.
   program: z
     .array(
       z.object({
         time: hhmmOrEmpty.default(""),
         title: text(120).default(""),
         place: text(200).nullish().transform((p) => p ?? ""),
+        address: text(300).nullish().transform((a) => a ?? ""),
       }),
     )
     .max(8),
@@ -64,6 +68,9 @@ const fields = {
   // og:title, напоминания, бот и SMS обходятся без неё.
   date: isoDateOrEmpty,
   time: hhmmOrEmpty,
+  // Срок ответа гостей (выбирает владелец, необязательно): «Пожалуйста, ответьте до …» на странице гостя.
+  // После этого дня по Ташкенту и после дня события ответы не принимаются (rsvpClosed в src/services/public.ts).
+  rsvpBy: isoDateOrEmpty,
   countdown: z.boolean(),
   showGuests: z.boolean(),
   cover: mediaOrEmpty,

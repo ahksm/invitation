@@ -103,9 +103,10 @@ zod-схема (лишние ключи отбрасываются):
 | dress, secret | ≤ 500 |
 | gifts, notes | ≤ 1000 |
 | dressColors | массив `#rrggbb`, не больше 6 |
-| program | массив не больше 8 из `{ time: "HH:MM" или "", title ≤ 120, place ≤ 200 }` |
+| program | массив не больше 8 из `{ time: "HH:MM" или "", title ≤ 120, place ≤ 200, address ≤ 300 }`; `address` необязателен (по умолчанию `""`, старые пункты читаются с `""`) |
 | date | `YYYY-MM-DD` или `""` (дата стёрта) |
 | time | `HH:MM` или `""` (время стёрто) |
+| rsvpBy | `YYYY-MM-DD` или `""`: срок ответа гостей, необязателен (по умолчанию его нет) |
 | countdown, showGuests | boolean |
 | cover, musicSrc, video | MediaUrl или "" |
 | gallery | массив MediaUrl, не больше 12 |
@@ -117,7 +118,11 @@ zod-схема (лишние ключи отбрасываются):
 | motion | `still|zoom|video` |
 | sections | массив `{ k: одна из SECTIONS, on: boolean }`; сервер убирает повторы и дописывает недостающие секции в конец с `on: false` |
 
+Программа и маршрут: пункт с `place` — остановка маршрута на странице гостя. На рисованной карте отметки расставляются по числу мест (одна на место, повторное место — та же отметка); остановка с названием главного места (`venue`) — это его отметка «●», иначе место встаёт в маршрут по `time`. `address` — адрес остановки или ссылка на карту. Ссылкой страница гостя делает только `https://` адрес картографического сайта (первая такая ссылка в поле): `yandex.*` (uz, ru, com, kz, kg, by, ua, az, tj, tm, com.tr), `maps.app.goo.gl`, `goo.gl/maps`, `google.*/maps` и `maps.google.*` (com, co.uz, ru, kz, kg, by, com.ua, az, tj, tm, com.tr), `2gis.*` (uz, ru, com, kz, kg, ae); без логина, пароля и порта в адресе (`mapLink` в `web/invito-engine.js`). Остальные ссылки (`http:`, `javascript:`, `data:`, другие сайты) не становятся ссылкой, не показываются гостю и не идут в поиск: «Как добраться» тогда ведёт на поиск Яндекс Карт по месту и тексту адреса. Сервер `address` не разбирает: это текст ≤ 300. Конструктор не сохраняет пункты без названия и места и даёт не больше 8 пунктов.
+
 MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://images.unsplash.com/...` (стоковые картинки по умолчанию). `data:`, `blob:` и другие хосты отклоняются с 400.
+
+Срок ответа `rsvpBy` выбирает владелец (шаг «Дата и время» конструктора, не позже даты события). Страница гостя пишет «Пожалуйста, ответьте до …» только если срок задан; выдуманного срока нет. Приём ответов закрыт, когда по календарю Ташкента наступил день после `rsvpBy` или после `date` (в сам день события ответы ещё принимаются, см. 3.6).
 
 Стёртые дата и время: `""` сохраняется как есть и возвращается в `data` (фронтенд не подставляет вместо него значение шаблона); `null` в `PATCH` удаляет ключ. Без даты: страница гостя показывает остальное, `og:title` — только имена, бот и SMS пишут текст без даты, напоминания по расписанию не отправляются (утреннему нужна дата, `r1d` и `r3h` — дата и время), «Напомнить» уходит без даты. Без времени: дата без времени, из напоминаний по расписанию только утреннее. Неверная дата или время — 400 с понятным текстом («Такой даты нет», «Время в формате ЧЧ:ММ»).
 
@@ -161,7 +166,7 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 Гость `Guest`:
 ```
 { id, name, phone, seat, token, link: "<APP_URL>/g/<token>", rsvp: "pending"|"yes"|"no"|"maybe",
-  plus, group: "family"|"friends"|"work"|"other", tableNo, checkedIn, checkedInAt, message,
+  plus, group: "family"|"friends"|"work"|"other", tableNo, checkedIn, checkedInAt, message, messagePublic,
   diet: ("veg"|"halal"|"nonut"|"noalc")[], source: "owner"|"self", openedAt, respondedAt,
   telegramLinked: boolean, paid: boolean, sms: { status, count } | null }
 ```
@@ -181,17 +186,19 @@ MediaUrl: `/media/<id>.<ext>` (загруженный файл) или `https://
 `PublicView`:
 ```
 { kind: "shared"|"personal", slug, language, template, event, data: InvContent,
-  guest?: { name, token, rsvp, count, diet, msg, checkedIn },
+  guest?: { name, token, rsvp, count, diet, msg, msgPublic, checkedIn },
   who?: { count, list: [{ name: "Анна К.", plus }], more },
   guestbook?: [{ name: "Анна К.", text }],
   botUsername: string|null, appUrl }
 ```
 - `who` только если `data.showGuests` и секция `who` включена: гости с ответом «да», до 14 имён (имя и первая буква фамилии), `count` = сумма `1 + plus`.
-- `guestbook` только если секция `guestbook` включена: до 30 последних сообщений гостей с ответом «да» или «может быть».
+- `guestbook` только если секция `guestbook` включена: до 30 последних сообщений гостей с ответом «да» или «может быть», которые гость сам разрешил показать (`public: true` в ответе, колонка `guests.message_public`). Остальные сообщения видит только владелец (`Guest.message`, `messagePublic: false`); сообщения, оставленные до появления флага, тоже только для владельца.
 - `GET /api/public/i/:slug?code=` → `PublicView`. 404, если приглашение не найдено, не опубликовано, не оплачено, в архиве или в режиме `personal`. Если задан пароль и `code` не совпал: 401 `{ locked: true, look: { template, font, palette, language }, error }` (лимит 10 попыток в минуту на IP; `language` — язык приглашения для формы пароля).
 - `GET /api/public/g/:token` → `PublicView` с `guest`. 404, если гость не найден, приглашение не опубликовано или место не оплачено. При первом открытии ставит `openedAt` и событие `opened` (запись вне кэша).
-- `POST /api/public/i/:slug/rsvp` `{ name (1..80), status, count (1..8), diet, msg (≤ 500), code?, guestToken? }` → `{ guestToken }`. Создаёт или обновляет гостя с `source: "self"`. Лимит 6 в минуту на IP, не больше 1000 таких гостей на приглашение.
-- `POST /api/public/g/:token/rsvp` `{ status, count, diet, msg }` → `{ ok: true }`.
+- `POST /api/public/i/:slug/rsvp` `{ name (1..80), status, count (1..8), diet, msg (≤ 500), public?, code?, guestToken? }` → `{ guestToken }`. Создаёт или обновляет гостя с `source: "self"`. Лимит 6 в минуту на IP, не больше 1000 таких гостей на приглашение.
+- `POST /api/public/g/:token/rsvp` `{ status, count, diet, msg, public? }` → `{ ok: true }`.
+- `public` (по умолчанию `false`): показать `msg` в гостевой книге. Повторный ответ без `public` делает сообщение снова личным. Ответ кнопкой в боте сохраняет прежний выбор.
+- После срока ответа (`data.rsvpBy`) и после дня события (`data.date`) по Ташкенту оба запроса отвечают 410 «Приём ответов завершён» (не 409: тот означает, что общих ответов слишком много), ответ не меняется; кнопки ответа в боте показывают то же. Страница гостя вместо формы пишет, что приём ответов завершён.
 - Ответ гостя: `plus = status === "no" ? 0 : count - 1`, `respondedAt`, событие со статусом, уведомление владельцу в Telegram, если `settings.notify` и у владельца есть `telegramId`.
 
 ### 3.7 Файлы
