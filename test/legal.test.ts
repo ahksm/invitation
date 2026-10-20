@@ -89,6 +89,8 @@ describe("страницы /oferta, /privacy, /contacts", () => {
     const privacy = (await page("/privacy")).body;
     expect(privacy).toContain("ЗРУ-547");
     for (const s of ["Eskiz", "Multicard", "Telegram", "cookie"]) expect(privacy).toContain(s);
+    // Сроки хранения совпадают с тем, что делает код: SMS гостей обезличиваются вместе с гостями.
+    expect(privacy).toContain("у SMS гостям номер и текст (с именем гостя и его личной ссылкой) стираются");
     expect(privacy).toContain('<a href="/contacts">контактам</a>');
     // Ссылки между документами сохраняют язык.
     const uz = (await page("/oferta?lang=uz")).body;

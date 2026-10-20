@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { guests, invitations, orders, templates } from "../src/db/schema.js";
+import { guests, invitations, orders, smsMessages, templates } from "../src/db/schema.js";
 import { seed } from "../src/db/seed.js";
 import { defaultPrices } from "../src/pricing.js";
 import { APP_URL, samples, testContext } from "./helpers.js";
@@ -392,6 +392,45 @@ describe("удаление, копия и публикация", () => {
     expect(row).toMatchObject({ status: "archived", paidSeats: 2 });
     // Страница гостя, только что попавшая в кэш, тоже закрыта.
     expect((await t.app.inject({ url: guestUrl })).statusCode).toBe(404);
+  });
+
+  it("SMS удалённых гостей остаются в журнале без номера и текста, коды входа не трогаются", async () => {
+    const { cookie } = await user();
+    const { inv, added } = await personalWithGuests(cookie, ["Аня", "Боря", "Вика"], 3);
+    for (const [i, g] of added.entries()) await req(cookie, "PATCH", `/api/invitations/${inv.id}/guests/${g.id}`, { phone: `+998 90 555 00 0${i}` });
+    await req(cookie, "POST", `/api/invitations/${inv.id}/publish`);
+    const [otp] = await db.insert(smsMessages).values({ purpose: "otp", phone: "998905559999", provider: "mock", status: "sent" }).returning();
+    await db.update(templates).set({ smsEnabled: true }).where(eq(templates.slug, "wedding-classic"));
+    try {
+      expect((await req(cookie, "POST", `/api/invitations/${inv.id}/sms`, {})).json()).toMatchObject({ sent: 3 });
+    } finally {
+      await db.update(templates).set({ smsEnabled: false }).where(eq(templates.slug, "wedding-classic"));
+    }
+    const log = () =>
+      db
+        .select({ id: smsMessages.id, phone: smsMessages.phone, text: smsMessages.text, status: smsMessages.status, providerRef: smsMessages.providerRef, invitationId: smsMessages.invitationId })
+        .from(smsMessages)
+        .where(eq(smsMessages.invitationId, inv.id))
+        .orderBy(smsMessages.phone);
+    const before = await log();
+    expect(before.map((r) => r.phone)).toEqual(["998905550000", "998905550001", "998905550002"]);
+    expect(before[0]!.text).toContain(`/g/${added[0].token}`);
+
+    // Один гость: его SMS обезличивается, остальные остаются как были.
+    expect((await req(cookie, "DELETE", `/api/invitations/${inv.id}/guests/${added[0].id}`)).statusCode).toBe(204);
+    const one = await log();
+    const gone = one.find((r) => r.id === before[0]!.id)!;
+    expect(gone).toEqual({ ...before[0], phone: "", text: null });
+    expect(one.filter((r) => r.phone).map((r) => r.text)).toEqual(before.slice(1).map((r) => r.text));
+
+    // Архив: обезличиваются все SMS приглашения; id, статус, ссылка провайдера и приглашение остаются для сверки и лимитов.
+    expect((await req(cookie, "DELETE", `/api/invitations/${inv.id}`)).statusCode).toBe(204);
+    const after = await log();
+    expect(after).toHaveLength(3);
+    for (const r of after) expect(r).toEqual({ ...before.find((b) => b.id === r.id), phone: "", text: null });
+    expect(after.every((r) => r.providerRef && r.status === "sent" && r.invitationId === inv.id)).toBe(true);
+    const [code] = await db.select().from(smsMessages).where(eq(smsMessages.id, otp!.id));
+    expect(code).toMatchObject({ phone: "998905559999", purpose: "otp" });
   });
 
   it("черновик с начатой оплатой не удаляется насовсем", async () => {

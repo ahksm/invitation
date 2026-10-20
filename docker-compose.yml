@@ -21,6 +21,13 @@ services:
       redis:
         condition: service_started
     restart: unless-stopped
+    # Журнал запросов (в нём IP-адреса) хранится ограниченно, как обещает политика конфиденциальности:
+    # не больше 5 файлов по 20 МБ, самые старые записи удаляются.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
 
   db:
     image: postgres:16-alpine

@@ -258,4 +258,26 @@ describe("файлы в содержимом приглашения", () => {
     }
     expect((await patch({ gallery: Array(13).fill(photo) })).statusCode).toBe(400);
   });
+
+  it("удалённый черновик удаляется вместе со своими файлами; файлы копии остаются", async () => {
+    const { cookie } = await user();
+    const { url: cover } = (await upload(cookie, samples.jpeg, { filename: "c.jpg" })).json();
+    const { url: photo } = (await upload(cookie, samples.png)).json();
+    const { url: song } = (await upload(cookie, samples.mp3, { filename: "a.mp3" })).json();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { cover, gallery: [photo], musicSrc: song, music: "custom" } })).json();
+    // Копия ссылается на ту же обложку.
+    const copy = (await req(cookie, "POST", `/api/invitations/${inv.id}/duplicate`)).json();
+    expect(copy.data.cover).toBe(cover);
+    await req(cookie, "PATCH", `/api/invitations/${copy.id}`, { data: { gallery: [], musicSrc: "" } });
+    const file = (url: string) => t.app.inject({ url });
+    for (const u of [cover, photo, song]) expect((await file(u)).statusCode, u).toBe(200);
+
+    expect((await req(cookie, "DELETE", `/api/invitations/${inv.id}`)).statusCode).toBe(204);
+    expect((await file(photo)).statusCode).toBe(404);
+    expect((await file(song)).statusCode).toBe(404);
+    expect((await file(cover)).statusCode).toBe(200);
+    const idOf = (u: string) => u.slice("/media/".length).split(".")[0]!;
+    expect(await db.select().from(media).where(eq(media.id, idOf(photo)))).toEqual([]);
+    expect(stored().some((f) => f.startsWith(idOf(photo)))).toBe(false);
+  });
 });

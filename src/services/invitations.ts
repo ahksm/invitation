@@ -22,6 +22,7 @@ import { quoteTemplate, templatePrice } from "../pricing.js";
 import { logEvent } from "./events.js";
 import { assertOwnMedia, deleteOwnMedia, mediaUrl, saveBuffer, sniffMedia } from "./media.js";
 import { getPrices } from "./settings.js";
+import { anonymizeGuestSms } from "./sms-log.js";
 import { getAccess } from "./users.js";
 
 export const randomToken = (bytes = 12) => randomBytes(bytes).toString("base64url");
@@ -444,11 +445,11 @@ export async function updateInvitation(
 }
 
 /**
- * Удаляет приглашение. Черновик без оплат (и без начатых оплат) удаляется насовсем, остальное
+ * Удаляет приглашение. Черновик без оплат (и без начатых оплат) удаляется насовсем вместе со своими файлами, остальное
  * уходит в архив: публичные страницы отдают 404, оплаченное (заказы, paid_seats) не теряется.
- * Гости архивного приглашения удаляются сразу: из архива приглашение не возвращается, владелец
- * его больше не видит, а политика конфиденциальности обещает хранить данные гостей, только пока
- * организатор не удалит гостя или приглашение.
+ * Гости архивного приглашения удаляются сразу, а их SMS в журнале обезличиваются: из архива
+ * приглашение не возвращается, владелец его больше не видит, а политика конфиденциальности обещает
+ * хранить данные гостей, только пока организатор не удалит гостя или приглашение.
  */
 export async function deleteInvitation(ctx: Pick<Ctx, "db" | "cache" | "config" | "log">, userId: string, id: string) {
   const inv = await getOwnInvitation(ctx, userId, id);
@@ -459,12 +460,16 @@ export async function deleteInvitation(ctx: Pick<Ctx, "db" | "cache" | "config" 
   if (inv.status === "draft" && !inv.unlocked && inv.paidSeats === 0 && orderCount === 0) {
     // Черновик никогда не попадал в кэш публичных страниц: сбрасывать нечего.
     await ctx.db.delete(invitations).where(eq(invitations.id, inv.id));
-    await deleteOwnMedia(ctx, userId, inv.ogImageUrl);
+    // Вместе с ним удаляются его файлы; те, что есть в других приглашениях владельца (копии), остаются.
+    for (const url of new Set([inv.ogImageUrl, ...contentMediaUrls(coerceContent(inv.data, null))])) await deleteOwnMedia(ctx, userId, url);
     return;
   }
   const removed = await ctx.db.transaction(async (tx) => {
     await tx.update(invitations).set({ status: "archived" }).where(eq(invitations.id, inv.id));
-    return tx.delete(guests).where(eq(guests.invitationId, inv.id)).returning({ token: guests.token });
+    const gone = await tx.delete(guests).where(eq(guests.invitationId, inv.id)).returning({ token: guests.token });
+    // После удаления гостей: SMS, начатая параллельно, либо уже записана и обезличится, либо не пройдёт по guest_id.
+    await anonymizeGuestSms(tx, { invitationId: inv.id });
+    return gone;
   });
   // Гостей в базе уже нет: их страницы в кэше сбрасываются по ключам удалённых строк.
   await ctx.cache.invalidate(cacheKeys.publicShared(inv.slug), ...removed.map((g) => cacheKeys.publicGuest(g.token)));

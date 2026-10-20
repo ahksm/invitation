@@ -8,6 +8,7 @@ import { appUrlOf, assertNotArchived, getOwnInvitation, invalidateInvitation, lo
 import { notifyOwnerLater } from "./notify.js";
 import { isGuestPaid, paidByRank } from "./seats.js";
 import { guestSmsStatuses } from "./sms.js";
+import { anonymizeGuestSms } from "./sms-log.js";
 
 export type GuestDto = {
   id: string;
@@ -174,12 +175,21 @@ export async function updateGuest(
   return guestDto(ctx, inv, updated!);
 }
 
+/** Удаляет гостя. Его SMS остаются в журнале обезличенными: без номера и текста (см. anonymizeGuestSms). */
 export async function removeGuest(ctx: Pick<Ctx, "db" | "cache">, userId: string, invitationId: string, guestId: string) {
   const inv = await getOwnInvitation(ctx, userId, invitationId);
-  const [g] = await ctx.db
-    .delete(guests)
-    .where(and(eq(guests.id, guestId), eq(guests.invitationId, inv.id)))
-    .returning({ token: guests.token });
+  const g = await ctx.db.transaction(async (tx) => {
+    // Строка гостя под блокировкой: SMS ему, начатая параллельно, не запишется между обезличиванием и удалением.
+    const [row] = await tx
+      .select({ id: guests.id, token: guests.token })
+      .from(guests)
+      .where(and(eq(guests.id, guestId), eq(guests.invitationId, inv.id)))
+      .for("update");
+    if (!row) return null;
+    await anonymizeGuestSms(tx, { guestId: row.id });
+    await tx.delete(guests).where(eq(guests.id, row.id));
+    return row;
+  });
   if (!g) throw new HttpError(404, "Гость не найден");
   // Следующие гости могли стать оплаченными, а ответ удалённого пропадает из «Кто придёт».
   await ctx.cache.invalidate(cacheKeys.publicGuest(g.token));
