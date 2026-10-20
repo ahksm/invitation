@@ -3,12 +3,18 @@ import type { Page } from "playwright-core";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { settings } from "../../src/db/schema.js";
 import { setLegal } from "../../src/services/settings.js";
+import { I18N } from "../../web/invito-data.js";
 import { startE2E, type E2E } from "./helpers.js";
 
 /**
  * Оферта, политика и контакты в браузере: реквизиты из админки («Реквизиты»), страницы на телефоне
- * и компьютере без нарушений CSP и горизонтальной прокрутки, переключение языка и документов.
+ * и компьютере без нарушений CSP и горизонтальной прокрутки, переключение языка и документов; ссылки на них
+ * из приложения (подвал главной, согласие с офертой под кнопками оплаты).
  */
+
+type Dict = Record<string, any>;
+const ru = I18N.ru as Dict;
+const uz = I18N.uz as Dict;
 
 let e: E2E;
 const PHONE = { width: 390, height: 844 };
@@ -160,5 +166,75 @@ describe("страницы документов", () => {
     expect(color).toBe("rgb(241, 235, 224)");
     await e.shot(page, "legal-privacy-uzc-dark.png");
     await context.close();
+  });
+});
+
+describe("ссылки из приложения", () => {
+  /** Текст согласия так, как его собирает приложение: «Нажимая «{btn}», вы принимаете условия {link}». */
+  const consent = (t: Dict, btn: string) => t.payConsent.replace("{btn}", btn).replace("{link}", t.consentLink);
+  const text = (page: Page, selector: string) => page.locator(selector).first().evaluate((x) => (x.textContent || "").replace(/\s+/g, " ").trim());
+
+  it("подвал главной и согласие под кнопками оплаты ведут на оферту на языке интерфейса", async () => {
+    const context = await e.newContext({ viewport: PHONE });
+    const user = await e.signIn(context);
+    const res = await e.app.inject({
+      method: "POST",
+      url: "/api/invitations",
+      headers: { cookie: `session=${e.app.jwt.sign({ sub: user.id })}`, origin: e.base },
+      payload: { template: "wedding-classic", mode: "shared", language: "ru", data: { names: "Согласие тест", intro: "none" } },
+    });
+    expect(res.statusCode, res.body).toBeLessThan(300);
+    const { page, problems, close } = await e.open("/app/", { context, waitText: "Согласие тест" });
+
+    // Подвал: «Публичная оферта» открывает страницу сервера в новой вкладке.
+    const foot = page.locator('[data-foot-link="oferta"]');
+    await foot.scrollIntoViewIfNeeded();
+    const [offer] = await Promise.all([context.waitForEvent("page"), foot.click()]);
+    await e.waitText(offer, "администрация сайта");
+    expect(offer.url()).toBe(`${e.base}/oferta`);
+    expect(await offer.title()).toBe("Публичная оферта — Invito");
+    await offer.close();
+
+    // Лист оплаты черновика: под «Оплатить …» и под кнопкой подписки — согласие со ссылкой на оферту.
+    await page.locator('#my-inv [data-inv-share="publish"]').first().click();
+    const pay = page.locator('[data-sheet="pay"]');
+    await pay.locator('[data-consent="pay"]').waitFor();
+    expect(await pay.locator('[data-pay="go"]').innerText()).toMatch(new RegExp("^" + ru.payWord + " "));
+    expect(await text(page, '[data-sheet="pay"] [data-consent="pay"]')).toBe(consent(ru, ru.payWord));
+    expect(consent(ru, ru.payWord)).toBe("Нажимая «Оплатить», вы принимаете условия оферты");
+    expect(await pay.locator('[data-pay="sub"]').innerText()).toMatch(new RegExp("^" + ru.subBuy + " "));
+    expect(await text(page, '[data-sheet="pay"] [data-consent="sub"]')).toBe(consent(ru, ru.subBuy));
+    for (const k of ["pay", "sub"]) {
+      const a = pay.locator(`[data-consent="${k}"] a`);
+      expect(await a.getAttribute("href"), k).toBe("/oferta");
+      expect(await a.getAttribute("target"), k).toBe("_blank");
+    }
+    const [fromPay] = await Promise.all([context.waitForEvent("page"), pay.locator('[data-consent="pay"] a').click()]);
+    await e.waitText(fromPay, "Публичная оферта");
+    expect(fromPay.url()).toBe(`${e.base}/oferta`);
+    await fromPay.close();
+    // Лист оплаты остался открытым.
+    await pay.locator('[data-pay="go"]').waitFor();
+    await e.expectClean(page, problems);
+    await close();
+
+    // Экран цен на узбекском: согласие под сроками подписки, оферта — на узбекском.
+    const uzc = await e.newContext({ viewport: PHONE });
+    await uzc.addInitScript(() => { try { localStorage.setItem("invito.lang", "uz"); } catch (x) {} });
+    const o = await e.open("/app/#/pricing", { context: uzc, waitText: uz.pricingTitle });
+    await o.page.locator('[data-consent="pricing"]').waitFor();
+    expect(await o.page.locator("[data-buy-sub]").first().innerText()).toBe(uz.subBuy);
+    expect(await text(o.page, '[data-consent="pricing"]')).toBe(consent(uz, uz.subBuy));
+    expect(await o.page.locator('[data-consent="pricing"] a').getAttribute("href")).toBe("/oferta?lang=uz");
+    const [uzOffer] = await Promise.all([uzc.waitForEvent("page"), o.page.locator('[data-consent="pricing"] a').click()]);
+    await e.waitText(uzOffer, "Ommaviy oferta");
+    expect(uzOffer.url()).toBe(`${e.base}/oferta?lang=uz`);
+    // И подвал: политика на узбекском.
+    await o.page.locator("[data-pricing-back]").click();
+    const priv = o.page.locator('[data-foot-link="privacy"]');
+    await priv.waitFor();
+    expect(await priv.getAttribute("href")).toBe("/privacy?lang=uz");
+    await e.expectClean(o.page, o.problems);
+    await o.close();
   });
 });

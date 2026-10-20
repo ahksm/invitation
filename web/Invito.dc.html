@@ -1195,6 +1195,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <button data-buy-sub="{{ p.m }}" onClick="{{ p.buy }}" style="margin-top:auto;height:44px;padding:0 14px;border-radius:999px;border:1px solid {{ p.btnBorder }};background:{{ p.btnBg }};color:{{ p.btnColor }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ pr.op }};transition:background .2s,opacity .2s" style-hover="background:#d4452a;color:#fff;border-color:#d4452a">{{ p.btn }}</button>
 </div></sc-for>
 </div>
+<div data-consent="pricing" style="margin-top:12px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ pr.consent.pre }}<a href="{{ pr.consent.href }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:2px" style-hover="color:#d4452a">{{ pr.consent.link }}</a>{{ pr.consent.post }}</div>
 <sc-if value="{{ pr.err }}"><div role="alert" style="margin-top:14px;max-width:720px;padding:12px 14px;border-radius:12px;background:rgba(212,69,42,.08);color:#d4452a;font-size:14px;line-height:1.45">{{ pr.err }}</div></sc-if>
 <sc-if value="{{ pr.plansNote }}"><div style="margin-top:12px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ pr.plansNote }}</div></sc-if>
 </div></sc-if>
@@ -1233,6 +1234,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ py.showMain }}"><div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:18px"><span style="font:500 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.payTotal }}</span><span data-pay-total="1" style="font:500 30px/1 'Cormorant Garamond',serif">{{ py.total }}</span></div>
 <sc-if value="{{ py.goBtn }}"><button data-pay="go" onClick="{{ py.go }}" style="margin-top:16px;width:100%;height:54px;border-radius:999px;border:0;background:{{ ui.ink }};color:{{ ui.paper }};font:500 15px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }};transition:opacity .2s" style-hover="background:#d4452a">{{ py.goLabel }}{{ py.goArrow }}</button></sc-if>
+<sc-if value="{{ py.payConsent }}"><div data-consent="pay" style="margin-top:10px;font-size:12px;line-height:1.45;color:{{ ui.muted }};text-align:center">{{ py.consent.pre }}<a href="{{ py.consent.href }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:2px" style-hover="color:#d4452a">{{ py.consent.link }}</a>{{ py.consent.post }}</div></sc-if>
 </div></sc-if>
 <sc-if value="{{ py.err }}"><div role="alert" style="margin-top:14px;color:#d4452a;font-size:14px;line-height:1.45">{{ py.err }}</div></sc-if>
 <sc-if value="{{ py.showSub }}"><div data-sub="1" style="margin-top:24px;padding:18px;border-radius:16px;background:{{ ui.card }};border:1px solid rgba({{ ui.inkRgb }},.14)">
@@ -1240,6 +1242,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="margin-top:6px;font-size:14px;line-height:1.45;color:{{ ui.muted }}">{{ t.subDesc }}</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px;margin-top:12px"><sc-for list="{{ py.subOpts }}" as="o" hint-placeholder-count="4"><button data-sub-m="{{ o.m }}" onClick="{{ o.onClick }}" aria-pressed="{{ o.pressed }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;padding:10px 12px;border-radius:12px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};text-align:left;cursor:pointer;transition:background .2s,border-color .2s"><span style="font-size:13px;font-weight:500">{{ o.label }}</span><span style="font:500 11px 'JetBrains Mono',monospace;opacity:.8;white-space:nowrap">{{ o.price }}</span></button></sc-for></div>
 <button data-pay="sub" onClick="{{ py.subGo }}" style="margin-top:12px;width:100%;min-height:48px;padding:0 16px;border-radius:999px;border:1px solid {{ ui.ink }};background:transparent;color:{{ ui.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;opacity:{{ py.goOp }}">{{ py.subLabel }}</button>
+<div data-consent="sub" style="margin-top:8px;font-size:12px;line-height:1.45;color:{{ ui.muted }};text-align:center">{{ py.subConsent.pre }}<a href="{{ py.subConsent.href }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:2px" style-hover="color:#d4452a">{{ py.subConsent.link }}</a>{{ py.subConsent.post }}</div>
 <button data-sub-more="1" onClick="{{ py.subMore }}" style="display:block;margin:12px auto 0;padding:4px 0;border:0;background:none;color:{{ ui.muted }};font:500 13px 'Onest',sans-serif;text-decoration:underline;text-underline-offset:3px;cursor:pointer" style-hover="color:#d4452a">{{ t.subMore }} →</button>
 </div></sc-if>
 </div></sc-if>
@@ -3789,6 +3792,12 @@ class Component extends DCLogic {
     const dlg = s.w >= 720
       ? { handle: false, box: 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,calc(100vw - 32px));border-radius:22px;padding:6px 26px 26px;max-height:calc(100vh - 48px)' }
       : { handle: true, box: 'position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;border-radius:22px 22px 0 0;padding:10px 22px calc(26px + env(safe-area-inset-bottom));max-height:90vh' };
+    // Юридические страницы сервера (/oferta, /privacy, /contacts) на языке интерфейса: ?lang=, у русского без него;
+    // в мини-аппе ссылки с target _blank открываются через openLink.
+    const legalHref = (path) => (lang === 'ru' ? path : path + '?lang=' + lang);
+    // Согласие с офертой под кнопками оплаты (лист оплаты, подписка, экран цен): «Нажимая «{btn}», вы принимаете
+    // условия оферты», где «оферты» — ссылка на /oferta.
+    const consentOf = (btn) => { const [pre, post = ''] = t.payConsent.replace('{btn}', btn).split('{link}'); return { pre, post, link: t.consentLink, href: legalHref('/oferta') }; };
     // Экран цен: цены и доступ — только из ответов сервера (/api/auth/config, /api/auth/me, /api/templates).
     // Общая ссылка — «от» самой низкой цены активных шаблонов, если цены шаблонов разные.
     const PRS = s.pricing || {}, QQ = this.quotes(), acc0 = (me && me.access) || {}, subOn = !!acc0.subscribed && !acc0.free;
@@ -3818,7 +3827,7 @@ class Component extends DCLogic {
       ] : [],
       incl: t.subIncl.map((text) => ({ kind: 'in', sign: '✓', mark: '#2e7d4f', color: U.body, text })).concat(PP ? [{ kind: 'out', sign: '—', mark: U.muted, color: U.muted, text: t.subExcl.replace('{price}', this.money(PP.seat)) }] : []),
       worth: PP && minTpl > 0 && !acc0.free ? (() => { const n = Math.max(1, Math.ceil(PP.subscriptionMonth / minTpl)); return D.plural(lang, n, t.subWorth).replace('{n}', n); })() : '',
-      showPlans: !acc0.free, plansNote: subOn ? t.subExtendNote : '',
+      showPlans: !acc0.free, plansNote: subOn ? t.subExtendNote : '', consent: consentOf(subOn ? t.subRenew : t.subBuy),
       plans: [1, 3, 6, 12].map((m) => {
         const a = selM === m;
         return { m, label: planOf(m), price: QQ ? this.money(QQ.sub(m)) : '…', per: QQ ? t.perMonth.replace('{price}', this.money(Math.round(QQ.sub(m) / m))) : '',
@@ -3919,7 +3928,7 @@ class Component extends DCLogic {
       footNav: [['tpls', t.navTpls, () => this.goGallery()], ['prices', t.navPrices, () => this.goPricing()], ['tour', t.tour, () => this.goTour()], ['inv', t.myInv, () => this.goMyInv()]].map(([key, label, onClick]) => ({ key, label, onClick })),
       // Оферта, политика и контакты — страницы сервера на языке интерфейса (?lang=, у русского без него);
       // в мини-аппе — через openLink (target _blank).
-      footLinks: [['oferta', HM.offer, '/oferta'], ['privacy', HM.privacy, '/privacy'], ['contacts', HM.contacts, '/contacts']].map(([key, label, path]) => ({ key, label, href: lang === 'ru' ? path : path + '?lang=' + lang, target: '_blank' }))
+      footLinks: [['oferta', HM.offer, '/oferta'], ['privacy', HM.privacy, '/privacy'], ['contacts', HM.contacts, '/contacts']].map(([key, label, path]) => ({ key, label, href: legalHref(path), target: '_blank' }))
         .concat(cfg.botUsername ? [{ key: 'bot', label: HM.bot, href: 'https://t.me/' + encodeURIComponent(cfg.botUsername), target: '_blank' }] : []),
       toggleTheme: () => this.setTheme(U.dark ? 'light' : 'dark'), darkOn: U.dark ? 'true' : 'false', themeGlyph: U.dark ? '☀' : '☾', themeLabel: U.dark ? HM.light : HM.dark,
       copy: HM.copy.replace('{year}', new Date().getFullYear()),
@@ -4300,6 +4309,9 @@ class Component extends DCLogic {
         goArrow: PY.busy ? '' : ' →', goOp: valid ? 1 : 0.45, go: () => { if (valid) this.pay(); }, err: PY.err || '',
         // В мини-аппе оплата — нативная MainButton Telegram, кнопка в листе не нужна.
         goBtn: !this.tgReal,
+        // Согласие с офертой — только когда есть что оплатить (бесплатная публикация — без него); в мини-аппе
+        // кнопка оплаты — MainButton с тем же «Оплатить …».
+        payConsent: !!amount, consent: consentOf(t.payWord), subConsent: consentOf(t.subBuy),
         // Подписка открывает шаблоны общих ссылок: персональным приглашениям она ничего не даёт (места платные), оплаченному шаблону — тоже.
         showSub: !!Q && !Q.free && !Q.subscribed && (up || (PY.kind === 'publish' && PY.mode === 'shared' && !pd.unlocked)),
         subPer: Q ? t.perMonth.replace('{price}', this.money(Q.P.subscriptionMonth)) : '',
