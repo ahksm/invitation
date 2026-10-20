@@ -186,6 +186,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fDate }}</span><input type="date" value="{{ inv.date }}" onChange="{{ on.date }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fTime }}</span><input type="time" value="{{ inv.time }}" onChange="{{ on.time }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 </div>
+<div data-rsvpby-field="1"><div style="display:flex;align-items:flex-end;gap:12px"><label style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fRsvpBy }}</span><input type="date" name="rsvp-by" value="{{ inv.rsvpBy }}" max="{{ rsvpByF.max }}" onChange="{{ on.rsvpBy }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label><sc-if value="{{ rsvpByF.on }}"><button data-rsvpby-clear="1" onClick="{{ rsvpByF.clear }}" style="flex:none;height:36px;margin-bottom:4px;padding:0 14px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:400 13px 'Onest',sans-serif;cursor:pointer">× {{ t.rsvpByClear }}</button></sc-if></div><p data-rsvpby-note="1" style="margin:8px 0 0;font-size:13px;line-height:1.45;color:{{ rsvpByF.noteColor }}">{{ rsvpByF.note }}</p></div>
 <button onClick="{{ toggleCd }}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;background:none;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14);padding:14px 0;cursor:pointer;color:{{ ui.ink }};text-align:left">
 <span><span style="display:block;font-size:17px">{{ t.fCountdown }}</span><span data-cdtext="1" style="display:block;margin-top:6px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;color:#d4452a"></span></span>
 <span style="width:48px;height:28px;border-radius:99px;background:{{ cdTrack }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ cdKnob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s cubic-bezier(.3,.7,.3,1);box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span>
@@ -220,9 +221,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px"><sc-for list="{{ swatches }}" as="w"><button onClick="{{ w.onClick }}" style="width:40px;height:40px;border-radius:50%;background:{{ w.c }};border:1px solid rgba({{ ui.inkRgb }},.18);cursor:pointer;box-shadow:{{ w.ring }};transition:box-shadow .2s"></button></sc-for></div></div>
 <div data-reveal="{{ rv.state }}"><button onClick="{{ rv.toggle }}" aria-pressed="{{ rv.pressed }}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;background:none;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14);padding:14px 0;cursor:pointer;color:{{ ui.ink }};text-align:left"><span style="min-width:0"><span style="display:block;font-size:17px">{{ t.fSecret }}</span><span style="display:block;margin-top:4px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.secretHint }}</span></span><span style="width:48px;height:28px;border-radius:99px;background:{{ rv.track }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ rv.knob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span></button>
 <sc-if value="{{ rv.on }}"><input name="secret" value="{{ inv.secret }}" maxLength="500" onChange="{{ on.secret }}" aria-label="{{ t.fSecret }}" style="width:100%;margin-top:6px;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:500 22px/1.3 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></sc-if></div>
-<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fGifts }}</span><textarea value="{{ inv.gifts }}" maxLength="1000" onChange="{{ on.gifts }}" rows="2" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
-<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fNotes }}</span><textarea value="{{ inv.notes }}" maxLength="1000" onChange="{{ on.notes }}" rows="3" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
-<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fContact }}</span><input name="contact" value="{{ inv.contact }}" maxLength="300" onChange="{{ on.contact }}" placeholder="{{ ph.contact }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fGifts }}</span><textarea name="gifts" value="{{ inv.gifts }}" maxLength="1000" onChange="{{ on.gifts }}" placeholder="{{ ph.gifts }}" rows="2" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label><p data-hint="gifts" style="margin:-18px 0 0;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.giftsHint }}</p>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fNotes }}</span><textarea name="notes" value="{{ inv.notes }}" maxLength="1000" onChange="{{ on.notes }}" placeholder="{{ ph.notes }}" rows="3" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fContact }}</span><input name="contact" value="{{ inv.contact }}" maxLength="300" onChange="{{ on.contact }}" placeholder="{{ ph.contact }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label><p data-hint="contact" style="margin:-18px 0 0;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.contactHint }}</p>
 </div></sc-if>
 <sc-if value="{{ ws.photos }}"><div style="display:flex;flex-direction:column;gap:26px">
 <div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fCover }}</div>
@@ -292,12 +293,18 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div></div></sc-if>
 </sc-if>
 
-<sc-if value="{{ isGuest }}"><div style="position:relative;background:{{ th.bg }};color:{{ th.ink }};font-family:{{ th.bodyCss }};overflow-x:clip">
-<sc-if value="{{ particlesOn }}"><canvas ref="{{ canvasRef }}" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:6"></canvas></sc-if>
+<sc-if value="{{ isGuest }}"><div style="position:relative;isolation:isolate;background:{{ th.bg }};color:{{ th.ink }};font-family:{{ th.bodyCss }};overflow-x:clip">
+<sc-if value="{{ particlesOn }}"><canvas data-particles="1" ref="{{ canvasRef }}" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1"></canvas><canvas data-burst="1" ref="{{ burstRef }}" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:6"></canvas></sc-if>
 
-<div style="position:fixed;top:{{ floatTop }};right:12px;z-index:50;display:flex;gap:8px">
-<button onClick="{{ cycleLang }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 11px 'JetBrains Mono',monospace;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">{{ langCode }}</button>
-<button onClick="{{ toggleMusic }}" title="Music" data-music="1" aria-pressed="{{ musicPressed }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)"><span style="width:3px;border-radius:2px;height:{{ mb.a }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.b }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.d }};background:{{ mb.c }};transition:height .4s"></span></button>
+<sc-if value="{{ langMenu }}"><div data-lang-shade="1" onClick="{{ closeLangMenu }}" style="position:fixed;inset:0;z-index:49"></div></sc-if>
+<div style="position:fixed;top:{{ floatTop }};right:12px;z-index:50;display:flex;gap:8px;align-items:flex-start">
+<div style="position:relative">
+<button data-lang-btn="1" onClick="{{ toggleLangMenu }}" aria-label="{{ langAria }}" aria-haspopup="menu" aria-expanded="{{ langExp }}" style="height:44px;padding:0 14px 0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 13px {{ th.bodyCss }};display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12);white-space:nowrap"><span>{{ langName }}</span><span aria-hidden="true" style="font-size:9px;opacity:.6">▼</span></button>
+<sc-if value="{{ langMenu }}"><div data-lang-menu="1" role="menu" style="position:absolute;right:0;top:52px;min-width:190px;padding:6px;border-radius:16px;background:{{ th.surface }};color:{{ th.ink }};border:1px solid {{ th.line }};box-shadow:0 18px 40px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ langItems }}" as="l"><button data-lang="{{ l.code }}" role="menuitemradio" aria-checked="{{ l.on }}" onClick="{{ l.onClick }}" style="height:46px;padding:0 14px;border:0;border-radius:11px;background:{{ l.bg }};color:{{ th.ink }};font:400 15px {{ th.bodyCss }};display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;text-align:left"><span>{{ l.name }}</span><span aria-hidden="true" style="color:{{ th.accentInk }}">{{ l.mark }}</span></button></sc-for>
+</div></sc-if>
+</div>
+<button onClick="{{ toggleMusic }}" title="{{ gt.musicBtn }}" aria-label="{{ gt.musicBtn }}" data-music="1" aria-pressed="{{ musicPressed }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:{{ th.surface }};display:flex;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)"><span style="width:3px;border-radius:2px;height:{{ mb.a }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.b }};background:{{ mb.c }};transition:height .4s"></span><span style="width:3px;border-radius:2px;height:{{ mb.d }};background:{{ mb.c }};transition:height .4s"></span></button>
 </div>
 <sc-if value="{{ fromTourLive }}"><button onClick="{{ backTour }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:90;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.tour }}</button></sc-if>
 <sc-if value="{{ isPreview }}"><button onClick="{{ backFromPreview }}" style="position:fixed;top:{{ floatTop }};left:12px;z-index:50;height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};font:500 14px 'Onest',sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)">← {{ t.back }}</button>
@@ -321,11 +328,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div></sc-if>
 
 <sc-if value="{{ gateShow }}"><div style="position:fixed;inset:0;z-index:85;background:{{ th.bg }};display:flex;align-items:center;justify-content:center;padding:24px"><div style="width:100%;max-width:340px;text-align:center;display:flex;flex-direction:column;gap:14px">
-<div style="width:56px;height:56px;margin:0 auto 6px;border-radius:50%;border:1px solid {{ th.accent }};display:flex;align-items:center;justify-content:center;color:{{ th.accent }};font-size:22px">✱</div>
-<div style="font-family:{{ th.fontCss }};font-size:calc(36px * {{ th.fs }});line-height:1;text-transform:{{ th.tt }}">{{ inv.names }}</div>
+<div style="width:56px;height:56px;margin:0 auto 6px;border-radius:50%;border:1px solid {{ th.accent }};display:flex;align-items:center;justify-content:center;color:{{ th.accentInk }};font-size:22px">✱</div>
+<div data-fit="word" style="font-family:{{ th.fontCss }};font-size:calc(36px * {{ th.fs }} * var(--nf,1));line-height:1;text-transform:{{ th.tt }}">{{ inv.names }}</div>
 <div style="color:{{ th.muted }}">{{ gt.locked }}</div>
 <input type="password" value="{{ pwTry }}" onChange="{{ onPwTry }}" placeholder="{{ gt.pwPh }}" style="height:54px;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.surface }};color:{{ th.ink }};padding:0 16px;font-size:16px;text-align:center;outline:none">
-<sc-if value="{{ pwErr }}"><div role="alert" style="color:{{ th.accent }};font-size:13px">{{ pwErrText }}</div></sc-if>
+<sc-if value="{{ pwErr }}"><div role="alert" style="color:{{ th.accentInk }};font-size:13px">{{ pwErrText }}</div></sc-if>
 <button onClick="{{ unlock }}" style="height:54px;border-radius:{{ th.radius }};border:0;background:{{ th.accent }};color:{{ th.onAccent }};font-size:16px;font-weight:600;cursor:pointer">{{ gt.unlock }}</button>
 </div></div></sc-if>
 
@@ -333,33 +340,33 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:absolute;top:0;bottom:0;left:0;width:50.5%;background:{{ th.surface }};transform:translateX({{ curL }});transition:transform 1.5s cubic-bezier(.7,0,.2,1);background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.07) 0 2px,transparent 2px 28px,rgba(255,255,255,.05) 28px 30px,transparent 30px 56px);box-shadow:inset -30px 0 60px rgba(0,0,0,.18)"><div style="position:absolute;right:0;top:0;bottom:0;width:6px;background:{{ th.accent }}"></div></div>
 <div style="position:absolute;top:0;bottom:0;right:0;width:50.5%;background:{{ th.surface }};transform:translateX({{ curR }});transition:transform 1.5s cubic-bezier(.7,0,.2,1);background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.07) 0 2px,transparent 2px 28px,rgba(255,255,255,.05) 28px 30px,transparent 30px 56px);box-shadow:inset 30px 0 60px rgba(0,0,0,.18)"><div style="position:absolute;left:0;top:0;bottom:0;width:6px;background:{{ th.accent }}"></div></div>
 <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;opacity:{{ sealOp }};transition:opacity .4s;width:min(86vw,520px)">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,10vw,80px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};color:{{ th.ink }};text-shadow:{{ th.glowCss }}">{{ inv.names }}</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<div data-fit="word" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,10vw,80px) * {{ th.fs }} * var(--nf,1));line-height:.95;text-transform:{{ th.tt }};color:{{ th.ink }};text-shadow:{{ th.glowCss }}">{{ inv.names }}</div>
 <div style="width:70px;height:70px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:22px;box-shadow:0 10px 24px rgba(0,0,0,.3)">{{ initials }}</div>
 <div style="font-size:13px;color:{{ th.muted }}">{{ gt.curtainHint }}</div>
 </div></div></sc-if>
 <sc-if value="{{ scratchIntroShow }}"><div style="position:fixed;inset:0;z-index:80;background:{{ th.bg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;opacity:{{ envOp }};transition:opacity .8s ease">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};text-align:center">{{ kick }}</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }};text-align:center">{{ kick }}</div>
 <div style="position:relative;width:min(86vw,420px);aspect-ratio:3/2;border-radius:18px;overflow:hidden;background:{{ th.surface }};border:1px solid {{ th.line }};box-shadow:0 40px 80px -40px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px">
-<div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(30px,8vw,48px) * {{ th.fs }});line-height:1;text-transform:{{ th.tt }}">{{ inv.names }}</div>
-<div style="font-size:13px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.accent }}">{{ gDateLong }}</div>
+<div data-fit="word" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(30px,8vw,48px) * {{ th.fs }} * var(--nf,1));line-height:1;text-transform:{{ th.tt }}">{{ inv.names }}</div>
+<div style="font-size:13px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gDateHero }}</div>
 <canvas ref="{{ scratchIntroRef }}" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>
 </div>
-<div style="font-size:13px;color:{{ th.muted }}">{{ gt.scratchHint }}</div>
+<div style="min-height:44px;display:flex;align-items:center;justify-content:center"><sc-if value="{{ skipOn }}"><button data-skip-intro="1" onClick="{{ skipIntro }}" style="padding:12px 22px;border-radius:999px;border:1px solid {{ th.line }};background:transparent;color:{{ th.ink }};font-family:{{ th.bodyCss }};font-size:14px;cursor:pointer">{{ gt.skipIntro }}</button></sc-if></div>
 </div></sc-if>
 <sc-if value="{{ envShow }}"><div onClick="{{ openEnv }}" style="position:fixed;inset:0;z-index:80;background:{{ th.bg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;opacity:{{ envOp }};transition:opacity .8s ease;cursor:pointer;padding:24px">
-<div style="font-size:12px;letter-spacing:.35em;text-transform:uppercase;color:{{ th.accent }};text-align:center">{{ gt.youGotMail }}</div>
+<div style="font-size:12px;letter-spacing:.35em;text-transform:uppercase;color:{{ th.accentInk }};text-align:center">{{ gt.youGotMail }}</div>
 <div style="position:relative;width:min(84vw,360px);aspect-ratio:3/2;perspective:900px">
 <div style="position:absolute;inset:0;background:{{ th.envBack }};border-radius:6px;box-shadow:0 50px 80px -40px rgba(0,0,0,.55)"></div>
 <div style="position:absolute;left:6%;right:6%;top:6%;bottom:6%;background:{{ th.surface }};border-radius:3px;transform:translateY({{ envCardY }});transition:transform 1.1s cubic-bezier(.2,.7,.2,1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;z-index:2;box-shadow:0 10px 30px rgba(0,0,0,.15)">
-<div style="font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.youreInvited }}</div>
-<div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(30px * {{ th.fs }});line-height:1;text-transform:{{ th.tt }};color:{{ th.ink }}">{{ inv.names }}</div>
-<div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.muted }}">{{ gDateShort }}</div>
+<div style="font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.youreInvited }}</div>
+<div data-fit="word" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(30px * {{ th.fs }} * var(--nf,1));line-height:1;text-transform:{{ th.tt }};color:{{ th.ink }}">{{ inv.names }}</div>
+<div style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.muted }}">{{ gDateShortH }}</div>
 </div>
 <div style="position:absolute;inset:0;background:{{ th.envFront }};clip-path:polygon(0 0,50% 56%,100% 0,100% 100%,0 100%);border-radius:6px;z-index:3"></div>
-<sc-if value="{{ hasTo }}"><div style="position:absolute;left:8%;right:8%;bottom:9%;z-index:4;display:flex;align-items:baseline;gap:10px;color:{{ envInk }};border-bottom:1px solid {{ envInk }};padding-bottom:4px;opacity:{{ sealOp }};transition:opacity .3s"><span style="font-size:10px;letter-spacing:.25em;text-transform:uppercase;opacity:.75">{{ gt.to }}:</span><span style="font-family:'Caveat',cursive;font-size:24px;line-height:1">{{ toName }}</span></div></sc-if>
+<sc-if value="{{ hasTo }}"><div data-env-to="1" style="position:absolute;left:8%;right:8%;bottom:7%;z-index:4;display:flex;align-items:baseline;gap:10px;color:{{ envInk }};border-bottom:1px solid {{ envInk }};padding-bottom:4px;opacity:{{ sealOp }};transition:opacity .3s"><span style="flex:none;font-size:10px;letter-spacing:.25em;text-transform:uppercase;opacity:.75">{{ gt.to }}:</span><span data-fit="line" style="flex:1;min-width:0;font-family:'Caveat',cursive;font-size:calc(24px * var(--nf,1));line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ toName }}</span></div></sc-if>
 <div style="position:absolute;left:0;right:0;top:0;height:60%;background:{{ th.envFlap }};clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transform:{{ envFlap }};transition:transform .7s cubic-bezier(.5,0,.3,1);z-index:{{ envFlapZ }}"></div>
-<div style="position:absolute;left:50%;top:60%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:19px;z-index:5;opacity:{{ sealOp }};transform:scale({{ sealScale }});transition:opacity .3s,transform .4s;box-shadow:0 6px 16px rgba(0,0,0,.3)">{{ initials }}</div>
+<div data-seal="1" style="position:absolute;left:50%;top:{{ sealTop }};width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:19px;z-index:5;opacity:{{ sealOp }};transform:scale({{ sealScale }});transition:opacity .3s,transform .4s;box-shadow:0 6px 16px rgba(0,0,0,.3)">{{ initials }}</div>
 </div>
 <div style="font-size:13px;color:{{ th.muted }}">{{ gt.tapOpen }}</div>
 </div></sc-if>
@@ -369,9 +376,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-par="-0.35" style="position:absolute;width:46vmax;height:46vmax;border-radius:50%;background:{{ th.accent2 }};opacity:.4;filter:blur(70px);top:-12vmax;left:-16vmax;pointer-events:none"></div>
 <div data-par="0.3" style="position:absolute;width:40vmax;height:40vmax;border-radius:50%;background:{{ th.accent }};opacity:.14;filter:blur(70px);bottom:-14vmax;right:-14vmax;pointer-events:none"></div>
 <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center">
-<div data-herotext="1" style="font-size:12px;letter-spacing:.38em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
+<div data-herotext="1" style="font-size:12px;letter-spacing:.38em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:26px;width:min(62vw,340px);aspect-ratio:3/4;border-radius:999px 999px {{ th.radius }} {{ th.radius }};overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }};box-shadow:0 40px 80px -40px rgba(0,0,0,.5)"><img data-par="0.14" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="margin:32px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,12vw,116px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};letter-spacing:-.02em;text-wrap:balance;max-width:14ch;text-shadow:{{ th.glowCss }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="margin:32px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,12vw,116px) * {{ th.fs }} * var(--nf,1));line-height:.95;text-transform:{{ th.tt }};letter-spacing:-.02em;text-wrap:balance;max-width:max(14ch,var(--nw,0px));text-shadow:{{ th.glowCss }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:{{ th.muted }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><span style="flex:0 1 34px;height:1px;background:{{ th.accent }}"></span><span style="min-width:0;text-align:center"><span style="white-space:nowrap">{{ whenD }}</span>{{ whenSep }}<span style="white-space:nowrap">{{ whenT }}</span></span><span style="flex:0 1 34px;height:1px;background:{{ th.accent }}"></span></div></sc-if>
 <div data-herotext="1" onClick="{{ ed.names }}" style="margin-top:14px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
@@ -382,23 +389,23 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div onClick="{{ ed.cover }}" style="position:absolute;inset:0;background:{{ th.imgBg }};overflow:hidden;outline:{{ eo }};outline-offset:-10px;cursor:{{ ec }}"><img data-par="0.4" data-zoom="0.22" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-8%;width:100%;height:116%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:absolute;inset:0;background:{{ th.fade }};pointer-events:none"></div>
 <div data-herotext="1" style="position:absolute;left:0;right:0;bottom:0;padding:0 22px 52px;max-width:1240px;margin:0 auto">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }} · {{ gEvLabel }}</div>
-<h1 onClick="{{ ed.names }}" style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,15vw,190px) * {{ th.fs }});line-height:.86;text-transform:{{ th.tt }};letter-spacing:-.02em;text-shadow:{{ th.glowCss }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }} · {{ gEvLabel }}</div>
+<h1 data-fit="word" onClick="{{ ed.names }}" style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,15vw,190px) * {{ th.fs }} * var(--nf,1));line-height:.86;text-transform:{{ th.tt }};letter-spacing:-.02em;text-shadow:{{ th.glowCss }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div onClick="{{ ed.when }}" style="margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;cursor:{{ ec }}">
-<sc-if value="{{ gDateLong }}"><span style="padding:10px 14px;border-radius:{{ th.radius }};background:{{ th.accent }};color:{{ th.onAccent }};font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700">{{ gDateLong }}</span></sc-if>
+<sc-if value="{{ gDateHero }}"><span style="padding:10px 14px;border-radius:{{ th.radius }};background:{{ th.accent }};color:{{ th.onAccent }};font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:700">{{ gDateHero }}</span></sc-if>
 <sc-if value="{{ inv.time }}"><span style="padding:9px 14px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};font-size:13px;letter-spacing:.08em">{{ inv.time }}</span></sc-if>
 <span style="padding:9px 14px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};font-size:13px;letter-spacing:.08em">{{ inv.venue }}</span>
 </div></div>
 </section></sc-if>
 
 <sc-if value="{{ th.editorial }}"><section data-hero="1" style="padding:{{ heroPad }} clamp(18px,5vw,56px) 40px;max-width:1240px;margin:0 auto">
-<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;border-bottom:3px solid {{ th.ink }};padding-bottom:10px"><span style="font-weight:700">Invito</span><span>{{ gEvLabel }}</span><span>{{ gDateShort }}</span></div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="margin:20px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(62px,16vw,224px) * {{ th.fs }});line-height:.84;letter-spacing:-.035em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;border-bottom:3px solid {{ th.ink }};padding-bottom:10px"><span style="font-weight:700">{{ gEvLabel }}</span><span>{{ gDateShortH }}</span></div>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="margin:20px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(62px,16vw,224px) * {{ th.fs }} * var(--nf,1));line-height:.84;letter-spacing:-.035em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:24px;margin-top:28px;border-top:1px solid {{ th.ink }};padding-top:24px">
 <div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:4/5;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.16" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if><span style="position:absolute;left:12px;bottom:12px;background:{{ th.bg }};padding:6px 10px;font-size:11px;letter-spacing:.2em;text-transform:uppercase">{{ kick }}</span></div>
 <div onClick="{{ ed.when }}" style="display:flex;flex-direction:column;justify-content:space-between;gap:22px;cursor:{{ ec }}">
-<div style="font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }}">{{ gWeekday }}</div>
-<div><div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(120px,30vw,280px) * {{ th.fs }});line-height:.8;color:{{ th.accent }};letter-spacing:-.04em;font-variant-numeric:lining-nums">{{ gDay }}</div><div style="font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin-top:14px">{{ gMyTime }}</div></div>
+<div style="font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gWeekday }}</div>
+<div><div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(120px,30vw,280px) * {{ th.fs }});line-height:.8;color:{{ th.accentInk }};letter-spacing:-.04em;font-variant-numeric:lining-nums">{{ gDay }}</div><div style="font-size:14px;letter-spacing:.24em;text-transform:uppercase;margin-top:14px">{{ gMyTime }}</div></div>
 <div style="font-style:italic;color:{{ th.muted }};border-top:1px solid {{ th.line }};padding-top:14px">{{ inv.host }}</div>
 </div></div>
 </section></sc-if>
@@ -407,13 +414,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:relative;width:min(76vw,420px);aspect-ratio:3/4;justify-self:center">
 <div data-par="-0.12" style="position:absolute;inset:0;border:1px solid {{ th.accent }};border-radius:50%;margin:5% -5% -5% 5%"></div>
 <div onClick="{{ ed.cover }}" style="position:absolute;inset:0;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:8px;cursor:{{ ec }};box-shadow:0 40px 80px -40px rgba(0,0,0,.45)"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
-<sc-if value="{{ gDateShort }}"><div data-par="-0.35" style="position:absolute;left:-6%;bottom:10%;padding:12px 18px;border-radius:999px;background:{{ th.surface }};font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accent }};box-shadow:0 14px 30px -14px rgba(0,0,0,.35)">{{ gDateShort }}</div></sc-if>
+<sc-if value="{{ gDateShortH }}"><div data-par="-0.35" style="position:absolute;left:-6%;bottom:10%;padding:12px 18px;border-radius:999px;background:{{ th.surface }};font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:{{ th.accentInk }};box-shadow:0 14px 30px -14px rgba(0,0,0,.35)">{{ gDateShortH }}</div></sc-if>
 </div>
 <div data-herotext="1" style="display:flex;flex-direction:column;gap:20px">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<h1 onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-style:italic;font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }});line-height:.92;letter-spacing:-.02em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-style:italic;font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }} * var(--nf,1));line-height:.92;letter-spacing:-.02em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="width:64px;height:1px;background:{{ th.accent }}"></div>
-<div onClick="{{ ed.when }}" style="font-size:16px;line-height:1.6;cursor:{{ ec }}"><sc-if value="{{ gWdDate }}">{{ gWdDate }}<br></sc-if>{{ gTimeVenue }}</div>
+<div onClick="{{ ed.when }}" style="font-size:16px;line-height:1.6;cursor:{{ ec }}"><sc-if value="{{ gWdDateH }}">{{ gWdDateH }}<br></sc-if>{{ gTimeVenue }}</div>
 <div onClick="{{ ed.names }}" style="font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 </section></sc-if>
@@ -424,11 +431,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-par="-0.6" style="position:absolute;width:90px;height:90px;border-radius:50%;background:{{ th.surface }};right:14%;top:16%;pointer-events:none"></div>
 <div style="position:relative;z-index:2;width:min(70vw,360px);aspect-ratio:1">
 <div onClick="{{ ed.cover }}" style="position:absolute;inset:0;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};border:10px solid {{ th.surface }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }};box-shadow:0 40px 70px -40px rgba(0,0,0,.4)"><img data-par="0.1" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-10%;width:100%;height:120%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
-<sc-if value="{{ gDateShort }}"><div data-par="-0.25" style="position:absolute;right:-6%;top:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;transform:rotate(8deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.3)">{{ gDateShort }}</div></sc-if>
+<sc-if value="{{ gDateShortH }}"><div data-par="-0.25" style="position:absolute;right:-6%;top:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;transform:rotate(8deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.3)">{{ gDateShortH }}</div></sc-if>
 <sc-if value="{{ inv.time }}"><div data-par="0.3" style="position:absolute;left:-8%;bottom:8%;padding:10px 16px;border-radius:999px;background:{{ th.surface }};color:{{ th.ink }};font-weight:700;font-size:14px;transform:rotate(-6deg);box-shadow:0 10px 20px -8px rgba(0,0,0,.25)">{{ inv.time }}</div></sc-if>
 </div>
-<div data-herotext="1" style="position:relative;z-index:2;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;z-index:2;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(44px,11vw,104px) * {{ th.fs }});line-height:1;text-transform:{{ th.tt }};text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div data-herotext="1" style="position:relative;z-index:2;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="position:relative;z-index:2;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(44px,11vw,104px) * {{ th.fs }} * var(--nf,1));line-height:1;text-transform:{{ th.tt }};text-wrap:balance;max-width:max(14ch,var(--nw,0px));outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div data-herotext="1" onClick="{{ ed.names }}" style="position:relative;z-index:2;margin-top:12px;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
@@ -436,10 +443,10 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:absolute;inset:14px;border:1px solid {{ th.accent }};opacity:.5;pointer-events:none"></div><div style="position:absolute;inset:22px;border:1px solid {{ th.accent }};opacity:.25;pointer-events:none"></div>
 <span style="position:absolute;left:14px;top:14px;width:12px;height:12px;margin:-6px;background:{{ th.accent }};transform:rotate(45deg)"></span><span style="position:absolute;right:14px;top:14px;width:12px;height:12px;margin:-6px;background:{{ th.accent }};transform:rotate(45deg)"></span><span style="position:absolute;left:14px;bottom:14px;width:12px;height:12px;margin:-6px;background:{{ th.accent }};transform:rotate(45deg)"></span><span style="position:absolute;right:14px;bottom:14px;width:12px;height:12px;margin:-6px;background:{{ th.accent }};transform:rotate(45deg)"></span>
 <div data-spin="1" style="position:absolute;left:50%;top:38%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;border-radius:50%;background:repeating-conic-gradient({{ th.accent }} 0deg .5deg,transparent .5deg 7.5deg);opacity:.13;pointer-events:none"></div>
-<div data-herotext="1" style="position:relative;width:min(46vw,210px);aspect-ratio:1;border-radius:50%;border:1px solid {{ th.accent }};background:{{ th.bg }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:clamp(54px,14vw,86px);color:{{ th.accent }};box-shadow:0 0 0 10px {{ th.bg }},0 0 0 11px {{ th.accentSoft }}">{{ monogram }}</div>
-<div data-herotext="1" style="position:relative;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,96px) * {{ th.fs }});line-height:1;letter-spacing:.06em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><span style="flex:none;width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span><span style="min-width:0;text-align:center"><span style="white-space:nowrap">{{ whenD }}</span>{{ whenSep }}<span style="white-space:nowrap">{{ whenT }}</span></span><span style="flex:none;width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span></div></sc-if>
+<div data-herotext="1" style="position:relative;width:min(46vw,210px);aspect-ratio:1;border-radius:50%;border:1px solid {{ th.accent }};background:{{ th.bg }};display:flex;align-items:center;justify-content:center;font-family:{{ th.fontCss }};font-size:clamp(54px,14vw,86px);color:{{ th.accentInk }};box-shadow:0 0 0 10px {{ th.bg }},0 0 0 11px {{ th.accentSoft }}">{{ monogram }}</div>
+<div data-herotext="1" style="position:relative;margin-top:34px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,96px) * {{ th.fs }} * var(--nf,1));line-height:1;letter-spacing:.06em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:22px;display:flex;align-items:center;gap:14px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accentInk }};cursor:{{ ec }}"><span style="flex:none;width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span><span style="min-width:0;text-align:center"><span style="white-space:nowrap">{{ whenD }}</span>{{ whenSep }}<span style="white-space:nowrap">{{ whenT }}</span></span><span style="flex:none;width:8px;height:8px;background:{{ th.accent }};transform:rotate(45deg)"></span></div></sc-if>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:40px;width:min(100%,760px);aspect-ratio:21/9;overflow:hidden;border:1px solid {{ th.accent }};background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.2" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-25%;width:100%;height:150%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:relative;margin-top:18px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
@@ -449,18 +456,18 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:absolute;inset:0;background:{{ th.bg }};opacity:.74;pointer-events:none"></div>
 <div data-tilt="1" style="position:relative;width:min(94vw,600px);display:grid;grid-template-columns:minmax(0,1fr) {{ stubW }};background:{{ th.surface }};border:1px solid {{ th.accent }};border-radius:16px;box-shadow:0 0 50px {{ th.accentSoft }},0 50px 90px -30px rgba(0,0,0,.85);transform-origin:50% 100%">
 <div style="padding:clamp(20px,5vw,34px);display:flex;flex-direction:column;gap:16px;min-width:0">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<h1 onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(38px,9vw,78px) * {{ th.fs }});line-height:.92;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(38px,9vw,78px) * {{ th.fs }} * var(--nf,1));line-height:.92;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div onClick="{{ ed.when }}" style="display:grid;grid-template-columns:{{ ticketCols }};gap:10px;border-top:1px solid {{ th.line }};padding-top:14px;cursor:{{ ec }}">
-<sc-if value="{{ hasDate }}"><div style="min-width:0"><div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.fDate }}</div><div style="margin-top:4px;font-size:14px;font-weight:700">{{ gDateShort }}</div></div></sc-if>
+<sc-if value="{{ hasDate }}"><div style="min-width:0"><div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.fDate }}</div><div style="margin-top:4px;font-size:14px;font-weight:700">{{ gDateShortH }}</div></div></sc-if>
 <sc-if value="{{ hasTime }}"><div style="min-width:0"><div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.fTime }}</div><div style="margin-top:4px;font-size:14px;font-weight:700">{{ inv.time }}</div></div></sc-if>
-<div style="min-width:0"><div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.venue }}</div><div style="margin-top:4px;font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ inv.venue }}</div></div>
+<div style="min-width:0"><div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.venue }}</div><div style="margin-top:4px;font-size:14px;font-weight:700;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere">{{ inv.venue }}</div></div>
 </div>
 <div style="font-size:13px;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 <div style="position:relative;border-left:2px dashed {{ th.line }};display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:20px 0">
 <span style="position:absolute;left:-13px;top:-13px;width:24px;height:24px;border-radius:50%;background:{{ th.bg }};border:1px solid {{ th.accent }}"></span><span style="position:absolute;left:-13px;bottom:-13px;width:24px;height:24px;border-radius:50%;background:{{ th.bg }};border:1px solid {{ th.accent }}"></span>
-<div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accent }};white-space:nowrap">Admit one · {{ ticketNo }}</div>
+<div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.accentInk }};white-space:nowrap;max-height:240px;overflow:hidden;text-overflow:ellipsis">{{ stubTxt }}</div>
 <div style="width:60%;height:70px;background:repeating-linear-gradient(0deg,{{ th.ink }} 0 2px,transparent 2px 4px,{{ th.ink }} 4px 5px,transparent 5px 8px)"></div>
 </div>
 </div>
@@ -471,11 +478,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="position:relative;display:flex;justify-content:space-between;gap:12px;font-size:11px;letter-spacing:.3em;text-transform:uppercase"><span>{{ kick }}</span><span style="color:{{ th.muted }}">{{ gEvLabel }}</span></div>
 <sc-if value="{{ hasDate }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;font-family:{{ th.fontCss }};font-weight:300;font-size:calc(clamp(96px,27vw,330px) * {{ th.fs }});line-height:.8;letter-spacing:-.06em;font-variant-numeric:lining-nums;cursor:{{ ec }}">{{ gDayDot }}</div></sc-if>
 <div style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:24px;align-items:end">
-<div><h1 onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(34px,7vw,72px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1><div style="margin-top:10px;color:{{ th.muted }}">{{ inv.host }}</div></div>
+<div><h1 data-fit="word" onClick="{{ ed.names }}" style="margin:0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(34px,7vw,72px) * {{ th.fs }} * var(--nf,1));line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1><div style="margin-top:10px;color:{{ th.muted }}">{{ inv.host }}</div></div>
 <div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.14" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 </div>
 <div onClick="{{ ed.when }}" style="position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));cursor:{{ ec }}">
-<sc-if value="{{ hasDate }}"><div style="border-top:1px solid {{ th.ink }};padding:10px 0;display:flex;justify-content:space-between;gap:10px"><span style="font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.fDate }}</span><span>{{ gDateLong }}</span></div></sc-if>
+<sc-if value="{{ hasDate }}"><div style="border-top:1px solid {{ th.ink }};padding:10px 0;display:flex;justify-content:space-between;gap:10px"><span style="font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.fDate }}</span><span>{{ gDateHero }}</span></div></sc-if>
 <sc-if value="{{ hasTime }}"><div style="border-top:1px solid {{ th.ink }};padding:10px 0;display:flex;justify-content:space-between;gap:10px"><span style="font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.fTime }}</span><span>{{ inv.time }}</span></div></sc-if>
 <div style="border-top:1px solid {{ th.ink }};padding:10px 0;display:flex;justify-content:space-between;gap:10px"><span style="font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.venue }}</span><span style="text-align:right">{{ inv.venue }}</span></div>
 </div>
@@ -484,11 +491,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ th.sun }}"><section data-hero="1" style="position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:{{ heroPad }} 24px 84px;overflow:hidden">
 <div data-par="-0.3" style="position:absolute;left:50%;top:12%;width:min(130vw,860px);aspect-ratio:1;pointer-events:none"><div style="position:absolute;top:0;left:-50%;width:100%;height:100%;border-radius:50%;background:{{ th.accent2 }};opacity:.75"></div></div>
 <div data-par="-0.15" style="position:absolute;left:50%;top:4%;width:min(170vw,1100px);aspect-ratio:1;pointer-events:none"><div style="position:absolute;top:0;left:-50%;width:100%;height:100%;border-radius:50%;border:1px solid {{ th.accent }};opacity:.35"></div></div>
-<div data-herotext="1" style="position:relative;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,11vw,112px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div data-herotext="1" style="position:relative;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,11vw,112px) * {{ th.fs }} * var(--nf,1));line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;max-width:max(14ch,var(--nw,0px));outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div onClick="{{ ed.cover }}" style="position:relative;margin-top:34px;width:min(58vw,300px);aspect-ratio:3/4;border-radius:999px 999px 0 0;overflow:hidden;background:{{ th.imgBg }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="position:relative;width:min(100%,720px);height:1px;background:{{ th.accent }}"></div>
-<sc-if value="{{ whenTxt }}"><div onClick="{{ ed.when }}" style="position:relative;margin-top:20px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;cursor:{{ ec }}">{{ whenTxt }}</div></sc-if>
+<sc-if value="{{ whenTxt }}"><div onClick="{{ ed.when }}" style="position:relative;margin-top:20px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;cursor:{{ ec }}"><span style="white-space:nowrap">{{ whenD }}</span>{{ whenSep }}<span style="white-space:nowrap">{{ whenT }}</span></div></sc-if>
 <div style="position:relative;margin-top:10px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
@@ -501,8 +508,8 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 <div data-herotext="1">
 <div style="font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:{{ th.ink }}">{{ kick }}</div>
-<h1 onClick="{{ ed.names }}" style="margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,13vw,140px) * {{ th.fs }});line-height:.88;text-transform:{{ th.tt }};text-shadow:.06em .06em 0 {{ th.accent }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div onClick="{{ ed.when }}" style="margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;cursor:{{ ec }}"><sc-if value="{{ gDateLong }}"><span style="padding:10px 14px;background:{{ th.accent2 }};font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg)">{{ gDateLong }}</span></sc-if><sc-if value="{{ inv.time }}"><span style="padding:10px 14px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;letter-spacing:.08em;transform:rotate(2deg)">{{ inv.time }}</span></sc-if></div>
+<h1 data-fit="word" onClick="{{ ed.names }}" style="margin:16px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,13vw,140px) * {{ th.fs }} * var(--nf,1));line-height:.88;text-transform:{{ th.tt }};text-shadow:.06em .06em 0 {{ th.accent }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div onClick="{{ ed.when }}" style="margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;cursor:{{ ec }}"><sc-if value="{{ gDateHero }}"><span style="padding:10px 14px;background:{{ th.accent2 }};font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;transform:rotate(-2deg)">{{ gDateHero }}</span></sc-if><sc-if value="{{ inv.time }}"><span style="padding:10px 14px;background:{{ th.accent }};color:{{ th.onAccent }};font-weight:700;font-size:14px;letter-spacing:.08em;transform:rotate(2deg)">{{ inv.time }}</span></sc-if></div>
 <div style="margin-top:18px;color:{{ th.muted }}">{{ inv.host }}</div>
 </div>
 </div>
@@ -512,30 +519,30 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:{{ heroCols }};gap:40px 60px;align-items:center">
 <div style="position:relative;width:min(80vw,440px);aspect-ratio:1/1.1;justify-self:center">
 <div data-par="-0.18" style="position:absolute;left:18%;top:4%;width:70%;padding:4% 4% 16%;background:#fff;transform:rotate(8deg);box-shadow:0 20px 40px -18px rgba(0,0,0,.35)"><div style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }}"><img src="{{ galA }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:{{ th.imgFilter }}"></div></div>
-<div onClick="{{ ed.cover }}" data-par="0.08" style="position:absolute;left:0;top:12%;width:74%;padding:4% 4% 18%;background:#fff;transform:rotate(-5deg);box-shadow:0 30px 50px -20px rgba(0,0,0,.4);cursor:{{ ec }};outline:{{ eo }};outline-offset:6px"><div style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }}"><img data-par="0.06" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div><div style="position:absolute;left:0;right:0;bottom:4%;text-align:center;font-family:'Caveat',cursive;font-size:clamp(20px,5vw,28px);color:#2d2620">{{ gDateShort }}</div></div>
+<div onClick="{{ ed.cover }}" data-par="0.08" style="position:absolute;left:0;top:12%;width:74%;padding:4% 4% 18%;background:#fff;transform:rotate(-5deg);box-shadow:0 30px 50px -20px rgba(0,0,0,.4);cursor:{{ ec }};outline:{{ eo }};outline-offset:6px"><div style="position:relative;aspect-ratio:1;overflow:hidden;background:{{ th.imgBg }}"><img data-par="0.06" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div><div style="position:absolute;left:0;right:0;bottom:4%;text-align:center;font-family:'Caveat',cursive;font-size:clamp(20px,5vw,28px);color:#2d2620">{{ gDateShortH }}</div></div>
 <div style="position:absolute;left:30%;top:6%;width:32%;height:9%;background:{{ th.accent2 }};opacity:.85;transform:rotate(-9deg);box-shadow:0 2px 4px rgba(0,0,0,.1)"></div>
 <sc-if value="{{ inv.time }}"><div style="position:absolute;right:2%;bottom:6%;padding:10px 16px;border-radius:999px;background:{{ th.accent }};color:{{ th.onAccent }};font-family:'Caveat',cursive;font-size:22px;transform:rotate(-8deg)">{{ inv.time }}</div></sc-if>
 </div>
 <div data-herotext="1">
-<div style="font-family:'Caveat',cursive;font-size:26px;color:{{ th.accent }}">{{ kick }}</div>
-<h1 onClick="{{ ed.names }}" style="margin:8px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,13vw,130px) * {{ th.fs }});line-height:.9;transform:rotate(-2deg);text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div style="font-family:'Caveat',cursive;font-size:26px;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" onClick="{{ ed.names }}" style="margin:8px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(56px,13vw,130px) * {{ th.fs }} * var(--nf,1));line-height:.9;transform:rotate(-2deg);text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 <div style="width:min(70%,260px);height:6px;margin-top:10px;border-radius:3px;background:{{ th.accent2 }};transform:rotate(-2deg)"></div>
-<div onClick="{{ ed.when }}" style="margin-top:22px;font-size:17px;line-height:1.6;cursor:{{ ec }}"><sc-if value="{{ gWdDate }}">{{ gWdDate }}<br></sc-if>{{ inv.venue }}</div>
+<div onClick="{{ ed.when }}" style="margin-top:22px;font-size:17px;line-height:1.6;cursor:{{ ec }}"><sc-if value="{{ gWdDateH }}">{{ gWdDateH }}<br></sc-if>{{ inv.venue }}</div>
 <div style="margin-top:10px;font-family:'Caveat',cursive;font-size:22px;color:{{ th.muted }}">— {{ inv.host }}</div>
 </div></div>
 </section></sc-if>
 
 <sc-if value="{{ th.film }}"><section data-hero="1" style="position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding:{{ heroPad }} 0 70px;overflow:hidden;text-align:center">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};letter-spacing:.6em">{{ kick }}</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }};letter-spacing:.6em">{{ kick }}</div>
 <div style="position:relative;margin-top:26px">
 <div style="height:16px;background:repeating-linear-gradient(90deg,{{ th.accent2 }} 0 14px,transparent 14px 28px)"></div>
-<div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:2.39/1;max-height:62vh;width:100%;overflow:hidden;background:{{ th.imgBg }};cursor:{{ ec }};outline:{{ eo }};outline-offset:-8px"><img data-par="0.3" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.55))"></div><div style="position:absolute;left:18px;bottom:14px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.2em;color:rgba(255,255,255,.8)">● REC · {{ ticketNo }}</div></div>
+<div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:2.39/1;max-height:62vh;width:100%;overflow:hidden;background:{{ th.imgBg }};cursor:{{ ec }};outline:{{ eo }};outline-offset:-8px"><img data-par="0.3" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.55))"></div><div style="position:absolute;left:18px;bottom:14px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.2em;color:rgba(255,255,255,.8)">● {{ filmTag }}</div></div>
 <div style="height:16px;background:repeating-linear-gradient(90deg,{{ th.accent2 }} 0 14px,transparent 14px 28px)"></div>
 </div>
 <div data-herotext="1" style="padding:0 20px">
 <div style="margin-top:30px;font-size:12px;letter-spacing:.5em;text-transform:uppercase;color:{{ th.muted }}">{{ inv.host }}</div>
-<h1 onClick="{{ ed.names }}" style="margin:14px auto 0;max-width:16ch;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(48px,11vw,128px) * {{ th.fs }});line-height:.92;letter-spacing:.05em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<div onClick="{{ ed.when }}" style="margin-top:22px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px 26px;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};cursor:{{ ec }}"><sc-if value="{{ gDateLong }}"><span>{{ gDateLong }}</span></sc-if><sc-if value="{{ inv.time }}"><span>{{ inv.time }}</span></sc-if><sc-if value="{{ whenEmpty }}"><span>{{ whenTxt }}</span></sc-if><sc-if value="{{ inv.venue }}"><span>{{ inv.venue }}</span></sc-if></div>
+<h1 data-fit="word" onClick="{{ ed.names }}" style="margin:14px auto 0;max-width:max(16ch,var(--nw,0px));font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(48px,11vw,128px) * {{ th.fs }} * var(--nf,1));line-height:.92;letter-spacing:.05em;text-transform:{{ th.tt }};text-wrap:balance;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div onClick="{{ ed.when }}" style="margin-top:22px;display:flex;justify-content:center;flex-wrap:wrap;gap:8px 26px;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }};cursor:{{ ec }}"><sc-if value="{{ gDateHero }}"><span>{{ gDateHero }}</span></sc-if><sc-if value="{{ inv.time }}"><span>{{ inv.time }}</span></sc-if><sc-if value="{{ whenEmpty }}"><span>{{ whenTxt }}</span></sc-if><sc-if value="{{ inv.venue }}"><span>{{ inv.venue }}</span></sc-if></div>
 </div>
 </section></sc-if>
 
@@ -544,21 +551,21 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div data-par="0.25" style="position:absolute;width:min(110vw,780px);aspect-ratio:1.2;right:-34vw;top:38%;border-radius:50%;background:radial-gradient(closest-side,{{ th.accentSoft }},transparent);pointer-events:none"></div>
 <div data-par="-0.5" style="position:absolute;width:260px;aspect-ratio:1;left:60%;top:8%;border-radius:50%;background:radial-gradient(closest-side,{{ th.accent2 }},transparent);opacity:.6;pointer-events:none"></div>
 <div onClick="{{ ed.cover }}" style="position:relative;width:min(72vw,400px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:{{ th.imgBg }};-webkit-mask-image:radial-gradient(closest-side,#000 66%,transparent);mask-image:radial-gradient(closest-side,#000 66%,transparent);cursor:{{ ec }}"><img data-par="0.1" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
-<div data-herotext="1" style="position:relative;margin-top:8px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ kick }}</div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }});line-height:1;text-wrap:balance;max-width:14ch;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
-<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:18px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }};cursor:{{ ec }}">{{ whenTxt }}</div></sc-if>
+<div data-herotext="1" style="position:relative;margin-top:8px;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ kick }}</div>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="position:relative;margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,12vw,124px) * {{ th.fs }} * var(--nf,1));line-height:1;text-wrap:balance;max-width:max(14ch,var(--nw,0px));outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<sc-if value="{{ whenTxt }}"><div data-herotext="1" onClick="{{ ed.when }}" style="position:relative;margin-top:18px;font-size:14px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }};cursor:{{ ec }}"><span style="white-space:nowrap">{{ whenD }}</span>{{ whenSep }}<span style="white-space:nowrap">{{ whenT }}</span></div></sc-if>
 <div style="position:relative;margin-top:10px;font-style:italic;color:{{ th.muted }}">{{ inv.host }}</div>
 </section></sc-if>
 
 <sc-if value="{{ th.brutal }}"><section data-hero="1" style="position:relative;min-height:100svh;padding:{{ heroPad }} clamp(14px,4vw,40px) 60px;overflow:hidden">
 <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px">
 <div style="grid-column:1/-1;border:4px solid {{ th.ink }};background:{{ th.surface }};padding:clamp(14px,3vw,28px);box-shadow:8px 8px 0 {{ th.ink }}">
-<div style="font:700 12px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;display:flex;justify-content:space-between;gap:10px"><span>{{ kick }}</span><span>{{ ticketNo }}</span></div>
-<h1 data-herotext="1" onClick="{{ ed.names }}" style="margin:12px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,14vw,190px) * {{ th.fs }});line-height:.86;text-transform:{{ th.tt }};overflow-wrap:break-word;hyphens:auto;outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
+<div style="font:700 12px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px"><span>{{ kick }}</span><span>{{ gEvLabel }}</span></div>
+<h1 data-fit="word" data-herotext="1" onClick="{{ ed.names }}" style="margin:12px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(52px,14vw,190px) * {{ th.fs }} * var(--nf,1));line-height:.86;text-transform:{{ th.tt }};outline:{{ eo }};outline-offset:6px;cursor:{{ ec }}">{{ inv.names }}</h1>
 </div>
 <div onClick="{{ ed.cover }}" style="position:relative;aspect-ratio:4/3;border:4px solid {{ th.ink }};overflow:hidden;background:{{ th.imgBg }};box-shadow:8px 8px 0 {{ th.ink }};cursor:{{ ec }}"><img data-par="0.12" data-kb="1" src="{{ inv.cover }}" alt="" style="position:absolute;left:0;top:-12%;width:100%;height:124%;object-fit:cover;filter:{{ th.imgFilter }}"><sc-if value="{{ hasVideo }}"><video src="{{ inv.video }}" onLoadedData="{{ vidReady }}" autoplay="autoplay" loop="loop" playsinline="playsinline" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:{{ th.imgFilter }}"></video></sc-if></div>
 <div style="display:grid;gap:14px">
-<sc-if value="{{ hasWhen }}"><div onClick="{{ ed.when }}" style="border:4px solid {{ th.ink }};background:{{ th.accent }};color:{{ th.onAccent }};padding:18px;box-shadow:8px 8px 0 {{ th.ink }};cursor:{{ ec }}"><div style="font:700 11px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase">{{ whenLabel }}</div><sc-if value="{{ hasDate }}"><div style="margin-top:6px;font-family:{{ th.fontCss }};font-size:calc(clamp(30px,6vw,52px) * {{ th.fs }});line-height:.95;text-transform:uppercase">{{ gDateLong }}</div></sc-if><sc-if value="{{ hasTime }}"><div style="margin-top:4px;font:700 18px 'JetBrains Mono',monospace">{{ inv.time }}</div></sc-if><sc-if value="{{ whenEmpty }}"><div style="margin-top:6px;font:700 18px 'JetBrains Mono',monospace">✎</div></sc-if></div></sc-if>
+<sc-if value="{{ hasWhen }}"><div onClick="{{ ed.when }}" style="border:4px solid {{ th.ink }};background:{{ th.accent }};color:{{ th.onAccent }};padding:18px;box-shadow:8px 8px 0 {{ th.ink }};cursor:{{ ec }}"><div style="font:700 11px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase">{{ whenLabel }}</div><sc-if value="{{ hasDate }}"><div style="margin-top:6px;font-family:{{ th.fontCss }};font-size:calc(clamp(30px,6vw,52px) * {{ th.fs }});line-height:.95;text-transform:uppercase">{{ gDateHero }}</div></sc-if><sc-if value="{{ hasTime }}"><div style="margin-top:4px;font:700 18px 'JetBrains Mono',monospace">{{ inv.time }}</div></sc-if><sc-if value="{{ whenEmpty }}"><div style="margin-top:6px;font:700 18px 'JetBrains Mono',monospace">✎</div></sc-if></div></sc-if>
 <div style="border:4px solid {{ th.ink }};background:{{ th.accent2 }};color:#fff;padding:18px;box-shadow:8px 8px 0 {{ th.ink }}"><div style="font:700 11px 'JetBrains Mono',monospace;letter-spacing:.2em;text-transform:uppercase">{{ gt.venue }}</div><div style="margin-top:6px;font-size:20px;font-weight:700">{{ inv.venue }}</div><div style="margin-top:2px;font-size:14px;opacity:.9">{{ inv.host }}</div></div>
 </div></div>
 <div style="margin:28px calc(-1 * clamp(14px,4vw,40px)) 0;border-top:4px solid {{ th.ink }};border-bottom:4px solid {{ th.ink }};background:{{ th.ink }};color:{{ th.accent }};overflow:hidden;white-space:nowrap"><div data-tick="1" style="display:inline-flex;gap:30px;padding:10px 0;font-family:{{ th.fontCss }};font-size:24px;text-transform:uppercase;will-change:transform"><span>{{ tickerTxt }}</span><span>{{ tickerTxt }}</span></div></div>
@@ -566,18 +573,27 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 
 <div style="display:flex;flex-direction:column">
 <sc-if value="{{ sec.message }}"><section onClick="{{ ed.message }}" style="order:{{ ord.message }};padding:18vh clamp(22px,6vw,60px);max-width:1000px;margin:0 auto;cursor:{{ ec }}">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }};margin-bottom:28px">{{ gt.invitationWord }}</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }};margin-bottom:28px">{{ gt.invitationWord }}</div>
 <p style="margin:0;font-family:{{ th.msgCss }};font-weight:400;font-size:calc(clamp(28px,6.2vw,58px) * {{ th.fsMsg }});line-height:1.2;letter-spacing:-.01em;text-wrap:pretty;outline:{{ eo }};outline-offset:10px"><sc-for list="{{ words }}" as="w" hint-placeholder-count="12"><span data-w="1" style="opacity:.14">{{ w }}</span></sc-for></p>
 <div style="margin-top:36px;display:flex;align-items:center;gap:14px;font-style:italic;color:{{ th.muted }}"><span style="width:42px;height:1px;background:{{ th.accent }}"></span>{{ inv.host }}</div>
 </section></sc-if>
 
-<sc-if value="{{ sec.program }}"><section data-pin="{{ progN }}" style="order:{{ ord.program }};position:relative;height:{{ pinH }}">
+<sc-if value="{{ progList }}"><section data-prog="list" onClick="{{ ed.program }}" style="order:{{ ord.program }};padding:12vh clamp(18px,5vw,48px);max-width:1000px;margin:0 auto;width:100%;box-sizing:border-box;cursor:{{ ec }}">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.program }}</div><div style="font-size:12px;letter-spacing:.25em;color:{{ th.muted }}">{{ progTotal }}</div></div>
+<div style="margin-top:22px;outline:{{ eo }};outline-offset:10px">
+<sc-for list="{{ gProg }}" as="p"><div data-prog-row="{{ $index }}" data-rv="1" style="opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .8s cubic-bezier(.2,.7,.2,1);display:grid;grid-template-columns:minmax(58px,auto) minmax(0,1fr);gap:4px 18px;align-items:baseline;padding:18px 0;border-top:1px solid {{ th.line }}">
+<div style="font-size:15px;letter-spacing:.12em;color:{{ th.accentInk }};font-variant-numeric:tabular-nums lining-nums;white-space:nowrap">{{ p.time }}</div>
+<div style="min-width:0"><div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(24px,6vw,44px) * {{ th.fs }});line-height:1.05;text-transform:{{ th.tt }};text-wrap:balance;overflow-wrap:anywhere">{{ p.title }}</div>
+<sc-if value="{{ p.hasPlace }}"><div style="margin-top:6px;display:flex;align-items:center;gap:8px;font-size:15px;color:{{ th.muted }}"><span style="flex:none;width:7px;height:7px;border-radius:50%;background:{{ th.accent }}"></span><span style="min-width:0;overflow-wrap:anywhere">{{ p.place }}</span></div></sc-if></div>
+</div></sc-for>
+</div></section></sc-if>
+<sc-if value="{{ progPin }}"><section data-pin="{{ progN }}" data-prog="pin" style="order:{{ ord.program }};position:relative;height:{{ pinH }}">
 <div style="position:sticky;top:0;height:100svh;overflow:hidden;display:flex;align-items:center;padding:0 clamp(22px,6vw,60px)">
 <div onClick="{{ ed.program }}" style="width:100%;max-width:1100px;margin:0 auto;display:grid;grid-template-columns:{{ pinCols }};gap:16px 56px;align-items:center;cursor:{{ ec }};outline:{{ eo }};outline-offset:10px">
-<div><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.program }}</div><div data-num="1" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(110px,28vw,300px) * {{ th.fs }});line-height:.85;color:{{ th.accent }};margin-top:12px;text-shadow:{{ th.glowCss }};font-variant-numeric:tabular-nums lining-nums">01</div><div style="font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.muted }};margin-top:8px">/ {{ progTotal }}</div></div>
+<div><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.program }}</div><div data-num="1" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(110px,28vw,300px) * {{ th.fs }});line-height:.85;color:{{ th.accentInk }};margin-top:12px;text-shadow:{{ th.glowCss }};font-variant-numeric:tabular-nums lining-nums">01</div><div style="font-size:12px;letter-spacing:.25em;text-transform:uppercase;color:{{ th.muted }};margin-top:8px">/ {{ progTotal }}</div></div>
 <div style="position:relative;height:clamp(220px,36vh,340px)">
 <sc-for list="{{ gProg }}" as="p"><div data-chap="{{ $index }}" style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:14px;opacity:0">
-<div style="font-size:15px;letter-spacing:.3em;color:{{ th.accent }}">{{ p.time }}</div>
+<div style="font-size:15px;letter-spacing:.3em;color:{{ th.accentInk }}">{{ p.time }}</div>
 <div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(38px,8.5vw,88px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance">{{ p.title }}</div>
 <sc-if value="{{ p.hasPlace }}"><div style="display:flex;align-items:center;gap:10px;font-size:15px;color:{{ th.muted }}"><span style="width:8px;height:8px;border-radius:50%;background:{{ th.accent }}"></span>{{ p.place }}</div></sc-if>
 </div></sc-for>
@@ -587,12 +603,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </section></sc-if>
 
 <sc-if value="{{ sec.countdown }}"><section onClick="{{ ed.when }}" style="order:{{ ord.countdown }};padding:14vh clamp(18px,5vw,48px);background:{{ th.surface }};text-align:center;cursor:{{ ec }}">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.untilEvent }}</div>
+<sc-if value="{{ cdLive }}"><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.untilEvent }}</div>
 <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(6px,2vw,24px);max-width:920px;margin:30px auto 0">
-<sc-for list="{{ cdUnits }}" as="u"><div data-rv="1" style="opacity:0;transform:translateY(26px);transition:opacity .8s ease {{ u.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ u.delay }};border-top:1px solid {{ th.line }};padding-top:18px">
+<sc-for list="{{ cdUnits }}" as="u"><div data-rv="1" style="opacity:0;transform:translateY(26px);transition:opacity .8s ease {{ u.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ u.delay }};border-top:1px solid {{ th.line }};padding-top:18px;min-width:0">
 <div data-cd="{{ u.k }}" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,12vw,124px) * {{ th.fs }});line-height:1;font-variant-numeric:tabular-nums lining-nums;text-shadow:{{ th.glowCss }}">00</div>
-<div style="margin-top:10px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:{{ th.muted }}">{{ u.label }}</div></div></sc-for>
-</div>
+<div data-cdl="{{ u.k }}" style="margin-top:10px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:{{ th.muted }};overflow-wrap:anywhere">{{ u.label }}</div></div></sc-for>
+</div></sc-if>
+<sc-if value="{{ cdPast }}"><div data-cd-past="1" style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(34px,8vw,72px) * {{ th.fs }});line-height:1.05;text-transform:{{ th.tt }};text-wrap:balance;text-shadow:{{ th.glowCss }}">{{ gt.eventPast }}</div></sc-if>
 <div style="margin-top:30px;color:{{ th.muted }};font-size:15px">{{ gFull }}</div>
 </section></sc-if>
 
@@ -604,11 +621,11 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div></div></section></sc-if>
 
 <sc-if value="{{ sec.venue }}"><section id="sec-venue" onClick="{{ ed.venue }}" style="order:{{ ord.venue }};padding:14vh clamp(18px,5vw,48px) 10vh;max-width:1140px;margin:0 auto;cursor:{{ ec }}">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.venue }}</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.venue }}</div>
 <h2 style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,96px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-wrap:balance;text-shadow:{{ th.glowCss }};outline:{{ eo }};outline-offset:6px">{{ inv.venue }}</h2>
 <div style="margin-top:14px;color:{{ th.muted }};font-size:17px">{{ inv.address }}</div>
 <div data-map="1" style="position:relative;margin-top:32px;aspect-ratio:{{ mapAR }};border-radius:{{ th.radius }};overflow:hidden;background:{{ th.surface }};clip-path:circle(8% at 50% 55%)">
-<sc-if value="{{ mapReal }}"><iframe src="{{ mapEmbed }}" title="map" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0;filter:{{ mapFilter }}"></iframe></sc-if>
+<sc-if value="{{ mapReal }}"><iframe src="{{ mapEmbed }}" title="{{ gt.mapTitle }}" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0;filter:{{ mapFilter }}"></iframe></sc-if>
 <sc-if value="{{ mapDrawn }}"><div style="position:absolute;inset:0;background-image:linear-gradient({{ th.line }} 1px,transparent 1px),linear-gradient(90deg,{{ th.line }} 1px,transparent 1px);background-size:46px 46px"></div>
 <div style="position:absolute;left:-20%;right:-20%;top:66%;height:15%;background:{{ th.accent2 }};opacity:.5;transform:rotate(-9deg)"></div>
 <div style="position:absolute;left:-20%;right:-20%;top:36%;height:12px;background:{{ th.bg }};transform:rotate(11deg)"></div>
@@ -622,7 +639,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 <sc-if value="{{ mapNote }}"><div style="margin-top:10px;font-size:12px;letter-spacing:.06em;color:{{ th.muted }}">{{ gt.mapSchematic }}</div></sc-if>
 <sc-if value="{{ hasRoute }}"><div data-route="1" style="margin-top:26px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:0 28px">
-<sc-for list="{{ routeList }}" as="r"><div data-stopn="{{ r.n }}" style="display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid {{ th.line }}"><span style="width:28px;height:28px;border-radius:50%;background:{{ r.badgeBg }};color:{{ r.badgeColor }};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ r.n }}</span><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2em;color:{{ th.accent }}">{{ r.time }}</div><div style="font-size:17px;margin-top:4px;overflow-wrap:anywhere">{{ r.place }}</div><sc-if value="{{ r.hasTitle }}"><div style="font-size:14px;color:{{ th.muted }};margin-top:2px">{{ r.title }}</div></sc-if><sc-if value="{{ r.hasAddr }}"><div data-addr="1" style="font-size:13px;line-height:1.4;color:{{ th.muted }};margin-top:4px;overflow-wrap:anywhere">{{ r.addr }}</div></sc-if><a data-stoplink="1" href="{{ r.href }}" target="_blank" rel="noopener" style="display:inline-block;padding:7px 0;margin-top:2px;color:{{ th.ink }};font-size:14px;text-decoration:underline;text-decoration-color:{{ th.accent }};text-underline-offset:3px">{{ gt.howToGet }} ↗</a></div></div></sc-for>
+<sc-for list="{{ routeList }}" as="r"><div data-stopn="{{ r.n }}" style="display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid {{ th.line }}"><span style="width:28px;height:28px;border-radius:50%;background:{{ r.badgeBg }};color:{{ r.badgeColor }};font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ r.n }}</span><div style="min-width:0"><div style="font-size:12px;letter-spacing:.2em;color:{{ th.accentInk }}">{{ r.time }}</div><div style="font-size:17px;margin-top:4px;overflow-wrap:anywhere">{{ r.place }}</div><sc-if value="{{ r.hasTitle }}"><div style="font-size:14px;color:{{ th.muted }};margin-top:2px">{{ r.title }}</div></sc-if><sc-if value="{{ r.hasAddr }}"><div data-addr="1" style="font-size:13px;line-height:1.4;color:{{ th.muted }};margin-top:4px;overflow-wrap:anywhere">{{ r.addr }}</div></sc-if><a data-stoplink="1" href="{{ r.href }}" target="_blank" rel="noopener" style="display:inline-block;padding:7px 0;margin-top:2px;color:{{ th.ink }};font-size:14px;text-decoration:underline;text-decoration-color:{{ th.accent }};text-underline-offset:3px">{{ gt.howToGet }} ↗</a></div></div></sc-for>
 </div></sc-if>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:22px">
 <a href="{{ mapUrl }}" target="_blank" rel="noopener" style="height:48px;padding:0 20px;display:inline-flex;align-items:center;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};color:{{ th.ink }};text-decoration:none;font-size:15px">{{ gt.openMap }} ↗</a>
@@ -630,40 +647,44 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 </div>
 </section></sc-if>
 
-<sc-if value="{{ sec.dress }}"><section onClick="{{ ed.details }}" style="order:{{ ord.dress }};padding:12vh clamp(18px,5vw,48px);border-top:1px solid {{ th.line }};cursor:{{ ec }}"><div style="max-width:1140px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:30px 60px;align-items:end">
-<div data-rv="1" style="opacity:0;transform:translateY(30px);transition:opacity .9s,transform 1s cubic-bezier(.2,.7,.2,1)"><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.dress }}</div><p style="margin:16px 0 0;font-family:{{ th.msgCss }};font-size:calc(clamp(26px,5vw,44px) * {{ th.fsMsg }});line-height:1.2;text-wrap:pretty;outline:{{ eo }};outline-offset:8px">{{ inv.dress }}</p></div>
+<sc-if value="{{ sec.dress }}"><section data-dress="1" onClick="{{ ed.details }}" style="order:{{ ord.dress }};padding:12vh clamp(18px,5vw,48px);border-top:1px solid {{ th.line }};cursor:{{ ec }}"><div style="max-width:1140px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:30px 60px;align-items:end">
+<div data-rv="1" style="opacity:0;transform:translateY(30px);transition:opacity .9s,transform 1s cubic-bezier(.2,.7,.2,1)"><div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.dress }}</div><p style="margin:16px 0 0;font-family:{{ th.msgCss }};font-size:calc(clamp(26px,5vw,44px) * {{ th.fsMsg }});line-height:1.2;text-wrap:pretty;outline:{{ eo }};outline-offset:8px">{{ inv.dress }}</p></div>
 <div style="display:flex;flex-wrap:wrap;gap:14px">
-<sc-for list="{{ dressSw }}" as="d"><div data-rv="1" style="opacity:0;transform:translateY(30px) scale(.8);transition:opacity .7s ease {{ d.delay }},transform .9s cubic-bezier(.2,.9,.3,1.3) {{ d.delay }};display:flex;flex-direction:column;align-items:center;gap:10px"><span style="width:clamp(60px,14vw,96px);height:clamp(60px,14vw,96px);border-radius:50%;background:{{ d.c }};border:1px solid {{ th.line }};box-shadow:0 16px 30px -16px rgba(0,0,0,.4)"></span><span style="font:500 10px 'JetBrains Mono',monospace;letter-spacing:.08em;color:{{ th.muted }}">{{ d.c }}</span></div></sc-for>
+<sc-for list="{{ dressSw }}" as="d"><div data-rv="1" style="opacity:0;transform:translateY(30px) scale(.8);transition:opacity .7s ease {{ d.delay }},transform .9s cubic-bezier(.2,.9,.3,1.3) {{ d.delay }};display:flex;flex-direction:column;align-items:center;gap:10px"><span style="width:clamp(60px,14vw,96px);height:clamp(60px,14vw,96px);border-radius:50%;background:{{ d.c }};border:1px solid {{ th.line }};box-shadow:0 16px 30px -16px rgba(0,0,0,.4)"></span></div></sc-for>
 </div></div></section></sc-if>
 
 <sc-if value="{{ sec.info }}"><section onClick="{{ ed.details }}" style="order:{{ ord.info }};padding:4vh clamp(18px,5vw,48px) 12vh;cursor:{{ ec }}"><div style="max-width:1140px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px">
-<sc-for list="{{ infoCards }}" as="c"><div data-rv="1" style="opacity:0;transform:translateY(30px);transition:opacity .8s ease {{ c.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ c.delay }};padding:26px;border-radius:{{ th.radius }};background:{{ th.surface }};border:1px solid {{ th.line }};display:flex;flex-direction:column;gap:14px;outline:{{ eo }};outline-offset:4px">
-<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:{{ th.accent }}">{{ c.title }}</span><span style="font-family:{{ th.fontCss }};font-size:28px;color:{{ th.accent }};line-height:1">{{ c.glyph }}</span></div>
-<p style="margin:0;font-size:17px;line-height:1.5;text-wrap:pretty">{{ c.text }}</p>
-<sc-if value="{{ c.hasLink }}"><a href="{{ c.href }}" target="_blank" rel="noopener" style="margin-top:auto;align-self:flex-start;height:42px;padding:0 16px;display:inline-flex;align-items:center;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};color:{{ th.ink }};text-decoration:none;font-size:14px">{{ c.linkLabel }} ↗</a></sc-if>
+<sc-for list="{{ infoCards }}" as="c"><div data-info="{{ c.k }}" data-rv="1" style="opacity:0;transform:translateY(30px);transition:opacity .8s ease {{ c.delay }},transform .9s cubic-bezier(.2,.7,.2,1) {{ c.delay }};padding:26px;border-radius:{{ th.radius }};background:{{ th.surface }};border:1px solid {{ th.line }};display:flex;flex-direction:column;gap:14px;outline:{{ eo }};outline-offset:4px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:{{ th.accentInk }}">{{ c.title }}</span><span style="font-family:{{ th.fontCss }};font-size:28px;color:{{ th.accentInk }};line-height:1">{{ c.glyph }}</span></div>
+<sc-if value="{{ c.text }}"><p style="margin:0;font-size:17px;line-height:1.5;text-wrap:pretty;white-space:pre-line;overflow-wrap:anywhere">{{ c.text }}</p></sc-if>
+<sc-if value="{{ c.copy }}"><button data-copy-card="1" onClick="{{ c.copy }}" style="align-self:flex-start;height:42px;padding:0 16px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};background:transparent;color:{{ th.ink }};font-size:14px;cursor:pointer">⧉ {{ gt.copyCard }}</button></sc-if>
+<sc-for list="{{ c.rows }}" as="x"><div data-contact="{{ x.kind }}" style="display:flex;flex-direction:column;gap:10px">
+<div style="font-size:17px;line-height:1.4;overflow-wrap:anywhere"><sc-if value="{{ x.hasLabel }}"><span style="display:block;font-size:13px;color:{{ th.muted }}">{{ x.label }}</span></sc-if>{{ x.value }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ x.links }}" as="l"><a data-contact-link="{{ l.kind }}" href="{{ l.href }}" target="{{ l.target }}" rel="noopener" style="height:42px;padding:0 16px;display:inline-flex;align-items:center;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};color:{{ th.ink }};text-decoration:none;font-size:14px">{{ l.label }}</a></sc-for></div>
+</div></sc-for>
 </div></sc-for>
 </div></section></sc-if>
 
 <sc-if value="{{ sec.who }}"><section id="sec-who" style="order:{{ ord.who }};padding:12vh clamp(18px,5vw,48px);border-top:1px solid {{ th.line }}"><div style="max-width:1000px;margin:0 auto">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.whoComing }}</div>
-<div style="margin-top:16px;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap"><span style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(72px,18vw,170px) * {{ th.fs }});line-height:.85;color:{{ th.accent }};text-shadow:{{ th.glowCss }};font-variant-numeric:lining-nums">{{ comingCount }}</span><span style="font-size:18px;color:{{ th.muted }};max-width:16ch">{{ comingLabel }}</span></div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.whoComing }}</div>
+<div style="margin-top:16px;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap"><span style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(72px,18vw,170px) * {{ th.fs }});line-height:.85;color:{{ th.accentInk }};text-shadow:{{ th.glowCss }};font-variant-numeric:lining-nums">{{ comingCount }}</span><span style="font-size:18px;color:{{ th.muted }};max-width:16ch">{{ comingLabel }}</span></div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:30px">
 <sc-for list="{{ whoList }}" as="w" hint-placeholder-count="0"><div data-rv="1" style="opacity:0;transform:scale(.6) translateY(20px);transition:opacity .5s ease {{ w.delay }},transform .7s cubic-bezier(.2,1.5,.4,1) {{ w.delay }};display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border-radius:999px;background:{{ w.bg }};color:{{ w.color }};border:1px solid {{ th.line }}"><span style="width:36px;height:36px;border-radius:50%;background:{{ w.av }};color:{{ w.avc }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ w.ini }}</span><span style="font-size:15px">{{ w.name }}</span><span style="font-size:13px;opacity:.65">{{ w.plus }}</span></div></sc-for>
 <sc-if value="{{ whoMore }}"><div style="display:flex;align-items:center;padding:0 16px;height:50px;border-radius:999px;border:1px dashed {{ th.line }};color:{{ th.muted }};font-size:14px">{{ whoMoreTxt }}</div></sc-if>
 </div></div></section></sc-if>
 
 <sc-if value="{{ sec.reveal }}"><section id="sec-reveal" onClick="{{ ed.details }}" style="order:{{ ord.reveal }};padding:12vh clamp(18px,5vw,48px);text-align:center;cursor:{{ ec }}">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.sec.reveal }}</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ revealKick }}</div>
 <div style="position:relative;width:min(88vw,460px);aspect-ratio:16/10;margin:26px auto 0;border-radius:{{ th.radius }};overflow:hidden;background:{{ th.surface }};border:1px solid {{ th.line }};display:flex;align-items:center;justify-content:center;padding:20px;box-shadow:0 40px 80px -46px rgba(0,0,0,.5)">
-<div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(36px,9vw,64px) * {{ th.fs }});line-height:1;color:{{ th.accent }};text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }};text-wrap:balance">{{ inv.secret }}</div>
+<div style="font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(36px,9vw,64px) * {{ th.fs }});line-height:1;color:{{ th.accentInk }};text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }};text-wrap:balance">{{ inv.secret }}</div>
 <canvas ref="{{ scratchRef }}" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair"></canvas>
 </div>
 <div style="margin-top:14px;font-size:13px;color:{{ th.muted }}">{{ gt.scratchHint }}</div>
 </section></sc-if>
 
 <sc-if value="{{ sec.guestbook }}"><section id="sec-guestbook" style="order:{{ ord.guestbook }};padding:12vh clamp(18px,5vw,48px);border-top:1px solid {{ th.line }}"><div style="max-width:1100px;margin:0 auto">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">{{ gt.guestbook }}</div>
-<h2 style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,88px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ gbCount }}</h2>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.guestbook }}</div>
+<sc-if value="{{ gbHas }}"><h2 data-gb-count="1" style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(40px,9vw,88px) * {{ th.fs }});line-height:.95;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ gbCount }}</h2></sc-if>
 <div style="margin-top:30px;columns:2 260px;column-gap:16px">
 <sc-for list="{{ guestbook }}" as="b" hint-placeholder-count="0"><div data-rv="1" style="opacity:0;transform:translateY(30px) rotate({{ b.rot }});transition:opacity .7s ease {{ b.delay }},transform .9s cubic-bezier(.2,.9,.3,1.2) {{ b.delay }};break-inside:avoid;margin:0 0 16px;padding:22px 22px 18px;border-radius:{{ th.radius }};background:{{ b.bg }};color:{{ b.color }};border:1px solid {{ th.line }};box-shadow:0 20px 40px -30px rgba(0,0,0,.5)">
 <div style="font-family:{{ th.fontCss }};font-size:40px;line-height:.6;color:{{ b.q }}">“</div>
@@ -671,24 +692,27 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="margin-top:14px;display:flex;align-items:center;gap:10px;font-size:13px;opacity:.85"><span style="width:28px;height:28px;border-radius:50%;background:{{ b.av }};color:{{ b.avc }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">{{ b.ini }}</span>{{ b.name }}</div>
 </div></sc-for>
 </div>
-<sc-if value="{{ gbEmpty }}"><div style="margin-top:20px;color:{{ th.muted }}">{{ gt.guestbookHint }}</div></sc-if>
+<sc-if value="{{ gbEmpty }}"><div data-gb-empty="1" style="margin-top:-14px;color:{{ th.muted }};line-height:1.5">{{ gt.guestbookHint }}</div></sc-if>
+<sc-if value="{{ gbFirst }}"><button data-gb-first="1" onClick="{{ writeWish }}" style="margin-top:18px;height:48px;padding:0 20px;border-radius:{{ th.radius }};border:1px solid {{ th.ink }};background:transparent;color:{{ th.ink }};font-size:15px;cursor:pointer">{{ gt.gbFirst }} ↓</button></sc-if>
 </div></section></sc-if>
 
 <section id="rsvp" style="order:{{ ord.rsvp }};display:{{ rsvpDisp }};padding:14vh clamp(18px,5vw,48px);background:{{ th.surface }}"><div style="max-width:620px;margin:0 auto">
-<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accent }}">RSVP</div>
+<div style="font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:{{ th.accentInk }}">{{ gt.rsvpKick }}</div>
 <h2 style="margin:14px 0 0;font-family:{{ th.fontCss }};font-weight:{{ th.wt }};font-size:calc(clamp(46px,10vw,100px) * {{ th.fs }});line-height:.92;text-transform:{{ th.tt }};text-shadow:{{ th.glowCss }}">{{ gt.rsvp }}</h2>
-<sc-if value="{{ rsvpBy }}"><div style="color:{{ th.muted }};margin-top:14px">{{ gt.replyBy }} {{ rsvpBy }}</div></sc-if>
+<sc-if value="{{ rsvpBy }}"><div data-rsvp-by="1" style="color:{{ th.muted }};margin-top:14px">{{ rsvpBy }}</div></sc-if>
+<sc-if value="{{ rsvpShutOn }}"><div data-rsvp-closed="1" role="status" style="margin-top:26px;padding:22px 20px;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.bg }}"><div style="font-family:{{ th.fontCss }};font-size:calc(28px * {{ th.fs }});line-height:1.1;text-transform:{{ th.tt }}">{{ gt.rsvpClosedT }}</div><sc-if value="{{ rsvpShutText }}"><div style="margin-top:8px;color:{{ th.muted }};line-height:1.5">{{ rsvpShutText }}</div></sc-if></div></sc-if>
 <sc-if value="{{ rsvpForm }}"><div>
-<sc-if value="{{ hasTo }}"><div style="margin-top:26px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:{{ th.radius }};background:{{ th.bg }};border:1px solid {{ th.line }}"><span style="width:36px;height:36px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ toIni }}</span><span style="font-size:13px;color:{{ th.muted }}">{{ gt.replying }}</span><span style="font-size:16px;font-weight:600">{{ toName }}</span></div></sc-if>
-<sc-if value="{{ noTo }}"><input name="rsvp-name" value="{{ rsvp.name }}" onChange="{{ onRsvpName }}" placeholder="{{ gt.yourName }}" style="margin-top:26px;width:100%;height:58px;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.bg }};color:{{ th.ink }};padding:0 18px;font-size:17px;outline:none"></sc-if>
+<sc-if value="{{ hasTo }}"><div style="margin-top:26px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:{{ th.radius }};background:{{ th.bg }};border:1px solid {{ th.line }}"><span style="flex:none;width:36px;height:36px;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ toIni }}</span><span style="font-size:13px;color:{{ th.muted }}">{{ gt.replying }}</span><span style="min-width:0;font-size:16px;font-weight:600;overflow-wrap:anywhere">{{ toName }}</span></div></sc-if>
+<sc-if value="{{ noTo }}"><input name="rsvp-name" value="{{ rsvp.name }}" onChange="{{ onRsvpName }}" placeholder="{{ gt.yourName }}" aria-label="{{ gt.yourName }}" autocomplete="name" style="margin-top:26px;width:100%;height:58px;border-radius:{{ th.radius }};border:1px solid {{ nameBorder }};background:{{ th.bg }};color:{{ th.ink }};padding:0 18px;font-size:17px;outline:none"></sc-if>
 <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
-<sc-for list="{{ rsvpOpts }}" as="o"><button onClick="{{ o.onClick }}" style="height:62px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;border-radius:{{ th.radius }};border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:17px;cursor:pointer;transition:background .25s,color .25s,transform .15s;text-align:left" style-active="transform:scale(.98)"><span>{{ o.label }}</span><span style="width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:12px">{{ o.mark }}</span></button></sc-for>
+<sc-for list="{{ rsvpOpts }}" as="o"><button data-rsvp-opt="1" onClick="{{ o.onClick }}" aria-pressed="{{ o.pressed }}" style="height:62px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;border-radius:{{ th.radius }};border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-size:17px;cursor:pointer;transition:background .25s,color .25s,transform .15s;text-align:left" style-active="transform:scale(.98)"><span>{{ o.label }}</span><span style="width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:12px">{{ o.mark }}</span></button></sc-for>
 </div>
-<sc-if value="{{ showCount }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px;padding:14px 0;border-top:1px solid {{ th.line }};border-bottom:1px solid {{ th.line }}"><span>{{ gt.guestsCount }}</span><div style="display:flex;align-items:center;gap:14px"><button onClick="{{ decCount }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:transparent;color:{{ th.ink }};font-size:20px;cursor:pointer">−</button><span style="font-family:{{ th.fontCss }};font-size:30px;min-width:32px;text-align:center">{{ rsvp.count }}</span><button onClick="{{ incCount }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:transparent;color:{{ th.ink }};font-size:20px;cursor:pointer">+</button></div></div></sc-if>
-<div style="margin-top:24px"><div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:{{ th.muted }}">{{ gt.diet }}</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><sc-for list="{{ dietOpts }}" as="d"><button onClick="{{ d.onClick }}" style="height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ d.border }};background:{{ d.bg }};color:{{ d.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ d.label }}</button></sc-for></div></div>
-<textarea value="{{ rsvp.msg }}" onChange="{{ onRsvpMsg }}" placeholder="{{ gt.msgHost }}" rows="3" style="margin-top:22px;width:100%;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.bg }};color:{{ th.ink }};padding:14px 16px;font-size:16px;resize:vertical;outline:none"></textarea>
+<sc-if value="{{ showCount }}"><div data-rsvp-count="1" style="margin-top:22px;padding:14px 0;border-top:1px solid {{ th.line }};border-bottom:1px solid {{ th.line }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="min-width:0">{{ gt.guestsCount }}</span><div style="flex:none;display:flex;align-items:center;gap:14px"><button onClick="{{ decCount }}" aria-label="−" aria-disabled="{{ decDis }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:transparent;color:{{ th.ink }};font-size:20px;cursor:pointer;opacity:{{ decOp }}">−</button><span data-count-n="1" style="font-family:{{ th.fontCss }};font-size:30px;min-width:32px;text-align:center">{{ rsvp.count }}</span><button onClick="{{ incCount }}" aria-label="+" aria-disabled="{{ incDis }}" style="width:44px;height:44px;border-radius:50%;border:1px solid {{ th.line }};background:transparent;color:{{ th.ink }};font-size:20px;cursor:pointer;opacity:{{ incOp }}">+</button></div></div><sc-if value="{{ countMaxOn }}"><div data-count-max="1" style="margin-top:8px;font-size:13px;color:{{ th.muted }}">{{ gt.countMax }}</div></sc-if></div></sc-if>
+<sc-if value="{{ dietShow }}"><div data-diet="1" style="margin-top:18px"><button onClick="{{ toggleDiet }}" aria-expanded="{{ dietExp }}" style="display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:0;border:0;background:none;color:{{ th.muted }};font-size:15px;text-align:left;cursor:pointer"><span aria-hidden="true" style="flex:none;width:22px;height:22px;border-radius:50%;border:1px solid {{ th.line }};display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1">{{ dietMark }}</span>{{ gt.dietMore }}</button><sc-if value="{{ dietOpen }}"><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><sc-for list="{{ dietOpts }}" as="d"><button data-diet-opt="{{ d.k }}" onClick="{{ d.onClick }}" aria-pressed="{{ d.pressed }}" style="height:44px;padding:0 16px;border-radius:999px;border:1px solid {{ d.border }};background:{{ d.bg }};color:{{ d.color }};font-size:14px;cursor:pointer;transition:background .2s">{{ d.label }}</button></sc-for></div></sc-if></div></sc-if>
+<textarea value="{{ rsvp.msg }}" onChange="{{ onRsvpMsg }}" placeholder="{{ gt.msgHost }}" aria-label="{{ gt.msgHost }}" maxLength="500" rows="3" style="margin-top:22px;width:100%;border-radius:{{ th.radius }};border:1px solid {{ th.line }};background:{{ th.bg }};color:{{ th.ink }};padding:14px 16px;font-size:16px;resize:vertical;outline:none"></textarea>
+<sc-if value="{{ msgPubShow }}"><button data-msg-public="{{ msgPubOn }}" role="checkbox" aria-checked="{{ msgPubOn }}" onClick="{{ toggleMsgPub }}" style="display:flex;align-items:flex-start;gap:12px;width:100%;margin-top:12px;padding:6px 0;border:0;background:none;color:{{ th.ink }};text-align:left;cursor:pointer"><span aria-hidden="true" style="flex:none;width:22px;height:22px;margin-top:1px;border-radius:6px;border:1.5px solid {{ msgPubBorder }};background:{{ msgPubBg }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">{{ msgPubMark }}</span><span style="min-width:0"><span style="display:block;font-size:15px">{{ gt.msgPublic }}</span><span style="display:block;margin-top:3px;font-size:13px;line-height:1.4;color:{{ th.muted }}">{{ gt.msgPrivHint }}</span></span></button></sc-if>
 <button onClick="{{ sendRsvp }}" style="margin-top:16px;width:100%;height:60px;border-radius:{{ th.radius }};border:0;background:{{ th.accent }};color:{{ th.onAccent }};font-size:16px;font-weight:700;letter-spacing:.04em;cursor:pointer;opacity:{{ sendOp }};transition:opacity .2s">{{ gt.send }}</button>
-<sc-if value="{{ rsvpNeed }}"><div data-rsvp-need="1" role="alert" style="margin-top:10px;text-align:center;color:{{ th.accent }};font-size:15px;line-height:1.4">{{ rsvpNeed }}</div></sc-if>
+<sc-if value="{{ rsvpNeed }}"><div data-rsvp-need="1" role="alert" style="margin-top:10px;text-align:center;color:{{ th.accentInk }};font-size:15px;line-height:1.4">{{ rsvpNeed }}</div></sc-if>
 </div></sc-if>
 <sc-if value="{{ rsvp.sent }}"><div data-rv="1" style="opacity:0;transform:translateY(20px);transition:opacity .7s,transform .8s cubic-bezier(.2,.7,.2,1);margin-top:32px;padding:30px 24px;border:1px solid {{ th.line }};border-radius:{{ th.radius }};background:{{ th.bg }};text-align:center">
 <div style="width:66px;height:66px;margin:0 auto;border-radius:50%;background:{{ th.accent }};color:{{ th.onAccent }};display:flex;align-items:center;justify-content:center;font-size:28px">✓</div>
@@ -702,12 +726,13 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#6e665b">{{ gt.entryQr }}</div>
 <img src="{{ entry.src }}" alt="QR" style="width:200px;height:200px;display:block;image-rendering:pixelated">
 <div style="font-size:13px;line-height:1.4;color:{{ entry.color }};text-align:center">{{ entry.hint }}</div>
+<sc-if value="{{ entry.save }}"><a data-qr-save="1" href="{{ entry.src }}" download="invito-qr.png" style="display:inline-flex;align-items:center;height:40px;padding:0 16px;border-radius:999px;border:1px solid #1a1714;color:#1a1714;text-decoration:none;font-size:14px">{{ gt.saveQr }} ↓</a></sc-if>
 </div></sc-if>
-<button onClick="{{ changeRsvp }}" style="margin-top:16px;background:none;border:0;color:{{ th.muted }};text-decoration:underline;cursor:pointer;font-size:14px">{{ gt.change }}</button>
-</div></sc-if>
+<sc-if value="{{ rsvpCanChange }}"><button onClick="{{ changeRsvp }}" style="margin-top:16px;background:none;border:0;color:{{ th.muted }};text-decoration:underline;cursor:pointer;font-size:14px">{{ gt.change }}</button></sc-if>
+<sc-if value="{{ rsvpShut }}"><div data-rsvp-closed="sent" style="margin-top:16px;font-size:14px;color:{{ th.muted }}">{{ gt.rsvpClosedT }}</div></sc-if>
 </div></section>
 </div>
-<footer style="padding:56px 20px {{ footPad }};text-align:center;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}"><div>{{ gt.madeWith }}</div><button onClick="{{ goHome }}" style="margin-top:12px;background:none;border:0;color:{{ th.accent }};cursor:pointer;font-size:12px;letter-spacing:.2em;text-transform:uppercase">{{ gt.makeOwn }} →</button></footer>
+<footer style="padding:56px 20px {{ footPad }};text-align:center;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:{{ th.muted }}"><div>{{ gt.madeWith }}</div><button onClick="{{ goHome }}" style="margin-top:12px;background:none;border:0;color:{{ th.accentInk }};cursor:pointer;font-size:12px;letter-spacing:.2em;text-transform:uppercase">{{ gt.makeOwn }} →</button></footer>
 
 <sc-if value="{{ sheetOpen }}"><div onClick="{{ closeSheet }}" style="position:fixed;inset:0;z-index:89;background:rgba(10,9,8,.45)"></div>
 <div style="position:fixed;left:0;right:0;bottom:0;z-index:90;max-width:640px;margin:0 auto;background:{{ ui.paper }};color:{{ ui.ink }};border-radius:22px 22px 0 0;padding:10px 22px 28px;font-family:'Onest',sans-serif;max-height:84vh;overflow:auto;box-shadow:0 -20px 60px rgba(0,0,0,.3)">
@@ -723,6 +748,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fDate }}</span><input type="date" value="{{ inv.date }}" onChange="{{ on.date }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 <label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fTime }}</span><input type="time" value="{{ inv.time }}" onChange="{{ on.time }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
 </div>
+<div data-rsvpby-field="1"><div style="display:flex;align-items:flex-end;gap:12px"><label style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fRsvpBy }}</span><input type="date" name="rsvp-by" value="{{ inv.rsvpBy }}" max="{{ rsvpByF.max }}" onChange="{{ on.rsvpBy }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label><sc-if value="{{ rsvpByF.on }}"><button data-rsvpby-clear="1" onClick="{{ rsvpByF.clear }}" style="flex:none;height:36px;margin-bottom:4px;padding:0 14px;border-radius:999px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:400 13px 'Onest',sans-serif;cursor:pointer">× {{ t.rsvpByClear }}</button></sc-if></div><p data-rsvpby-note="1" style="margin:8px 0 0;font-size:13px;line-height:1.45;color:{{ rsvpByF.noteColor }}">{{ rsvpByF.note }}</p></div>
 <button onClick="{{ toggleCd }}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;background:none;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14);padding:14px 0;cursor:pointer;color:{{ ui.ink }};text-align:left">
 <span><span style="display:block;font-size:17px">{{ t.fCountdown }}</span><span data-cdtext="1" style="display:block;margin-top:6px;font:500 11px 'JetBrains Mono',monospace;letter-spacing:.06em;color:#d4452a"></span></span>
 <span style="width:48px;height:28px;border-radius:99px;background:{{ cdTrack }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ cdKnob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s cubic-bezier(.3,.7,.3,1);box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span>
@@ -757,9 +783,9 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px"><sc-for list="{{ swatches }}" as="w"><button onClick="{{ w.onClick }}" style="width:40px;height:40px;border-radius:50%;background:{{ w.c }};border:1px solid rgba({{ ui.inkRgb }},.18);cursor:pointer;box-shadow:{{ w.ring }};transition:box-shadow .2s"></button></sc-for></div></div>
 <div data-reveal="{{ rv.state }}"><button onClick="{{ rv.toggle }}" aria-pressed="{{ rv.pressed }}" style="display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;background:none;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.14);padding:14px 0;cursor:pointer;color:{{ ui.ink }};text-align:left"><span style="min-width:0"><span style="display:block;font-size:17px">{{ t.fSecret }}</span><span style="display:block;margin-top:4px;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.secretHint }}</span></span><span style="width:48px;height:28px;border-radius:99px;background:{{ rv.track }};position:relative;flex:none;transition:background .3s"><span style="position:absolute;top:3px;left:{{ rv.knob }};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .3s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></span></button>
 <sc-if value="{{ rv.on }}"><input name="secret" value="{{ inv.secret }}" maxLength="500" onChange="{{ on.secret }}" aria-label="{{ t.fSecret }}" style="width:100%;margin-top:6px;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:500 22px/1.3 'Cormorant Garamond',serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></sc-if></div>
-<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fGifts }}</span><textarea value="{{ inv.gifts }}" maxLength="1000" onChange="{{ on.gifts }}" rows="2" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
-<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fNotes }}</span><textarea value="{{ inv.notes }}" maxLength="1000" onChange="{{ on.notes }}" rows="3" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
-<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fContact }}</span><input name="contact" value="{{ inv.contact }}" maxLength="300" onChange="{{ on.contact }}" placeholder="{{ ph.contact }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fGifts }}</span><textarea name="gifts" value="{{ inv.gifts }}" maxLength="1000" onChange="{{ on.gifts }}" placeholder="{{ ph.gifts }}" rows="2" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label><p data-hint="gifts" style="margin:-18px 0 0;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.giftsHint }}</p>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fNotes }}</span><textarea name="notes" value="{{ inv.notes }}" maxLength="1000" onChange="{{ on.notes }}" placeholder="{{ ph.notes }}" rows="3" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 17px/1.45 'Onest',sans-serif;color:{{ ui.ink }};outline:none;resize:vertical" style-focus="border-bottom-color:#d4452a"></textarea></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fContact }}</span><input name="contact" value="{{ inv.contact }}" maxLength="300" onChange="{{ on.contact }}" placeholder="{{ ph.contact }}" style="width:100%;background:transparent;border:0;border-bottom:1px solid rgba({{ ui.inkRgb }},.22);border-radius:0;padding:10px 0;font:400 18px/1.4 'Onest',sans-serif;color:{{ ui.ink }};outline:none" style-focus="border-bottom-color:#d4452a"></label><p data-hint="contact" style="margin:-18px 0 0;font-size:13px;line-height:1.45;color:{{ ui.muted }}">{{ t.contactHint }}</p>
 </div></sc-if>
 <sc-if value="{{ qs.photos }}"><div style="display:flex;flex-direction:column;gap:26px">
 <div><div style="font:500 11px/1.2 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:{{ ui.muted }}">{{ t.fCover }}</div>
@@ -910,7 +936,7 @@ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;min-he
 <sc-if value="{{ noReplies }}"><div data-empty="replies" style="padding:18px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12);font-size:14px;line-height:1.5;color:{{ ui.muted }}">{{ t.noReplies }}</div></sc-if>
 <sc-for list="{{ gRows }}" as="g" hint-placeholder-count="0"><div data-guest="{{ g.name }}" style="display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid rgba({{ ui.inkRgb }},.12)">
 <span style="width:42px;height:42px;border-radius:50%;background:{{ g.avBg }};color:{{ ui.paper }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">{{ g.ini }}</span>
-<div style="min-width:0"><div style="font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }} <span style="color:#d4452a;font-weight:400">{{ g.plus }}</span></div><div style="margin-top:3px;font:400 12px 'JetBrains Mono',monospace;color:{{ ui.muted }};display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>{{ g.user }}</span><select value="{{ g.group }}" onChange="{{ g.onGroup }}" style="font:400 11px 'JetBrains Mono',monospace;background:transparent;border:0;border-bottom:1px dashed rgba({{ ui.inkRgb }},.3);padding:0 2px;color:{{ ui.muted }};cursor:pointer"><sc-for list="{{ groupOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ g.checked }}"><span style="color:#2e7d4f">✓ {{ t.checkedIn }}</span></sc-if><sc-if value="{{ g.unpaid }}"><span data-unpaid="1" style="color:#d4452a">{{ t.unpaid }}</span></sc-if><sc-if value="{{ g.smsSt }}"><span data-sms="{{ g.smsKey }}" style="color:{{ g.smsColor }}">{{ g.smsSt }}</span></sc-if><sc-if value="{{ g.canSms }}"><button onClick="{{ g.onSms }}" style="height:22px;padding:0 8px;border-radius:99px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 11px 'Onest',sans-serif;cursor:pointer">✉ {{ t.smsOne }}</button></sc-if><sc-if value="{{ g.canDel }}"><button onClick="{{ g.onDel }}" style="height:22px;padding:0 4px;border:0;background:transparent;color:{{ ui.muted }};font:400 11px 'Onest',sans-serif;text-decoration:underline;cursor:pointer">{{ t.removeG }}</button></sc-if></div></div>
+<div style="min-width:0"><div style="font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }} <span style="color:#d4452a;font-weight:400">{{ g.plus }}</span></div><div style="margin-top:3px;font:400 12px 'JetBrains Mono',monospace;color:{{ ui.muted }};display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>{{ g.user }}</span><select value="{{ g.group }}" onChange="{{ g.onGroup }}" style="font:400 11px 'JetBrains Mono',monospace;background:transparent;border:0;border-bottom:1px dashed rgba({{ ui.inkRgb }},.3);padding:0 2px;color:{{ ui.muted }};cursor:pointer"><sc-for list="{{ groupOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select><sc-if value="{{ g.checked }}"><span style="color:#2e7d4f">✓ {{ t.checkedIn }}</span></sc-if><sc-if value="{{ g.unpaid }}"><span data-unpaid="1" style="color:#d4452a">{{ t.unpaid }}</span></sc-if><sc-if value="{{ g.smsSt }}"><span data-sms="{{ g.smsKey }}" style="color:{{ g.smsColor }}">{{ g.smsSt }}</span></sc-if><sc-if value="{{ g.canSms }}"><button onClick="{{ g.onSms }}" style="height:22px;padding:0 8px;border-radius:99px;border:1px solid rgba({{ ui.inkRgb }},.25);background:transparent;color:{{ ui.ink }};font:500 11px 'Onest',sans-serif;cursor:pointer">✉ {{ t.smsOne }}</button></sc-if><sc-if value="{{ g.canDel }}"><button onClick="{{ g.onDel }}" style="height:22px;padding:0 4px;border:0;background:transparent;color:{{ ui.muted }};font:400 11px 'Onest',sans-serif;text-decoration:underline;cursor:pointer">{{ t.removeG }}</button></sc-if></div><sc-if value="{{ g.msg }}"><div data-guest-msg="{{ g.msgKey }}" style="margin-top:6px;font-size:13px;line-height:1.45;color:{{ ui.body }};overflow-wrap:anywhere">«{{ g.msg }}» <span style="font:400 11px 'JetBrains Mono',monospace;color:{{ ui.muted }};white-space:nowrap">· {{ g.msgMark }}</span></div></sc-if></div>
 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><div style="display:flex;gap:6px;align-items:center"><button onClick="{{ g.onOpen }}" title="{{ t.openAs }}" style="height:24px;padding:0 9px;border-radius:99px;border:1px solid rgba({{ ui.inkRgb }},.2);background:transparent;color:{{ ui.ink }};font-size:11px;cursor:pointer">{{ t.linkBtn }} ↗</button><span style="padding:4px 10px;border-radius:99px;font-size:12px;background:{{ g.stBg }};color:{{ g.stColor }};border:1px solid {{ g.stBorder }};white-space:nowrap">{{ g.status }}</span></div>
 <select value="{{ g.table }}" onChange="{{ g.onTable }}" style="font:400 12px 'JetBrains Mono',monospace;background:transparent;border:1px solid rgba({{ ui.inkRgb }},.2);border-radius:6px;padding:4px 6px;color:{{ ui.ink }}"><sc-for list="{{ tableOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
 </div></sc-for>
@@ -1161,6 +1187,7 @@ class Component extends DCLogic {
   state = { ready: false, w: window.innerWidth };
   rootRef = React.createRef();
   canvasRef = React.createRef();
+  burstRef = React.createRef();
   scratchRef = React.createRef();
   scratchIntroRef = React.createRef();
   camRef = React.createRef();
@@ -1804,7 +1831,7 @@ class Component extends DCLogic {
   // остаются пустыми: гость видит только то, что владелец сохранил, без выдуманных дат и телефонов.
   invOf(dto) {
     const tid = this.tplOf(dto), data = dto.data || {};
-    const EMPTY = { names: '', host: '', message: '', venue: '', address: '', dress: '', gifts: '', notes: '', contact: '', secret: '', date: '', time: '', dressColors: [], program: [], gallery: [] };
+    const EMPTY = { names: '', host: '', message: '', venue: '', address: '', dress: '', gifts: '', notes: '', contact: '', secret: '', date: '', time: '', rsvpBy: '', dressColors: [], program: [], gallery: [] };
     const inv = { ...this.defaults(tid.split('-')[0], this.langOf(dto.language)), ...EMPTY, ...data };
     if (!data.font) inv.font = this.D.STYLES[tid.split('-')[1]].fonts[0];
     return inv;
@@ -1832,6 +1859,9 @@ class Component extends DCLogic {
     const date = String(inv.date || ''), time = String(inv.time || '');
     if (!date) out.date = ''; else if (/^\d{4}-\d{2}-\d{2}$/.test(date) && !isNaN(new Date(date + 'T00:00:00Z'))) out.date = date;
     if (!time) out.time = ''; else if (hhmm(time)) out.time = time;
+    // Срок ответа гостей: пустой — без срока; испорченное значение не отправляется.
+    const by = String(inv.rsvpBy || '');
+    if (!by) out.rsvpBy = ''; else if (/^\d{4}-\d{2}-\d{2}$/.test(by) && !isNaN(new Date(by + 'T00:00:00Z'))) out.rsvpBy = by;
     Object.keys(out).forEach((k) => { if (out[k] === undefined) delete out[k]; });
     return out;
   }
@@ -1873,10 +1903,10 @@ class Component extends DCLogic {
     const s = this.state;
     try {
       // Новому приглашению пустые дата и время не нужны: без них их просто нет.
-      const data = this.payload(s.inv); if (!data.date) delete data.date; if (!data.time) delete data.time;
-      // Контакт организатора из примера шаблона (выдуманный телефон) в новое приглашение не попадает: поле пустое,
-      // пример — только подсказкой в нём.
-      if (data.contact && this.sampleVals(s.event, 'contact').includes(data.contact.trim())) data.contact = '';
+      const data = this.payload(s.inv); if (!data.date) delete data.date; if (!data.time) delete data.time; if (!data.rsvpBy) delete data.rsvpBy;
+      // Контакт организатора, «Полезно знать» и подарки из примера шаблона (выдуманные телефон, парковка, трансфер,
+      // бокс для конвертов) в новое приглашение не попадают: поля пустые, пример — только подсказкой в них.
+      ['contact', 'notes', 'gifts'].forEach((k) => { if (data[k] && this.sampleVals(s.event, k).includes(data[k].trim())) data[k] = ''; });
       const dto = await this.call('/api/invitations', { body: { template: s.tplId, mode: 'shared', language: s.invLang, data }, retry: () => this.createDraft(then) });
       this.upsertInv(dto);
       this.loadDraft(dto);
@@ -2199,7 +2229,7 @@ class Component extends DCLogic {
     // В узкой колонке номер переносится только между группами («+998 90» / «123‑45‑67»): после +998 неразрывный
     // пробел, дефисы неразрывные (U+2011). Для копирования и CSV остаётся phone.
     const user = !p ? '' : /^998\d{9}$/.test(p) ? '+998\u00a0' + p.slice(3, 5) + ' ' + p.slice(5, 8) + '\u2011' + p.slice(8, 10) + '\u2011' + p.slice(10) : '+' + p;
-    return { id: g.id, lat: g.name, cyr: g.name, user, phone: p, status: g.rsvp, plus: g.plus || 0, table: g.tableNo || 0, group: g.group || 'other', checked: !!g.checkedIn, msg: g.message || '', token: g.token, link: g.link, paid: g.paid !== false, sms: g.sms || null, source: g.source, tg: !!g.telegramLinked };
+    return { id: g.id, lat: g.name, cyr: g.name, user, phone: p, status: g.rsvp, plus: g.plus || 0, table: g.tableNo || 0, group: g.group || 'other', checked: !!g.checkedIn, msg: g.message || '', msgPublic: g.messagePublic === true, token: g.token, link: g.link, paid: g.paid !== false, sms: g.sms || null, source: g.source, tg: !!g.telegramLinked };
   }
   // Экран гостей и «Поделиться»: GET /api/invitations/:id (приглашение и гости), затем активность.
   async loadManage() {
@@ -2372,7 +2402,7 @@ class Component extends DCLogic {
     // Имя и группу пишут гости: значение с =, +, -, @ в начале таблица приняла бы за формулу, перед ним ставится
     // апостроф (кроме телефона +998…).
     const q = (v) => { v = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(v) && !/^\+\d{7,15}$/.test(v)) v = "'" + v; return /[",\n\r;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    const rows = [['name', 'phone', 'status', 'plus_ones', 'group', 'table', 'checked_in', 'paid', 'link']].concat(this.state.guests.map((g) => [g.lat, g.phone ? '+' + g.phone : '', g.status, g.plus, g.group, g.table || '', g.checked ? 'yes' : '', g.paid ? 'yes' : 'no', g.link || '']));
+    const rows = [['name', 'phone', 'status', 'plus_ones', 'group', 'table', 'checked_in', 'paid', 'link', 'message', 'message_public']].concat(this.state.guests.map((g) => [g.lat, g.phone ? '+' + g.phone : '', g.status, g.plus, g.group, g.table || '', g.checked ? 'yes' : '', g.paid ? 'yes' : 'no', g.link || '', g.msg || '', g.msg ? (g.msgPublic ? 'yes' : 'no') : '']));
     this.download('guests.csv', '\ufeff' + rows.map((r) => r.map(q).join(',')).join('\n'), 'text/csv');
   }
 
@@ -2444,16 +2474,18 @@ class Component extends DCLogic {
   // Ответ гостя: личная ссылка — POST /g/:token/rsvp, общая — POST /i/:slug/rsvp с именем (guestToken — изменить прежний).
   async sendPublicRsvp() {
     const s = this.state, P = s.pub, R = s.rsvp; if (!P || s.rsvpBusy) return;
-    const status = R.status, count = status === 'no' ? 1 : Math.max(1, Math.min(8, R.count)), msg = (R.msg || '').trim().slice(0, 500), diet = R.diet.slice();
+    const status = R.status, count = status === 'no' ? 1 : Math.max(1, Math.min(8, R.count)), msg = (R.msg || '').trim().slice(0, 500), diet = status === 'no' ? [] : R.diet.slice();
+    // Сообщение попадает в гостевую книгу, только если гость сам отметил «Показать в гостевой книге».
+    const pub = !!msg && !!R.pub;
     this.setState({ rsvpBusy: true });
     try {
       if (P.kind === 'personal') {
-        await this.A.api('/api/public/g/' + encodeURIComponent(P.token) + '/rsvp', { body: { status, count, diet, msg } });
+        await this.A.api('/api/public/g/' + encodeURIComponent(P.token) + '/rsvp', { body: { status, count, diet, msg, public: pub } });
       } else {
         const name = (R.name || '').trim().slice(0, 80), saved = this.savedReply(P.slug);
-        const r = await this.A.api('/api/public/i/' + encodeURIComponent(P.slug) + '/rsvp', { body: { name, status, count, diet, msg, ...(P.code && { code: P.code }), ...(saved && saved.token && { guestToken: saved.token }) } });
+        const r = await this.A.api('/api/public/i/' + encodeURIComponent(P.slug) + '/rsvp', { body: { name, status, count, diet, msg, public: pub, ...(P.code && { code: P.code }), ...(saved && saved.token && { guestToken: saved.token }) } });
         const token = (r && r.guestToken) || (saved && saved.token) || null;
-        try { localStorage.setItem('invito.rsvp.' + P.slug, JSON.stringify({ token, name, status, count, diet, msg })); } catch (e) {}
+        try { localStorage.setItem('invito.rsvp.' + P.slug, JSON.stringify({ token, name, status, count, diet, msg, pub })); } catch (e) {}
         this.setState((x) => ({ pub: { ...x.pub, token } }));
       }
       this.setState((x) => ({ rsvpBusy: false, rsvp: { ...x.rsvp, sent: true } }));
@@ -2461,7 +2493,8 @@ class Component extends DCLogic {
       this.refreshView();
     } catch (e) {
       this.logErr(e);
-      this.setState({ rsvpBusy: false });
+      // 410 — приём ответов закрыт (срок ответа или день события прошли): форма сменяется сообщением об этом.
+      this.setState({ rsvpBusy: false, ...(e && e.status === 410 && { rsvpShut: true }) });
       this.toast(this.errText(e));
     }
   }
@@ -2500,6 +2533,9 @@ class Component extends DCLogic {
       this.onLink = (e) => { const a = e.target && e.target.closest && e.target.closest('a[target="_blank"]'); if (!a || a.hasAttribute('download') || !/^https?:/.test(a.href)) return; e.preventDefault(); this.openUrl(a.href); };
       document.addEventListener('click', this.onLink, true);
     }
+    // Шрифты шаблона догрузились: длинные имена меряются заново (fitNames).
+    this.onFonts = () => { this._fitGen = (this._fitGen || 0) + 1; this.fitNames(); };
+    if (document.fonts) { document.fonts.addEventListener('loadingdone', this.onFonts); document.fonts.ready.then(this.onFonts); }
     this.io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'none'; this.io.unobserve(e.target); } }), { threshold: 0.1 });
     // Раз в секунду: обратный отсчёт и счётчик «Новый код через N с» в листе входа.
     this.tick = setInterval(() => { this.updateCountdown(); const L = this.state.login; if (L && L.step === 'code' && Date.now() < L.resendAt + 1000) this.setState({ clock: Date.now() }); }, 1000);
@@ -2517,8 +2553,9 @@ class Component extends DCLogic {
     window.removeEventListener('scroll', this.onScroll, true); window.removeEventListener('resize', this.onResize);
     window.removeEventListener('hashchange', this.onHash); document.removeEventListener('visibilitychange', this.onVis);
     if (this.onLink) document.removeEventListener('click', this.onLink, true);
+    if (document.fonts) document.fonts.removeEventListener('loadingdone', this.onFonts);
     this.gestures.forEach((t) => document.removeEventListener(t, this.onGesture, true));
-    [this._saveT, this._retryT, this._tgT, this._tgPollT, this._orderT, this._slugT, this._pwT].forEach((x) => clearTimeout(x));
+    [this._saveT, this._retryT, this._tgT, this._tgPollT, this._orderT, this._slugT, this._pwT, this._skipT].forEach((x) => clearTimeout(x));
     clearInterval(this.tick); cancelAnimationFrame(this.loopId); this.io && this.io.disconnect(); this.stopMusic(); this.stopCam(true);
   }
   componentDidUpdate() {
@@ -2545,8 +2582,13 @@ class Component extends DCLogic {
     if (sc && sc !== this._scEl) { this._scEl = sc; this._scOff && this._scOff(); const th = this.curTh || {}; this._scOff = this.E.attachScratch(sc, { color: th.accent, color2: th.accent2, label: this.D.I18N[this._gl || s.lang].scratchHint, font: th.bodyCss, onDone: () => this.fireBurst() }); }
     if (!sc) this._scEl = null;
     const si = this.scratchIntroRef.current;
-    if (si && si !== this._siEl) { this._siEl = si; this._siOff && this._siOff(); const th = this.curTh || {}; this._siOff = this.E.attachScratch(si, { color: th.accent, color2: th.accent2, label: this.D.I18N[this._gl || s.lang].scratchHint, font: th.bodyCss, onDone: () => { this.setState({ env: 3 }); this.fireBurst(); setTimeout(() => this.setState({ env: 4 }), 800); } }); }
-    if (!si) this._siEl = null;
+    if (si && si !== this._siEl) {
+      this._siEl = si; this._siOff && this._siOff(); const th = this.curTh || {};
+      this._siOff = this.E.attachScratch(si, { color: th.accent, color2: th.accent2, label: this.D.I18N[this._gl || s.lang].scratchHint, font: th.bodyCss, onDone: () => { this.setState({ env: 3 }); this.fireBurst(); setTimeout(() => this.setState({ env: 4 }), 800); } });
+      // Кнопка «Пропустить» появляется через 4 секунды (сразу при prefers-reduced-motion): стереть слой может не каждый.
+      clearTimeout(this._skipT); this._skipT = setTimeout(() => this.setState({ skipOn: true }), this.reducedMotion() ? 0 : 4000);
+    }
+    if (!si && this._siEl) { this._siEl = null; clearTimeout(this._skipT); }
     // camera: включена только на вкладке «Чек-ин»
     if (this.stream && (s.screen !== 'manage' || s.mtab !== 'checkin')) this.stopCam();
     const cv = this.camRef.current;
@@ -2569,14 +2611,14 @@ class Component extends DCLogic {
       window.scrollTo(0, 0);
       if (s.screen === 'templates') { this.carBest = undefined; setTimeout(() => this.centerCard(this.tplIndex(), 'auto'), 40); }
     }
-    this.observe(); this.updateCountdown(); this.fx();
+    this.observe(); this.updateCountdown(); this.fx(); this.fitNames();
   }
 
   // ---------- data helpers ----------
   defaults(ev, lang) {
     const E = this.D.EVENTS[ev], L = E.text[lang] || E.text.en, iso = this.todayIso(E.days);
     // showGuests выключен, пока владелец сам не включит «Кто придёт»: имена гостей видны всем, у кого есть ссылка.
-    return { names: L.names, host: L.host, message: L.message, venue: L.venue, address: L.address, dress: L.dress, gifts: L.gifts, notes: L.notes, contact: L.contact, dressColors: E.dressColors.slice(), program: E.program.map((p) => ({ time: p.t, title: p[lang] || p.en, place: p.place || '', address: '' })), date: iso, time: E.time, countdown: true, showGuests: false, cover: E.img[0], gallery: E.img.slice(1), font: this.D.STYLES[E.styles[0]].fonts[0],
+    return { names: L.names, host: L.host, message: L.message, venue: L.venue, address: L.address, dress: L.dress, gifts: L.gifts, notes: L.notes, contact: L.contact, dressColors: E.dressColors.slice(), program: E.program.map((p) => ({ time: p.t, title: p[lang] || p.en, place: p.place || '', address: '' })), date: iso, time: E.time, rsvpBy: '', countdown: true, showGuests: false, cover: E.img[0], gallery: E.img.slice(1), font: this.D.STYLES[E.styles[0]].fonts[0],
       palette: 0, music: this.D.EVENT_MUSIC[ev] || 'lullaby', musicSrc: '', intro: 'envelope', mapMode: 'drawn', motion: 'zoom', video: '',
       secret: ev === 'baby' ? this.D.I18N[lang].secretBaby : this.D.I18N[lang].secretDef,
       sections: this.D.SECTIONS.map((k) => ({ k, on: k !== 'reveal' || ev === 'baby' })) };
@@ -2587,9 +2629,29 @@ class Component extends DCLogic {
     if (pal) { const v = (D.VARIANTS[k] || [])[pal]; if (v) { const vv = {}; Object.keys(v).forEach((x) => { if (v[x] !== undefined) vv[x] = v[x]; }); st = D.derive({ ...st, ...vv, key: k }); } }
     const f = font && st.fonts.includes(font) ? font : st.fonts[0];
     const script = D.SCRIPT.includes(f), heavy = D.HEAVY.includes(f), fs = D.FS[f] || 1;
-    return { ...st, font: f, fontCss: `'${f}', serif`, bodyCss: `'${st.body}', sans-serif`, fs, tt: script ? 'none' : st.tt, msgCss: heavy ? `'${st.body}', sans-serif` : `'${f}', serif`, fsMsg: heavy ? 0.8 : Math.min(fs, 1.05) };
+    return { ...st, font: f, fontCss: `'${f}', serif`, bodyCss: `'${st.body}', sans-serif`, fs, tt: script ? 'none' : st.tt, msgCss: heavy ? `'${st.body}', sans-serif` : `'${f}', serif`, fsMsg: heavy ? 0.8 : Math.min(fs, 1.05), accentInk: this.inkAccent(st) };
   }
-  freshRsvp() { return { status: null, count: 1, diet: [], msg: '', name: '', sent: false }; }
+  // Акцент для мелкого текста (подписи разделов, время программы, глифы): в светлых шаблонах акцент — цвет заливки
+  // (жёлтый brutal, розовый retro), и текст им не читается. Он смешивается с ink шагами по 10%, пока контраст с фоном
+  // и с поверхностью не станет не меньше 4.5:1 (WCAG AA). Заливки, линии и кнопки остаются на accent.
+  inkAccent(st) {
+    const key = st.accent + st.ink + st.bg + st.surface; if (this._ai && this._ai[0] === key) return this._ai[1];
+    const rgb = (c) => { const v = parseInt(String(c).slice(1, 7), 16); return [v >> 16, (v >> 8) & 255, v & 255]; };
+    const lum = (c) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+    const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    let out = st.accent;
+    if (/^#[0-9a-f]{6}$/i.test(st.accent) && /^#[0-9a-f]{6}$/i.test(st.ink)) {
+      const A = rgb(st.accent), I = rgb(st.ink), B = rgb(st.bg), S = rgb(st.surface);
+      for (let k = 0; k <= 10; k++) {
+        const m = A.map((c, i) => Math.round(c + (I[i] - c) * k / 10));
+        if (ratio(m, B) >= 4.5 && ratio(m, S) >= 4.5) { out = k ? '#' + m.map((x) => x.toString(16).padStart(2, '0')).join('') : st.accent; break; }
+        if (k === 10) out = st.ink;
+      }
+    }
+    this._ai = [key, out];
+    return out;
+  }
+  freshRsvp() { return { status: null, count: 1, diet: [], msg: '', name: '', sent: false, pub: false, dietOpen: false }; }
   // Момент события: data.date и data.time — местное время Ташкента (UTC+5, без летнего времени), а не часовой
   // пояс того, кто смотрит. null — даты нет или она неверная; без времени — полдень.
   at(iso, time) {
@@ -2672,7 +2734,7 @@ class Component extends DCLogic {
     // Редактор запоминает, с какого сохранения открыт: до первой правки в строке статуса — подсказка (функция —
     // чтобы взять savedAt только что загруженного приглашения, его setState ещё в очереди).
     if (mode === 'edit' && this.state.screen !== 'guest') this.setState((x) => ({ edFrom: x.savedAt }));
-    this.setState({ screen: 'guest', guestMode: mode, guestFrom: from, toGuestId: g ? g.id : null, myGuestId: null, env: (mode === 'edit' || !intro) ? 4 : 0, unlocked: false, pwTry: '', pwErr: false, rsvp, sheet: null, musicOff: false });
+    this.setState({ screen: 'guest', guestMode: mode, guestFrom: from, toGuestId: g ? g.id : null, myGuestId: null, env: (mode === 'edit' || !intro) ? 4 : 0, unlocked: false, pwTry: '', pwErr: false, rsvp, rsvpShut: false, sheet: null, musicOff: false, langMenu: false, skipOn: false });
   }
   submitRsvp() {
     if (this.state.pub) return this.sendPublicRsvp();
@@ -2680,15 +2742,49 @@ class Component extends DCLogic {
     const status = R.status, plus = status === 'no' ? 0 : Math.max(0, R.count - 1);
     const msg = (R.msg || '').trim();
     if (s.toGuestId) {
-      this.setState((x) => ({ rsvp: { ...x.rsvp, sent: true }, guests: x.guests.map((g) => g.id === x.toGuestId ? { ...g, status, plus, msg: msg || g.msg } : g) }));
+      this.setState((x) => ({ rsvp: { ...x.rsvp, sent: true }, guests: x.guests.map((g) => g.id === x.toGuestId ? { ...g, status, plus, msg: msg || g.msg, msgPublic: !!msg && !!R.pub } : g) }));
       this.logAct({ kind: status, gid: s.toGuestId });
     } else {
       const nm = (R.name || '').trim(); const id = s.myGuestId || Date.now();
-      const row = { id, lat: nm, cyr: nm, user: '', status, plus, table: 0, group: 'other', msg, checked: false };
+      const row = { id, lat: nm, cyr: nm, user: '', status, plus, table: 0, group: 'other', msg, msgPublic: !!msg && !!R.pub, checked: false };
       setTimeout(() => this.logAct({ kind: status, gid: id }), 0);
       this.setState((x) => ({ myGuestId: id, rsvp: { ...x.rsvp, sent: true }, guests: x.guests.some((g) => g.id === id) ? x.guests.map((g) => g.id === id ? { ...g, ...row, table: g.table } : g) : x.guests.concat(row) }));
     }
     if (status !== 'no') this.fireBurst();
+  }
+  // Контакты организатора из одной строки: через запятую, точку с запятой или с новой строки. В каждом — телефон,
+  // @имя или ссылка t.me (Telegram) или почта, остальной текст — подпись («Азиз», «Сторона невесты»). Подпись без
+  // контакта («Азиз, +998 …») присоединяется к следующему. Телефон — «Позвонить» и Telegram по номеру, @имя —
+  // «Написать в Telegram», почта — письмо. Старые записи с одним контактом показываются так же.
+  contactsOf(raw, gt) {
+    const out = []; let pend = '';
+    String(raw || '').split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean).forEach((c) => {
+      const mail = c.match(/[^\s@,;()<>]+@[^\s@,;()<>]+\.[A-Za-z]{2,}/);
+      const tg = !mail && (c.match(/(?:https?:\/\/)?(?:t|telegram)\.me\/([A-Za-z0-9_]{4,32})/i) || c.match(/(?:^|[\s(])@([A-Za-z0-9_]{4,32})(?![\w.])/));
+      let ph = !mail && !tg && c.match(/\+?\d[\d\s()\u2011-]{5,}\d/);
+      const digits = ph ? ph[0].replace(/\D/g, '') : '';
+      if (ph && (digits.length < 7 || digits.length > 15)) ph = null;
+      const hit = mail ? mail[0] : tg ? tg[0] : ph ? ph[0] : '';
+      if (!hit) { pend = pend ? pend + ', ' + c : c; return; }
+      const rest = c.replace(hit, ' ').replace(/^[\s:–—-]+|[\s:–—-]+$/g, '').trim(), label = [pend, rest].filter(Boolean).join(' ');
+      pend = '';
+      if (mail) return out.push({ kind: 'mail', label, value: mail[0], links: [{ kind: 'mail', href: 'mailto:' + mail[0], label: gt.mailBtn, target: '_self' }] });
+      if (tg) return out.push({ kind: 'tg', label, value: '@' + tg[1], links: [{ kind: 'tg', href: 'https://t.me/' + tg[1], label: gt.tgBtn, target: '_blank' }] });
+      // Номер без кода страны (9 цифр) — узбекский: +998.
+      const intl = digits.length === 9 ? '998' + digits : digits, plus = digits.length === 9 || ph[0].trim().startsWith('+');
+      const links = [{ kind: 'tel', href: 'tel:' + (plus ? '+' : '') + intl, label: gt.callBtn, target: '_self' }];
+      if (plus && intl.length >= 10) links.push({ kind: 'tg', href: 'https://t.me/+' + intl, label: 'Telegram', target: '_blank' });
+      out.push({ kind: 'tel', label, value: ph[0].trim(), links });
+    });
+    if (pend) { const last = out[out.length - 1]; if (last && !last.label) last.label = pend; else out.push({ kind: 'text', label: '', value: pend, links: [] }); }
+    return out.slice(0, 4).map((x) => ({ ...x, hasLabel: !!x.label }));
+  }
+  copyText(text, msg) { try { navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {} this.toast(msg); }
+  // «Оставить первое пожелание»: к полю сообщения в ответе, отметка «Показать в гостевой книге» уже стоит.
+  // Ответ уже отправлен — форма открывается снова.
+  writeWish() {
+    this.setState((x) => ({ rsvp: { ...x.rsvp, sent: false, pub: true } }));
+    setTimeout(() => { const el = document.querySelector('#rsvp textarea'); if (!el) return; try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 60);
   }
   openEnv() {
     if (this.state.env) return;
@@ -2786,8 +2882,8 @@ class Component extends DCLogic {
     if (!v && code) this.setState({ pwErr: b.locked && b.locked.limited ? 'limited' : true });
     // Прежний ответ: личная ссылка — из представления, общая — сохранённый в этом браузере.
     const R = this.freshRsvp(), g = v && v.guest, saved = v && b.mode === 'shared' ? this.savedReply(pub.slug) : null;
-    if (g && g.rsvp !== 'pending') Object.assign(R, { status: g.rsvp, count: Math.max(1, g.count || 1), diet: g.diet || [], msg: g.msg || '', sent: true });
-    else if (saved && saved.status) { Object.assign(R, { status: saved.status, count: saved.count || 1, diet: saved.diet || [], msg: saved.msg || '', name: saved.name || '', sent: true }); pub.token = saved.token || null; }
+    if (g && g.rsvp !== 'pending') Object.assign(R, { status: g.rsvp, count: Math.max(1, g.count || 1), diet: g.diet || [], msg: g.msg || '', pub: g.msgPublic === true, sent: true });
+    else if (saved && saved.status) { Object.assign(R, { status: saved.status, count: saved.count || 1, diet: saved.diet || [], msg: saved.msg || '', pub: saved.pub === true, name: saved.name || '', sent: true }); pub.token = saved.token || null; }
     if (R.sent) this.setState({ rsvp: R, pub });
   }
 
@@ -2911,12 +3007,55 @@ class Component extends DCLogic {
       }
     }
   }
+  // Имена в героях и на заставках: самое длинное слово («Muhammadamin», «Abdurahmon») не шире своего места — иначе
+  // его конец обрезал бы край экрана, а brutal рвал бы его по слогам. Слова меряются (Range) при обычном размере,
+  // --nf уменьшает шрифт ровно настолько, чтобы самое длинное поместилось, --nw раздвигает max-width до его ширины.
+  // data-fit="line" — «Кому» на конверте: одна строка, мельче до 0.62, дальше многоточие. Пересчёт — при смене
+  // текста, ширины окна, шрифта и после загрузки шрифтов (_fitGen).
+  fitNames() {
+    const r = this.rootRef.current; if (!r) return;
+    const els = r.querySelectorAll('[data-fit]'); if (!els.length) return;
+    const W = window.innerWidth;
+    els.forEach((el) => {
+      const key = el.textContent + '|' + W + '|' + (this._fitGen || 0) + '|' + el.style.fontFamily + '|' + el.style.fontSize;
+      if (el.__fit === key) return;
+      el.__fit = key; el.style.setProperty('--nf', '1'); el.style.removeProperty('--nw');
+      if (el.dataset.fit === 'line') {
+        const need = el.scrollWidth, have = el.clientWidth;
+        if (have > 0 && need > have + 1) el.style.setProperty('--nf', Math.max(0.62, have / need).toFixed(3));
+        return;
+      }
+      // Доступная ширина — самая узкая из коробок-предков до героя (flex-родитель с длинным словом сам растягивается
+      // по нему, поэтому берётся минимум), но не шире экрана без полей.
+      let avail = W - 32, box = el.parentElement;
+      for (let i = 0; box && i < 8; i++, box = box.parentElement) {
+        const cs = getComputedStyle(box), w = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        if (w > 0) avail = Math.min(avail, w);
+        if (box.hasAttribute('data-hero')) break;
+      }
+      // Текст лежит во вложенных узлах (рантайм оборачивает {{ }}), поэтому обходятся все текстовые узлы.
+      let widest = 0; const rg = document.createRange(), tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+        const re = /\S+/g; let m;
+        while ((m = re.exec(n.data))) { rg.setStart(n, m.index); rg.setEnd(n, m.index + m[0].length); widest = Math.max(widest, rg.getBoundingClientRect().width); }
+      }
+      if (!widest || avail <= 0) return;
+      const nf = widest > avail ? Math.max(0.3, (avail - 2) / widest) : 1;
+      if (nf < 1) el.style.setProperty('--nf', nf.toFixed(3));
+      el.style.setProperty('--nw', Math.ceil(widest * nf) + 'px');
+    });
+  }
   updateCountdown() {
     const r = this.rootRef.current; if (!r || !this.state.ready) return;
     const inv = this.state.inv, at = this.at(inv.date, inv.time);
     const ms = at ? Math.max(0, at.getTime() - Date.now()) : 0;
     const v = { d: Math.floor(ms / 864e5), h: Math.floor(ms / 36e5) % 24, m: Math.floor(ms / 6e4) % 60, s: Math.floor(ms / 1e3) % 60 };
     r.querySelectorAll('[data-cd]').forEach((el) => { const s = String(v[el.dataset.cd]).padStart(2, '0'); if (el.textContent !== s) el.textContent = s; });
+    // Подписи страницы гостя — на её языке (this._gl) и по числу: «1 день», «21 час», «5 минут».
+    const gl = this._gl || this.state.lang, gcn = (this.D.I18N[gl] || {}).cdN || {};
+    r.querySelectorAll('[data-cdl]').forEach((el) => { const k = el.dataset.cdl, s = String(this.D.plural(gl, v[k], gcn[k]) || ''); if (s && el.textContent !== s) el.textContent = s; });
+    // Событие наступило, пока страница открыта: отсчёт сменяется на «Событие состоялось».
+    const past = !!at && ms === 0; if (this._cdPast !== past) { const was = this._cdPast; this._cdPast = past; if (was !== undefined) this.setState({ clock: Date.now() }); }
     const lang = this.state.lang, t = this.D.I18N[lang], cn = t.cdN || {}, w = (n, k, f) => n + ' ' + this.D.plural(lang, n, cn[k] || f);
     // Без даты в конструкторе под переключателем пусто, а не «0 дней · 0 часов · 0 минут».
     const txt = at ? [w(v.d, 'd', t.days), w(v.h, 'h', t.hours), w(v.m, 'm', t.min)].join(' · ') : '';
@@ -2964,8 +3103,9 @@ class Component extends DCLogic {
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = window.innerWidth, H = window.innerHeight;
     if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
     const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    // На телефоне частиц меньше: они фоновые, а слабым телефонам гостей нужна батарея.
     const type = th.particle, dens = this.props.particleDensity ?? 1;
-    const n = Math.round((type === 'dots' ? 24 : type === 'confetti' ? 20 : 30) * dens * (W > 900 ? 1.5 : 1));
+    const n = Math.round((type === 'dots' ? 24 : type === 'confetti' ? 20 : 30) * dens * (W > 900 ? 1.5 : 0.6));
     if (this.pkey !== type + th.key + n || !this.parts) { this.pkey = type + th.key + n; this.parts = Array.from({ length: n }, () => this.newP(type, W, H, true)); }
     const cols = [th.accent, th.accent2, th.ink], t = performance.now() / 1000;
     for (const p of this.parts) {
@@ -2973,12 +3113,20 @@ class Component extends DCLogic {
       if (p.y > H + 30 || p.y < -30 || p.x < -40 || p.x > W + 40) Object.assign(p, this.newP(type, W, H, false));
       this.drawP(ctx, type, p, cols, t);
     }
-    if (this.burst && this.burst.length) {
-      for (const p of this.burst) { p.vy += 0.2; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= 1; this.drawP(ctx, 'confetti', p, cols, t); }
+    // Конфетти ответа и открытия — на своём холсте поверх страницы (фоновые частицы лежат под текстом).
+    const bc = this.burstRef.current; if (!bc) return;
+    if (bc.width !== c.width || bc.height !== c.height) { bc.width = c.width; bc.height = c.height; this._burstDrawn = true; }
+    const has = !!(this.burst && this.burst.length); if (!has && !this._burstDrawn) return;
+    const bx = bc.getContext('2d'); bx.setTransform(dpr, 0, 0, dpr, 0, 0); bx.clearRect(0, 0, W, H); this._burstDrawn = has;
+    if (has) {
+      for (const p of this.burst) { p.vy += 0.2; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life -= 1; this.drawP(bx, 'confetti', p, cols, t); }
       this.burst = this.burst.filter((p) => p.life > 0 && p.y < H + 40);
     }
   }
+  // Гость просил меньше движения (prefers-reduced-motion): ни фоновых частиц, ни конфетти.
+  reducedMotion() { try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
   fireBurst() {
+    if (this.reducedMotion()) return;
     const W = window.innerWidth, H = window.innerHeight, R = Math.random;
     this.burst = (this.burst || []).concat(Array.from({ length: 150 }, () => ({ x: W / 2 + (R() - 0.5) * 80, y: H * 0.65, vx: (R() - 0.5) * 15, vy: -(6 + R() * 11), r: R() * 6, vr: (R() - 0.5) * 0.3, s: 3 + R() * 3, ci: Math.floor(R() * 3), life: 170 })));
   }
@@ -3003,6 +3151,10 @@ class Component extends DCLogic {
     const gEvLabel = E.label[gl] || evLabel;
     const gDateShort = this.fmt(inv.date, inv.time, { day: 'numeric', month: 'short', year: 'numeric' }, gl);
     const gDateLong = this.fmt(inv.date, inv.time, { day: 'numeric', month: 'long', year: 'numeric' }, gl);
+    // В героях дата крупно и прописными: русское «г.» после года там лишнее и переносилось одно («2026 / Г.»);
+    // то же для короткой даты в героях и бегущей строке («20 дек. 2026»).
+    const gDateHero = gl === 'ru' ? gDateLong.replace(/\s*г\.$/, '') : gDateLong;
+    const gDateShortH = gl === 'ru' ? gDateShort.replace(/\s*г\.$/, '') : gDateShort;
     const shortOf = (iso) => this.fmt(iso, '12:00', { day: 'numeric', month: 'short', year: 'numeric' });
     const isoIn = (days) => this.todayIso(days);
 
@@ -3093,7 +3245,7 @@ class Component extends DCLogic {
     const stepKey = STEPS[s.step];
     const ws = {}, qs = {}; STEPS.forEach((k) => { ws[k] = s.screen === 'build' && stepKey === k; qs[k] = isGuest && s.sheet === k; });
     const steps = STEPS.map((k, i) => ({ label: SL[k], bar: i === s.step ? '#d4452a' : i < s.step ? U.ink : 'rgba(' + U.inkRgb + ',.15)', onClick: () => this.setState({ step: i }) }));
-    const on = {}; ['names', 'host', 'date', 'time', 'venue', 'address', 'message', 'dress', 'gifts', 'notes', 'contact', 'secret'].forEach((k) => { on[k] = (e) => this.setInv({ [k]: e.target.value }); });
+    const on = {}; ['names', 'host', 'date', 'time', 'rsvpBy', 'venue', 'address', 'message', 'dress', 'gifts', 'notes', 'contact', 'secret'].forEach((k) => { on[k] = (e) => this.setInv({ [k]: e.target.value }); });
     // Конец конструктора и публикация. Цена — из ответов сервера (как в листе оплаты): опубликовано, шаблон оплачен,
     // бесплатный доступ, место гостя персонального приглашения, подписка или «от» цены шаблона. Поля, оставшиеся
     // из примера шаблона, — кнопками, ведущими к их шагу (в редакторе — к листу).
@@ -3116,8 +3268,12 @@ class Component extends DCLogic {
       : s.saving ? { key: 'saving', text: t.saving, retry: null }
       : s.savedAt && s.savedAt !== s.edFrom ? { key: 'saved', text: '✓ ' + t.saved + ' · ' + hhmmOf(s.savedAt) + ' · ' + t.savedWhere, retry: null }
       : { key: 'hint', text: '✎ ' + t.tapHint, retry: null };
-    // Пустые поля фактов (место, адрес, контакт) подсказывают пример шаблона, но не подставляют его.
-    const LS = E.text[lang] || E.text.en, ph = {}; ['venue', 'address', 'contact'].forEach((k) => { ph[k] = LS[k] ? t.phEg.replace('{x}', LS[k]) : ''; });
+    // Пустые поля фактов (место, адрес, контакт, «Полезно знать», подарки) подсказывают пример шаблона, но не подставляют его.
+    const LS = E.text[lang] || E.text.en, ph = {}; ['venue', 'address', 'contact', 'notes', 'gifts'].forEach((k) => { ph[k] = LS[k] ? t.phEg.replace('{x}', LS[k]) : ''; });
+    // Срок ответа гостей в шаге и листе «Дата и время»: необязателен; позже даты события — предупреждение
+    // (ответы всё равно закроются после дня события).
+    const byLate = !!inv.rsvpBy && !!inv.date && inv.rsvpBy > inv.date;
+    const rsvpByF = { on: !!inv.rsvpBy, max: /^\d{4}-\d{2}-\d{2}$/.test(inv.date || '') ? inv.date : '', note: byLate ? t.rsvpByLate : t.rsvpByHint, noteColor: byLate ? '#d4452a' : U.muted, clear: () => this.setInv({ rsvpBy: '' }) };
     // Скретч-секрет: поле видно, только когда раздел «Скретч-сюрприз» включён (переключатель здесь же).
     const secsR = inv.sections && inv.sections.length ? inv.sections : D.SECTIONS.map((k) => ({ k, on: true })), revOn = secsR.some((x) => x.k === 'reveal' && x.on);
     const rv = { on: revOn, state: revOn ? 'on' : 'off', pressed: revOn ? 'true' : 'false', track: revOn ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', knob: revOn ? '23px' : '3px',
@@ -3152,11 +3308,15 @@ class Component extends DCLogic {
     const words = (inv.message || '').split(/\s+/).filter(Boolean).map((w) => w + ' ');
     // Дата события — по календарю Ташкента, в каком бы поясе ни был гость; без даты строки с ней пустые.
     const d0 = this.at(inv.date, inv.time), dp = d0 ? inv.date.split('-') : null;
+    const cdMs = d0 ? Math.max(0, d0.getTime() - Date.now()) : 0, cdPast = !!d0 && cdMs === 0;
+    const cdV = { d: Math.floor(cdMs / 864e5), h: Math.floor(cdMs / 36e5) % 24, m: Math.floor(cdMs / 6e4) % 60, s: Math.floor(cdMs / 1e3) % 60 };
     const gDay = dp ? dp[2] : '';
     const gMonthYear = this.fmt(inv.date, inv.time, { month: 'long', year: 'numeric' }, gl);
     const gWeekday = this.fmt(inv.date, inv.time, { weekday: 'long' }, gl);
     const gWhen = [gDateLong, inv.time].filter(Boolean).join(' · '), gWdDate = [gWeekday, gDateLong].filter(Boolean).join(', '), gTimeVenue = [inv.time, inv.venue].filter(Boolean).join(' · ');
-    const gFull = [gWdDate, inv.time].filter(Boolean).join(' · '), gMyTime = [gMonthYear, inv.time].filter(Boolean).join(' · ');
+    const gFull = [gWdDate, inv.time].filter(Boolean).join(' · '), gMyTime = [gl === 'ru' ? gMonthYear.replace(/\s*г\.$/, '') : gMonthYear, inv.time].filter(Boolean).join(' · ');
+    // В герое — без русского «г.» (см. gDateHero); строка под отсчётом остаётся полной.
+    const gWdDateH = [gWeekday, gDateHero].filter(Boolean).join(', ');
     // Программа гостя: пункты без названия и места (только что добавленные в конструкторе) не показываются.
     const gProg = inv.program.filter((p) => (p.title || '').trim() || (p.place || '').trim()).map((p) => ({ time: p.time, title: p.title, place: (p.place || '').trim(), address: (p.address || '').trim(), hasPlace: !!(p.place || '').trim() }));
     const n = gProg.length;
@@ -3192,17 +3352,29 @@ class Component extends DCLogic {
     const ed = {};
     if (isEdit) { const m = { names: 'basics', when: 'when', venue: 'where', message: 'words', program: 'where', details: 'details', cover: 'photos', font: 'font', music: 'music', sections: 'sections' }; Object.keys(m).forEach((k) => { ed[k] = (e) => { if (e) e.stopPropagation(); this.setState({ sheet: m[k] }); }; }); }
     else { ed.font = () => {}; ed.music = () => {}; ed.sections = () => {}; }
-    const cLink = (c) => { c = (c || '').trim(); if (c.startsWith('@')) return 'https://t.me/' + c.slice(1); if (/^\+?[\d\s()-]{7,}$/.test(c)) return 'tel:' + c.replace(/[^\d+]/g, ''); if (c.includes('@')) return 'mailto:' + c; return ''; };
+    // Подарки: номер карты (16 цифр, денежный подарок — to‘yona) копируется кнопкой, гостю не нужно его перепечатывать.
+    const cardM = (inv.gifts || '').match(/(?:\d[ \u00a0-]?){15}\d/), cardNo = cardM ? cardM[0].replace(/\D/g, '') : '';
+    const contactRows = this.contactsOf(inv.contact, gt);
     const infoCards = [
-      { title: gt.gifts, glyph: '✦', text: inv.gifts },
-      { title: gt.notes, glyph: '◎', text: inv.notes },
-      { title: gt.contact, glyph: '✉', text: inv.contact, href: cLink(inv.contact), linkLabel: gt.writeHost },
-    ].filter((c) => c.text).map((c, i) => ({ ...c, hasLink: !!c.href, delay: i * 100 + 'ms' }));
+      { k: 'gifts', title: gt.gifts, glyph: '✦', text: inv.gifts, copy: cardNo ? (e) => { if (e) e.stopPropagation(); this.copyText(cardNo, gt.cardCopied); } : null, rows: [] },
+      { k: 'notes', title: gt.notes, glyph: '◎', text: inv.notes, copy: null, rows: [] },
+      { k: 'contact', title: gt.contact, glyph: '✉', text: '', copy: null, rows: contactRows },
+    ].filter((c) => c.text || c.rows.length).map((c, i) => ({ ...c, delay: i * 100 + 'ms' }));
     const R = s.rsvp;
-    const rsvpOpts = [['yes', gt.yes], ['maybe', gt.maybe], ['no', gt.no]].map(([k, label]) => { const a = R.status === k; return { label, mark: a ? '✓' : '', bg: a ? th.ink : 'transparent', color: a ? th.bg : th.ink, border: a ? th.ink : th.line, onClick: () => this.setState((x) => ({ rsvp: { ...x.rsvp, status: k } })) }; });
-    const dietOpts = [['veg', gt.veg], ['halal', gt.halal], ['nonut', gt.nonut], ['noalc', gt.noalc]].map(([k, label]) => { const a = R.diet.includes(k); return { label, bg: a ? th.accent : 'transparent', color: a ? th.onAccent : th.ink, border: a ? th.accent : th.line, onClick: () => this.setState((x) => ({ rsvp: { ...x.rsvp, diet: a ? x.rsvp.diet.filter((y) => y !== k) : x.rsvp.diet.concat(k) } })) }; });
-    const byIso = d0 ? new Date(Math.max(Date.now(), d0.getTime() - 14 * 864e5) + 5 * 36e5).toISOString().slice(0, 10) : '';
-    const dietTxt = R.diet.map((k) => gt[k]).join(', ');
+    // Приём ответов закрыт — по тому же правилу, что на сервере (rsvpClosed): по календарю Ташкента наступил день после
+    // срока ответа или после дня события (в сам день события ответить ещё можно), либо сервер уже ответил 410.
+    const today = this.todayIso(), byIso = /^\d{4}-\d{2}-\d{2}$/.test(inv.rsvpBy || '') ? inv.rsvpBy : '';
+    const pastDay = !!d0 && today > inv.date, byPast = !!byIso && today > byIso, rsvpShut = pastDay || byPast || !!s.rsvpShut;
+    const byTxt = byIso ? this.fmt(byIso, '12:00', { day: 'numeric', month: 'long' }, gl) : '';
+    // «Отправить» без имени или ответа: недостающее поле обведено, курсор — в нём (сначала имя).
+    const needSt = !!R.tried && !R.status;
+    const rsvpOpts = [['yes', gt.yes], ['maybe', gt.maybe], ['no', gt.no]].map(([k, label]) => { const a = R.status === k; return { label, mark: a ? '✓' : '', pressed: a ? 'true' : 'false', bg: a ? th.ink : 'transparent', color: a ? th.bg : th.ink, border: a ? th.ink : needSt ? th.accentInk : th.line, onClick: () => this.setState((x) => ({ rsvp: { ...x.rsvp, status: k } })) }; });
+    // Пожелания по меню — только тем, кто придёт, свёрнуты и только уместные: «халяль» не предлагается на узбекском
+    // приглашении и на ифтаре (там это само собой разумеется), «без алкоголя» — на детском празднике и ифтаре.
+    // Уже выбранное (прежний ответ) остаётся видно.
+    const DIET_OFF = { halal: s.event === 'iftar' || s.invLang === 'uz' || s.invLang === 'uzc', noalc: s.event === 'kids' || s.event === 'iftar' };
+    const dietOpts = [['veg', gt.veg], ['halal', gt.halal], ['nonut', gt.nonut], ['noalc', gt.noalc]].filter(([k]) => !DIET_OFF[k] || R.diet.includes(k)).map(([k, label]) => { const a = R.diet.includes(k); return { k, label, pressed: a ? 'true' : 'false', bg: a ? th.accent : 'transparent', color: a ? th.onAccent : th.ink, border: a ? th.accent : th.line, onClick: () => this.setState((x) => ({ rsvp: { ...x.rsvp, diet: a ? x.rsvp.diet.filter((y) => y !== k) : x.rsvp.diet.concat(k) } })) }; });
+    const dietTxt = (R.status === 'no' ? [] : R.diet).map((k) => gt[k]).join(', ');
     const rsvpSummary = R.status === 'no' ? gt.sumNo : (R.status === 'yes' ? gt.sumYes : gt.sumMaybe) + R.count + (dietTxt ? ' · ' + dietTxt : '');
     const ics = () => { if (!d0) return; const f = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; const end = new Date(d0.getTime() + 4 * 36e5); this.download('invito.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Invito//EN', 'BEGIN:VEVENT', 'UID:' + Date.now() + '@invito.app', 'DTSTAMP:' + f(new Date()), 'DTSTART:' + f(d0), 'DTEND:' + f(end), 'SUMMARY:' + inv.names, 'LOCATION:' + inv.venue + ', ' + inv.address, 'DESCRIPTION:' + (inv.message || '').replace(/\n/g, ' '), 'END:VEVENT', 'END:VCALENDAR'].join('\r\n'), 'text/calendar'); };
     const env = s.env, intro = this.props.showIntro ?? true;
@@ -3292,7 +3464,9 @@ class Component extends DCLogic {
     const monogram = parts0.length > 1 ? parts0.slice(0, 2).map((p) => p.trim()[0]).join(' · ') : (inv.names.trim()[0] || '✦');
     const PX = {
       kick, hasTo: !!toName, noTo: !toName, toName, toIni: toName ? this.ini(toName) : '', envInk,
-      heroCols: wide ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)', stubW: wide ? '110px' : '76px', ticketNo: '№ ' + String((slug.length * 37) % 1000).padStart(4, '0'), monogram,
+      heroCols: wide ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)', stubW: wide ? '110px' : '76px', monogram,
+      // Корешок билета и метка кадра: имя гостя или событие с датой — без английских «Admit one», «REC» и номеров.
+      stubTxt: toName || [gEvLabel, gDateShortH].filter(Boolean).join(' · '), filmTag: gDateShortH || gEvLabel, sealTop: toName ? '54%' : '60%',
       gDayDot: dp ? dp[2] + '.' + dp[1] : '',
       showWho: inv.showGuests === true && whoList.length > 0, comingCount, whoList, whoMore: whoMoreN > 0, whoMoreTxt: gt.andMore.replace('{n}', whoMoreN), comingLabel: D.plural(gl, comingCount, gt.comingN),
       personal, personalMore: invitees.length > P_MAX, personalMoreTxt: t.andMore.replace('{n}', invitees.length - P_MAX), personalEmpty: !!dr && invitees.length === 0,
@@ -3300,10 +3474,13 @@ class Component extends DCLogic {
       onRsvpName: (e) => { const v = e.target.value; this.setState((x) => ({ rsvp: { ...x.rsvp, name: v } })); },
     };
     const rsvpReady = !!R.status && (!!toName || !!(R.name || '').trim()) && !s.rsvpBusy;
+    const needNm = !!R.tried && !toName && !(R.name || '').trim();
     // ---- extended features ----
     const segO = (list, cur, set) => list.map(([k, label]) => { const a = cur === k; return { label, bg: a ? U.ink : 'transparent', color: a ? U.paper : U.ink, border: a ? U.ink : 'rgba(' + U.inkRgb + ',.25)', onClick: () => set(k) }; });
     const secs = (inv.sections && inv.sections.length ? inv.sections : D.SECTIONS.map((k) => ({ k, on: true })));
-    const avail = { message: !!inv.message, program: gProg.length > 0, countdown: inv.countdown !== false && !!d0, gallery: inv.gallery.length > 0, venue: !!(inv.venue || inv.address), dress: !!inv.dress || inv.dressColors.length > 0, info: infoCards.length > 0, reveal: !!inv.secret, who: PX.showWho, guestbook: true, rsvp: true };
+    const avail = { message: !!inv.message, program: gProg.length > 0, countdown: inv.countdown !== false && !!d0, gallery: inv.gallery.length > 0, venue: !!(inv.venue || inv.address), dress: !!inv.dress || inv.dressColors.length > 0, info: infoCards.length > 0, reveal: !!inv.secret, who: PX.showWho,
+      // Пустая гостевая книга после закрытия ответов на странице гостя не нужна: оставить пожелание уже нельзя.
+      guestbook: !(PV && rsvpShut && !(PV.guestbook || []).length), rsvp: true };
     const sec = {}, ord = {}; secs.forEach((x, i) => { sec[x.k] = x.on && avail[x.k]; ord[x.k] = i; });
     const moveSec = (i, d) => { const a = secs.slice(); const j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; this.setInv({ sections: a }); };
     // «Кто придёт» — один переключатель: раздел виден гостям, только когда включены и он, и showGuests (так решает
@@ -3313,9 +3490,10 @@ class Component extends DCLogic {
       onToggle: () => { const v = !secOn(x); this.setInv({ sections: secs.map((y, j) => j === i ? { ...y, on: v } : y), ...(x.k === 'who' ? { showGuests: v } : {}) }); }, onUp: () => moveSec(i, -1), onDown: () => moveSec(i, 1),
       onDragStart: (e) => { this.secDragFrom = i; try { e.dataTransfer.setData('text/plain', 'sec'); } catch (x2) {} }, onDragOver: (e) => { e.preventDefault(); if (s.secDrag !== i) this.setState({ secDrag: i }); },
       onDrop: (e) => { e.preventDefault(); const from = this.secDragFrom; if (from == null) return; const a = secs.slice(); const [it] = a.splice(from, 1); a.splice(i, 0, it); this.secDragFrom = null; this.setState({ secDrag: null }); this.setInv({ sections: a }); } }));
-    // Выдуманные пожелания (msgIdx) есть только у гостей демо.
+    // Выдуманные пожелания (msgIdx) есть только у гостей демо. Сообщение гостя попадает в книгу, только если он сам
+    // отметил «Показать в гостевой книге» (так же отбирает сервер для PublicView.guestbook).
     const wishes = s.demo ? gt.wishes || [] : [];
-    const gbList = G.filter((g) => (g.status === 'yes' || g.status === 'maybe') && (g.msg || g.msgIdx != null)).map((g) => ({ g, text: g.msg || wishes[g.msgIdx] })).filter((x) => x.text);
+    const gbList = G.filter((g) => (g.status === 'yes' || g.status === 'maybe') && ((g.msg && g.msgPublic) || g.msgIdx != null)).map((g) => ({ g, text: (g.msgPublic && g.msg) || wishes[g.msgIdx] })).filter((x) => x.text);
     const meIdGB = s.toGuestId || s.myGuestId;
     gbList.sort((a, b) => (b.g.id === meIdGB) - (a.g.id === meIdGB));
     // На публичной странице гостевая книга — из представления сервера.
@@ -3349,6 +3527,8 @@ class Component extends DCLogic {
       row.smsColor = g.sms && g.sms.status === 'failed' ? '#d4452a' : g.sms && g.sms.status === 'delivered' ? '#2e7d4f' : U.muted;
       row.canSms = smsOn && !!g.phone && !!g.paid; row.onSms = () => this.sendSms(g.id);
       row.canDel = !!dr; row.onDel = () => this.delGuest(g);
+      // Сообщение гостя владелец видит всегда; отметка — попало ли оно в гостевую книгу (решает сам гость).
+      row.msg = g.msg || ''; row.msgKey = g.msgPublic ? 'public' : 'private'; row.msgMark = g.msgPublic ? t.msgShown : t.msgHidden;
     });
     const gRowsF = gRows;
     // Уведомления бота — settings приглашения (PATCH settings), в демо — локально.
@@ -3464,11 +3644,13 @@ class Component extends DCLogic {
     const myToken = s.pub ? s.pub.token : null;
     const hasBot = s.pub ? !!(PV && PV.botUsername && myToken) : true;
     const entryOn = !!PV && !!myToken && R.sent && R.status === 'yes';
-    const entry = entryOn ? { show: true, src: qrOf((PV.appUrl || appUrl) + '/g/' + myToken, 400, '#1a1714', '#ffffff'), hint: pg && pg.checkedIn ? '✓ ' + t.youCheckedIn : t.entryHint, color: pg && pg.checkedIn ? '#2e7d4f' : '#6e665b' } : { show: false };
+    // Подсказка мягкая (проверяют ли приглашения на входе, решает организатор); QR можно сохранить картинкой — кроме
+    // мини-аппа Telegram, где атрибут download не работает.
+    const entry = entryOn ? { show: true, src: qrOf((PV.appUrl || appUrl) + '/g/' + myToken, 400, '#1a1714', '#ffffff'), hint: pg && pg.checkedIn ? '✓ ' + gt.youCheckedIn : gt.entryHint, color: pg && pg.checkedIn ? '#2e7d4f' : '#6e665b', save: !this.tgReal } : { show: false };
     const isShareScr = s.screen === 'share' && !isPersonalInv;
     const X = {
       isTour: s.screen === 'tour', goTour: () => { this.stopMusic(); this.setState({ music: false, fromTour: true }); this.go('tour'); }, fromTourLive: isGuest && !!s.fromTour && s.guestMode !== 'preview' && s.guestMode !== 'edit', backTour: () => { this.stopMusic(); this.setState((x) => ({ music: false, share: { ...x.share, pwOn: false }, unlocked: false })); this.go('tour'); }, tourColor: s.screen === 'tour' ? '#d4452a' : U.ink, demos, demoCount: String(demos.length).padStart(2, '0'), styleChips, eventChips, allTpls, galleryCount: allTpls.length + ' / ' + D.TEMPLATES.length,
-      galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill([kick, inv.names, gDateShort].filter(Boolean).join(' ✦ ')).join('   ✦   '), namesDate: [inv.names, gDateShort].filter(Boolean).join(' · '),
+      galA: inv.gallery[0] || inv.cover, tickerTxt: Array(6).fill([kick, inv.names, gDateShortH].filter(Boolean).join(' ✦ ')).join('   ✦   '), namesDate: [inv.names, gDateShort].filter(Boolean).join(' · '),
       ui: U, notTg: !tg, tgSim, tgBack: backFn, tgBackLabel: scr === 'home' && !closeTop ? '✕ ' + t.close : '← ' + t.back,
       mainBtn: { show: tgSim && !!MB, label: MB ? MB[0] : '', onClick: () => MB && MB[1](), bg: '#d4452a', barBg: isGuest ? th.bg : U.paper },
       palettes, mapOpts: segO([['drawn', t.mapDrawn], ['real', t.mapReal]], inv.mapMode || 'drawn', (k) => this.setInv({ mapMode: k })),
@@ -3480,7 +3662,9 @@ class Component extends DCLogic {
       aiGo: () => { if (!s.aiBusy) this.aiWrite(); }, aiLabel: s.aiBusy ? t.aiBusy : t.aiWrite, aiOp: s.aiBusy ? 0.6 : 1,
       tracks, audioLabel: inv.musicSrc ? t.replace + ' · ' + t.tracks.custom : t.uploadAudio,
       onAudio: (e) => this.pickMedia(e, (url) => this.setInv({ musicSrc: url, music: 'custom' })),
-      secRows, sec, ord, rsvpDisp: sec.rsvp ? 'block' : 'none', guestbook, gbCount: String(guestbook.length).padStart(2, '0'), gbEmpty: guestbook.length === 0,
+      secRows, sec, ord, rsvpDisp: sec.rsvp ? 'block' : 'none', guestbook, gbCount: String(guestbook.length).padStart(2, '0'), gbHas: guestbook.length > 0, gbEmpty: guestbook.length === 0,
+      // Пустая книга: вместо «00» — приглашение оставить первое пожелание (к полю сообщения в ответе, с отметкой «показать»).
+      gbFirst: guestbook.length === 0 && sec.rsvp && !rsvpShut, writeWish: () => this.writeWish(),
       mapReal: inv.mapMode === 'real', mapDrawn: inv.mapMode !== 'real', mapEmbed: 'https://maps.google.com/maps?q=' + encodeURIComponent(venueQ) + '&z=15&output=embed', mapFilter: th.dark ? 'invert(.9) hue-rotate(180deg) saturate(.5)' : 'saturate(.75) contrast(1.03)',
       // Индикатор сохранения: время из updatedAt ответа сервера.
       saveDot: s.demo ? '#d4452a' : s.draftId ? (s.saving ? '#93723f' : s.saveErr ? '#d4452a' : s.savedAt ? '#2e7d4f' : 'transparent') : s.saveErr ? '#d4452a' : 'transparent',
@@ -3552,7 +3736,7 @@ class Component extends DCLogic {
       buildPadB: wide ? (tg ? '40px' : 'calc(120px + env(safe-area-inset-bottom))') : this.tgReal ? '88px' : tgSim ? '158px' : 'calc(170px + env(safe-area-inset-bottom))',
       buildCols: wide ? 'minmax(0,1fr) 380px' : 'minmax(0,1fr)', steps, stepKicker: t.stepOf.replace('{n}', s.step + 1).replace('{total}', STEPS.length), stepLabel: SL[stepKey], stepHint: SH[stepKey],
       fin, nav, sv, es, ph, rv, pyx,
-      ws, qs, on, prog, swatches, gal, fonts, gDateShort,
+      ws, qs, on, rsvpByF, prog, swatches, gal, fonts, gDateShort, gDateShortH,
       toggleCd: () => this.setInv({ countdown: !inv.countdown }), cdTrack: inv.countdown ? '#d4452a' : 'rgba(' + U.inkRgb + ',.2)', cdKnob: inv.countdown ? '23px' : '3px',
       addProg: () => this.addProg(), sortProg: () => this.sortProg(), progUnsorted, progNone: progLen === 0, addProgLabel: progFull ? t.progFull : '+ ' + t.addItem, progAddOp: progFull ? 0.45 : 1,
       onCover: (e) => this.pickMedia(e, (src) => this.setInv({ cover: src })),
@@ -3561,7 +3745,14 @@ class Component extends DCLogic {
       prevStep: () => s.step > 0 ? this.setState({ step: s.step - 1 }) : this.go('templates'),
       nextStep: () => s.step < STEPS.length - 1 ? this.setState({ step: s.step + 1 }) : this.goShare(),
       nextLabel: s.step < STEPS.length - 1 ? t.next : t.toShare, lastStep: s.step === STEPS.length - 1,
-      particlesOn: density > 0, cycleLang: () => { const LC = D.LANGS.map((x) => x.code); if (!pub && s.draftId && !s.demo) this.setInvLang(LC[(LC.indexOf(gl) + 1) % LC.length]); else this.setLang(LC[(LC.indexOf(lang) + 1) % LC.length], { save: true }); }, langCode: D.LANGS.find((x) => x.code === gl).label,
+      particlesOn: density > 0 && !this.reducedMotion(), langCode: D.LANGS.find((x) => x.code === gl).label,
+      // Язык страницы гостя: кнопка с названием языка и меню из четырёх. На публичной странице меняется только язык
+      // интерфейса гостя; в предпросмотре и редакторе своего черновика — язык самого приглашения (с тостом об этом).
+      langMenu: !!s.langMenu, langExp: s.langMenu ? 'true' : 'false', langName: D.LANG_NAMES[gl] || gl, langAria: gt.langAria.replace('{lang}', D.LANG_NAMES[gl] || gl),
+      toggleLangMenu: () => this.setState({ langMenu: !s.langMenu }), closeLangMenu: () => this.setState({ langMenu: false }),
+      langItems: D.LANGS.map((x) => { const a = x.code === gl; return { code: x.code, name: D.LANG_NAMES[x.code], on: a ? 'true' : 'false', mark: a ? '✓' : '', bg: a ? th.accentSoft : 'transparent',
+        onClick: () => { this.setState({ langMenu: false }); if (a) return; if (!pub && s.draftId && !s.demo) { this.setInvLang(x.code); this.toast(t.invLangSet.replace('{lang}', D.LANG_NAMES[x.code])); } else this.setLang(x.code, { save: true }); } }; }),
+      revealKick: s.event === 'baby' ? gt.revealKickBaby : gt.revealKick,
       toggleMusic: () => this.toggleMusic(), musicPressed: s.music ? 'true' : 'false', mb: s.music ? { a: '14px', b: '22px', d: '10px', c: th.accent } : { a: '6px', b: '6px', d: '6px', c: th.muted },
       isPreview: isGuest && s.guestMode === 'preview', isRefine: isEdit,
       backFromPreview: () => { this.stopMusic(); this.setState({ music: false }); this.go(s.fromTour ? 'tour' : 'templates'); },
@@ -3572,32 +3763,50 @@ class Component extends DCLogic {
       gateShow: gateShow || (isGuest && s.pubLocked), pwTry: s.pwTry, pwErr: !!s.pwErr, pwErrText: s.pwErr === 'limited' ? gt.tooManyPw : gt.wrongPw, onPwTry: (e) => this.setState({ pwTry: e.target.value, pwErr: false }),
       // Пароль публичной страницы проверяет сервер: страница перезагружается с ?code=.
       unlock: () => { if (s.pubLocked) { const c = (s.pwTry || '').trim(); if (c) location.search = '?code=' + encodeURIComponent(c); return; } if (s.pwTry === s.share.pw) this.setState({ unlocked: true }); else this.setState({ pwErr: true }); },
-      envShow: isGuest && intro && env < 4 && !isEdit && (inv.intro || 'envelope') === 'envelope', curtainShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'curtain', scratchIntroShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'scratch', curL: env >= 1 ? '-102%' : '0%', curR: env >= 1 ? '102%' : '0%', openEnv: () => this.openEnv(), envOp: env >= 3 ? 0 : 1, envCardY: env >= 2 ? '-62%' : '0%', envFlap: env >= 1 ? 'rotateX(180deg)' : 'rotateX(0deg)', envFlapZ: env >= 1 ? 1 : 4, sealOp: env >= 1 ? 0 : 1, sealScale: env >= 1 ? 1.4 : 1, initials: (parts0.length > 1 ? parts0.slice(0, 2).map((p) => p.trim()[0]).join('').toUpperCase() : this.ini(inv.names)) || '✦',
-      gDateLong, gWeekday, gDay, gMonthYear, gWhen, gWdDate, gTimeVenue, gFull, gMyTime, hasDate: !!d0, words,
+      envShow: isGuest && intro && env < 4 && !isEdit && (inv.intro || 'envelope') === 'envelope', curtainShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'curtain', scratchIntroShow: isGuest && intro && env < 4 && !isEdit && inv.intro === 'scratch', skipOn: !!s.skipOn, skipIntro: () => { this.setState({ env: 3, skipOn: false }); setTimeout(() => this.setState({ env: 4 }), 800); }, curL: env >= 1 ? '-102%' : '0%', curR: env >= 1 ? '102%' : '0%', openEnv: () => this.openEnv(), envOp: env >= 3 ? 0 : 1, envCardY: env >= 2 ? '-62%' : '0%', envFlap: env >= 1 ? 'rotateX(180deg)' : 'rotateX(0deg)', envFlapZ: env >= 1 ? 1 : 4, sealOp: env >= 1 ? 0 : 1, sealScale: env >= 1 ? 1.4 : 1, initials: (parts0.length > 1 ? parts0.slice(0, 2).map((p) => p.trim()[0]).join('').toUpperCase() : this.ini(inv.names)) || '✦',
+      gDateLong, gWeekday, gDay, gMonthYear, gWhen, gWdDate, gWdDateH, gTimeVenue, gFull, gMyTime, hasDate: !!d0, words,
       // Без даты или времени их ячейки в героях (билет, сетка, brutal) скрыты, а не пусты.
       // В редакторе пустые дата и время остаются местом для нажатия: «✎ Дата» открывает лист «Когда».
       hasTime: !!inv.time, hasWhen: !!d0 || !!inv.time || isEdit, whenLabel: d0 || !inv.time ? gt.fDate : gt.fTime,
       whenTxt: gWhen || (isEdit ? '✎ ' + gt.fDate : ''), whenEmpty: isEdit && !d0 && !inv.time,
       // Строка даты героя: дата и время не рвутся внутри («27 декабря 2026 г.» / «16:00»), перенос — только между ними.
-      whenD: gWhen ? gDateLong : isEdit ? '✎ ' + gt.fDate : '', whenT: gWhen ? inv.time || '' : '', whenSep: gDateLong && inv.time ? ' · ' : '',
+      whenD: gWhen ? gDateHero : isEdit ? '✎ ' + gt.fDate : '', whenT: gWhen ? inv.time || '' : '', whenSep: gDateLong && inv.time ? ' · ' : '', gDateHero,
       ticketCols: 'repeat(' + (1 + (d0 ? 1 : 0) + (inv.time ? 1 : 0)) + ',minmax(0,1fr))',
+      // Программа: на телефоне и при 5+ пунктах — компактный список; закреплённые экраны по пункту — только на
+      // широком экране и не больше 4 пунктов (иначе 8 пунктов — 8 экранов прокрутки).
+      progPin: !!sec.program && wide && n <= 4, progList: !!sec.program && !(wide && n <= 4),
       progN: n, progTotal: String(n).padStart(2, '0'), pinH: (n * 90 + 60) + 'vh', pinCols: wide ? 'minmax(0,1fr) minmax(0,1.4fr)' : 'minmax(0,1fr)',
-      cdUnits: [['d', gt.days], ['h', gt.hours], ['m', gt.min], ['s', gt.secs]].map(([k, label], i) => ({ k, label, delay: i * 90 + 'ms' })),
+      // Подписи отсчёта склоняются по числу («1 день», «21 час»); каждую секунду их обновляет updateCountdown.
+      // Событие наступило — вместо 00:00:00:00 «Событие состоялось».
+      cdLive: !cdPast, cdPast, cdUnits: [['d', gt.days], ['h', gt.hours], ['m', gt.min], ['s', gt.secs]].map(([k, label], i) => ({ k, label: D.plural(gl, cdV[k], (gt.cdN || {})[k]) || label, delay: i * 90 + 'ms' })),
       hasGallery: inv.gallery.length > 0, hpinH: (100 + inv.gallery.length * 55) + 'vh', galCount: String(inv.gallery.length).padStart(2, '0'), galW: wide ? '380px' : '66vw',
       gGallery: inv.gallery.map((src, i) => ({ src, n: String(i + 1).padStart(2, '0'), rot: (i % 2 ? 2 : -2) + 'deg', y: (i % 2 ? 24 : -10) + 'px' })),
       mapAR: wide ? '16/7' : '4/5', pins, routePts, routeList, hasRoute: stopsN > 0, gProg, mapNote: stopsN > 0 && inv.mapMode !== 'real',
       mapUrl: venueLink || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(venueQ),
       routeUrl: venueLink || 'https://yandex.uz/maps/?rtext=~' + encodeURIComponent(venueQ) + '&rtt=auto',
       hasDress: !!inv.dress || inv.dressColors.length > 0, dressSw: inv.dressColors.map((c, i) => ({ c, delay: i * 90 + 'ms' })), infoCards,
-      rsvp: R, rsvpForm: !R.sent, showCount: R.status === 'yes' || R.status === 'maybe', rsvpOpts, dietOpts, rsvpBy: this.fmt(byIso, '12:00', { day: 'numeric', month: 'long' }, gl),
+      rsvp: R, rsvpForm: !R.sent && !rsvpShut, showCount: R.status === 'yes' || R.status === 'maybe', rsvpOpts, dietOpts,
+      // «Пожалуйста, ответьте до …» — только если срок выбрал владелец и ответы ещё принимаются.
+      rsvpBy: byIso && !rsvpShut ? gt.replyBy.replace('{date}', byTxt) : '',
+      // Приём ответов закрыт: вместо формы — объяснение; отправленный ответ виден, но «Изменить ответ» нет.
+      rsvpShut, rsvpShutOn: rsvpShut && !R.sent, rsvpShutText: pastDay ? gt.rsvpClosedPast : byPast ? gt.rsvpClosedBy.replace('{date}', byTxt) : '', rsvpCanChange: !rsvpShut,
+      dietShow: R.status === 'yes' || R.status === 'maybe' ? dietOpts.length > 0 : false, dietOpen: !!R.dietOpen || R.diet.length > 0, dietMark: R.dietOpen || R.diet.length ? '−' : '+', dietExp: R.dietOpen || R.diet.length ? 'true' : 'false',
+      toggleDiet: () => this.setState((x) => ({ rsvp: { ...x.rsvp, dietOpen: !(x.rsvp.dietOpen || x.rsvp.diet.length > 0) } })),
+      // Число гостей в ответе — от 1 до 8, как принимает сервер; у предела кнопка гаснет и объясняет почему.
       decCount: () => this.setState((x) => ({ rsvp: { ...x.rsvp, count: Math.max(1, x.rsvp.count - 1) } })), incCount: () => this.setState((x) => ({ rsvp: { ...x.rsvp, count: Math.min(8, x.rsvp.count + 1) } })),
+      decOp: R.count <= 1 ? 0.35 : 1, incOp: R.count >= 8 ? 0.35 : 1, decDis: R.count <= 1 ? 'true' : 'false', incDis: R.count >= 8 ? 'true' : 'false', countMaxOn: R.count >= 8,
       onRsvpMsg: (e) => { const v = e.target.value; this.setState((x) => ({ rsvp: { ...x.rsvp, msg: v } })); },
+      // «Показать в гостевой книге»: по умолчанию сообщение видит только организатор (флажок — только при включённой книге).
+      msgPubShow: !!sec.guestbook, msgPubOn: R.pub ? 'true' : 'false', msgPubMark: R.pub ? '✓' : '', msgPubBg: R.pub ? th.accent : 'transparent', msgPubBorder: R.pub ? th.accent : th.muted,
+      toggleMsgPub: () => this.setState((x) => ({ rsvp: { ...x.rsvp, pub: !x.rsvp.pub } })),
       ...PX,
-      sendOp: rsvpReady ? 1 : 0.4,
-      // «Отправить» без ответа или имени не молчит: подсказка под кнопкой, курсор — в поле имени.
+      sendOp: rsvpReady ? 1 : 0.4, nameBorder: needNm ? th.accentInk : th.line,
+      // «Отправить» без ответа или имени не молчит: подсказка под кнопкой, недостающее поле обведено, курсор и прокрутка —
+      // к нему (сначала имя, потом ответ).
       sendRsvp: () => { if (rsvpReady) { this.submitRsvp(); return; } if (s.rsvpBusy) return; this.setState((x) => ({ rsvp: { ...x.rsvp, tried: true } }));
-        if (R.status) setTimeout(() => { const el = document.querySelector('#rsvp input[name="rsvp-name"]'); if (el) el.focus(); }, 0); },
-      rsvpNeed: R.tried && !rsvpReady && !s.rsvpBusy ? (!R.status ? gt.needStatus : gt.needName) : '',
+        const noName = !toName && !(R.name || '').trim();
+        setTimeout(() => { const el = document.querySelector(noName ? '#rsvp input[name="rsvp-name"]' : '#rsvp [data-rsvp-opt]'); if (!el) return; try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 0); },
+      rsvpNeed: R.tried && !rsvpReady && !s.rsvpBusy ? (!R.status && !toName && !(R.name || '').trim() ? gt.needBoth : !R.status ? gt.needStatus : gt.needName) : '',
       rsvpSummary, addCal: ics, viaBot: () => (s.pub ? this.openUrl('https://t.me/' + PV.botUsername + '?start=g_' + myToken) : this.openUrl('https://t.me/share/url?url=' + encodeURIComponent(fullLink) + '&text=' + encodeURIComponent('RSVP: ' + rsvpSummary))),
       changeRsvp: () => this.setState((x) => ({ rsvp: { ...x.rsvp, sent: false } })),
       footPad: isEdit ? '210px' : isGuest && s.guestMode === 'preview' ? '150px' : '60px',

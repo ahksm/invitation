@@ -68,6 +68,9 @@ const fields = {
   // og:title, напоминания, бот и SMS обходятся без неё.
   date: isoDateOrEmpty,
   time: hhmmOrEmpty,
+  // Срок ответа гостей (выбирает владелец, необязательно): «Пожалуйста, ответьте до …» на странице гостя.
+  // После этого дня по Ташкенту и после дня события ответы не принимаются (rsvpClosed в src/services/public.ts).
+  rsvpBy: isoDateOrEmpty,
   countdown: z.boolean(),
   showGuests: z.boolean(),
   cover: mediaOrEmpty,

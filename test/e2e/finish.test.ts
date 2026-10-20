@@ -447,11 +447,13 @@ describe("страница гостя", () => {
     expect(parts[1]![1]).toBeLessThanOrEqual(parts[2]![0]! + 0.5);
     const dateSpan = hero.locator("span > span").first();
     expect((await dateSpan.boundingBox())!.height).toBeLessThan(30);
-    // Без ответа: подсказка выбрать ответ; с ответом без имени — ввести имя, курсор в поле.
+    // Пусто: подсказка про оба поля, курсор в поле имени; с ответом без имени — ввести имя, курсор в поле.
     const rsvp = page.locator("#rsvp");
     await rsvp.scrollIntoViewIfNeeded();
     await rsvp.getByRole("button", { name: ru.send }).click();
-    expect(await rsvp.locator("[data-rsvp-need]").textContent()).toBe(ru.needStatus);
+    expect(await rsvp.locator("[data-rsvp-need]").textContent()).toBe(ru.needBoth);
+    await expect.poll(() => page.evaluate(() => document.activeElement?.getAttribute("name"))).toBe("rsvp-name");
+    await page.evaluate(() => (document.activeElement as HTMLElement).blur());
     await rsvp.getByRole("button", { name: ru.yes }).click();
     await rsvp.getByRole("button", { name: ru.send }).click();
     expect(await rsvp.locator("[data-rsvp-need]").textContent()).toBe(ru.needName);

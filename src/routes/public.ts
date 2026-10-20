@@ -11,6 +11,8 @@ const rsvp = {
   count: z.number().int().min(1).max(8).default(1),
   diet: z.array(z.enum(guestDiets)).max(guestDiets.length).default([]),
   msg: z.string().max(500).default(""),
+  // Показать сообщение в гостевой книге. Без явного true оно видно только владельцу.
+  public: z.boolean().default(false),
 };
 
 /** Данные для страниц приглашения, которые открывают гости. Представления кэшируются в Redis. */

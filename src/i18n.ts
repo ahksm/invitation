@@ -105,6 +105,7 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Неверный пароль": { uz: "Parol noto'g'ri", en: "Wrong password" },
   "Слишком много попыток, попробуйте через минуту": { uz: "Urinishlar juda ko'p, bir daqiqadan keyin urinib ko'ring", en: "Too many attempts, try again in a minute" },
   "Для этого приглашения собрано слишком много ответов": { uz: "Bu taklifnomaga javoblar juda ko'p", en: "This invitation has received too many responses" },
+  "Приём ответов завершён": { uz: "Javoblar qabul qilish yakunlandi", en: "Replies are closed" },
   "Нужна картинка PNG или JPEG": { uz: "PNG yoki JPEG rasm kerak", uzc: "PNG ёки JPEG расм керак", en: "A PNG or JPEG image is required" },
   "Файл слишком большой": { uz: "Fayl juda katta", en: "The file is too large" },
   "Этот тип файла не поддерживается": { uz: "Bu fayl turi qo'llab-quvvatlanmaydi", en: "This file type is not supported" },
@@ -266,6 +267,7 @@ export const botTexts = {
   rsvpMaybe: { ru: "🤔 Возможно", uz: "🤔 Balki", en: "🤔 Maybe" },
   rsvpNo: { ru: "❌ Не приду", uz: "❌ Kela olmayman", en: "❌ Can't make it" },
   rsvpSaved: { ru: "Ответ сохранён", uz: "Javob saqlandi", en: "Reply saved" },
+  rsvpClosed: { ru: "Приём ответов завершён", uz: "Javoblar qabul qilish yakunlandi", en: "Replies are closed" },
 } satisfies Record<string, Record<Exclude<Locale, "uzc">, string>>;
 
 export type BotTextKey = keyof typeof botTexts;

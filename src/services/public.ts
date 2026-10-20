@@ -20,7 +20,7 @@ import { isGuestPaid } from "./seats.js";
  * изменений владельца (invalidateInvitation). Открытие личной ссылки пишется в базу вне кэша.
  */
 
-export type PublicGuest = { name: string; token: string; rsvp: Guest["rsvp"]; count: number; diet: GuestDiet[]; msg: string; checkedIn: boolean };
+export type PublicGuest = { name: string; token: string; rsvp: Guest["rsvp"]; count: number; diet: GuestDiet[]; msg: string; msgPublic: boolean; checkedIn: boolean };
 
 export type PublicView = {
   kind: "shared" | "personal";
@@ -32,7 +32,7 @@ export type PublicView = {
   guest?: PublicGuest;
   /** Кто придёт: только если владелец включил data.showGuests и секция «who» включена. */
   who?: { count: number; list: { name: string; plus: number }[]; more: number };
-  /** Гостевая книга: только при включённой секции «guestbook». */
+  /** Гостевая книга: только при включённой секции «guestbook» и только сообщения, которые гости сами сделали публичными. */
   guestbook?: { name: string; text: string }[];
   botUsername: string | null;
   appUrl: string;
@@ -111,7 +111,7 @@ async function social(ctx: Pick<Ctx, "db">, invitationId: string, data: InvConte
   const showBook = sectionOn(data, "guestbook");
   if (!showWho && !showBook) return {};
   const rows = await ctx.db
-    .select({ id: guests.id, name: guests.name, plus: guests.plus, rsvp: guests.rsvp, message: guests.message, respondedAt: guests.respondedAt })
+    .select({ id: guests.id, name: guests.name, plus: guests.plus, rsvp: guests.rsvp, message: guests.message, messagePublic: guests.messagePublic, respondedAt: guests.respondedAt })
     .from(guests)
     .where(and(eq(guests.invitationId, invitationId), inArray(guests.rsvp, ["yes", "maybe"])))
     .orderBy(asc(guests.respondedAt), asc(guests.seat));
@@ -122,8 +122,9 @@ async function social(ctx: Pick<Ctx, "db">, invitationId: string, data: InvConte
     out.who = { count: yes.reduce((n, r) => n + 1 + r.plus, 0), list, more: yes.length - list.length };
   }
   if (showBook) {
+    // Сообщение гостя видят все, у кого есть ссылка, поэтому в книгу идут только отмеченные им самим «показать».
     out.guestbook = rows
-      .filter((r) => r.message?.trim())
+      .filter((r) => r.messagePublic && r.message?.trim())
       .reverse()
       .slice(0, GUESTBOOK_LIMIT)
       .map((r) => ({ name: shortName(r.name), text: r.message!.trim() }));
@@ -193,6 +194,7 @@ async function guestEntry(ctx: Pick<Ctx, "db" | "cache" | "config">, token: stri
       count: 1 + g.plus,
       diet: g.diet,
       msg: g.message ?? "",
+      msgPublic: g.messagePublic,
       checkedIn: g.checkedInAt !== null,
     };
     return {
@@ -256,17 +258,32 @@ export async function getPublicPage(
   return { status: 200, view: entry.view, meta: entry.meta };
 }
 
-export type RsvpInput = { status: "yes" | "no" | "maybe"; count: number; diet: GuestDiet[]; msg: string };
+/** public: показать сообщение в гостевой книге (по умолчанию его видит только владелец). */
+export type RsvpInput = { status: "yes" | "no" | "maybe"; count: number; diet: GuestDiet[]; msg: string; public?: boolean | undefined };
 
 function rsvpValues(input: RsvpInput) {
+  const message = input.msg.trim() || null;
   return {
     rsvp: input.status,
     plus: input.status === "no" ? 0 : input.count - 1,
     diet: [...new Set(input.diet)],
-    message: input.msg.trim() || null,
+    message,
+    messagePublic: !!message && input.public === true,
     respondedAt: new Date(),
   };
 }
+
+/**
+ * Приём ответов закрыт: по календарю Ташкента наступил день после срока ответа (data.rsvpBy) или после дня
+ * события (data.date). В сам день события ответы ещё принимаются. Без даты и срока ответ открыт всегда.
+ */
+export function rsvpClosed(data: Pick<InvContent, "date" | "rsvpBy">, now = new Date()): boolean {
+  // Местная дата Ташкента (UTC+5, без летнего времени), как tashkentDate в reminders.ts (тот импортирует этот модуль).
+  const today = new Date(now.getTime() + 5 * 3600_000).toISOString().slice(0, 10);
+  return (!!data.rsvpBy && today > data.rsvpBy) || (!!data.date && today > data.date);
+}
+
+const CLOSED = "Приём ответов завершён";
 
 type RsvpCtx = Pick<Ctx, "db" | "cache" | "config" | "notifier" | "log">;
 
@@ -284,9 +301,11 @@ async function afterRsvp(ctx: RsvpCtx, inv: { id: string; slug: string }, guest:
 export async function rsvpPersonal(ctx: RsvpCtx, token: string, input: RsvpInput): Promise<boolean> {
   const entry = await guestEntry(ctx, token);
   if (!entry) return false;
-  // Запись в кэше могла пережить архив: ответ принимается, только пока приглашение опубликовано.
-  const [inv] = await ctx.db.select({ status: invitations.status }).from(invitations).where(eq(invitations.id, entry.invitationId));
+  // Запись в кэше могла пережить архив: ответ принимается, только пока приглашение опубликовано
+  // и не прошли срок ответа и день события (по свежим данным, а не по кэшу).
+  const [inv] = await ctx.db.select({ status: invitations.status, data: invitations.data }).from(invitations).where(eq(invitations.id, entry.invitationId));
   if (inv?.status !== "active") return false;
+  if (rsvpClosed(coerceContent(inv.data, null))) throw new HttpError(410, CLOSED);
   const [g] = await ctx.db.update(guests).set(rsvpValues(input)).where(eq(guests.id, entry.guestId)).returning({ id: guests.id, name: guests.name });
   // Гостя могли удалить, пока его страница лежала в кэше.
   if (!g) return false;
@@ -318,6 +337,7 @@ export async function rsvpShared(
       if (check === "limited") throw new HttpError(429, "Слишком много попыток, попробуйте через минуту");
       if (check === "wrong") throw new HttpError(401, "Неверный пароль");
     }
+    if (rsvpClosed(coerceContent(inv.data, null))) throw new HttpError(410, CLOSED);
     if (input.guestToken) {
       const [g] = await tx
         .update(guests)
@@ -361,13 +381,14 @@ export async function personalView(ctx: Pick<Ctx, "db" | "cache" | "config">, to
 /**
  * Ответ кнопкой под карточкой приглашения в боте: тот же путь, что POST /api/public/g/:token/rsvp.
  * Кнопка несёт id гостя, поэтому ответ принимается только из чата, привязанного к этому гостю.
- * Число гостей, пожелания и диета остаются прежними. Возвращает токен гостя или null, если ответ не принят.
+ * Число гостей, пожелания (и видны ли они в гостевой книге) и диета остаются прежними. Возвращает токен гостя
+ * или null, если ответ не принят; после срока ответа — HttpError 410, как у страницы гостя.
  */
 export async function rsvpFromChat(ctx: RsvpCtx, guestId: string, chatId: number, status: RsvpInput["status"]): Promise<string | null> {
   const [g] = await ctx.db
-    .select({ token: guests.token, plus: guests.plus, diet: guests.diet, message: guests.message })
+    .select({ token: guests.token, plus: guests.plus, diet: guests.diet, message: guests.message, messagePublic: guests.messagePublic })
     .from(guests)
     .where(and(eq(guests.id, guestId), eq(guests.telegramChatId, chatId)));
   if (!g) return null;
-  return (await rsvpPersonal(ctx, g.token, { status, count: 1 + g.plus, diet: g.diet, msg: g.message ?? "" })) ? g.token : null;
+  return (await rsvpPersonal(ctx, g.token, { status, count: 1 + g.plus, diet: g.diet, msg: g.message ?? "", public: g.messagePublic })) ? g.token : null;
 }

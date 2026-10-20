@@ -210,7 +210,8 @@ describe("конструктор: программа и маршрут", () => {
     await editOf(page, "Лист тест").click();
     await page.getByTitle(ru.stepsX.sections).click();
     await page.getByRole("button", { name: "✎ " + ru.toEditor }).click();
-    await page.locator("section[data-pin] [data-num]").waitFor();
+    // На телефоне программа — компактный список (data-prog="list"), а не закреплённый счётчик.
+    await page.locator('section[data-prog="list"] [data-prog-row]').first().waitFor();
 
     // Текст приглашения: лист без программы.
     await page.locator("[data-w]").first().click();
@@ -220,14 +221,14 @@ describe("конструктор: программа и маршрут", () => {
     await page.getByRole("button", { name: ru.done }).click();
 
     // Программа на приглашении → лист «Место и программа».
-    await page.locator("section[data-pin] [data-num]").click();
+    await page.locator('section[data-prog="list"] [data-prog-row]').first().click();
     await page.locator("[data-route-editor]").waitFor();
     expect(await page.getByText(ru.steps.where, { exact: true }).count()).toBeGreaterThan(0);
     await expect.poll(() => rows(page).count()).toBe(1);
     await page.locator("[data-add-prog]").click();
     await expect.poll(() => focused(page)).toBe("1:title");
     await page.keyboard.type("Той");
-    await expect.poll(() => page.locator("section[data-pin]").getAttribute("data-pin")).toBe("2");
+    await expect.poll(() => page.locator("section[data-prog] [data-prog-row]").count()).toBe(2);
     await e.shot(page, "route-sheet-ru-390x844.png");
     // Удалили всё — раздела программы на приглашении нет.
     for (let i = 2; i > 0; i--) {
@@ -235,7 +236,7 @@ describe("конструктор: программа и маршрут", () => {
       await expect.poll(() => rows(page).count()).toBe(i - 1);
     }
     await page.locator("[data-prog-empty]").waitFor();
-    await page.locator("section[data-pin]").waitFor({ state: "detached" });
+    await page.locator("section[data-prog]").waitFor({ state: "detached" });
     await e.expectClean(page, problems);
     await close();
   });

@@ -23,6 +23,8 @@ export type GuestDto = {
   checkedIn: boolean;
   checkedInAt: Date | null;
   message: string;
+  // Сообщение показано в гостевой книге (гость сам выбрал «показать»); иначе его видит только владелец.
+  messagePublic: boolean;
   diet: GuestDiet[];
   source: Guest["source"];
   openedAt: Date | null;
@@ -49,6 +51,7 @@ export function toGuestDto(ctx: Pick<Ctx, "config">, g: Guest, extra: { paid: bo
     checkedIn: g.checkedInAt !== null,
     checkedInAt: g.checkedInAt,
     message: g.message ?? "",
+    messagePublic: g.messagePublic,
     diet: g.diet,
     source: g.source,
     openedAt: g.openedAt,

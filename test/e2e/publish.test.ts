@@ -522,8 +522,9 @@ describe("страница гостя", () => {
     await page.locator("[data-entry-qr]").waitFor();
     // Язык меняет только просмотр гостя: ничего не сохраняется на сервере.
     const before = problems.requests.length;
-    const lb = page.getByRole("button", { name: D.LANGS.find((l: Dict) => l.code === "ru").label, exact: true }).first();
-    await lb.click();
+    // Кнопка языка открывает меню языков (раньше переключала по кругу).
+    await page.getByRole("button", { name: ru.langAria.replace("{lang}", D.LANG_NAMES.ru) }).click();
+    await page.getByRole("menuitemradio", { name: D.LANG_NAMES.uz }).click();
     await expect.poll(() => page.locator("body").innerText()).not.toContain(ru.thanks);
     expect(problems.requests.slice(before).filter((u) => u.startsWith("/api/"))).toEqual([]);
     await e.expectClean(page, problems);
@@ -554,8 +555,8 @@ describe("страница гостя", () => {
     const inv = await createInvitation(user.id, { data: { names: "Зарина и Акмаль", intro: "none", showGuests: true } });
     await activate(inv.id, { unlocked: true });
     const slug = inv.slug as string;
-    // Другой гость уже ответил и оставил пожелание.
-    const r0 = await e.app.inject({ method: "POST", url: `/api/public/i/${slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Феруза Алиева", status: "yes", count: 2, diet: [], msg: "Счастья вам!" } });
+    // Другой гость уже ответил и оставил пожелание (сам решил показать его в книге: по умолчанию его видит только владелец).
+    const r0 = await e.app.inject({ method: "POST", url: `/api/public/i/${slug}/rsvp`, headers: { origin: e.base }, payload: { name: "Феруза Алиева", status: "yes", count: 2, diet: [], msg: "Счастья вам!", public: true } });
     expect(r0.statusCode).toBe(200);
     const { page, problems, close } = await e.open(`/i/${slug}`, { waitText: "Зарина и Акмаль" });
     expect(await page.locator("body").innerText()).toContain("Счастья вам!");
@@ -564,11 +565,12 @@ describe("страница гостя", () => {
     await page.locator(`#rsvp input[placeholder="${ru.yourName}"]`).fill("Отабек Юсупов");
     await page.locator("#rsvp").getByRole("button", { name: ru.yes }).click();
     await page.locator("#rsvp").locator("textarea").fill("Обязательно будем!");
+    await page.locator("#rsvp [data-msg-public]").click();
     await page.locator("#rsvp").getByRole("button", { name: ru.send }).click();
     await e.waitText(page, ru.thanks);
     await expect.poll(async () => (await guestsOf(inv.id)).length).toBe(2);
     const mine = (await guestsOf(inv.id)).find((g) => g.name === "Отабек Юсупов")!;
-    expect(mine).toMatchObject({ rsvp: "yes", source: "self", message: "Обязательно будем!" });
+    expect(mine).toMatchObject({ rsvp: "yes", source: "self", message: "Обязательно будем!", messagePublic: true });
     const saved = await page.evaluate((s) => JSON.parse(localStorage.getItem("invito.rsvp." + s) || "null"), slug);
     expect(saved.token).toBe(mine.token);
     // После ответа: «кто придёт» с отметкой «вы», пожелание в гостевой книге, QR для входа.
@@ -617,7 +619,7 @@ describe("страница гостя", () => {
     const body = await page.locator("body").innerText();
     const W = D.EVENTS.wedding, L = W.text.ru;
     // Ни выдуманной даты, ни программы, ни телефона, ни дресс-кода, подарков и «Ответьте до».
-    for (const made of [L.contact, L.dress, L.gifts, L.notes, ...W.program.map((x: Dict) => x.ru), ru.replyBy]) expect(body).not.toContain(made);
+    for (const made of [L.contact, L.dress, L.gifts, L.notes, ...W.program.map((x: Dict) => x.ru), ru.replyBy.split("{date}")[0].trim()]) expect(body).not.toContain(made);
     expect(body).not.toMatch(/\d{4} г\./);
     expect(body).not.toMatch(/^\s*·|·\s*$/m);
     for (const own of ["Кафе «Ромашка»", "ул. Навои, 1", "Ждём вас!"]) expect(body).toContain(own);

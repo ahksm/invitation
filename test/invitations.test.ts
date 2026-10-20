@@ -39,6 +39,8 @@ const GUEST_KEYS = [
   "id",
   "link",
   "message",
+  // Гость сам разрешил показать сообщение в гостевой книге (GuestDto.messagePublic).
+  "messagePublic",
   "name",
   "openedAt",
   "paid",
@@ -508,6 +510,7 @@ describe("гости и места", () => {
       checkedIn: false,
       checkedInAt: null,
       message: "",
+      messagePublic: false,
       diet: [],
       source: "owner",
       openedAt: null,

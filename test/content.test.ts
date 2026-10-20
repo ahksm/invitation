@@ -105,6 +105,7 @@ describe("содержимое приглашения (InvContent)", () => {
       ],
       date: "2026-12-26",
       time: "18:30",
+      rsvpBy: "2026-12-10",
       palette: 2,
       music: "custom",
       intro: "scratch",
@@ -115,6 +116,8 @@ describe("содержимое приглашения (InvContent)", () => {
     });
     expect(ok).not.toHaveProperty("extra");
     expect(ok.dressColors).toEqual(["#aabbcc"]);
+    expect(ok.rsvpBy).toBe("2026-12-10");
+    expect(schema.parse({ rsvpBy: "" })).toEqual({ rsvpBy: "" });
     expect(ok.program).toEqual([
       { time: "16:00", title: "Сбор гостей", place: "", address: "" },
       { time: "", title: "Ужин", place: "", address: "" },
@@ -133,6 +136,9 @@ describe("содержимое приглашения (InvContent)", () => {
       { date: "2026-02-30" },
       { date: "26.12.2026" },
       { time: "7:00" },
+      { rsvpBy: "2026-13-01" },
+      { rsvpBy: "10.12.2026" },
+      { rsvpBy: null },
       { palette: 3 },
       { palette: 1.5 },
       { music: "rock" },

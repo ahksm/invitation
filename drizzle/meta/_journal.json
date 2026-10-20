@@ -36,6 +36,13 @@
       "when": 1792419791065,
       "tag": "0004_legacy_content",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792515739659,
+      "tag": "0005_guest_message_public",
+      "breakpoints": true
     }
   ]
 }

@@ -159,8 +159,10 @@ export const guests = pgTable(
     // Стол в рассадке; 0 — без стола.
     tableNo: integer("table_no").notNull().default(0),
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
-    // Пожелание гостя (гостевая книга).
+    // Сообщение гостя хозяевам. В гостевую книгу (видна всем, у кого есть ссылка) попадает, только если
+    // гость сам отметил «Показать в гостевой книге» (message_public); иначе его видит только владелец.
     message: text("message"),
+    messagePublic: boolean("message_public").notNull().default(false),
     diet: text("diet").array().$type<GuestDiet[]>().notNull().default(sql`'{}'::text[]`),
     // owner — добавил владелец, self — ответил сам по общей ссылке.
     source: guestSource("source").notNull().default("owner"),
