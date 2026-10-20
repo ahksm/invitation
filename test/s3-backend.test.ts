@@ -143,6 +143,11 @@ describe("заказы", () => {
     // Места: шаблон не оплачивается.
     const pers = (await req(cookie, "POST", "/api/invitations", { template, mode: "personal" })).json();
     expect((await req(cookie, "POST", "/api/orders", { kind: "seats", invitationId: pers.id, quantity: 2 })).json().order.template).toBeNull();
+    // Испорченный templateId в meta не ломает историю: шаблона просто нет.
+    await db.update(orders).set({ meta: { templateId: "not-a-uuid" } }).where(eq(orders.id, created.order.id));
+    const res = await req(cookie, "GET", "/api/orders");
+    expect(res.statusCode).toBe(200);
+    expect(res.json().find((o: any) => o.id === created.order.id).template).toBeNull();
   });
 
   it("миграция 0007 убирает из сохранённых уведомлений номер карты и прочие лишние поля, остальное не трогает", async () => {

@@ -33,7 +33,12 @@ export type OrderDto = Pick<
   "id" | "number" | "kind" | "invitationId" | "quantity" | "amount" | "currency" | "status" | "checkoutUrl" | "paidAt" | "createdAt"
 > & { template: string | null };
 
-const orderTemplateId = (o: Order) => (o.kind === "template" && typeof o.meta.templateId === "string" ? o.meta.templateId : null);
+// Только uuid: испорченное значение в meta не должно ломать запрос к шаблонам.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const orderTemplateId = (o: Order) => {
+  const id = o.kind === "template" ? o.meta.templateId : null;
+  return typeof id === "string" && UUID.test(id) ? id : null;
+};
 
 const orderDto = (o: Order, slugs: ReadonlyMap<string, string> = new Map()): OrderDto => {
   const tid = orderTemplateId(o);
