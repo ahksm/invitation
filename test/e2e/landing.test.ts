@@ -278,18 +278,20 @@ describe("Мои приглашения", () => {
     // «Изменить» у черновика: конструктор с первого шага, потом — с шага, на котором остановились.
     await reload(page, "Черновик тест");
     await draftCard.getByRole("button", { name: ru.edit, exact: true }).click();
-    await waitContent(page, `${ru.stepWord} 1 / 9`);
+    await waitContent(page, ru.stepOf.replace("{n}", "1").replace("{total}", "9"));
     await page.getByTitle(ru.steps.where).first().click();
-    await waitContent(page, `${ru.stepWord} 3 / 9`);
+    await waitContent(page, ru.stepOf.replace("{n}", "3").replace("{total}", "9"));
     await expect.poll(() => page.evaluate((id) => localStorage.getItem("invito.step." + id), draft.id)).toBe("2");
     await reload(page, "Черновик тест", true);
     await draftCard.getByRole("button", { name: ru.edit, exact: true }).click();
-    await waitContent(page, `${ru.stepWord} 3 / 9`);
+    await waitContent(page, ru.stepOf.replace("{n}", "3").replace("{total}", "9"));
     // «Изменить» у опубликованного: сразу редактор на странице приглашения.
     await reload(page, "Опубликовано тест");
     await liveCard.getByRole("button", { name: ru.edit, exact: true }).click();
     await e.waitText(page, ru.tapHint);
-    expect(await page.getByTitle(ru.stepsX.sections).count()).toBe(0);
+    // Редактор, а не конструктор: панель инструментов редактора (в ней тоже есть «Разделы»), счётчика шагов нет.
+    await page.locator("[data-ed-tools]").waitFor();
+    expect(await page.locator("[data-step-of]").count()).toBe(0);
     await e.expectClean(page, problems);
     await close();
   });

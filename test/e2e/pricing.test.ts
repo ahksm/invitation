@@ -83,8 +83,8 @@ async function previewOf(page: Page, t: Dict = ru) {
   }, { timeout: 15_000 }).toBe(true);
 }
 
-/** Конструктор открыт: шаги с подписями. */
-const builder = (page: Page) => page.getByTitle(ru.stepsX.sections).waitFor();
+/** Конструктор открыт: счётчик «Шаг N из 9» (у редактора его нет, а «Разделы» есть и в его панели). */
+const builder = (page: Page) => page.locator("[data-step-of]").waitFor();
 
 describe("экран цен", () => {
   it("цены сервера: общая ссылка «от» самой низкой цены шаблона, место, сроки 1–12 месяцев, что входит, вопросы", async () => {
@@ -339,9 +339,14 @@ describe("«Купить шаблон»", () => {
     expect(page.url()).toBe(`${e.base}/app/`);
     expect(await invOf(inv!.id)).toMatchObject({ status: "draft", unlocked: true });
     expect(await e.app.inject({ url: "/i/" + (await invOf(inv!.id)).slug }).then((r) => r.statusCode)).toBe(404);
-    // Ссылка потом — без новой оплаты: лист показывает «Оплачено», кнопка «Опубликовать».
+    // Ссылка потом — без новой оплаты: лист показывает «Оплачено», кнопка «Опубликовать». Черновик создан покупкой
+    // и ещё с именами и датой из примера: перед публикацией — проверка примеров, «Всё равно опубликовать».
     await page.getByTitle(ru.stepsX.sections).click();
     await page.getByRole("button", { name: ru.toShare + " →" }).last().click();
+    const cf = sheet(page, "confirm");
+    await cf.waitFor();
+    expect(await cf.innerText()).toContain(ru.smpTitle);
+    await cf.getByRole("button", { name: ru.smpAnyway }).click();
     const pay = sheet(page, "pay");
     await expect.poll(() => pay.locator('[data-price="shared"]').innerText()).toBe(ru.paidMark);
     expect(await pay.locator("[data-pay-total]").innerText()).toBe(ru.free);
