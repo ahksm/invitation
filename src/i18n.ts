@@ -123,6 +123,13 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
   "Такой даты нет": { uz: "Bunday sana yo'q", en: "There is no such date" },
   "Цвет в формате #rrggbb": { uz: "Rang #rrggbb formatida bo'lishi kerak", uzc: "Ранг #rrggbb форматида бўлиши керак", en: "Colour must be in #rrggbb format" },
   "Неизвестное событие": { uz: "Noma'lum tadbir", en: "Unknown event" },
+  // Реквизиты в админке (PUT /api/admin/legal).
+  "Email: адрес вида name@example.com": {
+    uz: "Elektron pochta: name@example.com ko‘rinishidagi manzil",
+    uzc: "Электрон почта: name@example.com кўринишидаги манзил",
+    en: "Email: an address like name@example.com",
+  },
+  "Telegram: имя пользователя, например @invito_support": { uz: "Telegram: foydalanuvchi nomi, masalan @invito_support", en: "Telegram: a username, for example @invito_support" },
   // Рассылки, бот и помощник с текстом.
   "Рассылка уже идёт, подождите": { uz: "Yuborish davom etmoqda, kuting", en: "Sending is already in progress, please wait" },
   "Подключите Telegram, чтобы получать уведомления": { uz: "Bildirishnomalarni olish uchun Telegramni ulang", en: "Connect Telegram to receive notifications" },

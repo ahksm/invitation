@@ -5,7 +5,7 @@ import { invitations, orders, smsMessages, subscriptions, templates, usageEvents
 import { HttpError } from "../errors.js";
 import { pricesSchema } from "../pricing.js";
 import { invalidateTemplates } from "../services/invitations.js";
-import { getPrices, setPrices } from "../services/settings.js";
+import { getLegal, getPrices, legalSchema, setLegal, setPrices } from "../services/settings.js";
 import { track } from "../services/usage.js";
 import { parseUserRef } from "../services/user-ref.js";
 import { invalidateUser, isConfiguredAdmin } from "../services/users.js";
@@ -231,6 +231,10 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/prices", async () => getPrices(ctx));
   app.put("/prices", async (req) => setPrices(ctx, pricesSchema.parse(req.body)));
+
+  // Реквизиты и контакты для /oferta, /privacy и /contacts. PUT заменяет все поля: не присланные становятся пустыми.
+  app.get("/legal", async () => getLegal(ctx));
+  app.put("/legal", async (req) => setLegal(ctx, legalSchema.parse(req.body)));
 
   // Порядок каталога; старые шаблоны без события в конце.
   app.get("/templates", async () =>
