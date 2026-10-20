@@ -6,7 +6,7 @@ import { parseRange } from "../src/routes/media.js";
 import { sniffMedia } from "../src/services/media.js";
 import { isPreviewBot, longDate, shortName } from "../src/services/public.js";
 import { inviteText, otpText } from "../src/sms/texts.js";
-import { hasUrl, mapLink, mapSearch, mapText } from "../web/invito-engine.js";
+import { hasUrl, isStop, mapLink, mapSearch, mapText } from "../web/invito-engine.js";
 import { samples } from "./helpers.js";
 
 describe("данные дизайна", () => {
@@ -191,6 +191,25 @@ describe("содержимое приглашения (InvContent)", () => {
 });
 
 describe("ссылки остановок маршрута (web/invito-engine.js)", () => {
+  it("остановка — пункт с названием или местом и с местом, адресом или ссылкой на карту из списка", () => {
+    expect(isStop({ title: "Никах", place: "Мечеть Минор" })).toBe(true);
+    expect(isStop({ title: "", place: "Oqsaroy" })).toBe(true);
+    // Адрес без места: гости видят остановку с названием пункта, конструктор закрашивает номер.
+    expect(isStop({ title: "Церемония", place: "", address: "ул. Навои, 1" })).toBe(true);
+    expect(isStop({ title: "Церемония", place: " ", address: "https://2gis.uz/tashkent/firm/123" })).toBe(true);
+    for (const no of [
+      { title: "Той", place: "" },
+      { title: "Той", place: "", address: "javascript:alert(1)" },
+      { title: "Той", place: "", address: "https://evil.example/x" },
+      // Без названия и места гость пункт не видит вовсе.
+      { title: " ", place: "", address: "ул. Навои, 1" },
+      {},
+      null,
+    ]) {
+      expect(isStop(no), JSON.stringify(no)).toBe(false);
+    }
+  });
+
   it("ссылкой становится только https-адрес карты из списка, как его записывает URL", () => {
     for (const ok of [
       "https://yandex.uz/maps/-/CDabc",

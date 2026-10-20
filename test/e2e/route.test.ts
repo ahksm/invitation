@@ -144,6 +144,11 @@ describe("конструктор: программа и маршрут", () => {
     await field(page, 1, "address").fill("javascript:alert(1)");
     expect(await page.locator('[data-stop="1"] [data-linknote="bad"]').innerText()).toBe(ru.linkBad);
     expect(await badges(page)).toEqual(["stop", "item", "stop"]);
+    // Адрес без места — тоже остановка, как у гостя (подсказка над списком говорит о месте или адресе).
+    await field(page, 1, "address").fill("ул. Бабура, 5");
+    expect(await badges(page)).toEqual(["stop", "stop", "stop"]);
+    await field(page, 1, "address").fill("javascript:alert(1)");
+    expect(await badges(page)).toEqual(["stop", "item", "stop"]);
 
     // ↑ ↓ и «По времени» (видна, только когда времена не по порядку).
     expect(await page.locator("[data-sort-prog]").count()).toBe(0);
@@ -326,14 +331,24 @@ describe("страница гостя: маршрут", () => {
       await close();
     }
 
-    // Пункт без места, но со ссылкой на карту: остановка с его названием и этой ссылкой (конструктор её принял).
-    const linked = await createInvitation(user.id, { data: { ...base, names: "Ссылка без места", program: [{ time: "16:00", title: "Церемония", place: "", address: "https://2gis.uz/tashkent/firm/123" }, { time: "18:00", title: "Той", place: "" }] } });
+    // Пункт без места, но со ссылкой на карту или адресом: остановка с его названием (конструктор закрашивает его номер).
+    const linked = await createInvitation(user.id, {
+      data: {
+        ...base,
+        names: "Ссылка без места",
+        program: [
+          { time: "16:00", title: "Церемония", place: "", address: "https://2gis.uz/tashkent/firm/123" },
+          { time: "17:00", title: "Фото", place: "", address: "ул. Бабура, 5" },
+          { time: "18:00", title: "Той", place: "" },
+        ],
+      },
+    });
     await publish(linked.id);
     {
       const { page, problems, close } = await e.open(`/i/${linked.slug}`, { waitText: "Ссылка без места" });
       const layout = await pinLayout(page);
-      expect(layout.numbers).toEqual(["1", "●"]);
-      expect(await stopLinks(page)).toEqual(["https://2gis.uz/tashkent/firm/123", yandexSearch("Oqsaroy, ул. Навои, 1")]);
+      expect(layout.numbers).toEqual(["1", "2", "●"]);
+      expect(await stopLinks(page)).toEqual(["https://2gis.uz/tashkent/firm/123", yandexSearch("Фото, ул. Бабура, 5"), yandexSearch("Oqsaroy, ул. Навои, 1")]);
       expect(await page.locator("[data-route]").innerText()).toContain("Церемония");
       await e.expectClean(page, problems);
       await close();

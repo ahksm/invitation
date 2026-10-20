@@ -4031,12 +4031,12 @@ class Component extends DCLogic {
     const pyx = { title: !PYX ? '' : PYX.kind === 'seats' ? t.seatsTitle : PYX.kind === 'upgrade' ? t.payUpTitle : pyAmount ? t.payTitlePub : t.payTitle,
       sum: pyPub, names: (inv.names || '').trim() || evLabel, what: t.payWhat.replace('{tpl}', tplName).replace('{mode}', pyPers ? t.payPersonal : t.payShared),
       after: pyAmount == null ? '' : pyPers ? (pyAmount ? t.payAfterPers : t.payAfterPersFree) : pyAmount ? t.payAfter : t.payAfterFree };
-    // Программа и маршрут (шаг и лист «Место»): время, название, место и адрес или ссылка на карту. Пункт с местом —
-    // остановка на карте гостя (номер закрашен). Под адресом — подсказка, откроется ли вставленная ссылка у гостей.
+    // Программа и маршрут (шаг и лист «Место»): время, название, место и адрес или ссылка на карту. Остановка на карте
+    // гостя (номер закрашен) — по тому же правилу, что и у гостя (this.E.isStop): пункт с местом или адресом. Под адресом — подсказка, откроется ли вставленная ссылка у гостей.
     const progLen = inv.program.length, progFull = progLen >= 8;
     const oneLine = (e) => e.target.value.replace(/[\r\n]+/g, ' '), noEnter = (e) => { if (e.key === 'Enter') e.preventDefault(); };
     const prog = inv.program.map((p, i) => {
-      const addr = p.address || '', link = this.E.mapLink(addr), bad = !link && this.E.hasUrl(addr), on = !!(p.place || '').trim();
+      const addr = p.address || '', link = this.E.mapLink(addr), bad = !link && this.E.hasUrl(addr), on = this.E.isStop(p);
       return { n: String(i + 1), time: p.time, title: p.title, place: p.place, address: addr, badge: on ? 'stop' : 'item',
         badgeBg: on ? '#d4452a' : 'transparent', badgeBorder: on ? '#d4452a' : 'rgba(' + U.inkRgb + ',.3)', badgeColor: on ? '#fff' : U.muted, placeIcon: on ? '#d4452a' : U.muted,
         noteOn: !!link || bad, noteKind: link ? 'ok' : 'bad', note: link ? t.linkOk : t.linkBad, noteColor: link ? (U.dark ? '#86c79c' : '#2e7d4f') : (U.dark ? '#ef8a72' : '#b5361e'), upOp: i ? 1 : 0.3, downOp: i < progLen - 1 ? 1 : 0.3,
@@ -4069,12 +4069,12 @@ class Component extends DCLogic {
     // Программа гостя: пункты без названия и места (только что добавленные в конструкторе) не показываются.
     const gProg = inv.program.filter((p) => (p.title || '').trim() || (p.place || '').trim()).map((p) => ({ time: p.time, title: p.title, place: (p.place || '').trim(), address: (p.address || '').trim(), hasPlace: !!(p.place || '').trim() }));
     const n = gProg.length;
-    // Маршрут: остановки — пункты программы с местом или с адресом (ссылкой на карту), в порядке списка; у пункта
-    // без места остановка подписана его названием — ссылку, которую конструктор принял, гости видят. Главное место —
+    // Маршрут: остановки — пункты программы с местом или с адресом (ссылкой на карту; правило this.E.isStop, как
+    // у номеров в конструкторе), в порядке списка; у пункта без места остановка подписана его названием — ссылку, которую конструктор принял, гости видят. Главное место —
     // отметка «●»: остановка с тем же названием становится ею, иначе место встаёт в маршрут по времени начала
     // (inv.time), без времени — в конец.
     const pkey = (x) => (x || '').trim().toLowerCase(), venueK = pkey(inv.venue);
-    const visits = gProg.filter((p) => p.hasPlace || this.E.mapLink(p.address) || this.E.mapText(p.address))
+    const visits = gProg.filter((p) => this.E.isStop(p))
       .map((p) => ({ time: p.time, title: p.hasPlace ? p.title : '', place: p.place || (p.title || '').trim(), addr: p.address }));
     const stopsN = visits.length;
     if (venueK && stopsN && !visits.some((v) => pkey(v.place) === venueK)) { const vi = inv.time ? visits.findIndex((v) => v.time && v.time > inv.time) : -1; visits.splice(vi < 0 ? visits.length : vi, 0, { time: inv.time, title: '', place: inv.venue.trim(), addr: '' }); }

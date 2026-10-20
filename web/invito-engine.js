@@ -196,6 +196,17 @@ export function mapText(s) {
   return (typeof s === 'string' ? s : '').replace(URLISH, ' ').replace(/\s+/g, ' ').replace(/^[\s,;:—–).\]»”-]+|[\s,;:—–(\[«“-]+$/g, '');
 }
 
+/**
+ * Пункт программы — остановка маршрута: одно правило для гостя (номер на карте и в списке) и для конструктора
+ * (закрашенный номер). Нужны название или место (иначе гость пункт не видит) и место, ссылка на карту из списка
+ * (mapLink) или текст адреса (mapText); ссылка, которая у гостей не откроется, остановкой не делает.
+ */
+export function isStop(p) {
+  const s = (v) => (typeof v === 'string' ? v.trim() : '');
+  const place = s(p && p.place), addr = s(p && p.address);
+  return !!(s(p && p.title) || place) && !!(place || mapLink(addr) || mapText(addr));
+}
+
 /** Поиск места на Яндекс Картах (в Узбекистане ими пользуются чаще всего); пустой запрос — ''. */
 export function mapSearch(q) {
   q = typeof q === 'string' ? q.trim() : '';
