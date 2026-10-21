@@ -57,7 +57,7 @@ npm run test:e2e       # проверка фронтенда в Chromium, см. 
 1. Заменить файлы в `web/` новыми (`support.js` тоже кладётся как есть, без правок).
 2. В `Invito.dc.html` повторить две правки, без которых сервер не стартует: убрать из `<helmet>` `<script src="https://telegram.org/js/telegram-web-app.js">` (его подключает оболочка) и заменить `import(new URL('./invito-data.js', base).href)` на `import('/app/invito-data.js')` (так же для остальных модулей), иначе страницы `/i/…` и `/g/…` ищут модули не там.
 3. Если сервер сообщает, что патч не применился, сверить `src/web/support-patches.ts` с новым `support.js`.
-4. Проверить: `npm test` и `npm run test:e2e`. Браузер для e2e — `PLAYWRIGHT_CHROMIUM`, `/opt/pw-browsers/chromium` или `npx playwright-core install chromium`; с `E2E_SHOTS_DIR=<папка>` тест сохраняет скриншоты.
+4. Проверить: `npm test` и `npm run test:e2e`. Браузер для e2e — `PLAYWRIGHT_CHROMIUM`, `/opt/pw-browsers/chromium` или `npx playwright-core install chromium`, его флаги — `E2E_CHROMIUM_ARGS` через пробел; с `E2E_SHOTS_DIR=<папка>` тест сохраняет скриншоты. В CI текст рисуется с округлением размеров шрифта и ширин букв до целых пикселей (chromium-headless-shell, как с `--font-render-hinting=full`); проверки, которые меряют текст (шапка в `test/e2e/brand.test.ts`), так же у себя: `PLAYWRIGHT_CHROMIUM=<папка браузеров>/chromium_headless_shell-<версия>/chrome-linux/headless_shell E2E_CHROMIUM_ARGS=--font-render-hinting=full npm run test:e2e`.
 
 ## Безопасность
 
