@@ -150,6 +150,29 @@ describe("заказы", () => {
     expect(res.json().find((o: any) => o.id === created.order.id).template).toBeNull();
   });
 
+  it("заказ шаблона, который не дошёл до платёжной системы, сохраняет шаблон", async () => {
+    const { cookie } = await user();
+    const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-luxe", mode: "shared" })).json();
+    const payments = t.app.ctx.payments;
+    const create = payments.createCheckout;
+    payments.createCheckout = async () => {
+      throw new Error("Multicard: HTTP 503");
+    };
+    try {
+      const res = await req(cookie, "POST", "/api/orders", { kind: "template", invitationId: inv.id });
+      expect(res.statusCode).toBe(502);
+    } finally {
+      payments.createCheckout = create;
+    }
+    const [row] = await db.select().from(orders).where(eq(orders.invitationId, inv.id));
+    expect(row).toMatchObject({ status: "failed", meta: { templateId: expect.any(String), error: "Error: Multicard: HTTP 503" } });
+    // Шаблон приглашения потом сменили: в истории — тот, за который выставляли счёт.
+    await req(cookie, "PATCH", `/api/invitations/${inv.id}`, { template: "wedding-classic" });
+    const list = (await req(cookie, "GET", "/api/orders")).json();
+    expect(list.map((o: any) => [o.kind, o.status, o.template])).toEqual([["template", "failed", "wedding-luxe"]]);
+    expect((await req(cookie, "GET", `/api/orders/${row!.id}`)).json()).toMatchObject({ status: "failed", template: "wedding-luxe" });
+  });
+
   it("миграция 0007 убирает из сохранённых уведомлений номер карты и прочие лишние поля, остальное не трогает", async () => {
     const { user: u } = await user();
     const kept = { uuid: "u-1", invoice_id: "1001", billing_id: "b-1", payment_time: "2026-10-01 12:00:00", ps: "humo", receipt_url: "https://receipt.test/1", amount: 5_000_000 };

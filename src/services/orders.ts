@@ -175,7 +175,8 @@ export async function createOrder(ctx: Ctx, userId: string, req: OrderRequest, r
     await track(ctx, userId, "order_created", { orderId: order!.id, kind: req.kind, amount });
     return { status: "pending", order: updated!, checkoutUrl: checkout.checkoutUrl };
   } catch (err) {
-    await ctx.db.update(orders).set({ status: "failed", meta: { error: String(err) } }).where(eq(orders.id, order!.id));
+    // Прежняя meta (templateId заказа шаблона) остаётся: история платежей показывает, за что был счёт.
+    await ctx.db.update(orders).set({ status: "failed", meta: { ...order!.meta, error: String(err) } }).where(eq(orders.id, order!.id));
     ctx.log.error({ err, orderId: order!.id }, "не удалось создать платёж");
     throw new HttpError(502, "Платёжная система недоступна, попробуйте позже");
   }
