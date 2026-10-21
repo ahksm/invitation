@@ -2452,7 +2452,7 @@ class Component extends DCLogic {
     this._snap[id] = full;
     const body = this.changedOf(id, full); if (!body) return Promise.resolve(null);
     return this.A.api('/api/invitations/' + id, { method: 'PATCH', body, keepalive: JSON.stringify(body).length < 60000 })
-      .then((dto) => { this.rebase(id, body); this.onSaved(dto); return dto; }, (e) => { this.logErr(e); return null; });
+      .then((dto) => { this.rebase(id, body, dto); this.onSaved(dto); return dto; }, (e) => { this.logErr(e); return null; });
   }
   // PATCH /api/invitations/:id. Запросы одного приглашения идут строго по очереди, поэтому старое сохранение не может
   // прийти позже нового и затереть его; автосохранения, ждущие очереди, сливаются в одно с последними данными.
@@ -2470,7 +2470,7 @@ class Component extends DCLogic {
         // keepalive и у обычного автосохранения (пока тело меньше лимита браузера в 64 КБ): закрытие страницы
         // не обрывает PATCH, который уже в пути.
         const dto = await this.A.api('/api/invitations/' + id, { method: 'PATCH', body, keepalive: !!opts.keepalive || (!!opts.auto && JSON.stringify(body).length < 60000) });
-        this.rebase(id, body);
+        this.rebase(id, body, dto);
         this.onSaved(dto);
         return dto;
       } catch (e) {
@@ -2494,11 +2494,19 @@ class Component extends DCLogic {
     if (Object.keys(data).length) out.data = data;
     return Object.keys(out).length ? out : null;
   }
-  rebase(id, body) {
+  // Файлы, которых уже нет (фото убрали в другой вкладке, и сохранение удалило файл), сервер выбрасывает из data
+  // (ответ dto без них): они убираются и здесь, иначе вкладка показывала бы пустое фото как сохранённое.
+  rebase(id, body, dto) {
     const b = this._base[id]; if (!b || !body) return;
     if (body.template) b.template = body.template;
     if (body.language) b.language = body.language;
-    if (body.data) b.data = { ...b.data, ...body.data };
+    if (!body.data) return;
+    const MK = ['cover', 'musicSrc', 'video'], own = (u) => typeof u === 'string' && u.indexOf('/media/') === 0;
+    const urls = (d) => MK.map((k) => d[k]).concat(d.gallery || []).filter(own);
+    const kept = new Set(dto && dto.data ? urls(dto.data) : urls(body.data)), gone = new Set(urls(body.data).filter((u) => !kept.has(u)));
+    const clean = (d) => { const o = {}; MK.forEach((k) => { if (gone.has(d[k])) o[k] = ''; }); if ((d.gallery || []).some((u) => gone.has(u))) o.gallery = d.gallery.filter((u) => !gone.has(u)); return o; };
+    b.data = { ...b.data, ...body.data, ...clean(body.data) };
+    if (gone.size) this.setState((x) => (x.draftId === id ? { inv: { ...x.inv, ...clean(x.inv) } } : null));
   }
   // Ответ сервера после сохранения: «Сохранено · ЧЧ:ММ» по updatedAt сервера.
   onSaved(dto) {

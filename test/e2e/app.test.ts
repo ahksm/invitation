@@ -328,6 +328,59 @@ describe("вход и черновики", () => {
     await close();
   });
 
+  it("фото, убранное в другой вкладке: вторая вкладка сохраняет свои правки, а удалённое фото уходит и из неё", async () => {
+    const context = await e.newContext();
+    const user = await e.signIn(context);
+    const inv = await createInvitation(user.id, { data: { names: "Две вкладки" } });
+    const one = await e.open("/app/", { context, waitText: "Две вкладки" });
+    // Три фото: PNG из canvas страницы, загруженные в /api/media.
+    const [g1, g2, g3] = await one.page.evaluate(async () => {
+      const out: string[] = [];
+      for (const color of ["#112233", "#445566", "#778899"]) {
+        const c = document.createElement("canvas"); c.width = 300; c.height = 400; const x = c.getContext("2d")!; x.fillStyle = color; x.fillRect(0, 0, 300, 400);
+        const fd = new FormData(); fd.append("file", await new Promise<Blob>((r) => c.toBlob((b) => r(b!), "image/png")), "g.png");
+        out.push((await (await fetch("/api/media", { method: "POST", body: fd })).json()).url);
+      }
+      return out;
+    });
+    await patchAs(user.id, inv.id, { data: { gallery: [g1, g2, g3] } });
+    const two = await e.open("/app/", { context, waitText: "Две вкладки" });
+    const statuses: number[] = [];
+    two.page.on("response", (r) => { if (r.request().method() === "PATCH" && r.url() === `${e.base}/api/invitations/${inv.id}`) statuses.push(r.status()); });
+    const remove = (page: Page, src: string) => page.locator(`img[src="${src}"] + button`).first();
+    for (const page of [one.page, two.page]) {
+      await editOf(page, "Две вкладки").click();
+      await page.getByTitle(ru.steps.photos).click();
+      await remove(page, g3!).waitFor();
+    }
+    const gallery = async () => (await invById(inv.id)).data.gallery;
+    const file = async (url: string) => (await e.app.inject({ url })).statusCode;
+    // Первая вкладка убирает g1: сохранение удаляет файл.
+    await remove(one.page, g1!).click();
+    await expect.poll(gallery, { timeout: 10_000 }).toEqual([g2, g3]);
+    await expect.poll(() => file(g1!)).toBe(404);
+    // Вторая всё ещё показывает g1 и убирает g3: g1 выпадает из сохранения, g3 убран, и g1 пропадает с экрана.
+    await remove(two.page, g3!).click();
+    await expect.poll(gallery, { timeout: 10_000 }).toEqual([g2]);
+    await expect.poll(() => two.page.locator(`img[src="${g1}"]`).count()).toBe(0);
+    expect(await two.page.locator(`img[src="${g2}"] + button`).count()).toBeGreaterThan(0);
+    // Дальше правки второй вкладки сохраняются, и в отправленном нет удалённых файлов.
+    const bodies: Dict[] = [];
+    two.page.on("request", (r) => { if (r.method() === "PATCH" && r.url() === `${e.base}/api/invitations/${inv.id}`) bodies.push(JSON.parse(r.postData() || "{}")); });
+    await two.page.getByTitle(ru.steps.basics).click();
+    await two.page.getByLabel(ru.fNames).first().fill("Имена из второй вкладки");
+    await expect.poll(async () => (await invById(inv.id)).data.names, { timeout: 10_000 }).toBe("Имена из второй вкладки");
+    await e.waitText(two.page, ru.saved);
+    expect(await two.page.locator("body").innerText()).not.toContain(ru.notSaved);
+    expect(statuses.length).toBeGreaterThan(0);
+    expect(statuses.every((st) => st === 200)).toBe(true);
+    expect(bodies.length).toBeGreaterThan(0);
+    expect(bodies.every((b) => JSON.stringify(b) === JSON.stringify({ data: { names: "Имена из второй вкладки" } }))).toBe(true);
+    expect((await invById(inv.id)).data.gallery).toEqual([g2]);
+    for (const p of [one, two]) await e.expectClean(p.page, p.problems);
+    await context.close();
+  });
+
   it("ответ ассистента для черновика, который уже закрыли, не попадает в другой", async () => {
     const context = await e.newContext();
     const user = await e.signIn(context);
