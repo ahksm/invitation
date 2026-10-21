@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { settings } from "../src/db/schema.js";
+import { UNUSED_MEDIA_TTL_MS } from "../src/services/media.js";
 import { emptyLegal, getLegal } from "../src/services/settings.js";
 import { legalLocale, legalPath, renderLegalPage, type LegalEnv } from "../src/web/legal.js";
 import { LEGAL_PAGES, legalTexts } from "../src/web/legal-texts.js";
@@ -91,6 +92,13 @@ describe("страницы /oferta, /privacy, /contacts", () => {
     for (const s of ["Eskiz", "Multicard", "Telegram", "cookie"]) expect(privacy).toContain(s);
     // Сроки хранения совпадают с тем, что делает код: SMS гостей обезличиваются вместе с гостями.
     expect(privacy).toContain("у SMS гостям номер и текст (с именем гостя и его личной ссылкой) стираются");
+    // Файлы: заменённые удаляются при сохранении, не попавшие в приглашения — через UNUSED_MEDIA_TTL_MS.
+    expect(UNUSED_MEDIA_TTL_MS).toBe(24 * 3600_000);
+    expect(privacy).toContain("файл, который вы заменили или убрали из приглашения, удаляется сразу при сохранении");
+    expect(privacy).toContain("ни в одно приглашение, — через 24 часа после загрузки");
+    for (const [lang, s] of [["uz", "yuklanganidan 24 soat o‘tgach"], ["en", "deleted 24 hours after upload"]] as const) {
+      expect((await page(`/privacy?lang=${lang}`)).body).toContain(s);
+    }
     expect(privacy).toContain('<a href="/contacts">контактам</a>');
     // Ссылки между документами сохраняют язык.
     const uz = (await page("/oferta?lang=uz")).body;
