@@ -119,4 +119,6 @@ export const cacheKeys = {
   sendLock: (invitationId: string) => `send:${invitationId}`,
   // Напоминания по расписанию: один запуск за раз на все процессы.
   remindersLock: "reminders",
+  // Удаление файлов, которых нет ни в одном приглашении (src/services/media.ts).
+  mediaSweepLock: "media-sweep",
 };

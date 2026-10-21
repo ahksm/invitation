@@ -4,7 +4,8 @@ import { mkdir, open, rename, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { and, eq, inArray, or, sql, sum } from "drizzle-orm";
+import { and, eq, inArray, lt, or, sql, sum, type SQL } from "drizzle-orm";
+import { cacheKeys } from "../cache.js";
 import type { Ctx } from "../context.js";
 import { invitations, media, type Media, type MediaKind, type User } from "../db/schema.js";
 import { HttpError } from "../errors.js";
@@ -139,6 +140,19 @@ export async function assertOwnMedia(ctx: Pick<Ctx, "db">, userId: string, urls:
   if (urls.some((u) => !own.has(u))) throw new HttpError(400, "Файл должен быть загружен через /api/media");
 }
 
+/** Условие на invitations: приглашение ссылается на файл url (превью ссылки, обложка, музыка, видео или галерея). */
+const usesMedia = (url: SQL | string) =>
+  or(
+    sql`${invitations.ogImageUrl} = ${url}`,
+    sql`${invitations.data}->>'cover' = ${url}`,
+    sql`${invitations.data}->>'musicSrc' = ${url}`,
+    sql`${invitations.data}->>'video' = ${url}`,
+    sql`${invitations.data}->'gallery' @> jsonb_build_array(${url}::text)`,
+  );
+
+const unlinkMedia = (ctx: Pick<Ctx, "config" | "log">, row: Pick<Media, "id" | "ext">) =>
+  unlink(resolve(mediaDir(ctx), `${row.id}.${row.ext}`)).catch((err) => ctx.log.warn({ err, id: row.id }, "не удалось удалить файл"));
+
 /**
  * Удаляет файл пользователя по адресу /media/<id>.<ext>. Чужие и внешние адреса пропускаются, как и
  * файлы, на которые ещё ссылается другое приглашение владельца (картинка превью или содержимое копии).
@@ -149,24 +163,69 @@ export async function deleteOwnMedia(ctx: Pick<Ctx, "db" | "config" | "log">, us
   const [used] = await ctx.db
     .select({ id: invitations.id })
     .from(invitations)
-    .where(
-      and(
-        eq(invitations.userId, userId),
-        or(
-          eq(invitations.ogImageUrl, url),
-          sql`${invitations.data}->>'cover' = ${url}`,
-          sql`${invitations.data}->>'musicSrc' = ${url}`,
-          sql`${invitations.data}->>'video' = ${url}`,
-          sql`${invitations.data}->'gallery' @> jsonb_build_array(${url}::text)`,
-        ),
-      ),
-    )
+    .where(and(eq(invitations.userId, userId), usesMedia(url)))
     .limit(1);
   if (used) return;
   const [row] = await ctx.db
     .delete(media)
     .where(and(eq(media.id, m[1]!), eq(media.userId, userId)))
     .returning();
-  if (!row) return;
-  await unlink(resolve(mediaDir(ctx), `${row.id}.${row.ext}`)).catch((err) => ctx.log.warn({ err, id: row.id }, "не удалось удалить файл"));
+  if (row) await unlinkMedia(ctx, row);
+}
+
+/** Через сколько после загрузки файл, которого нет ни в одном приглашении владельца, удаляется. */
+export const UNUSED_MEDIA_TTL_MS = 24 * 3600_000;
+const SWEEP_INTERVAL_MS = 3600_000;
+const SWEEP_BATCH = 500;
+const SWEEP_LOCK_TTL = 600;
+
+/**
+ * Удаляет файлы, загруженные раньше olderThanMs назад, которых нет ни в одном приглашении владельца
+ * (в том числе в архивном): загруженные, но так и не сохранённые в приглашении, картинки для
+ * скачивания в мини-аппе и файлы, заменённые до того, как замена стала удалять прежний файл сразу.
+ * Возвращает число удалённых файлов.
+ */
+export async function deleteUnusedMedia(ctx: Pick<Ctx, "db" | "config" | "log">, olderThanMs = UNUSED_MEDIA_TTL_MS): Promise<number> {
+  const before = new Date(Date.now() - olderThanMs);
+  const url = sql`'/media/' || ${media.id}::text || '.' || ${media.ext}`;
+  let total = 0;
+  for (;;) {
+    const unused = ctx.db
+      .select({ id: media.id })
+      .from(media)
+      .where(
+        and(
+          lt(media.createdAt, before),
+          sql`not exists (select 1 from ${invitations} where ${invitations.userId} = ${media.userId} and ${usesMedia(url)})`,
+        ),
+      )
+      .limit(SWEEP_BATCH);
+    const rows = await ctx.db.delete(media).where(inArray(media.id, unused)).returning({ id: media.id, ext: media.ext });
+    for (const row of rows) await unlinkMedia(ctx, row);
+    total += rows.length;
+    if (rows.length < SWEEP_BATCH) return total;
+  }
+}
+
+/** Запускает deleteUnusedMedia через минуту после старта и дальше раз в час. Один запуск за раз (блокировка в Redis); возвращает остановку. */
+export function startMediaSweepJob(ctx: Pick<Ctx, "db" | "cache" | "config" | "log">, intervalMs = SWEEP_INTERVAL_MS): () => void {
+  const tick = async () => {
+    const lock = await ctx.cache.lock(cacheKeys.mediaSweepLock, SWEEP_LOCK_TTL);
+    if (!lock) return;
+    try {
+      const n = await deleteUnusedMedia(ctx);
+      if (n) ctx.log.info({ n }, "удалены файлы, которых нет ни в одном приглашении");
+    } finally {
+      await lock.release();
+    }
+  };
+  const run = () => void tick().catch((err) => ctx.log.error({ err }, "не удалось удалить неиспользуемые файлы"));
+  const first = setTimeout(run, 60_000);
+  const timer = setInterval(run, intervalMs);
+  first.unref();
+  timer.unref();
+  return () => {
+    clearTimeout(first);
+    clearInterval(timer);
+  };
 }

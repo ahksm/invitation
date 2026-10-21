@@ -10,6 +10,7 @@ import { createDb } from "./db/index.js";
 import { runMigrations } from "./db/migrate.js";
 import { seed } from "./db/seed.js";
 import { createPaymentProvider } from "./payments/index.js";
+import { startMediaSweepJob } from "./services/media.js";
 import { startReminderJob } from "./services/reminders.js";
 import { getLegal } from "./services/settings.js";
 import { createSmsProvider } from "./sms/index.js";
@@ -46,6 +47,8 @@ const bot = botEnabled(config) ? createBot(app.ctx) : null;
 if (bot) app.ctx.notifier = createTelegramNotifier(bot.api, app.ctx);
 // Напоминания гостям по расписанию (r1d, r3h, morning) уходят только через бота.
 const stopReminders = bot ? startReminderJob(app.ctx) : null;
+// Файлы, которых нет ни в одном приглашении владельца, удаляются через сутки после загрузки.
+const stopMediaSweep = startMediaSweepJob(app.ctx);
 
 if (bot && config.TELEGRAM_MODE === "webhook") {
   // Telegram подписывает каждый запрос заголовком X-Telegram-Bot-Api-Secret-Token.
@@ -70,6 +73,7 @@ async function shutdown(signal: string) {
   stopping = true;
   app.log.info({ signal }, "остановка");
   stopReminders?.();
+  stopMediaSweep();
   if (bot?.isRunning()) await bot.stop();
   await app.close();
   await Promise.allSettled([pool.end(), redis.quit(), rateLimitRedis.quit()]);

@@ -375,6 +375,8 @@ export async function updateInvitation(
   if (patch.settings !== undefined) set.settings = { ...defaultInvitationSettings, ...inv.settings, ...patch.settings };
 
   let cardChanged = false;
+  // Файлы, которых после правки нет в содержимом: заменённая обложка, убранное фото, другая музыка или видео.
+  let dropped: string[] = [];
   if (patch.data !== undefined || set.templateId || set.language) {
     const current = coerceContent(inv.data, oldTpl.style);
     let data: InvContent;
@@ -393,6 +395,8 @@ export async function updateInvitation(
       data = normalizeContent(current, tpl.style);
     }
     set.data = data;
+    const kept = new Set(contentMediaUrls(data));
+    dropped = contentMediaUrls(current).filter((u) => !kept.has(u));
     set.title = titleOf(data, tpl, set.language ?? inv.language);
     cardChanged = OG_CARD_FIELDS.some((k) => data[k] !== current[k]);
   }
@@ -440,7 +444,9 @@ export async function updateInvitation(
     throw err;
   }
   await invalidateInvitation(ctx, updated!, ...(updated!.slug !== inv.slug ? [inv.slug] : []));
-  if (set.ogImageUrl === null) await deleteOwnMedia(ctx, user.id, inv.ogImageUrl);
+  // Сброшенное превью и файлы, ушедшие из содержимого, удаляются; те, что есть в других приглашениях владельца
+  // (копии), остаются. Так у удалённого черновика не остаётся прежних обложек и фото.
+  for (const url of new Set([...(set.ogImageUrl === null ? [inv.ogImageUrl] : []), ...dropped])) await deleteOwnMedia(ctx, user.id, url);
   return dtoOf(ctx, { inv: updated!, tpl });
 }
 

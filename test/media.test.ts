@@ -1,9 +1,9 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { media } from "../src/db/schema.js";
-import { MEDIA_LIMITS, MEDIA_QUOTA } from "../src/services/media.js";
+import { invitations, media } from "../src/db/schema.js";
+import { MEDIA_LIMITS, MEDIA_QUOTA, UNUSED_MEDIA_TTL_MS, deleteUnusedMedia } from "../src/services/media.js";
 import { multipart, samples, testContext } from "./helpers.js";
 
 const t = testContext();
@@ -279,5 +279,73 @@ describe("файлы в содержимом приглашения", () => {
     const idOf = (u: string) => u.slice("/media/".length).split(".")[0]!;
     expect(await db.select().from(media).where(eq(media.id, idOf(photo)))).toEqual([]);
     expect(stored().some((f) => f.startsWith(idOf(photo)))).toBe(false);
+  });
+
+  it("заменённые и убранные файлы удаляются при сохранении, поэтому удалённый черновик не оставляет прежних файлов", async () => {
+    const { cookie } = await user();
+    const up = async (buf: Buffer, filename: string) => (await upload(cookie, buf, { filename })).json().url as string;
+    const [a, b, p1, p2, p3, song, clip] = [
+      await up(samples.jpeg, "a.jpg"),
+      await up(samples.jpeg, "b.jpg"),
+      await up(samples.png, "p1.png"),
+      await up(samples.png, "p2.png"),
+      await up(samples.png, "p3.png"),
+      await up(samples.mp3, "a.mp3"),
+      await up(samples.mp4, "a.mp4"),
+    ];
+    const file = async (url: string) => (await t.app.inject({ url })).statusCode;
+    const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { cover: a, gallery: [p1, p2, p3], musicSrc: song, music: "custom", video: clip } })).json();
+    // Копия ссылается на p3: из исходного приглашения его можно убрать, файл копии остаётся.
+    const copy = (await req(cookie, "POST", `/api/invitations/${inv.id}/duplicate`)).json();
+    expect((await req(cookie, "PATCH", `/api/invitations/${copy.id}`, { data: { cover: "", gallery: [p3], musicSrc: "", video: "" } })).statusCode).toBe(200);
+    for (const u of [a, p1, p2, p3, song, clip]) expect(await file(u), u).toBe(200);
+
+    // Обложку заменили, обложка ушла в галерею, одно фото убрали, видео стёрли (null удаляет ключ).
+    const res = await req(cookie, "PATCH", `/api/invitations/${inv.id}`, { data: { cover: b, gallery: [p2, a], video: null } });
+    expect(res.statusCode, res.body).toBe(200);
+    expect(await file(p1)).toBe(404);
+    expect(await file(clip)).toBe(404);
+    for (const u of [a, b, p2, p3, song]) expect(await file(u), u).toBe(200);
+    const idOf = (u: string) => u.slice("/media/".length).split(".")[0]!;
+    expect(await db.select().from(media).where(inArray(media.id, [idOf(p1), idOf(clip)]))).toEqual([]);
+    expect(stored().some((f) => f.startsWith(idOf(p1)) || f.startsWith(idOf(clip)))).toBe(false);
+
+    // Шаблон и язык без data файлов не трогают.
+    expect((await req(cookie, "PATCH", `/api/invitations/${inv.id}`, { template: "wedding-luxe", language: "uz" })).statusCode).toBe(200);
+    for (const u of [a, b, p2, song]) expect(await file(u), u).toBe(200);
+
+    // Удаление черновика: из его файлов не остаётся ничего, кроме того, что есть в копии.
+    expect((await req(cookie, "DELETE", `/api/invitations/${inv.id}`)).statusCode).toBe(204);
+    for (const u of [a, b, p1, p2, song, clip]) expect(await file(u), u).toBe(404);
+    expect(await file(p3)).toBe(200);
+  });
+});
+
+describe("файлы, которых нет ни в одном приглашении", () => {
+  it("удаляются через сутки после загрузки; файлы приглашений, архивных и превью ссылки остаются", async () => {
+    const { cookie, user: u } = await user();
+    const up = async () => (await upload(cookie, samples.png)).json().url as string;
+    const [unused, cover, archived, og, fresh] = [await up(), await up(), await up(), await up(), await up()];
+    await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { cover } });
+    const old = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { gallery: [archived] } })).json();
+    await db.update(invitations).set({ status: "archived", ogImageUrl: og }).where(eq(invitations.id, old.id));
+    // Чужое приглашение с тем же адресом не держит файл: проверяются только приглашения владельца.
+    const other = await user();
+    const [foreign] = await db.select().from(invitations).where(eq(invitations.userId, u.id)).limit(1);
+    await db.insert(invitations).values({ userId: other.user.id, templateId: foreign!.templateId, slug: `foreign-${other.user.id.slice(0, 8)}`, mode: "shared", title: "x", data: { cover: unused } });
+
+    const idOf = (url: string) => url.slice("/media/".length).split(".")[0]!;
+    const aged = new Date(Date.now() - UNUSED_MEDIA_TTL_MS - 60_000);
+    await db.update(media).set({ createdAt: aged }).where(inArray(media.id, [unused, cover, archived, og].map(idOf)));
+
+    expect(await deleteUnusedMedia(t.app.ctx)).toBeGreaterThanOrEqual(1);
+    const file = async (url: string) => (await t.app.inject({ url })).statusCode;
+    expect(await file(unused)).toBe(404);
+    expect(await db.select().from(media).where(eq(media.id, idOf(unused)))).toEqual([]);
+    expect(stored().some((f) => f.startsWith(idOf(unused)))).toBe(false);
+    for (const url of [cover, archived, og, fresh]) expect(await file(url), url).toBe(200);
+    // Повторный запуск ничего не меняет.
+    expect(await deleteUnusedMedia(t.app.ctx)).toBe(0);
+    for (const url of [cover, archived, og, fresh]) expect(await file(url), url).toBe(200);
   });
 });

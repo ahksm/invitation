@@ -333,6 +333,7 @@ const ru: LegalTexts = {
             {
               list: [
                 "данные аккаунта и приглашений — пока существует аккаунт; удалённый черновик, для которого ничего не оплачено и не получено по подписке или бесплатному доступу и оплата не начата, удаляется сразу вместе с загруженными в него файлами (кроме тех, что есть в других ваших приглашениях), а остальные удалённые приглашения переносятся в архив и больше не открываются гостям;",
+                "загруженные файлы — пока они есть хотя бы в одном вашем приглашении, в том числе в архивном: файл, который вы заменили или убрали из приглашения, удаляется сразу при сохранении, а файл, который так и не попал ни в одно приглашение, — через 24 часа после загрузки;",
                 "данные гостей — пока организатор не удалит гостя или приглашение; при удалении приглашения, в том числе при переносе в архив, его гости удаляются сразу;",
                 "журнал SMS — номер телефона, время и статус каждой отправки, чтобы сверять отправки с SMS-провайдером и защищать Сервис от злоупотреблений; текст SMS с кодом входа мы не сохраняем, а у SMS гостям номер и текст (с именем гостя и его личной ссылкой) стираются, как только организатор удаляет гостя или приглашение, в том числе при переносе в архив;",
                 "сведения о заказах и платежах — не меньше сроков, установленных законодательством о бухгалтерском учёте и налогах;",
@@ -687,6 +688,7 @@ const uz: LegalTexts = {
             {
               list: [
                 "akkaunt va taklifnomalar ma’lumotlari — akkaunt mavjud ekan; hech narsa to‘lanmagan, obuna yoki bepul foydalanish huquqi orqali olinmagan va to‘lovi boshlanmagan qoralama o‘chirilganda unga yuklangan fayllar bilan birga darhol o‘chiriladi (boshqa taklifnomalaringizda bor fayllardan tashqari), qolgan o‘chirilgan taklifnomalar esa arxivga o‘tkaziladi va mehmonlarga boshqa ochilmaydi;",
+                "yuklangan fayllar — ular kamida bitta taklifnomangizda, jumladan arxivdagisida, bor ekan: taklifnomada almashtirilgan yoki undan olib tashlangan fayl saqlanganda darhol o‘chiriladi, hech qaysi taklifnomaga kirmagan fayl esa yuklanganidan 24 soat o‘tgach o‘chiriladi;",
                 "mehmonlar ma’lumotlari — tashkilotchi mehmonni yoki taklifnomani o‘chirmaguncha; taklifnoma o‘chirilganda, jumladan arxivga o‘tkazilganda, uning mehmonlari darhol o‘chiriladi;",
                 "SMS jurnali — har bir SMS yuborilgan telefon raqami, yuborish vaqti va holati: yuborishlarni SMS-provayder bilan solishtirish va Servisni suiiste’moldan himoya qilish uchun; kirish kodi yozilgan SMS matnini saqlamaymiz, mehmonlarga yuborilgan SMS raqami va matni (mehmon ismi va shaxsiy havolasi bilan) esa tashkilotchi mehmonni yoki taklifnomani o‘chirishi bilanoq, jumladan arxivga o‘tkazganda, o‘chiriladi;",
                 "buyurtmalar va to‘lovlar haqidagi ma’lumotlar — buxgalteriya hisobi va soliqlar to‘g‘risidagi qonunchilikda belgilangan muddatlardan kam bo‘lmagan muddat;",
@@ -1042,6 +1044,7 @@ const en: LegalTexts = {
             {
               list: [
                 "account and invitation data — while the account exists; a deleted draft with nothing paid for or received through a subscription or free access, and no payment started, is deleted immediately together with the files uploaded to it (except those used in your other invitations), while other deleted invitations are moved to the archive and no longer open for guests;",
+                "uploaded files — while they are used in at least one of your invitations, including archived ones: a file you replace or remove from an invitation is deleted as soon as the change is saved, and a file that never made it into any invitation is deleted 24 hours after upload;",
                 "guest data — until the organiser deletes the guest or the invitation; when an invitation is deleted, including when it is moved to the archive, its guests are deleted right away;",
                 "SMS log — the phone number, time and status of each message, to reconcile messages with the SMS provider and protect the Service from abuse; we do not store the text of login code messages, and for messages to guests the number and text (with the guest’s name and personal link) are erased as soon as the organiser deletes the guest or the invitation, including when it is moved to the archive;",
                 "order and payment records — for no less than the periods set by accounting and tax laws;",
