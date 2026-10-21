@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { BRAND } from "../brand.js";
 import { botUsername } from "../config.js";
 import { pickLocale, type Locale } from "../i18n.js";
 import { longDate } from "../services/public.js";
@@ -8,7 +9,7 @@ import { LEGAL_PAGES, LEGAL_REVISION, legalTexts, type Block, type LegalField, t
 
 /**
  * Юридические страницы /oferta, /privacy и /contacts (их требует Multicard): обычный HTML без скриптов,
- * в стиле Invito. Язык из ?lang= (ru по умолчанию, uz, uzc, en), реквизиты — из настроек (раздел «Реквизиты»
+ * в стиле сайта. Язык из ?lang= (ru по умолчанию, uz, uzc, en), реквизиты — из настроек (раздел «Реквизиты»
  * админки); пустые поля не выводятся.
  */
 
@@ -17,7 +18,6 @@ export type LegalEnv = {
   legal: Legal;
   /** APP_URL без «/» в конце. */
   appUrl: string;
-  appName: string;
   /** Имя Telegram-бота; null, если бот не запущен. */
   bot: string | null;
 };
@@ -50,7 +50,7 @@ const executorOf = (env: LegalEnv, t: LegalTexts) => env.legal.companyName || t.
 function plain(text: string, env: LegalEnv, t: LegalTexts): string {
   return text
     .replace(/\[([^\]]+)\]\((?:oferta|privacy|contacts)\)/g, "$1")
-    .replace(/\{(executor|site|host|app)\}/g, (_, k: string) => (k === "executor" ? executorOf(env, t) : k === "app" ? env.appName : hostOf(env.appUrl)));
+    .replace(/\{(executor|site|host|app)\}/g, (_, k: string) => (k === "executor" ? executorOf(env, t) : k === "app" ? BRAND : hostOf(env.appUrl)));
 }
 
 /** Текст в HTML: сначала экранирование, затем ссылки «[текст](privacy)» и подстановки (их значения экранируются). */
@@ -59,7 +59,7 @@ function inline(text: string, env: LegalEnv, t: LegalTexts): string {
   return esc(text)
     .replace(/\[([^\]]+)\]\((oferta|privacy|contacts)\)/g, (_, label: string, page: LegalPage) => `<a href="${esc(legalPath(page, env.lang))}">${label}</a>`)
     .replace(/\{(executor|site|host|app)\}/g, (_, k: string) =>
-      k === "site" ? `<a href="${esc(env.appUrl)}/">${esc(host)}</a>` : esc(k === "executor" ? executorOf(env, t) : k === "app" ? env.appName : host),
+      k === "site" ? `<a href="${esc(env.appUrl)}/">${esc(host)}</a>` : esc(k === "executor" ? executorOf(env, t) : k === "app" ? BRAND : host),
     );
 }
 
@@ -130,6 +130,8 @@ function sectionHtml(blocks: Block[], n: number | null, env: LegalEnv, t: LegalT
   return parts.join("");
 }
 
+// Название в шапке занимает место, которое остаётся от переключателя языка, и уменьшается до 20px, если
+// «InviteBloom» в 32px не помещается (100cqi / 4.4 — ширина слова в Cormorant Garamond italic с запасом), как в приложении.
 const CSS = `
 :root{--paper:#f3efe6;--paper-rgb:243,239,230;--ink:#1a1714;--body:#4a443c;--muted:#6e665b;--card:#fbf9f4;--line:rgba(26,23,20,.14);--line2:rgba(26,23,20,.22);--accent:#d4452a;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--paper:#151311;--paper-rgb:21,19,17;--ink:#f1ebe0;--body:#cfc6b8;--muted:#a39a8c;--card:#1e1b18;--line:rgba(241,235,224,.14);--line2:rgba(241,235,224,.24);color-scheme:dark}}
@@ -142,8 +144,9 @@ a:hover{color:var(--accent);text-decoration-thickness:2px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
 .bar{position:sticky;top:0;z-index:5;background:rgba(var(--paper-rgb),.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .bar-in{height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{font:italic 500 32px/1 'Cormorant Garamond',Georgia,serif;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
-.langs{display:flex;gap:2px;padding:3px;border:1px solid var(--line2);border-radius:999px}
+.brand{flex:1 1 0;min-width:0;container-type:inline-size;display:flex;align-items:center}
+.logo{font:italic 500 clamp(20px,calc(100cqi / 4.4),32px)/1 'Cormorant Garamond',Georgia,serif;letter-spacing:-.01em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.langs{flex:none;display:flex;gap:2px;padding:3px;border:1px solid var(--line2);border-radius:999px}
 .langs a{min-width:36px;height:30px;padding:0 8px;display:flex;align-items:center;justify-content:center;border-radius:999px;font:500 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;color:var(--muted);text-decoration:none}
 .langs a:hover{color:var(--ink)}
 .langs a[aria-current]{background:var(--ink);color:var(--paper)}
@@ -202,7 +205,7 @@ h2 .num{font-style:italic;color:var(--accent)}
 export function renderLegalPage(page: LegalPage, env: LegalEnv): string {
   const t = legalTexts[env.lang];
   const doc = t.docs[page];
-  const title = `${doc.title} — ${env.appName}`;
+  const title = `${doc.title} — ${BRAND}`;
   const description = plain(doc.description, env, t);
   const abs = (lang: Locale) => `${env.appUrl}${legalPath(page, lang)}`;
 
@@ -237,6 +240,7 @@ export function renderLegalPage(page: LegalPage, env: LegalEnv): string {
     `<link rel="canonical" href="${esc(abs(env.lang))}">`,
     ...LANG_LINKS.map(([l]) => `<link rel="alternate" hreflang="${HTML_LANG[l]}" href="${esc(abs(l))}">`),
     '<meta property="og:type" content="website">',
+    `<meta property="og:site_name" content="${BRAND}">`,
     `<meta property="og:url" content="${esc(abs(env.lang))}">`,
     `<meta property="og:title" content="${esc(title)}">`,
     `<meta property="og:description" content="${esc(description)}">`,
@@ -246,7 +250,7 @@ export function renderLegalPage(page: LegalPage, env: LegalEnv): string {
     `<style>${CSS}</style>`,
     "</head>",
     `<body data-page="${page}">`,
-    `<header class="bar"><div class="wrap bar-in"><a class="logo" href="/">${esc(env.appName)}</a>`,
+    `<header class="bar"><div class="wrap bar-in"><div class="brand"><a class="logo" href="/">${BRAND}</a></div>`,
     `<nav class="langs" aria-label="${esc(t.ui.langLabel)}">${LANG_LINKS.map(
       ([l, label]) => `<a href="${esc(legalPath(page, l))}" hreflang="${HTML_LANG[l]}" lang="${HTML_LANG[l]}"${current(l === env.lang)}>${label}</a>`,
     ).join("")}</nav></div></header>`,
@@ -266,7 +270,7 @@ export function renderLegalPage(page: LegalPage, env: LegalEnv): string {
     "</main>",
     `<footer class="foot"><div class="wrap foot-in"><nav aria-label="${esc(t.ui.docsLabel)}">${docLinks}</nav>`,
     `<a href="/">← ${esc(t.ui.home)}</a>`,
-    `<span>© ${new Date().getUTCFullYear()} ${esc(env.appName)}</span></div></footer>`,
+    `<span>© ${new Date().getUTCFullYear()} ${BRAND}</span></div></footer>`,
     "</body>",
     "</html>\n",
   ]
@@ -287,7 +291,6 @@ export async function legalRoutes(app: FastifyInstance) {
         lang: legalLocale(req.query.lang),
         legal: await getLegal(ctx),
         appUrl,
-        appName: ctx.config.APP_NAME,
         bot: botUsername(ctx.config),
       };
       reply.type("text/html; charset=utf-8").header("cache-control", "private, no-cache");

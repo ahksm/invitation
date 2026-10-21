@@ -595,7 +595,7 @@ describe("getPublicPage: мета-теги", () => {
     expect(wrong.status).toBe(401);
 
     const missing = await getPublicPage(ctx(), { kind: "shared", key: "nothing-here" });
-    expect(missing).toEqual({ status: 404, meta: { title: "Invito", description: "", image: null, url: `${APP_URL}/i/nothing-here` } });
+    expect(missing).toEqual({ status: 404, meta: { title: "InviteBloom", description: "", image: null, url: `${APP_URL}/i/nothing-here` } });
     const badToken = await getPublicPage(ctx(), { kind: "personal", key: "../../etc" });
     expect(badToken.status).toBe(404);
   });

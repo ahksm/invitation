@@ -384,7 +384,7 @@ describe("заказы", () => {
 
 describe("тексты SMS", () => {
   it("напоминание короткое, латиница в GSM", () => {
-    const link = "https://invito.uz/g/abcdefghijklmnop";
+    const link = "https://invitebloom.tech/g/abcdefghijklmnop";
     expect(reminderText("ru", { guestName: "Аня", event: "Свадьба", date: "26.12.2026", link })).toBe(`Аня, напоминаем: Свадьба, 26.12.2026. Ждём ваш ответ: ${link}`);
     const uz = reminderText("uz", { guestName: "G‘ayrat", event: "To‘y", link });
     expect(uz).toBe(`G'ayrat, eslatma: To'y. Javobingizni kutamiz: ${link}`);

@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { and, asc, count, eq, inArray, isNull } from "drizzle-orm";
+import { BRAND } from "../brand.js";
 import { cacheKeys } from "../cache.js";
 import { botUsername } from "../config.js";
 import { coerceContent, sectionOn, type InvContent } from "../content.js";
@@ -82,7 +83,7 @@ const tplCols = { slug: templates.slug, event: templates.event, style: templates
 
 function pageMeta(ctx: Pick<Ctx, "config">, { inv, tpl }: Row, data: InvContent, url: string): PageMeta {
   const lang = pickLocale(inv.language);
-  const names = data.names?.trim() || eventLabel(tpl.event, lang) || ctx.config.APP_NAME;
+  const names = data.names?.trim() || eventLabel(tpl.event, lang) || BRAND;
   const date = data.date ? longDate(data.date, lang) : "";
   const message = Array.from((data.message ?? "").replace(/\s+/g, " ").trim());
   const image = inv.ogImageUrl || data.cover || "";
@@ -95,14 +96,14 @@ function pageMeta(ctx: Pick<Ctx, "config">, { inv, tpl }: Row, data: InvContent,
 }
 
 /** Для запертой паролем страницы: без имён, текста и картинок. */
-const lockedMeta = (ctx: Pick<Ctx, "config">, { inv, tpl }: Row, url: string): PageMeta => ({
-  title: eventLabel(tpl.event, pickLocale(inv.language)) ?? ctx.config.APP_NAME,
+const lockedMeta = ({ inv, tpl }: Row, url: string): PageMeta => ({
+  title: eventLabel(tpl.event, pickLocale(inv.language)) ?? BRAND,
   description: "",
   image: null,
   url,
 });
 
-const notFoundMeta = (ctx: Pick<Ctx, "config">, url: string): PageMeta => ({ title: ctx.config.APP_NAME, description: "", image: null, url });
+const notFoundMeta = (url: string): PageMeta => ({ title: BRAND, description: "", image: null, url });
 
 /** «Кто придёт» и гостевая книга. me: гость личной ссылки, он идёт первым в списке. */
 async function social(ctx: Pick<Ctx, "db">, invitationId: string, data: InvContent, meId?: string): Promise<Pick<PublicView, "who" | "guestbook">> {
@@ -167,7 +168,7 @@ async function sharedEntry(ctx: Pick<Ctx, "db" | "cache" | "config">, slug: stri
       look: { template: row.tpl.slug, font: data.font ?? null, palette: data.palette ?? 0, language: pickLocale(row.inv.language) },
       view: { ...baseView(ctx, "shared", row, data), ...(await social(ctx, row.inv.id, data)) },
       meta: pageMeta(ctx, row, data, url),
-      lockedMeta: lockedMeta(ctx, row, url),
+      lockedMeta: lockedMeta(row, url),
     };
   });
 }
@@ -242,12 +243,12 @@ export async function getPublicPage(
   const appUrl = appUrlOf(ctx);
   if (req.kind === "personal") {
     const entry = await guestEntry(ctx, req.key);
-    if (!entry) return { status: 404, meta: notFoundMeta(ctx, `${appUrl}/g/${encodeURIComponent(req.key)}`) };
+    if (!entry) return { status: 404, meta: notFoundMeta(`${appUrl}/g/${encodeURIComponent(req.key)}`) };
     if (!isPreviewBot(req.userAgent)) await markOpened(ctx, entry);
     return { status: 200, view: entry.view, meta: entry.meta };
   }
   const entry = await sharedEntry(ctx, req.key);
-  if (!entry) return { status: 404, meta: notFoundMeta(ctx, `${appUrl}/i/${encodeURIComponent(req.key)}`) };
+  if (!entry) return { status: 404, meta: notFoundMeta(`${appUrl}/i/${encodeURIComponent(req.key)}`) };
   if (entry.accessCode !== null) {
     const locked = { status: 401 as const, locked: { look: entry.look }, meta: entry.lockedMeta };
     if (!req.code) return locked;

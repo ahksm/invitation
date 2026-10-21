@@ -5,7 +5,7 @@ import type { Locale } from "../i18n.js";
  * Тексты страниц /oferta, /privacy и /contacts на ru, uz и en; uzc получается из uz через toCyr.
  *
  * Подстановки: {executor} — название компании из реквизитов или «администрация сайта <host>»,
- * {site} — ссылка на сайт, {host} — домен из APP_URL, {app} — APP_NAME. «[текст](privacy)» —
+ * {site} — ссылка на сайт, {host} — домен из APP_URL, {app} — название продукта (BRAND). «[текст](privacy)» —
  * ссылка на другую страницу документов на том же языке. Реквизиты подставляет блок { slot }.
  */
 
@@ -1123,7 +1123,7 @@ const en: LegalTexts = {
 
 // Подстановки {…}, цели ссылок «](privacy)», названия сервисов и технические слова остаются латиницей.
 const KEEP_LATIN =
-  /(\{\w+\}|\]\(\w+\)|\b(?:Multicard|Eskiz|Uzcard|Humo|Telegram|Invito|Anthropic|Unsplash|Google Maps|Google Fonts|Google|HTTPS|User-Agent|username|localStorage|[Cc]ookie|ID|IP)\b)/;
+  /(\{\w+\}|\]\(\w+\)|\b(?:Multicard|Eskiz|Uzcard|Humo|Telegram|InviteBloom|Anthropic|Unsplash|Google Maps|Google Fonts|Google|HTTPS|User-Agent|username|localStorage|[Cc]ookie|ID|IP)\b)/;
 const cyr = (s: string) =>
   s
     .split(KEEP_LATIN)

@@ -241,7 +241,7 @@ describe("оболочка", () => {
     expect(metaOf(renderShell(design, { boot: { mode: "app" } }), "robots")).toBeUndefined();
   });
 
-  it("главная: заголовок и описание говорят, что такое Invito; значки сайта", () => {
+  it("главная: заголовок и описание говорят, что такое InviteBloom; значки сайта", () => {
     const html = renderShell(design, { boot: { mode: "app" } });
     expect(html).toContain(`<title>${DEFAULT_META.title}</title>`);
     expect(metaOf(html, "description")).toBe(DEFAULT_META.description);
@@ -470,7 +470,7 @@ describe("публичные страницы на данных приглаше
       expect(res.headers["content-type"], url).toBe("text/html; charset=utf-8");
       expect(bootOf(res.body), url).toEqual({ mode: "notfound" });
       // Без данных приглашения: только название сайта и адрес страницы.
-      expect(res.body, url).toContain(`<title>${config.APP_NAME}</title>`);
+      expect(res.body, url).toContain("<title>InviteBloom</title>");
       expect(metaOf(res.body, "og:description"), url).toBeUndefined();
       expect(metaOf(res.body, "og:image"), url).toBeUndefined();
     }

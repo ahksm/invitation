@@ -24,12 +24,12 @@ const rowsOf = (html: string) =>
   Object.fromEntries([...html.matchAll(/<div data-field="(\w+)"><dt>[^<]*<\/dt><dd>(.*?)<\/dd><\/div>/g)].map((m) => [m[1], m[2]!.replace(/<[^>]+>/g, "")]));
 
 const full = {
-  companyName: "ООО «Инвито Медиа»",
+  companyName: "ООО «Инвайт Блум»",
   inn: "309876543",
   address: "Ташкент, ул. Буюк Ипак Йули, 123",
   phone: "+998 90 123-45-67",
-  email: "support@invito.uz",
-  telegram: "@invito_support",
+  email: "support@invitebloom.tech",
+  telegram: "@invitebloom_support",
   bankName: "АКБ «Капиталбанк»",
   bankAccount: "20208000900123456001",
   mfo: "01088",
@@ -66,7 +66,7 @@ describe("страницы /oferta, /privacy, /contacts", () => {
         const html = res.body;
         expect(html).toContain(`<html lang="${htmlLang[lang]}">`);
         expect(h1Of(html)).toBe(titles[i]);
-        expect(titleOf(html)).toBe(`${titles[i]} — Invito`);
+        expect(titleOf(html)).toBe(`${titles[i]} — InviteBloom`);
         expect(metaOf(html, "description")!.length).toBeGreaterThan(40);
         // Страница — не оболочка приложения: без скриптов и загрузочных данных.
         expect(html).not.toContain("<script");
@@ -135,29 +135,29 @@ describe("страницы /oferta, /privacy, /contacts", () => {
     expect((await req(admin.cookie, "PUT", "/api/admin/legal", partial)).statusCode).toBe(200);
 
     const oferta = (await page("/oferta")).body;
-    expect(oferta).toContain("ООО «Инвито Медиа» (далее — «Исполнитель»)");
+    expect(oferta).toContain("ООО «Инвайт Блум» (далее — «Исполнитель»)");
     expect(oferta).not.toContain("администрация сайта");
     expect(rowsOf(oferta)).toEqual({
-      companyName: "ООО «Инвито Медиа»",
+      companyName: "ООО «Инвайт Блум»",
       inn: "309876543",
       address: "Ташкент, ул. Буюк Ипак Йули, 123",
       director: "Абдурахмонов А.",
-      telegram: "@invito_support",
+      telegram: "@invitebloom_support",
       bot: "@invite_test_bot",
       phone: "+998 90 123-45-67",
-      email: "support@invito.uz",
+      email: "support@invitebloom.tech",
       site: "localhost:3000",
     });
     expect(oferta).not.toMatch(/data-field="(bankName|bankAccount|mfo)"/);
     expect(oferta).toContain('<a href="tel:+998901234567">+998 90 123-45-67</a>');
-    expect(oferta).toContain('<a href="mailto:support@invito.uz">support@invito.uz</a>');
-    expect(oferta).toContain('<a href="https://t.me/invito_support">@invito_support</a>');
+    expect(oferta).toContain('<a href="mailto:support@invitebloom.tech">support@invitebloom.tech</a>');
+    expect(oferta).toContain('<a href="https://t.me/invitebloom_support">@invitebloom_support</a>');
 
     // Реквизиты в контактах — отдельным разделом; подписи на языке страницы, значения как есть.
     const contacts = (await page("/contacts?lang=uz")).body;
     expect(contacts).toContain('id="details"');
     expect(contacts).toContain("<dt>STIR</dt><dd>309876543</dd>");
-    expect(contacts).toContain("<dt>Nomi</dt><dd>ООО «Инвито Медиа»</dd>");
+    expect(contacts).toContain("<dt>Nomi</dt><dd>ООО «Инвайт Блум»</dd>");
     const uzc = (await page("/contacts?lang=uzc")).body;
     expect(uzc).toContain("<dt>СТИР</dt><dd>309876543</dd>");
     expect(uzc).toContain("Абдурахмонов А.");
@@ -200,9 +200,9 @@ describe("страницы /oferta, /privacy, /contacts", () => {
     expect(res.body).toContain("администрация сайта localhost:3000");
 
     // Поле, которое когда-то было в схеме, не обнуляет остальные реквизиты.
-    await db.update(settings).set({ value: { companyName: "ООО «Инвито Медиа»", oldField: "x" } }).where(eq(settings.key, "legal"));
+    await db.update(settings).set({ value: { companyName: "ООО «Инвайт Блум»", oldField: "x" } }).where(eq(settings.key, "legal"));
     await redis.flushdb();
-    expect(await getLegal(t.app.ctx)).toEqual({ ...emptyLegal, companyName: "ООО «Инвито Медиа»" });
+    expect(await getLegal(t.app.ctx)).toEqual({ ...emptyLegal, companyName: "ООО «Инвайт Блум»" });
   });
 
   it("заголовки: CSP как у страниц приложения, без X-Frame-Options, кэш как у главной, индексируются; HEAD работает", async () => {
@@ -248,9 +248,9 @@ describe("PUT /api/admin/legal", () => {
     const admin = await login(1);
     expect((await req(admin.cookie, "GET", "/api/admin/legal")).json()).toEqual(emptyLegal);
     const saved = (
-      await req(admin.cookie, "PUT", "/api/admin/legal", { ...full, telegram: "https://t.me/Invito_Support/", address: "  Ташкент,\n  ул. Навои, 1  ", email: " support@invito.uz " })
+      await req(admin.cookie, "PUT", "/api/admin/legal", { ...full, telegram: "https://t.me/InviteBloom_Support/", address: "  Ташкент,\n  ул. Навои, 1  ", email: " support@invitebloom.tech " })
     ).json();
-    expect(saved).toEqual({ ...full, telegram: "Invito_Support", address: "Ташкент, ул. Навои, 1" });
+    expect(saved).toEqual({ ...full, telegram: "InviteBloom_Support", address: "Ташкент, ул. Навои, 1" });
     expect((await req(admin.cookie, "GET", "/api/admin/legal")).json()).toEqual(saved);
     // Поля, которых нет в запросе, очищаются.
     expect((await req(admin.cookie, "PUT", "/api/admin/legal", { phone: "+998 71 200-00-00" })).json()).toEqual({ ...emptyLegal, phone: "+998 71 200-00-00" });
@@ -266,8 +266,8 @@ describe("PUT /api/admin/legal", () => {
     expect(await bad({ email: "not-an-email" })).toBe("Email: адрес вида name@example.com");
     expect(await bad({ email: "not-an-email" }, "uz")).toBe("Elektron pochta: name@example.com ko‘rinishidagi manzil");
     expect(await bad({ email: "not-an-email" }, "en")).toBe("Email: an address like name@example.com");
-    expect(await bad({ telegram: "@ab" })).toBe("Telegram: имя пользователя, например @invito_support");
-    expect(await bad({ telegram: "javascript:alert(1)" }, "uzc")).toBe("Telegram: фойдаланувчи номи, масалан @invito_support");
+    expect(await bad({ telegram: "@ab" })).toBe("Telegram: имя пользователя, например @invitebloom_support");
+    expect(await bad({ telegram: "javascript:alert(1)" }, "uzc")).toBe("Telegram: фойдаланувчи номи, масалан @invitebloom_support");
     expect(await bad({ companyName: "x".repeat(201) })).toBe("Неверные данные");
     expect(await bad({ bankAccount: "1".repeat(41) })).toBe("Неверные данные");
     expect(await bad({ inn: 309876543 })).toBe("Неверные данные");
@@ -278,7 +278,7 @@ describe("PUT /api/admin/legal", () => {
 });
 
 describe("renderLegalPage", () => {
-  const env = (over: Partial<LegalEnv> = {}): LegalEnv => ({ lang: "ru", legal: emptyLegal, appUrl: "https://invitebloom.tech", appName: "Invito", bot: null, ...over });
+  const env = (over: Partial<LegalEnv> = {}): LegalEnv => ({ lang: "ru", legal: emptyLegal, appUrl: "https://invitebloom.tech", bot: null, ...over });
 
   it("язык из ?lang=: по умолчанию и для неизвестного — русский", () => {
     expect(legalLocale(undefined)).toBe("ru");

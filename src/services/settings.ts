@@ -53,7 +53,7 @@ const legalShape = {
   email: line(120).refine((v) => v === "" || z.email().safeParse(v).success, "Email: адрес вида name@example.com"),
   telegram: line(64)
     .transform(telegramName)
-    .refine((v) => v === "" || /^[A-Za-z][A-Za-z0-9_]{3,31}$/.test(v), "Telegram: имя пользователя, например @invito_support"),
+    .refine((v) => v === "" || /^[A-Za-z][A-Za-z0-9_]{3,31}$/.test(v), "Telegram: имя пользователя, например @invitebloom_support"),
   bankName: line(200),
   bankAccount: line(40),
   mfo: line(20),

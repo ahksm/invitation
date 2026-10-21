@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { and, count, eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { logUrl } from "../src/app.js";
+import { BRAND } from "../src/brand.js";
 import { loadConfig } from "../src/config.js";
 import { orders, templates, usageEvents, users } from "../src/db/schema.js";
 import { multicardSign } from "../src/payments/multicard.js";
@@ -376,14 +377,17 @@ describe("конфигурация", () => {
 
   it("в production APP_URL — публичный https-адрес", () => {
     expect(() => loadConfig(prodEnv)).toThrow(/APP_URL: публичный https-адрес/);
-    expect(() => loadConfig({ ...prodEnv, APP_URL: "http://invito.uz" })).toThrow(/APP_URL/);
+    expect(() => loadConfig({ ...prodEnv, APP_URL: "http://invitebloom.tech" })).toThrow(/APP_URL/);
     expect(() => loadConfig({ ...prodEnv, APP_URL: "https://localhost:3000" })).toThrow(/APP_URL/);
-    expect(loadConfig({ ...prodEnv, APP_URL: "https://invito.uz" }).APP_URL).toBe("https://invito.uz");
+    expect(loadConfig({ ...prodEnv, APP_URL: "https://invitebloom.tech" }).APP_URL).toBe("https://invitebloom.tech");
     // Вне production локальный адрес по-прежнему подходит.
     expect(loadConfig(baseEnv).APP_URL).toBe("http://localhost:3000");
   });
 
-  it("название по умолчанию — Invito", () => {
-    expect(loadConfig(baseEnv).APP_NAME).toBe("Invito");
+  it("название продукта не из окружения: строка APP_NAME из старого .env не читается", () => {
+    const config = loadConfig({ ...baseEnv, APP_NAME: "Invito" });
+    expect(config).not.toHaveProperty("APP_NAME");
+    expect(JSON.stringify(config)).not.toContain("Invito");
+    expect(BRAND).toBe("InviteBloom");
   });
 });

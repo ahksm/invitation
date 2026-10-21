@@ -61,7 +61,6 @@ const schema = z
     ADMIN_TELEGRAM_IDS: csvIds,
     // Админы, которые входят по телефону: номера через запятую в формате 998XXXXXXXXX.
     ADMIN_PHONES: csvIds,
-    APP_NAME: z.string().default("Invito"),
     // Каталог загруженных файлов (картинки, музыка, видео). В Docker — отдельный том.
     MEDIA_DIR: z.string().min(1).default("./data/media"),
     // Помощник с текстом (POST /api/ai/write). Пусто: выключен.
@@ -122,7 +121,7 @@ const schema = z
     // проверка Origin, ссылки в SMS, адреса возврата и колбэков Multicard строятся от APP_URL.
     const appUrl = new URL(env.APP_URL);
     if (appUrl.protocol !== "https:" || ["localhost", "127.0.0.1", "[::1]", "0.0.0.0"].includes(appUrl.hostname)) {
-      ctx.addIssue({ code: "custom", message: "APP_URL: публичный https-адрес сайта, например https://invito.uz" });
+      ctx.addIssue({ code: "custom", message: "APP_URL: публичный https-адрес сайта, например https://invitebloom.tech" });
     }
     if (env.PAYMENT_PROVIDER === "mock") {
       ctx.addIssue({ code: "custom", message: "В production нельзя использовать PAYMENT_PROVIDER=mock" });

@@ -1,6 +1,7 @@
 import { Bot, InlineKeyboard, Keyboard, type Context } from "grammy";
 import { count, eq, gt } from "drizzle-orm";
 import { issueLoginCode } from "../auth/codes.js";
+import { BRAND } from "../brand.js";
 import {
   approveTelegramLogin,
   claimTelegramApproval,
@@ -165,7 +166,7 @@ export function createBot(ctx: Ctx) {
     const g = view.guest;
     const lines = [
       bt(l, "guestInvited", { name: g?.name ?? "" }),
-      d.names?.trim() || eventLabel(view.event, l) || ctx.config.APP_NAME,
+      d.names?.trim() || eventLabel(view.event, l) || BRAND,
       when && `📅 ${when}`,
       place && `📍 ${place}`,
       g && g.rsvp !== "pending" && bt(l, "guestAnswer", { answer: bt(l, RSVP_BUTTONS[g.rsvp]) }),

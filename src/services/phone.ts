@@ -1,5 +1,6 @@
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
+import { BRAND } from "../brand.js";
 import { cacheKeys } from "../cache.js";
 import type { Ctx } from "../context.js";
 import { invitations, media, orders, smsMessages, subscriptions, usageEvents, users, type User } from "../db/schema.js";
@@ -43,7 +44,7 @@ export async function requestOtp(ctx: Ctx, phone: string, ip: string, locale: Lo
 
   const [row] = await ctx.db.insert(smsMessages).values({ purpose: "otp", phone, provider: ctx.sms.name }).returning({ id: smsMessages.id });
   try {
-    const { providerRef } = await ctx.sms.send(phone, otpText(locale, ctx.config.APP_NAME, code));
+    const { providerRef } = await ctx.sms.send(phone, otpText(locale, BRAND, code));
     await ctx.db.update(smsMessages).set({ status: "sent", providerRef }).where(eq(smsMessages.id, row!.id));
   } catch (err) {
     await ctx.db.update(smsMessages).set({ status: "failed", error: String(err).slice(0, 500) }).where(eq(smsMessages.id, row!.id));

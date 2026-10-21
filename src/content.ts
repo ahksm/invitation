@@ -2,7 +2,7 @@ import { z } from "zod";
 import { SECTIONS, TRACKS, styleFonts } from "./design-data.js";
 
 /**
- * Содержимое приглашения (InvContent, колонка invitations.data): то, что конструктор Invito
+ * Содержимое приглашения (InvContent, колонка invitations.data): то, что конструктор (web/Invito.dc.html)
  * хранит в `inv`. Все поля необязательны (фронтенд дополняет недостающие значениями по умолчанию),
  * но если поле есть, оно проверяется. Лишние ключи отбрасываются.
  */
@@ -113,7 +113,7 @@ export function contentSchema(style: string | null | undefined) {
 }
 
 /**
- * Содержимое из базы. Старые записи (до Invito) хранили произвольные строки: оставляем
+ * Содержимое из базы. Старые записи (до дизайна Invito) хранили произвольные строки: оставляем
  * только поля, которые проходят проверку, чтобы чтение никогда не падало.
  */
 export function coerceContent(raw: unknown, style: string | null | undefined): InvContent {

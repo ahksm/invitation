@@ -56,15 +56,15 @@ describe("реквизиты в админке", () => {
       const fill = async (values: Record<string, string>) => {
         for (const [name, value] of Object.entries(values)) await page.locator(`input[name="${name}"]`).fill(value);
       };
-      await fill({ companyName: "ООО «Инвито Медиа»", inn: "309876543", address: "Ташкент, ул. Навои, 1", phone: "+998 90 123-45-67", email: "plохой", telegram: "https://t.me/invito_support" });
+      await fill({ companyName: "ООО «Инвайт Блум»", inn: "309876543", address: "Ташкент, ул. Навои, 1", phone: "+998 90 123-45-67", email: "plохой", telegram: "https://t.me/invitebloom_support" });
       await page.getByRole("button", { name: "Сохранить" }).click();
       await e.waitText(page, "Email: адрес вида name@example.com");
-      expect(await e.app.inject({ method: "GET", url: "/contacts" }).then((r) => r.body)).not.toContain("Инвито Медиа");
+      expect(await e.app.inject({ method: "GET", url: "/contacts" }).then((r) => r.body)).not.toContain("Инвайт Блум");
 
-      await fill({ email: "support@invito.uz" });
+      await fill({ email: "support@invitebloom.tech" });
       await page.getByRole("button", { name: "Сохранить" }).click();
       await e.waitText(page, "Реквизиты сохранены");
-      expect(await page.locator('input[name="telegram"]').inputValue()).toBe("invito_support");
+      expect(await page.locator('input[name="telegram"]').inputValue()).toBe("invitebloom_support");
       // Поля ограничены по длине так же, как на сервере.
       expect(await page.locator('input[name="companyName"]').getAttribute("maxlength")).toBe("200");
       await e.shot(page, "legal-admin.png");
@@ -72,8 +72,8 @@ describe("реквизиты в админке", () => {
       // Ссылка из формы открывает страницу контактов с сохранёнными данными.
       const [contacts] = await Promise.all([context.waitForEvent("page"), page.getByRole("link", { name: "Контакты" }).click()]);
       await contacts.waitForLoadState();
-      await e.waitText(contacts, "ООО «Инвито Медиа»");
-      expect(await contacts.locator('[data-field="telegram"] a').getAttribute("href")).toBe("https://t.me/invito_support");
+      await e.waitText(contacts, "ООО «Инвайт Блум»");
+      expect(await contacts.locator('[data-field="telegram"] a').getAttribute("href")).toBe("https://t.me/invitebloom_support");
       expect(await contacts.locator('[data-field="phone"] a').getAttribute("href")).toBe("tel:+998901234567");
       expect(await contacts.locator('[data-field="bankAccount"]').count()).toBe(0);
       // Реквизиты заполнены: предупреждения на главной админки больше нет.
@@ -94,7 +94,7 @@ describe("реквизиты в админке", () => {
 describe("страницы документов", () => {
   it("телефон: оферта без реквизитов, оглавление раскрывается, переход на узбекский и к политике; без нарушений CSP", async () => {
     const { page, problems, close } = await e.open("/oferta", { viewport: PHONE, waitText: "Публичная оферта" });
-    expect(await page.title()).toBe("Публичная оферта — Invito");
+    expect(await page.title()).toBe("Публичная оферта — InviteBloom");
     expect(await overflow(page)).toBe(0);
     // Без реквизитов исполнитель назван нейтрально, заглушек нет.
     await e.waitText(page, "администрация сайта 127.0.0.1");
@@ -128,12 +128,12 @@ describe("страницы документов", () => {
 
   it("компьютер: оглавление сбоку, реквизиты таблицей; контакты на всех языках без горизонтальной прокрутки", async () => {
     await setLegal(e.app.ctx, {
-      companyName: "ООО «Инвито Медиа»",
+      companyName: "ООО «Инвайт Блум»",
       inn: "309876543",
       address: "Ташкент, Мирзо-Улугбекский район, ул. Буюк Ипак Йули, 123, офис 45",
       phone: "+998 90 123-45-67",
       email: "support@invitebloom.tech",
-      telegram: "invito_support",
+      telegram: "invitebloom_support",
       bankName: "АКБ «Капиталбанк», Ташкентский филиал",
       bankAccount: "20208000900123456001",
       mfo: "01088",
@@ -142,7 +142,7 @@ describe("страницы документов", () => {
     const { page, problems, close } = await e.open("/oferta", { viewport: DESKTOP, waitText: "Реквизиты Исполнителя" });
     expect(await visible(page, ".toc-side")).toBe(true);
     expect(await visible(page, ".toc-mob")).toBe(false);
-    expect(await page.locator("#general").innerText()).toContain("ООО «Инвито Медиа» (далее — «Исполнитель»)");
+    expect(await page.locator("#general").innerText()).toContain("ООО «Инвайт Блум» (далее — «Исполнитель»)");
     // Реквизиты: подпись слева, значение справа.
     const [dt, dd] = await Promise.all([page.locator('#details [data-field="inn"] dt').boundingBox(), page.locator('#details [data-field="inn"] dd').boundingBox()]);
     expect(dd!.x).toBeGreaterThan(dt!.x + dt!.width);
@@ -201,7 +201,7 @@ describe("ссылки из приложения", () => {
     const [offer] = await Promise.all([context.waitForEvent("page"), foot.click()]);
     await e.waitText(offer, "администрация сайта");
     expect(offer.url()).toBe(`${e.base}/oferta`);
-    expect(await offer.title()).toBe("Публичная оферта — Invito");
+    expect(await offer.title()).toBe("Публичная оферта — InviteBloom");
     await offer.close();
 
     // Лист оплаты черновика: под «Оплатить …» и под кнопкой подписки — согласие со ссылкой на оферту;

@@ -1,8 +1,9 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { BRAND } from "../brand.js";
 import { appCsp, appHelmet } from "./csp.js";
 import { assetUrl, createDesignStore, type Asset, type Design, type Encoding } from "./design.js";
 
-/** Загрузочные данные страницы: логика Invito читает их из #invito-boot. */
+/** Загрузочные данные страницы: логика интерфейса (web/Invito.dc.html) читает их из #invito-boot. */
 export type Boot =
   | { mode: "app" }
   | { mode: "shared"; slug: string; view?: unknown; locked?: { look: unknown; limited?: boolean } }
@@ -38,9 +39,9 @@ export type PublicPageRequest = {
 /** Источник публичных страниц: подключается в src/app.ts. */
 export type PublicPageResolver = (req: PublicPageRequest) => Promise<PublicPage>;
 
-/** Главная и приложение: что такое Invito, как на первом экране (web/invito-data.js, hero и heroSub). */
+/** Главная и приложение: что такое InviteBloom, как на первом экране (web/invito-data.js, hero и heroSub). */
 export const DEFAULT_META: ShellMeta = {
-  title: "Invito — электронные приглашения на свадьбу и праздник",
+  title: `${BRAND} — электронные приглашения на свадьбу и праздник`,
   description:
     "Онлайн-приглашение на свадьбу, день рождения или любой праздник: одна ссылка для Telegram и WhatsApp, ответы гостей в одном списке, персональные приглашения с именем гостя. Собрать и посмотреть — бесплатно.",
 };
@@ -90,6 +91,7 @@ export function renderShell(design: Design, opts: ShellOptions): string {
     `<title>${esc(meta.title)}</title>`,
     meta.description && `<meta name="description" content="${esc(meta.description)}">`,
     '<meta property="og:type" content="website">',
+    `<meta property="og:site_name" content="${BRAND}">`,
     meta.url && `<meta property="og:url" content="${esc(meta.url)}">`,
     `<meta property="og:title" content="${esc(meta.title)}">`,
     meta.description && `<meta property="og:description" content="${esc(meta.description)}">`,
@@ -252,7 +254,7 @@ export async function webRoutes(app: FastifyInstance, opts: { publicPage: Public
 
   // Неизвестный адрес (обработчик на весь сайт: плагин без префикса). Ссылка гостя с лишним «/» в конце
   // ведёт на саму ссылку; страница, которую открывают в браузере, получает оболочку «не найдено» в стиле
-  // Invito. API, файлы (/media/, /app/*.js) и запросы не за HTML получают JSON, как раньше.
+  // сайта. API, файлы (/media/, /app/*.js) и запросы не за HTML получают JSON, как раньше.
   app.setNotFoundHandler((req, reply) => {
     const [path = "", query] = req.url.split(/\?(.*)/s);
     if (req.method === "GET" || req.method === "HEAD") {
@@ -266,7 +268,7 @@ export async function webRoutes(app: FastifyInstance, opts: { publicPage: Public
         // заголовки страниц приложения (appHelmet), как /app и /i/…: без X-Frame-Options, frame-ancestors с Telegram.
         reply.raw.removeHeader("x-frame-options");
         reply.helmet({ contentSecurityPolicy: appCsp, xFrameOptions: false });
-        return sendShell(reply, store.get(), { boot: { mode: "notfound" }, meta: { title: ctx.config.APP_NAME }, status: 404 });
+        return sendShell(reply, store.get(), { boot: { mode: "notfound" }, meta: { title: BRAND }, status: 404 });
       }
     }
     return reply.code(404).send({ message: `Route ${req.method}:${req.url} not found`, error: "Not Found", statusCode: 404 });

@@ -133,7 +133,7 @@ const errors: Record<string, Partial<Record<Locale, string>>> = {
     uzc: "Электрон почта: name@example.com кўринишидаги манзил",
     en: "Email: an address like name@example.com",
   },
-  "Telegram: имя пользователя, например @invito_support": { uz: "Telegram: foydalanuvchi nomi, masalan @invito_support", en: "Telegram: a username, for example @invito_support" },
+  "Telegram: имя пользователя, например @invitebloom_support": { uz: "Telegram: foydalanuvchi nomi, masalan @invitebloom_support", en: "Telegram: a username, for example @invitebloom_support" },
   // Рассылки, бот и помощник с текстом.
   "Рассылка уже идёт, подождите": { uz: "Yuborish davom etmoqda, kuting", en: "Sending is already in progress, please wait" },
   "Подключите Telegram, чтобы получать уведомления": { uz: "Bildirishnomalarni olish uchun Telegramni ulang", en: "Connect Telegram to receive notifications" },

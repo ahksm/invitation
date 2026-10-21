@@ -2,6 +2,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { webhookCallback, type Bot } from "grammy";
 import { Redis } from "ioredis";
 import { buildApp } from "./app.js";
+import { BRAND } from "./brand.js";
 import { setBotCommands, createBot, type BotContext } from "./bot/index.js";
 import { createTelegramNotifier } from "./bot/notifier.js";
 import { createCache } from "./cache.js";
@@ -89,7 +90,7 @@ async function setupBot(bot: Bot<BotContext>) {
   // Кнопка мини-аппа в чате с ботом. Telegram открывает мини-апп только по https.
   if (config.APP_URL.startsWith("https://")) {
     await bot.api.setChatMenuButton({
-      menu_button: { type: "web_app", text: config.APP_NAME, web_app: { url: `${config.APP_URL.replace(/\/+$/, "")}/app/` } },
+      menu_button: { type: "web_app", text: BRAND, web_app: { url: `${config.APP_URL.replace(/\/+$/, "")}/app/` } },
     });
   }
   if (config.TELEGRAM_MODE === "webhook") {
