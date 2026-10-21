@@ -105,14 +105,13 @@ async function wordmarkFits(page: Page, label: string, spot: Spot) {
   const style = await page.addStyleTag({ content: WIDE });
   expect(await page.evaluate(() => document.fonts.load("italic 500 20px 'Cormorant Garamond'", "InviteBloom").then((f) => f.length)), label).toBe(1);
   const wide = await check("DejaVu Serif");
-  // Шрифт действительно шире Times (иначе проверка ничего не проверяет); слово всё равно видно целиком. Сравнение с Times
-  // в том же браузере: ширина букв зависит от того, как он округляет их до пикселей.
-  expect(wide.textW / wide.fs, label).toBeGreaterThan((times.textW / times.fs) * 1.05);
+  // Что подменённый шрифт действительно шире Times (иначе проверка ничего не проверяет), видно ниже без font-size-adjust:
+  // больше 5,5 своего размера (Times — 4,8). С font-size-adjust ширина в CI зависит от округления размера (см. ниже).
   expect(wide.textL, label).toBeGreaterThanOrEqual(wide.clipL - 0.5);
-  // Chromium в CI округляет размер запасного шрифта после font-size-adjust до целого пикселя (ширина слова на 320 px от
-  // этого не меняется при 22 и 23px), поэтому слово может выйти за край обрезки на ширину округления, до 3px; на кнопки
-  // оно при этом не заходит (край обрезки проверен выше).
-  expect(wide.textR, label).toBeLessThanOrEqual(wide.clipR + 3);
+  // Chromium в CI округляет размер запасного шрифта после font-size-adjust до целого пикселя, а 1px размера DejaVu Serif —
+  // это до 6px ширины слова; поэтому слово может выйти за край обрезки на одно такое округление, до 6px. На кнопки оно
+  // при этом не заходит: край обрезки не ближе 6px к ним (проверено выше).
+  expect(wide.textR, label).toBeLessThanOrEqual(wide.clipR + 6);
 
   // Браузер без font-size-adjust: DejaVu Serif в полный размер (6,0 своего размера), где он шире места, обрезается
   // по нему (то, что за краем, не рисуется), и край обрезки не ближе 6px к кнопкам.
