@@ -1,12 +1,12 @@
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { BRAND } from "../brand.js";
 import { cacheKeys } from "../cache.js";
 import type { Ctx } from "../context.js";
 import { invitations, media, orders, smsMessages, subscriptions, usageEvents, users, type User } from "../db/schema.js";
 import { HttpError } from "../errors.js";
 import type { Locale } from "../i18n.js";
 import { otpText } from "../sms/texts.js";
+import { SmsRejectedError } from "../sms/types.js";
 import { invalidateUser, isConfiguredAdmin, syncAdmin } from "./users.js";
 
 /** Приводит номер к виду 998XXXXXXXXX. Принимает +998 90 123-45-67, 998901234567 и 901234567. */
@@ -43,9 +43,18 @@ export async function requestOtp(ctx: Ctx, phone: string, ip: string, locale: Lo
   await cache.redis.multi().del(key).hset(key, { hash: otpHash(ctx.config.JWT_SECRET, phone, code), attempts: 0 }).expire(key, OTP_TTL).exec();
 
   const [row] = await ctx.db.insert(smsMessages).values({ purpose: "otp", phone, provider: ctx.sms.name }).returning({ id: smsMessages.id });
+  const host = new URL(ctx.config.APP_URL).hostname;
   try {
-    const { providerRef } = await ctx.sms.send(phone, otpText(locale, BRAND, code));
-    await ctx.db.update(smsMessages).set({ status: "sent", providerRef }).where(eq(smsMessages.id, row!.id));
+    let sent;
+    try {
+      sent = await ctx.sms.send(phone, otpText(locale, host, code));
+    } catch (err) {
+      // Пока Eskiz не одобрил текст на языке человека, код уходит текстом на узбекской латинице.
+      if (!(err instanceof SmsRejectedError) || locale === "uz") throw err;
+      ctx.log.warn({ err, locale }, "Eskiz не принял текст кода входа, отправляем на узбекском");
+      sent = await ctx.sms.send(phone, otpText("uz", host, code));
+    }
+    await ctx.db.update(smsMessages).set({ status: "sent", providerRef: sent.providerRef }).where(eq(smsMessages.id, row!.id));
   } catch (err) {
     await ctx.db.update(smsMessages).set({ status: "failed", error: String(err).slice(0, 500) }).where(eq(smsMessages.id, row!.id));
     await cache.redis.del(key);
