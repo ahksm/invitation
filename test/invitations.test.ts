@@ -1,6 +1,6 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { guests, invitations, orders, smsMessages, templates } from "../src/db/schema.js";
 import { seed } from "../src/db/seed.js";
@@ -431,6 +431,40 @@ describe("удаление, копия и публикация", () => {
     expect(after.every((r) => r.providerRef && r.status === "sent" && r.invitationId === inv.id)).toBe(true);
     const [code] = await db.select().from(smsMessages).where(eq(smsMessages.id, otp!.id));
     expect(code).toMatchObject({ phone: "998905559999", purpose: "otp" });
+  });
+
+  it("миграция 0008 удаляет то, что старый код оставлял: гостей архивных приглашений и номера и тексты их SMS", async () => {
+    const { cookie, user: u } = await user();
+    const { inv: live, added } = await personalWithGuests(cookie, ["Аня", "Боря"], 2);
+    const { inv: old, added: oldGuests } = await personalWithGuests(cookie, ["Вика"], 1);
+    const [anya, borya] = added;
+    // Старый код: архив без удаления гостей и удаление гостя без обезличивания его SMS.
+    await db.update(invitations).set({ status: "archived" }).where(eq(invitations.id, old.id));
+    const sms = async (purpose: "invite" | "reminder" | "otp", phone: string, guestId: string | null, invitationId: string | null) =>
+      (
+        await db
+          .insert(smsMessages)
+          .values({ purpose, phone, text: purpose === "otp" ? null : `Приглашение ${phone}: http://x/g/tok`, userId: u.id, invitationId, guestId, provider: "mock", providerRef: `ref-${phone}`, status: "delivered" })
+          .returning()
+      )[0]!;
+    const deleted = await sms("invite", "998905550001", anya.id, live.id);
+    const kept = await sms("reminder", "998905550002", borya.id, live.id);
+    const archived = await sms("invite", "998905550003", oldGuests[0].id, old.id);
+    const otp = await sms("otp", "998905550004", null, null);
+    await db.delete(guests).where(eq(guests.id, anya.id));
+
+    const migration = readFileSync(new URL("../drizzle/0008_deleted_guest_data.sql", import.meta.url), "utf8");
+    const row = async (id: string) => (await db.select().from(smsMessages).where(eq(smsMessages.id, id)))[0]!;
+    for (let run = 0; run < 2; run++) {
+      await db.execute(sql.raw(migration));
+      expect(await db.select({ id: guests.id }).from(guests).where(inArray(guests.invitationId, [live.id, old.id]))).toEqual([{ id: borya.id }]);
+      // id, статус, ссылка провайдера, время и приглашение остаются для сверки с Eskiz и лимита SMS.
+      for (const s of [deleted, archived]) expect(await row(s.id), `запуск ${run + 1}`).toEqual({ ...s, guestId: null, phone: "", text: null });
+      expect(await row(kept.id)).toEqual(kept);
+      expect(await row(otp.id)).toEqual(otp);
+    }
+    const [arch] = await db.select().from(invitations).where(eq(invitations.id, old.id));
+    expect(arch).toMatchObject({ status: "archived", paidSeats: 1 });
   });
 
   it("черновик с начатой оплатой не удаляется насовсем", async () => {

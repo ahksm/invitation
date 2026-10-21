@@ -57,6 +57,13 @@
       "when": 1792515859659,
       "tag": "0007_order_card_data",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792515919659,
+      "tag": "0008_deleted_guest_data",
+      "breakpoints": true
     }
   ]
 }
