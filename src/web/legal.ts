@@ -132,6 +132,9 @@ function sectionHtml(blocks: Block[], n: number | null, env: LegalEnv, t: LegalT
 
 // Название в шапке занимает место, которое остаётся от переключателя языка, и уменьшается до 20px, если
 // «InviteBloom» в 32px не помещается (100cqi / 4.4 — ширина слова в Cormorant Garamond italic с запасом), как в приложении.
+// Пока Cormorant Garamond не загрузился (или если не загрузится), font-size-adjust:.386 (его x-height) сводит запасной
+// шрифт к той же высоте строчных и примерно той же ширине; что всё же шире — обрезается по месту названия (.brand:
+// overflow:hidden, поля 6px с отрицательными отступами, чтобы не обрезать рамку фокуса) и не заходит на языки.
 const CSS = `
 :root{--paper:#f3efe6;--paper-rgb:243,239,230;--ink:#1a1714;--body:#4a443c;--muted:#6e665b;--card:#fbf9f4;--line:rgba(26,23,20,.14);--line2:rgba(26,23,20,.22);--accent:#d4452a;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--paper:#151311;--paper-rgb:21,19,17;--ink:#f1ebe0;--body:#cfc6b8;--muted:#a39a8c;--card:#1e1b18;--line:rgba(241,235,224,.14);--line2:rgba(241,235,224,.24);color-scheme:dark}}
@@ -144,8 +147,8 @@ a:hover{color:var(--accent);text-decoration-thickness:2px}
 .wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
 .bar{position:sticky;top:0;z-index:5;background:rgba(var(--paper-rgb),.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .bar-in{height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand{flex:1 1 0;min-width:0;container-type:inline-size;display:flex;align-items:center}
-.logo{font:italic 500 clamp(20px,calc(100cqi / 4.4),32px)/1 'Cormorant Garamond',Georgia,serif;letter-spacing:-.01em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand{flex:1 1 0;min-width:0;align-self:stretch;margin:0 -6px;padding:0 6px;overflow:hidden;container-type:inline-size;display:flex;align-items:center}
+.logo{font:italic 500 clamp(20px,calc(100cqi / 4.4),32px)/1 'Cormorant Garamond',Georgia,serif;font-size-adjust:.386;letter-spacing:-.01em;color:var(--ink);text-decoration:none;white-space:nowrap}
 .langs{flex:none;display:flex;gap:2px;padding:3px;border:1px solid var(--line2);border-radius:999px}
 .langs a{min-width:36px;height:30px;padding:0 8px;display:flex;align-items:center;justify-content:center;border-radius:999px;font:500 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.06em;color:var(--muted);text-decoration:none}
 .langs a:hover{color:var(--ink)}
