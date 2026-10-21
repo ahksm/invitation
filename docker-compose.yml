@@ -1,0 +1,56 @@
+# Полный запуск: docker compose up --build (переменные берутся из .env).
+services:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      # Перекрывает NODE_ENV из .env: в контейнере всегда production и его проверки.
+      NODE_ENV: production
+      DATABASE_URL: postgres://invite:invite@db:5432/invite
+      REDIS_URL: redis://redis:6379
+      MEDIA_DIR: /app/data/media
+    volumes:
+      - media:/app/data/media
+    # Только для nginx на этом же сервере: порт, опубликованный Docker, ufw не закрывает, а с TRUST_PROXY=1
+    # прямой доступ к приложению позволил бы подделать X-Forwarded-For и обойти лимиты по IP.
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    # Журнал запросов (в нём IP-адреса) хранится ограниченно, как обещает политика конфиденциальности:
+    # не больше 5 файлов по 20 МБ, самые старые записи удаляются.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: invite
+      POSTGRES_PASSWORD: invite
+      POSTGRES_DB: invite
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invite"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis:/data
+    restart: unless-stopped
+
+volumes:
+  db:
+  redis:
+  media:

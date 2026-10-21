@@ -1,0 +1,183 @@
+import compress from "@fastify/compress";
+import cookie from "@fastify/cookie";
+import helmet from "@fastify/helmet";
+import jwt from "@fastify/jwt";
+import rateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
+import { eq, sql } from "drizzle-orm";
+import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
+import type { Redis } from "ioredis";
+import { fileURLToPath } from "node:url";
+import { ZodError } from "zod";
+import type { Ctx } from "./context.js";
+import { users, type User } from "./db/schema.js";
+import { HttpError } from "./errors.js";
+import { isKnownMessage, requestLocale, translateError } from "./i18n.js";
+import { noopNotifier, type Notifier } from "./notifier.js";
+import { adminRoutes } from "./routes/admin.js";
+import { aiRoutes } from "./routes/ai.js";
+import { authRoutes } from "./routes/auth.js";
+import { invitationRoutes } from "./routes/invitations.js";
+import { mediaRoutes } from "./routes/media.js";
+import { paymentRoutes } from "./routes/payments.js";
+import { publicRoutes } from "./routes/public.js";
+import { smsRoutes } from "./routes/sms.js";
+import { getPublicPage } from "./services/public.js";
+import { getUser } from "./services/users.js";
+import { siteHelmet } from "./web/csp.js";
+import { legalRoutes } from "./web/legal.js";
+import { webRoutes } from "./web/pages.js";
+
+declare module "fastify" {
+  interface FastifyInstance {
+    ctx: Ctx;
+    authenticate: (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireAdmin: (req: FastifyRequest, reply: FastifyReply) => Promise<void>;
+  }
+}
+
+declare module "@fastify/jwt" {
+  interface FastifyJWT {
+    payload: { sub: string };
+    // После authenticate в request.user лежит пользователь из базы, а не payload токена.
+    user: User;
+  }
+}
+
+export const SESSION_COOKIE = "session";
+const publicDir = fileURLToPath(new URL("../public", import.meta.url));
+
+// Пути, куда приходят запросы от внешних систем: проверка Origin к ним не применяется.
+const EXTERNAL_PATHS = [/^\/api\/payments\/[\w-]+\/callback$/, /^\/api\/sms\/[\w-]+\/callback$/, /^\/telegram\/webhook$/];
+
+// Секреты из адреса (пароль приглашения, одноразовый код входа, секрет колбэка SMS) в лог не попадают.
+const SECRET_PARAMS = /([?&](?:code|secret|token)=)[^&#]*/gi;
+export const logUrl = (url: string) => url.replace(SECRET_PARAMS, "$1***");
+
+type Deps = Omit<Ctx, "log" | "notifier"> & {
+  notifier?: Notifier;
+  /**
+   * Redis для лимитов запросов. Отдельный клиент, который при недоступном Redis сразу отвечает ошибкой
+   * (см. server.ts): тогда лимит пропускается (skipOnError), а не задерживает каждый запрос, включая
+   * статические файлы. По умолчанию — клиент кэша.
+   */
+  rateLimitRedis?: Redis;
+};
+
+export async function buildApp(deps: Deps, opts: { logger?: boolean } = {}) {
+  const { config } = deps;
+  const hops = config.TRUST_PROXY;
+  const app = Fastify({
+    logger:
+      opts.logger === false
+        ? false
+        : {
+            serializers: {
+              req: (req) => ({ method: req.method, url: logUrl(req.url), host: req.host, remoteAddress: req.ip, remotePort: req.socket?.remotePort }),
+            },
+          },
+    // Число прокси передаём функцией: Fastify 5 не доверяет ни одному адресу, если получает просто число.
+    trustProxy: typeof hops === "number" ? (_address: string, hop: number) => hop < hops : hops,
+    bodyLimit: 256 * 1024,
+  });
+  const { rateLimitRedis, ...ctxDeps } = deps;
+  const ctx: Ctx = { ...ctxDeps, notifier: deps.notifier ?? noopNotifier, log: app.log };
+  app.decorate("ctx", ctx);
+
+  // CSP и запрет фреймов для всего сайта; страницы приложения переопределяют их в src/web.
+  await app.register(helmet, siteHelmet);
+  await app.register(rateLimit, {
+    global: true,
+    max: 120,
+    timeWindow: "1 minute",
+    redis: rateLimitRedis ?? deps.cache.redis,
+    nameSpace: "inv:rl-http:",
+    skipOnError: true,
+    errorResponseBuilder: () => new HttpError(429, "Слишком много запросов, попробуйте позже"),
+  });
+  // Сжатие ответов (API, админка, страницы), тела запросов не распаковываются. Файлы под /app/
+  // отдаются уже сжатыми копиями (compress: false у их маршрутов, см. src/web/pages.ts).
+  await app.register(compress, { global: true, globalDecompression: false, encodings: ["br", "gzip"] });
+  await app.register(cookie);
+  await app.register(jwt, {
+    secret: config.JWT_SECRET,
+    cookie: { cookieName: SESSION_COOKIE, signed: false },
+    sign: { expiresIn: "30d" },
+  });
+
+  // Защита от CSRF: изменяющие запросы к API принимаются только со своего сайта.
+  const appOrigin = new URL(config.APP_URL).origin;
+  app.addHook("onRequest", async (req, reply) => {
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return;
+    const path = req.url.split("?")[0]!;
+    if (EXTERNAL_PATHS.some((re) => re.test(path))) return;
+    const origin = req.headers.origin ?? (req.headers.referer ? new URL(req.headers.referer).origin : undefined);
+    if (origin !== appOrigin) throw new HttpError(403, "Запрос с чужого сайта отклонён");
+  });
+
+  app.decorate("authenticate", async (req: FastifyRequest, reply: FastifyReply) => {
+    let sub: string;
+    try {
+      ({ sub } = await req.jwtVerify<{ sub: string }>());
+    } catch {
+      throw new HttpError(401, "Нужно войти");
+    }
+    const user = await getUser(ctx, sub);
+    if (!user) throw new HttpError(401, "Нужно войти");
+    if (user.blocked) throw new HttpError(403, "Доступ заблокирован");
+    // Номер телефона обязателен для всех аккаунтов: каждый способ входа его привязывает.
+    if (!user.phone) throw new HttpError(428, "Привяжите номер телефона");
+    // «Был» в админке и порядок списка пользователей: последняя активность, а не последний вход.
+    // Не чаще раза в час на пользователя; кэш пользователя ради этого не сбрасывается.
+    if (await ctx.cache.claim(`seen:${user.id}`, 3600)) await ctx.db.update(users).set({ lastSeenAt: new Date() }).where(eq(users.id, user.id));
+    req.user = user;
+  });
+
+  app.decorate("requireAdmin", async (req: FastifyRequest, reply: FastifyReply) => {
+    await app.authenticate(req, reply);
+    if (!req.user.isAdmin) throw new HttpError(403, "Только для администратора");
+  });
+
+  app.setErrorHandler((err, req, reply) => {
+    if (err instanceof HttpError) return reply.code(err.statusCode).send({ error: err.message });
+    if (err instanceof ZodError) {
+      // Понятное сообщение из схемы (например, «Введите узбекский номер…») важнее общего: его можно перевести.
+      const known = err.issues.find((i) => isKnownMessage(i.message));
+      return reply.code(400).send({ error: known?.message ?? "Неверные данные", issues: err.issues.map((i) => ({ path: i.path, message: i.message })) });
+    }
+    const status = (err as { statusCode?: number }).statusCode;
+    if (status && status < 500) return reply.code(status).send({ error: (err as Error).message });
+    req.log.error({ err }, "необработанная ошибка");
+    return reply.code(500).send({ error: "Внутренняя ошибка сервера" });
+  });
+
+  // Сообщения об ошибках переводятся на язык запроса.
+  app.addHook("preSerialization", async (req, _reply, payload) => {
+    const p = payload as { error?: unknown } | null;
+    if (p && typeof p === "object" && typeof p.error === "string") return { ...p, error: translateError(p.error, requestLocale(req.headers)) };
+    return payload;
+  });
+
+  app.get("/health", { config: { rateLimit: false } }, async () => {
+    await Promise.all([deps.cache.redis.ping(), deps.db.execute(sql`select 1`)]);
+    return { ok: true };
+  });
+
+  await app.register(authRoutes, { prefix: "/api/auth" });
+  await app.register(invitationRoutes, { prefix: "/api" });
+  await app.register(paymentRoutes, { prefix: "/api/payments" });
+  await app.register(publicRoutes, { prefix: "/api/public" });
+  await app.register(smsRoutes, { prefix: "/api/sms" });
+  await app.register(adminRoutes, { prefix: "/api/admin" });
+  await app.register(aiRoutes, { prefix: "/api/ai" });
+  await app.register(mediaRoutes);
+
+  // Оферта, политика конфиденциальности и контакты: /oferta, /privacy, /contacts.
+  await app.register(legalRoutes);
+  // Фронтенд из дизайна (web/): /, /app, /i/:slug, /g/:token и файлы под /app/.
+  await app.register(webRoutes, { publicPage: (req) => getPublicPage(ctx, req) });
+  // Админка и её общие файлы.
+  await app.register(fastifyStatic, { root: publicDir, prefix: "/", index: ["index.html"] });
+
+  return app;
+}
