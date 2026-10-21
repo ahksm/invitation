@@ -2,7 +2,7 @@ import { randomBytes, randomInt } from "node:crypto";
 import { and, asc, count, desc, eq, gt, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { cacheKeys } from "../cache.js";
-import { coerceContent, contentMediaUrls, contentSchema, normalizeContent, type InvContent } from "../content.js";
+import { coerceContent, contentMediaUrls, contentSchema, normalizeContent, withoutMedia, type InvContent } from "../content.js";
 import type { Ctx } from "../context.js";
 import {
   defaultInvitationSettings,
@@ -290,8 +290,9 @@ export async function createInvitation(
   input: { template: string; mode: "shared" | "personal"; language: Locale; data?: unknown },
 ): Promise<InvitationDto> {
   const tpl = await activeTemplate(ctx, input.template);
-  const data = contentSchema(tpl.style).parse(input.data ?? {});
-  await assertOwnMedia(ctx, userId, contentMediaUrls(data));
+  // Файлы, которых уже нет (черновик с ними удалили в другой вкладке), в новое приглашение не попадают.
+  const parsed = contentSchema(tpl.style).parse(input.data ?? {});
+  const data = withoutMedia(parsed, await assertOwnMedia(ctx, userId, contentMediaUrls(parsed)));
   const [inv] = await ctx.db
     .insert(invitations)
     .values({
@@ -385,11 +386,15 @@ export async function updateInvitation(
       for (const [k, v] of Object.entries(patch.data)) if (v === null) delete merged[k];
       data = contentSchema(tpl.style).parse(merged);
       // Новые файлы должны быть загружены самим владельцем; уже сохранённые адреса не перепроверяются.
+      // Файлы, удалённые прежним сохранением (фото убрали в другой вкладке), выпадают из data, остальное сохраняется.
       const saved = new Set(contentMediaUrls(current));
-      await assertOwnMedia(
-        ctx,
-        user.id,
-        contentMediaUrls(data).filter((u) => !saved.has(u)),
+      data = withoutMedia(
+        data,
+        await assertOwnMedia(
+          ctx,
+          user.id,
+          contentMediaUrls(data).filter((u) => !saved.has(u)),
+        ),
       );
     } else {
       data = normalizeContent(current, tpl.style);

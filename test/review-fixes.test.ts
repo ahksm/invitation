@@ -623,7 +623,11 @@ describe("мелкие исправления", () => {
     expect(bad.json().error).toBe("The file must be uploaded via /api/media");
     const own = await create(b.cookie, { template: "wedding-classic", data: { cover: await upload(b.cookie) } });
     expect((await req(b.cookie, "PATCH", `/api/invitations/${own.id}`, { data: { gallery: [foreign] } })).statusCode).toBe(400);
-    expect((await req(b.cookie, "PATCH", `/api/invitations/${own.id}`, { data: { gallery: ["/media/00000000-0000-0000-0000-000000000000.png"] } })).statusCode).toBe(400);
+    // Адрес файла, которого нет ни у кого (например, удалён сохранением из другой вкладки), в содержимое тоже
+    // не попадает: он выпадает из правки, остальное сохраняется (test/media.test.ts).
+    const ghost = await req(b.cookie, "PATCH", `/api/invitations/${own.id}`, { data: { gallery: ["/media/00000000-0000-0000-0000-000000000000.png"] } });
+    expect(ghost.statusCode, ghost.body).toBe(200);
+    expect(ghost.json().data.gallery).toEqual([]);
     // Уже сохранённый адрес не мешает менять остальное.
     expect((await req(b.cookie, "PATCH", `/api/invitations/${own.id}`, { data: { names: "Б" } })).statusCode).toBe(200);
 

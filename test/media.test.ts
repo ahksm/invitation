@@ -319,6 +319,57 @@ describe("файлы в содержимом приглашения", () => {
     for (const u of [a, b, p1, p2, song, clip]) expect(await file(u), u).toBe(404);
     expect(await file(p3)).toBe(200);
   });
+
+  it("файл, удалённый сохранением из другой вкладки, выпадает из правки, а остальная правка сохраняется; чужой файл — 400", async () => {
+    const { cookie } = await user();
+    const up = async (buf: Buffer, filename: string) => (await upload(cookie, buf, { filename })).json().url as string;
+    const [a, b, p1, p2, p3, clip] = [
+      await up(samples.jpeg, "a.jpg"),
+      await up(samples.jpeg, "b.jpg"),
+      await up(samples.png, "p1.png"),
+      await up(samples.png, "p2.png"),
+      await up(samples.png, "p3.png"),
+      await up(samples.mp4, "a.mp4"),
+    ];
+    const file = async (url: string) => (await t.app.inject({ url })).statusCode;
+    const inv = (await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { names: "Две вкладки", cover: a, gallery: [p1, p2, p3], video: clip } })).json();
+    const patch = (data: Record<string, unknown>) => req(cookie, "PATCH", `/api/invitations/${inv.id}`, { data });
+
+    // Первая вкладка убирает p1 и стирает видео: файлы удаляются.
+    expect((await patch({ gallery: [p2, p3], video: "" })).statusCode).toBe(200);
+    expect(await file(p1)).toBe(404);
+    expect(await file(clip)).toBe(404);
+    // Вторая вкладка ещё показывает p1 и убирает p3, а заодно меняет имена: p1 выпадает, остальное сохраняется.
+    const stale = await patch({ gallery: [p1, p2], names: "Из второй вкладки" });
+    expect(stale.statusCode, stale.body).toBe(200);
+    expect(stale.json().data).toMatchObject({ names: "Из второй вкладки", gallery: [p2], cover: a });
+    expect(await file(p3)).toBe(404);
+    expect(await file(p2)).toBe(200);
+    // Обложка и видео с адресом удалённого файла становятся пустыми, правка рядом сохраняется.
+    const scalar = await patch({ video: clip, host: "Хозяева" });
+    expect(scalar.statusCode, scalar.body).toBe(200);
+    expect(scalar.json().data).toMatchObject({ video: "", host: "Хозяева", cover: a });
+    const [row] = await db.select().from(invitations).where(eq(invitations.id, inv.id));
+    expect(row!.data).toMatchObject({ names: "Из второй вкладки", host: "Хозяева", gallery: [p2], video: "", cover: a });
+
+    // Новый черновик из содержимого вкладки, где черновик с этими файлами уже удалили: удалённые файлы не попадают.
+    const created = await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { cover: p1, gallery: [p3, b] } });
+    expect(created.statusCode, created.body).toBe(201);
+    expect(created.json().data).toMatchObject({ cover: "", gallery: [b] });
+
+    // Файл другого пользователя по-прежнему отклоняется вместе со всей правкой.
+    const other = await user();
+    const { url: foreign } = (await upload(other.cookie, samples.png)).json();
+    const bad = await patch({ gallery: [p2, foreign], names: "Чужое" });
+    expect(bad.statusCode).toBe(400);
+    expect(bad.json().error).toBe("Файл должен быть загружен через /api/media");
+    expect((await req(cookie, "POST", "/api/invitations", { template: "wedding-classic", data: { gallery: [foreign] } })).statusCode).toBe(400);
+    // Свой файл с чужим расширением — тоже не загруженный адрес.
+    expect((await patch({ cover: b.replace(/\.jpg$/, ".png") })).statusCode).toBe(400);
+    const [after] = await db.select().from(invitations).where(eq(invitations.id, inv.id));
+    expect(after!.data).toMatchObject({ names: "Из второй вкладки", gallery: [p2], cover: a });
+    expect(await file(foreign)).toBe(200);
+  });
 });
 
 describe("файлы, которых нет ни в одном приглашении", () => {

@@ -128,16 +128,26 @@ const MEDIA_PATH = /^\/media\/([0-9a-f-]{36})\.([a-z0-9]+)$/;
 /**
  * Адреса /media/<id>.<ext> в содержимом приглашения должны указывать на файлы, загруженные этим
  * пользователем: иначе можно сослаться на чужой файл, а владелец удалит его, не зная о ссылке.
+ * Возвращает адреса файлов, которых уже нет ни у кого: например, фото убрали в другой вкладке или на
+ * другом устройстве, и сохранение удалило файл (updateInvitation), а эта вкладка ещё его показывает.
+ * Их убирают из содержимого (withoutMedia), а не отклоняют всё сохранение вместе с остальными правками.
  */
-export async function assertOwnMedia(ctx: Pick<Ctx, "db">, userId: string, urls: string[]) {
+export async function assertOwnMedia(ctx: Pick<Ctx, "db">, userId: string, urls: string[]): Promise<Set<string>> {
+  const gone = new Set<string>();
+  if (!urls.length) return gone;
   const ids = [...new Set(urls.map((u) => MEDIA_PATH.exec(u)?.[1]).filter((id): id is string => id !== undefined))];
-  if (!ids.length) return;
-  const rows = await ctx.db
-    .select({ id: media.id, ext: media.ext })
-    .from(media)
-    .where(and(eq(media.userId, userId), inArray(media.id, ids)));
-  const own = new Set(rows.map(mediaUrl));
-  if (urls.some((u) => !own.has(u))) throw new HttpError(400, "Файл должен быть загружен через /api/media");
+  const rows = ids.length
+    ? await ctx.db.select({ id: media.id, ext: media.ext, userId: media.userId }).from(media).where(inArray(media.id, ids))
+    : [];
+  const own = new Set(rows.filter((r) => r.userId === userId).map(mediaUrl));
+  const known = new Set(rows.map((r) => r.id));
+  for (const u of urls) {
+    if (own.has(u)) continue;
+    const id = MEDIA_PATH.exec(u)?.[1];
+    if (id === undefined || known.has(id)) throw new HttpError(400, "Файл должен быть загружен через /api/media");
+    gone.add(u);
+  }
+  return gone;
 }
 
 /** Условие на invitations: приглашение ссылается на файл url (превью ссылки, обложка, музыка, видео или галерея). */

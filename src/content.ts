@@ -134,6 +134,15 @@ export function contentMediaUrls(d: InvContent): string[] {
   return [d.cover, d.musicSrc, d.video, ...(d.gallery ?? [])].filter((u): u is string => typeof u === "string" && u.startsWith("/media/"));
 }
 
+/** Содержимое без этих файлов: они убираются из галереи, а обложка, музыка или видео с таким адресом становятся пустыми. */
+export function withoutMedia(d: InvContent, urls: ReadonlySet<string>): InvContent {
+  if (!urls.size) return d;
+  const out = { ...d };
+  for (const k of ["cover", "musicSrc", "video"] as const) if (out[k] !== undefined && urls.has(out[k])) out[k] = "";
+  if (out.gallery) out.gallery = out.gallery.filter((u) => !urls.has(u));
+  return out;
+}
+
 /** Включена ли секция. Без списка секций действуют значения дизайна: всё, кроме «reveal». */
 export function sectionOn(d: InvContent, k: string): boolean {
   if (!d.sections) return k !== "reveal";
