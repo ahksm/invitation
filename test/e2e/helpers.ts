@@ -23,7 +23,13 @@ import { createMockSms } from "../../src/sms/mock.js";
  * Общее окружение проверок в браузере (npm run test:e2e): приложение на свободном порту
  * (APP_URL совпадает с адресом, иначе защита от CSRF отклонит запросы страницы), тестовая база,
  * Redis, SMS в память и Chromium. Браузер: PLAYWRIGHT_CHROMIUM, /opt/pw-browsers/chromium или
- * установленный `npx playwright-core install chromium`. Скриншоты пишутся в E2E_SHOTS_DIR, если задана.
+ * установленный `npx playwright-core install chromium`; E2E_CHROMIUM_ARGS — его флаги через пробел.
+ * Скриншоты пишутся в E2E_SHOTS_DIR, если задана.
+ *
+ * В CI Playwright запускает chromium-headless-shell, и текст там рисуется как с --font-render-hinting=full:
+ * размеры шрифта и ширины букв — целые пиксели, а не дробные, как в /opt/pw-browsers/chromium. Проверки,
+ * которые меряют текст, так же у себя: PLAYWRIGHT_CHROMIUM=<папка браузеров>/chromium_headless_shell-<версия>/
+ * chrome-linux/headless_shell E2E_CHROMIUM_ARGS=--font-render-hinting=full.
  */
 
 /** Ключ бота для подписи initData: ненастоящий, Telegram не вызывается (TELEGRAM_MODE=off). */
@@ -165,7 +171,8 @@ export async function startE2E(opts: E2EOptions = {}) {
     { logger: false },
   );
   await app.listen({ port, host: "127.0.0.1" });
-  const browser: Browser = await chromium.launch({ executablePath: chromiumPath(), ...(opts.browserArgs && { args: opts.browserArgs }) });
+  const args = [...(opts.browserArgs ?? []), ...(process.env.E2E_CHROMIUM_ARGS ?? "").split(" ").filter(Boolean)];
+  const browser: Browser = await chromium.launch({ executablePath: chromiumPath(), ...(args.length > 0 && { args }) });
   const shotsDir = process.env.E2E_SHOTS_DIR;
 
   const e = {
