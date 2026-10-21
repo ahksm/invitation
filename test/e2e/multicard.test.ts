@@ -15,7 +15,7 @@ import { startE2E, telegramStub, tgState, uniquePhone, type E2E } from "./helper
 
 type Dict = Record<string, any>;
 const ru = I18N.ru as Dict;
-const BOT = "invito_e2e_bot";
+const BOT = "invitebloom_e2e_bot";
 const STORE = "6";
 const SECRET = "mc-e2e-secret";
 const CHECKOUT = "https://checkout.multicard.test";

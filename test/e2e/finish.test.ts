@@ -276,7 +276,7 @@ describe("конец конструктора", () => {
     expect(await page.locator('[data-finish-price="live"]').textContent()).toBe(uz.pubPrice + " · " + uz.live);
     expect(await page.locator("[data-finish]").innerText()).toContain(uz.finishLive);
     // Новое событие при открытом своём приглашении: тост, что прежнее осталось в «Mening taklifnomalarim».
-    await page.locator("header").getByText("Invito").first().click().catch(() => page.goto(e.base + "/app/"));
+    await page.locator("header").getByText("InviteBloom").first().click().catch(() => page.goto(e.base + "/app/"));
     await e.waitText(page, uz.hero1);
     await page.getByRole("button", { name: uz.create }).first().click();
     await e.waitText(page, uz.chooseEvent);
@@ -404,8 +404,8 @@ describe("«Поделиться»", () => {
     expect(await page.locator("a[download]").count()).toBe(0);
     const dl = async (kind: string) => {
       await page.locator(`[data-dl="${kind}"]`).click();
-      await expect.poll(async () => (await tgState(page)).links.filter((x) => x[0] === "dl" && x[2] === `invito-${kind}.jpg`).length, { timeout: 15_000 }).toBe(1);
-      const [, url] = (await tgState(page)).links.find((x) => x[2] === `invito-${kind}.jpg`)!;
+      await expect.poll(async () => (await tgState(page)).links.filter((x) => x[0] === "dl" && x[2] === `invitebloom-${kind}.jpg`).length, { timeout: 15_000 }).toBe(1);
+      const [, url] = (await tgState(page)).links.find((x) => x[2] === `invitebloom-${kind}.jpg`)!;
       expect(url).toMatch(new RegExp(`^${e.base}/media/[0-9a-f-]{36}\\.jpg$`));
       const res = await e.app.inject({ method: "GET", url: url!.slice(e.base.length) });
       expect(res.statusCode).toBe(200);

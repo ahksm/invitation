@@ -6,7 +6,7 @@ import { I18N, INVITO } from "../../web/invito-data.js";
 import { startE2E, telegramStub, tgState, uniquePhone, type E2E } from "./helpers.js";
 
 /**
- * Главная (что такое Invito, как это работает, витрина, цены сервера, вопросы, подвал), карточки
+ * Главная (что такое InviteBloom, как это работает, витрина, цены сервера, вопросы, подвал), карточки
  * «Моих приглашений» («Поделиться» / «Опубликовать», «Изменить» с сохранённого шага), события с числом
  * шаблонов, экран шаблонов (стрелки, точки, понятные названия), мини-апп (предпросмотр шаблона) и тур
  * без переключателей разработчика — в браузере вместе с API.
@@ -86,7 +86,7 @@ async function reload(page: Page, waitText: string, hard = false) {
     const set = pending.get(page)!;
     await expect.poll(() => set.size).toBe(0);
     await page.goto(e.base + "/app/");
-  } else await page.getByRole("button", { name: "Invito" }).first().click();
+  } else await page.getByRole("button", { name: "InviteBloom" }).first().click();
   await e.waitText(page, waitText);
 }
 
@@ -108,7 +108,7 @@ const onTop = (loc: Locator) =>
   });
 
 describe("главная", () => {
-  it("без входа: что такое Invito, кнопки, шаги, возможности, витрина, цены сервера, вопросы и подвал", async () => {
+  it("без входа: что такое InviteBloom, кнопки, шаги, возможности, витрина, цены сервера, вопросы и подвал", async () => {
     const P = await cfgPrices();
     // Свой шаблон дешевле общей цены: общая ссылка — «от» самой низкой цены, витрина — цена шаблона.
     const cheap = P.sharedTemplate - 1_000_000;

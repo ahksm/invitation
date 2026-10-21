@@ -6,7 +6,7 @@ import { I18N, INVITO } from "../../web/invito-data.js";
 import { signInitData, startE2E, uniquePhone, type E2E } from "./helpers.js";
 
 /**
- * Приложение Invito в браузере вместе с API (docs/invito-integration.md, раздел 4): вход по SMS
+ * Приложение InviteBloom в браузере вместе с API (docs/invito-integration.md, раздел 4): вход по SMS
  * и в мини-аппе Telegram, черновики на сервере, языки, файлы, демо тура, ошибки.
  * Во всех сценариях нет ошибок консоли и нарушений CSP; 401 от /api/auth/me без сессии считается отдельно.
  */
@@ -167,7 +167,7 @@ describe("приложение без входа", () => {
     await e.shot(page, "demo-guests-ru-390x844.png");
     expect(problems.requests.filter((u) => u.startsWith("/api/")).length).toBe(before);
     // С главной демо выключается, гостей больше нет.
-    await page.getByRole("button", { name: "Invito" }).first().click();
+    await page.getByRole("button", { name: "InviteBloom" }).first().click();
     await e.waitText(page, ru.hero1);
     expect(await page.getByText(ru.demo).count()).toBe(0);
     await e.expectClean(page, problems);
@@ -394,7 +394,7 @@ describe("вход и черновики", () => {
     await page.getByTitle(ru.steps.words).click();
     await page.getByRole("button", { name: ru.aiWrite }).click();
     // Пока ассистент пишет, человек уходит и открывает B.
-    await page.getByRole("button", { name: "Invito" }).first().click();
+    await page.getByRole("button", { name: "InviteBloom" }).first().click();
     await editOf(page, "Черновик B").click();
     await expect.poll(() => page.getByLabel(ru.fNames).inputValue()).toBe("Черновик B");
     await page.getByTitle(ru.steps.words).click();
@@ -462,7 +462,7 @@ describe("вход и черновики", () => {
     expect(await page.locator("input[name=access-code]").count()).toBe(0);
     expect(await page.locator("body").innerText()).not.toContain("TopSecret42");
     // Превью шаблона: ни имён, ни гостей и пожеланий прежнего приглашения.
-    await page.getByRole("button", { name: "Invito" }).first().click();
+    await page.getByRole("button", { name: "InviteBloom" }).first().click();
     await e.waitText(page, ru.hero1);
     await toTemplates(page);
     await page.getByRole("button", { name: ru.preview, exact: true }).first().click();
@@ -589,7 +589,7 @@ describe("языки", () => {
     await page.getByLabel(uz.fNames).waitFor();
     await page.waitForTimeout(400);
     await e.shot(page, "build-uz-390x844.png");
-    await page.getByRole("button", { name: "Invito" }).first().click();
+    await page.getByRole("button", { name: "InviteBloom" }).first().click();
     await toTemplates(page, uz, "uz");
     await e.shot(page, "templates-uz-390x844.png");
     await e.expectClean(page, problems);
@@ -693,8 +693,8 @@ describe("мини-апп Telegram", () => {
     // BackButton закрывает лист.
     await tgBack(page);
     await sheet(page, "account").waitFor({ state: "detached" });
-    await page.evaluate(() => { const a = document.createElement("a"); a.href = "https://t.me/invito_bot"; a.target = "_blank"; a.textContent = "bot"; document.body.appendChild(a); a.click(); a.href = "https://example.com/x"; a.click(); a.remove(); });
-    expect((await tgState(page)).links).toEqual([["tg", "https://t.me/invito_bot"], ["link", "https://example.com/x"]]);
+    await page.evaluate(() => { const a = document.createElement("a"); a.href = "https://t.me/invitebloombot"; a.target = "_blank"; a.textContent = "bot"; document.body.appendChild(a); a.click(); a.href = "https://example.com/x"; a.click(); a.remove(); });
+    expect((await tgState(page)).links).toEqual([["tg", "https://t.me/invitebloombot"], ["link", "https://example.com/x"]]);
     expect(problems.requests.filter((u) => u === "/api/auth/webapp")).toHaveLength(1);
     await e.expectClean(page, problems);
     expect(problems.me401).toBe(0);

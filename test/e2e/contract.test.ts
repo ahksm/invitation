@@ -18,7 +18,7 @@ import { botHarness, startE2E, telegramStub, tgState, uniquePhone, type E2E } fr
 type Dict = Record<string, any>;
 const ru = I18N.ru as Dict;
 const LANGS = ["ru", "en", "uz", "uzc"] as const;
-const BOT = "invito_e2e_bot";
+const BOT = "invitebloom_e2e_bot";
 const TG_WEB = "https://web.telegram.org";
 let e: E2E;
 

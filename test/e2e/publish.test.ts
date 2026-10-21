@@ -669,6 +669,10 @@ describe("страница гостя", () => {
     await e.waitText(page, ru.thanks);
     const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: ru.addCal }).click()]);
     const ics = Buffer.concat((await (await download.createReadStream()).toArray()) as Buffer[]).toString("utf8");
+    // Файл и программа, которая его создала, названы по сайту.
+    expect(download.suggestedFilename()).toBe("invitebloom.ics");
+    expect(ics).toContain("PRODID:-//InviteBloom//EN");
+    expect(ics).not.toMatch(/invito/i);
     // 17:00 в Ташкенте (UTC+5) — 12:00 UTC, а не 17:00 по Нью-Йорку.
     expect(ics).toContain("DTSTART:20261226T120000Z");
     expect(ics).toContain("DTEND:20261226T160000Z");
@@ -799,7 +803,7 @@ describe("«Поделиться»", () => {
     await expect.poll(async () => (await invOf(inv.id)).slug, { timeout: 10_000 }).toBe(fresh);
     await expect.poll(() => page.locator("pre").textContent()).toContain(`${e.base}/i/${fresh}`);
     expect(await page.locator("pre").textContent()).toContain("Ждём вас на нашей свадьбе!");
-    expect(await page.locator("pre").textContent()).not.toContain("invito.app");
+    expect(await page.locator("pre").textContent()).not.toMatch(/invito\.app|invitebloom\.tech/);
     // Пароль страницы: включение и ввод сохраняют accessCode.
     await page.getByRole("button", { name: new RegExp("^" + ru.pw) }).click();
     await page.locator("input[name=access-code]").fill("2026");

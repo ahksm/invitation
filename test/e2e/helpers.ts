@@ -285,12 +285,12 @@ export type E2E = Awaited<ReturnType<typeof startE2E>>;
  * не вызывается. message — текст или команда, contact — контакт (owner — чей номер, по умолчанию свой),
  * press — нажатие inline-кнопки.
  */
-export function botHarness(e: E2E, username = "invito_e2e_bot") {
+export function botHarness(e: E2E, username = "invitebloom_e2e_bot") {
   const bot = createBot(e.app.ctx);
   bot.botInfo = {
     id: 999,
     is_bot: true,
-    first_name: "Invito",
+    first_name: "InviteBloom",
     username,
     can_join_groups: false,
     can_read_all_group_messages: false,

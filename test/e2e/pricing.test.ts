@@ -359,7 +359,7 @@ describe("«Купить шаблон»", () => {
     expect(await page.locator('[data-buy="tpl"]').count()).toBe(0);
     expect(await page.locator('[data-consent="tpl"]').count()).toBe(0);
     // На главной черновик помечен «Оплачено · не опубликовано».
-    await page.getByRole("button", { name: "Invito" }).first().click();
+    await page.getByRole("button", { name: "InviteBloom" }).first().click();
     await expect.poll(() => page.locator("#my-inv [data-inv-status]").first().innerText()).toBe(ru.draftPaid);
     await page.locator("#my-inv").getByRole("button", { name: ru.edit, exact: true }).first().click();
     await builder(page);

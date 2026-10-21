@@ -19,7 +19,7 @@ const uz = I18N.uz as Dict;
 const uzc = I18N.uzc as Dict;
 const en = I18N.en as Dict;
 const D = INVITO as Dict;
-const BOT = "invito_e2e_bot";
+const BOT = "invitebloom_e2e_bot";
 const DESK = { width: 1366, height: 900 };
 let e: E2E;
 

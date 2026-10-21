@@ -1,4 +1,4 @@
-// Клиент API Invito (docs/invito-integration.md, раздел 3). ES-модуль: логика дизайна подгружает его
+// Клиент API InviteBloom (docs/invito-integration.md, раздел 3). ES-модуль: логика дизайна подгружает его
 // так же, как invito-data.js, через import('/app/invito-api.js').
 
 let lang = 'ru';

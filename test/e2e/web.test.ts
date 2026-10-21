@@ -7,7 +7,7 @@ import { startE2E, uniquePhone, type E2E, type Problems } from "./helpers.js";
 
 /**
  * Дымовая проверка фронтенда в настоящем Chromium: оболочка, пропатченный рантайм и логика
- * Invito запускаются без ошибок в консоли и без нарушений CSP (то есть без eval и CDN).
+ * InviteBloom запускаются без ошибок в консоли и без нарушений CSP (то есть без eval и CDN).
  * Запуск: npm run test:e2e (окружение — test/e2e/helpers.ts).
  */
 
@@ -30,7 +30,7 @@ afterAll(async () => {
 });
 
 describe("фронтенд в браузере", () => {
-  it("/app/ показывает главную Invito без ошибок и нарушений CSP", async () => {
+  it("/app/ показывает главную InviteBloom без ошибок и нарушений CSP", async () => {
     const { page, problems, close } = await e.open("/app/", { waitText: HERO });
     await e.expectClean(page, problems);
     // Без сессии единственная ошибка консоли — 401 от /api/auth/me.

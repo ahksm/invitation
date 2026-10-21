@@ -63,12 +63,12 @@ describe("тексты дизайна", () => {
     expect(toCyr("She’riy")).toBe("Шеърий");
     expect(toCyr("ma’lumot")).toBe("маълумот");
     expect(toCyr("Smart casual. Bitiruv")).toBe("Smart casual. Битирув");
-    expect(toCyr("Invito’da yaratilgan")).toBe("Invito’да яратилган");
+    expect(toCyr("InviteBloom’da yaratilgan")).toBe("InviteBloom’да яратилган");
     for (const [lat, cyr] of [["yo‘nalish", "йўналиш"], ["O‘zbekcha", "Ўзбекча"], ["ko‘chasi", "кўчаси"], ["ta'lim", "таълим"]]) expect(toCyr(lat!)).toBe(cyr);
     // В словаре uzc апостроф остаётся только после бренда.
     const dict = JSON.stringify(uzc);
     expect(dict.match(/’/g)).toHaveLength(1);
-    expect(dict).toContain("Invito’да");
+    expect(dict).toContain("InviteBloom’да");
   });
 
   it("числа: формы слова для ru и en, узбекские существительные не меняются", () => {

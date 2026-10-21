@@ -213,7 +213,7 @@ describe("страница гостя: ответ и гостевая книга
     expect((await guestsOf(inv.id))[0]!.diet).toEqual(["veg"]);
     // QR для входа можно сохранить картинкой.
     const save = page.locator("[data-entry-qr] [data-qr-save]");
-    expect(await save.getAttribute("download")).toBe("invito-qr.png");
+    expect(await save.getAttribute("download")).toBe("invitebloom-qr.png");
     expect(await save.getAttribute("href")).toMatch(/^data:image\/png;base64,/);
     await e.expectClean(page, problems);
     await close();
@@ -343,7 +343,7 @@ describe("страница гостя: ответ и гостевая книга
 describe("страница гостя: герои и мелочи", () => {
   const STYLES = ["wedding-classic", "party-brutal", "date-editorial", "date-cinema", "date-neon", "birthday-retro", "party-riso", "birthday-polaroid", "corporate-minimal", "wedding-luxe", "wedding-boho", "wedding-watercolor", "kids-pastel", "wedding-botanical"];
 
-  it("длинные узбекские имена во всех героях на 390 px: слова целиком и в окне, без «Admit one», «REC», «№» и «Invito»", async () => {
+  it("длинные узбекские имена во всех героях на 390 px: слова целиком и в окне, без «Admit one», «REC», «№» и названия сайта", async () => {
     const user = await e.signIn(await e.newContext());
     const context = await e.newContext({ viewport: M, locale: "uz-UZ" });
     const page = await context.newPage();
@@ -364,7 +364,7 @@ describe("страница гостя: герои и мелочи", () => {
         expect(w.right, `${template}: «${w.w}» за правым краем`).toBeLessThanOrEqual(fit.W + 1);
       }
       expect(fit.hyphens, template).not.toBe("auto");
-      expect(fit.hero, template).not.toMatch(/Admit one|\bREC\b|№|Invito/i);
+      expect(fit.hero, template).not.toMatch(/Admit one|\bREC\b|№|Invito|InviteBloom/i);
       await e.shot(page, `guest-hero-${template}-uz-390x844.png`);
     }
     expect(errors).toEqual([]);
