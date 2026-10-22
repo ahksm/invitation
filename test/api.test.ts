@@ -187,7 +187,7 @@ describe("вход по телефону", () => {
     const r1 = await req(null, "POST", "/api/auth/phone/request", { phone: "+998 93 111-22-33" }, { "x-lang": "uz" });
     expect(r1.statusCode).toBe(200);
     expect(smsSent[0]!.phone).toBe("998931112233");
-    expect(smsSent[0]!.text).toContain("kirish kodi");
+    expect(smsSent[0]!.text).toMatch(/^localhost saytiga kirish uchun tasdiqlash kodi: \d{6}\. Kodni hech kimga bermang\.$/);
     const code = smsSent[0]!.text.match(/\d{6}/)![0];
 
     // Повторный запрос в ту же минуту запрещён.

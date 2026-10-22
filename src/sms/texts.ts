@@ -17,13 +17,18 @@ function cyr<V extends unknown[]>(uz: Text<V>): Text<V> {
   };
 }
 
-type OtpVars = [app: string, code: string];
-const otpUz: Text<OtpVars> = (app, code) => `${app}: kirish kodi ${code}. Bu kodni hech kimga bermang.`;
+/**
+ * Код входа. Eskiz отклонил тексты вида «Invito: код для входа 123456» по пункту 2 своей инструкции: текст с кодом
+ * должен называть ресурс словом «сайт» и говорить, для чего код. host — домен из APP_URL (invitebloom.tech).
+ * Кириллица без «никому не сообщайте», чтобы текст помещался в одно SMS (70 символов).
+ */
+type OtpVars = [host: string, code: string];
+const otpUzShort: Text<OtpVars> = (host, code) => `${host} saytiga kirish uchun tasdiqlash kodi: ${code}`;
 const otp: Record<Locale, Text<OtpVars>> = {
-  ru: (app, code) => `${app}: код для входа ${code}. Никому не сообщайте этот код.`,
-  uz: otpUz,
-  uzc: cyr(otpUz),
-  en: (app, code) => `${app}: your sign-in code is ${code}. Do not share it with anyone.`,
+  ru: (host, code) => `Код подтверждения для входа на сайт ${host}: ${code}`,
+  uz: (host, code) => `${otpUzShort(host, code)}. Kodni hech kimga bermang.`,
+  uzc: cyr(otpUzShort),
+  en: (host, code) => `Verification code to sign in to the ${host} website: ${code}. Do not share it with anyone.`,
 };
 
 /** event: заголовок приглашения (имена) или название события на языке приглашения. */
@@ -46,7 +51,7 @@ const reminder: Record<Locale, Text<ReminderVars>> = {
   en: (g, e, d, l) => `${g}, a reminder: ${e}${d ? `, ${d}` : ""}. Please reply: ${l}`,
 };
 
-export const otpText = (locale: Locale, appName: string, code: string) => otp[locale](appName, code);
+export const otpText = (locale: Locale, host: string, code: string) => otp[locale](host, code);
 
 // Узбекские апострофы (o‘, g‘, ʼ) в именах и названиях событий («To‘y») заменяются на ',
 // иначе латинское SMS уходит в UCS-2 и делится на части по 70 символов.

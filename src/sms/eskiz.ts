@@ -1,7 +1,7 @@
 import type { FastifyBaseLogger } from "fastify";
 import { z } from "zod";
 import { cacheKeys, type Cache } from "../cache.js";
-import type { SmsProvider } from "./types.js";
+import { SmsRejectedError, type SmsProvider } from "./types.js";
 
 /**
  * Eskiz (https://notify.eskiz.uz/, справка: integrations/multicard-eskiz.md):
@@ -85,7 +85,11 @@ export function createEskiz(opts: EskizOptions): SmsProvider {
       }
       const json = await res.json().catch(() => null);
       const parsed = sendResponse.safeParse(json);
-      if (!res.ok || !parsed.success) throw new Error(`Eskiz send: HTTP ${res.status} ${JSON.stringify(json)?.slice(0, 300)}`);
+      if (!res.ok || !parsed.success) {
+        const msg = `Eskiz send: HTTP ${res.status} ${JSON.stringify(json)?.slice(0, 300)}`;
+        // 400: Eskiz отказал, SMS не ушло (текст не прошёл модерацию, неверный номер и т. п.).
+        throw res.status === 400 ? new SmsRejectedError(msg) : new Error(msg);
+      }
       return { providerRef: String(parsed.data.id) };
     },
 

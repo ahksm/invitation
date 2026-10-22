@@ -49,13 +49,14 @@ describe("название продукта", () => {
     expect(t.config).not.toHaveProperty("APP_NAME");
   });
 
-  it("SMS с кодом входа начинается с InviteBloom на всех языках, и при APP_NAME=Invito в окружении", async () => {
+  it("SMS с кодом входа называет сайт, а не Invito, на всех языках и при APP_NAME=Invito в окружении", async () => {
     for (const [i, lang] of LANGS.entries()) {
       smsSent.length = 0;
       const phone = `99893555000${i}`;
       expect((await req(null, "POST", "/api/auth/phone/request", { phone }, { "x-lang": lang })).statusCode, lang).toBe(200);
       expect(smsSent, lang).toHaveLength(1);
-      expect(smsSent[0]!.text, lang).toMatch(/^InviteBloom: /);
+      // Eskiz одобряет текст кода, только если в нём назван сайт: здесь это домен из APP_URL тестов.
+      expect(smsSent[0]!.text, lang).toMatch(/\blocalhost\b/);
       expect(smsSent[0]!.text, lang).not.toMatch(OLD);
     }
   });

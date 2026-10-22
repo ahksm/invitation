@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { BRAND } from "../src/brand.js";
 import { coerceContent, contentSchema, isMediaUrl, sectionOn } from "../src/content.js";
 import { EVENT_ORDER, EVENTS, SECTIONS, STYLES, TEMPLATES, TRACKS, slugify, toCyr } from "../src/design-data.js";
 import { bt, pickLocale, requestLocale, translateError } from "../src/i18n.js";
@@ -58,7 +57,7 @@ describe("языки", () => {
     // Подстановки и команды бота не транслитерируются.
     expect(bt("uzc", "phoneLinked", { phone: "+998 90 123-45-67" })).toBe("+998 90 123-45-67 рақами уланди.");
     expect(bt("uzc", "unknown")).toBe("Буйруқ тушунарсиз. Мавжуд: /login, /my, /prices, /lang");
-    expect(otpText("uzc", BRAND, "123456")).toBe("InviteBloom: кириш коди 123456. Бу кодни ҳеч кимга берманг.");
+    expect(otpText("uzc", "invitebloom.tech", "123456")).toBe("invitebloom.tech сайтига кириш учун тасдиқлаш коди: 123456");
     const link = "https://example.uz/g/Abc_def-12";
     expect(inviteText("uzc", { guestName: "Aziz", event: "Анна ва Темур", date: "12.12.2026", link })).toBe(
       `Aziz, сизни таклиф қиламиз: Анна ва Темур, 12.12.2026. Таклифномангиз: ${link}`,

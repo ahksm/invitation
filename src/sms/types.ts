@@ -9,3 +9,6 @@ export interface SmsProvider {
   /** Разбирает колбэк о доставке. null, если формат незнаком. */
   parseDelivery(body: unknown): SmsDeliveryReport | null;
 }
+
+/** Провайдер отказал и ничего не отправил: например, Eskiz не пропускает текст без одобренного шаблона. */
+export class SmsRejectedError extends Error {}
